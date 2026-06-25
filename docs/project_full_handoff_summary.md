@@ -814,7 +814,27 @@ Fresh result:
 
 This fixed the data-length and stale-data blocker.
 
-The next step is to rerun the exact Wizard Static Spread test on this fresh 400-row file.
+The exact Wizard Static Spread test was then rerun on this fresh 400-row file.
+
+Fresh local verification result:
+
+- Pair: BNB-USD / STX-USD
+- Exact mode: Static Spread
+- Entry: +2 / -2
+- Exit: zero cross
+- Cost buckets tested: zero cost, base cost, stress cost
+- Trades: 2
+- Closed trades: 1
+- Profit factor: 4.1021
+- Sharpe: 2.4319
+- Max drawdown: 39.57%
+- Total return: 14.07%
+- Acceptance: REJECT
+- Acceptance reason: max drawdown > 15%; thin trade count
+
+Conclusion:
+
+The fresh data problem is fixed, but BNB/STX still does not pass local acceptance. It remains research-only because the drawdown is too high and the trade count is too thin.
 
 ## 29. Earlier BNB/STX Local Result Before Fresh Data
 
@@ -869,10 +889,13 @@ Done:
 - Safe archive-later approach defined.
 - BNB/STX exact Wizard settings captured.
 - Fresh 400-row BNB/STX daily dYdX history pulled.
+- Fresh BNB/STX exact Static Spread local verification completed.
+- Dashboard verification output updated.
+- Full test suite passed after the verifier update: 286 passed.
 
 Not finished yet:
 
-- The fresh 400-row BNB/STX exact Static Spread local after-cost rerun still needs to be completed.
+- More Crypto Wizards daily candidates still need the same exact-mode local verification flow.
 - Wizard cost assumptions are still unknown because the pair page did not visibly expose them.
 - Full dashboard inventory still needs to be completed.
 - ML dataset/model/quantization are designed but not production-proven.
@@ -881,32 +904,41 @@ Not finished yet:
 ## 31. Immediate Next Steps
 
 Step 1:
-Rerun BNB/STX Static Spread on the fresh 400-row daily dYdX file.
+Treat BNB/STX as research-only for now.
 
-Use:
+Reason:
 
-- entry +2 / -2
-- exit zero cross
-- exact mode Static Spread
-- daily bars
-- zero/base/stress cost buckets
-- local after-cost acceptance gates
+- Local Sharpe and profit factor are interesting.
+- Local total return is positive but below the original Wizard return.
+- Drawdown is too high.
+- Closed trade count is too thin.
 
 Step 2:
-Compare local result against Wizard:
+Keep the Wizard comparison visible:
 
 - Wizard Sharpe 2.81
 - Wizard return 47.8%
 - Wizard closed trades 1
 - Wizard max drawdown -4.4%
+- Local Sharpe 2.4319
+- Local return 14.07%
+- Local closed trades 1
+- Local max drawdown 39.57%
 
 Key question:
-Does local dYdX data replicate the Wizard result after costs?
+Why does Wizard show much lower drawdown and higher return than the local dYdX replay?
 
 Step 3:
-If local result passes, mark BNB/STX as WATCH or PROMOTE depending on acceptance evidence strength.
+Check whether the difference comes from:
 
-If local result fails, mark as REJECT or FETCH_MORE_DATA with exact reason.
+- Wizard cost assumptions
+- Wizard spread construction
+- hedge or weighting handling
+- exact execution timing
+- bar alignment
+- mark/close price differences
+- funding treatment
+- open trade handling
 
 Step 4:
 Repeat this flow for more Crypto Wizards candidates:
