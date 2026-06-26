@@ -4359,6 +4359,8 @@ def run_dydx_pair_expansion(
     indexer_scheme: str = "",
     output_path: Path | None = None,
     run_research: bool = True,
+    skip_fetch: bool = False,
+    allow_stale_fetch: bool = False,
 ) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
@@ -4398,7 +4400,8 @@ def run_dydx_pair_expansion(
                 pair_id=pair_id,
                 limit=limit,
                 indexer_base=indexer_base,
-                allow_stale_fetch=False,
+                allow_stale_fetch=allow_stale_fetch,
+                skip_fetch=skip_fetch,
                 derive_hedge_ratio=True,
                 run_research=run_research,
             )
@@ -4635,6 +4638,8 @@ def print_run_dydx_pair_expansion(
     indexer_scheme: str = "",
     output_path: Path | None = None,
     run_research: bool = True,
+    skip_fetch: bool = False,
+    allow_stale_fetch: bool = False,
 ) -> None:
     output = output_path or ROOT / "reports" / "dydx_pair_expansion_run.csv"
     frame = run_dydx_pair_expansion(
@@ -4644,6 +4649,8 @@ def print_run_dydx_pair_expansion(
         indexer_scheme=indexer_scheme,
         output_path=output,
         run_research=run_research,
+        skip_fetch=skip_fetch,
+        allow_stale_fetch=allow_stale_fetch,
     )
     print(frame.to_string(index=False))
     print(f"dydx_pair_expansion_run: {output}")
@@ -7091,6 +7098,11 @@ def main() -> None:
         help="Use existing payload files if fetches fail (for offline reruns or flaky DNS).",
     )
     parser.add_argument(
+        "--allow-blocked-exploration",
+        action="store_true",
+        help="Run data-exploration commands even when readiness gates are blocked.",
+    )
+    parser.add_argument(
         "--skip-fetch",
         action="store_true",
         help="Skip network fetches for fetch-dydx-two-leg-data and require existing payload files in --download-dir.",
@@ -7587,7 +7599,8 @@ def main() -> None:
         for name, path in paths.items():
             print(f"{name}: {path}")
     elif args.command == "run-dydx-pair-expansion":
-        _assert_ready_for_exploration()
+        if not args.allow_blocked_exploration:
+            _assert_ready_for_exploration()
         print_run_dydx_pair_expansion(
             max_pairs=args.max_pairs,
             limit=args.limit,
@@ -7595,6 +7608,8 @@ def main() -> None:
             indexer_scheme=args.indexer_scheme,
             output_path=args.output_path,
             run_research=args.run_research,
+            skip_fetch=args.skip_fetch,
+            allow_stale_fetch=args.allow_stale_fetch,
         )
     elif args.command == "backfill-dydx-pair-history-features":
         input_dir = args.input_dir or ROOT / "data" / "raw" / "pair_details"

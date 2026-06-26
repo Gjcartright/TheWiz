@@ -1,0 +1,8 @@
+step,ready,status,blocker,evidence,next_action
+indexer_market_data,True,ready,,rest_indexer=https://indexer.v4testnet.dydx.exchange;websocket_indexer=wss://indexer.v4testnet.dydx.exchange/v4/ws,read market/funding data from testnet indexer
+testnet_credentials,False,blocked,missing_wallet_address;missing_private_key,wallet_address_present=False;private_key_present=False,set DYDX_TESTNET_WALLET_ADDRESS and DYDX_TESTNET_PRIVATE_KEY in .env.local
+dydx_sdk,True,ready,,dydx_v4_client_installed=True,continue adapter wiring
+submit_flag,False,blocked,submit_orders_false,submit_orders=False,leave DYDX_TESTNET_SUBMIT_ORDERS=false until research and adapter gates pass
+order_client_adapter,False,blocked,missing_dydx_order_client_adapter,order_adapter=False;contract_valid=False;signature_accepts_intent_config=False;exchange_submission_capable=False;record_only=False;adapter_error=DYDX_TESTNET_ORDER_CLIENT_ADAPTER is not set,set DYDX_TESTNET_ORDER_CLIENT_ADAPTER to a module:object implementing place_order
+research_acceptance,False,blocked,no_research_accepted_two_leg_strategy,acceptance_report_exists=True;production_eligible=0;two_leg_passing_pairs=0,run real two-leg experiments until acceptance gates pass
+paper_submission_gate,False,blocked,missing_wallet_address;missing_private_key;submit_orders_false;missing_dydx_order_client_adapter;no_research_accepted_two_leg_strategy,dydx_ready=False;strategy_ready=False,do not submit paper orders

@@ -1,0 +1,38 @@
+strategy_rank,strategy,family,pairs_tested,passing_pairs,total_trades,median_profit_factor,median_sharpe,worst_drawdown,production_eligible,preferred_eligible,acceptance_reason,preferred_reason
+1,Hurst Filter,mean_reversion,4,0,42,inf,0.10624484877169832,0.1518572084387006,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+2,Hurst + Half-Life,mean_reversion,4,0,42,inf,0.10624484877169832,0.1518572084387006,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+3,ZScore + ECM,hybrid,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+4,ECM + Copula + ZScore,hybrid,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+5,Pure ECM,ecm,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+6,ECM Leadership,ecm,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+7,Leader/Follower Prediction,ecm,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+8,Composite Quant Score,composite,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+9,Weighted Voting Model,composite,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+10,Pair Ranking Strategy,portfolio,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+11,Portfolio Rotation,portfolio,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+12,Risk Adjusted Ranking,portfolio,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+13,Copula Risk Filter,copula,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+14,Copula + ECM Strategy,hybrid,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+15,Trade Outcome Predictor,ml,4,0,0,inf,0.0,0.0,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;total_trades<250
+16,KMeans Regime Model,regime,4,0,44,0.6874521789493523,-0.34707921765939376,0.1668982561539822,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+17,Proprietary Signal Stack,composite,4,0,82,0.7812617042249188,-0.3724868285517995,0.15087972943083747,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+18,Profile Match,ml,4,0,52,0.7381434347483151,-0.388818064910824,0.16266638614262166,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+19,Feature Importance Model,ml,4,0,2,inf,-0.5921866016904924,0.2527822396104362,False,False,passing_pairs<2,not_production_eligible;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+20,Half-Life Optimized,mean_reversion,4,0,96,0.6686927290540134,-0.6865753479908991,0.14131081438985882,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+21,Dynamic Threshold Model,adaptive,4,0,84,0.5982550201504185,-0.7902533965736624,0.1724031619419739,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+22,HMM Regime Model,regime,4,0,52,0.5115882835897948,-0.870382750696754,0.19719333585566065,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+23,GMM Regime Model,regime,4,0,48,0.47327792122466583,-0.9065168327985643,0.19402513048619402,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+24,Meta Model,ml,4,0,90,0.6169609580345576,-0.978186193228487,0.16482515077837723,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+25,ZScore + Copula,hybrid,4,0,64,0.47326580416638164,-1.0540274925555817,0.2123758796094,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+26,Classic ZScore Mean Reversion,zscore,4,0,64,0.47326580416638164,-1.0540274925555817,0.2123758796094,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+27,Regime Filtered Stat-Arb,regime,4,0,56,0.4787206126962987,-1.1172632453834381,0.166766589015862,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+28,OU Optimal,mean_reversion,4,0,106,0.5494366707903504,-1.1746543239517866,0.1872673669057344,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+29,ML Confidence,ml,4,0,106,0.556030408901123,-1.20913838690364,0.182302593808663,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+30,Dual Conditional Copula,copula,4,0,210,0.5918958471664196,-2.296071973865497,0.13447109995987125,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+31,Tail Event Reversion,copula,4,0,174,0.550896544304856,-2.660186440144072,0.14399389227077397,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+32,Copula Divergence Persistence,copula,4,0,194,0.5181368201679074,-2.7967226071803113,0.14486230090321278,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+33,Pure Copula,copula,4,0,250,0.4854368237369131,-3.142013717978114,0.22206819818381396,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1
+34,Copula Tail Risk Sizing,portfolio,4,0,250,0.4854368237369131,-3.142013717978114,0.22206819818381396,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1
+35,Copula + Regime Strategy,copula,4,0,226,0.3872260660335225,-3.189873387000968,0.31678242078947016,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1;total_trades<250
+36,Pure Copula Portfolio,portfolio,4,0,322,0.39780640410077056,-3.3720155860133754,0.3625873993441613,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1
+37,Copula Dislocation Ranking Engine,copula,4,0,322,0.39780640410077056,-3.3720155860133754,0.3625873993441613,False,False,passing_pairs<2,not_production_eligible;median_profit_factor<2.0;median_sharpe<1.5;worst_drawdown>0.1

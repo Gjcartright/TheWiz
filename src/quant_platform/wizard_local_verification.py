@@ -66,7 +66,60 @@ def verify_wizard_local_mode(
     history_file = history_path or DEFAULT_HISTORY
     wizard_file = wizard_capture_path or DEFAULT_WIZARD_CAPTURE
     payload = _read_json(history_file)
-    history = _history_frame(payload)
+    try:
+        history = _history_frame(payload)
+    except ValueError as exc:
+        reports = root / "reports" / "active"
+        output_stem = f"{output_name}_after_cost"
+        summary_path = reports / f"{output_stem}.csv"
+        cost_path = reports / f"{output_stem}_cost_comparison.csv"
+        trade_path = reports / f"{output_stem}_trade_log.csv"
+        md_path = reports / f"{output_stem}.md"
+        summary = {
+            "pair": payload.get("pair", "unknown"),
+            "asset_x": payload.get("asset_x", ""),
+            "asset_y": payload.get("asset_y", ""),
+            "interval": payload.get("interval", ""),
+            "local_observations": 0,
+            "local_last_timestamp": "",
+            "local_stale_days": "",
+            "pair_sharpe": "",
+            "total_return": "",
+            "profit_factor": 0.0,
+            "sharpe": 0.0,
+            "max_drawdown": 0.0,
+            "closed_trades": 0,
+            "trades": 0,
+            "acceptance": "BLOCKED",
+            "acceptance_reason": str(exc),
+            "evidence_path": str(history_file),
+            "wizard_capture_path": str(wizard_file),
+            "exact_mode": "",
+            "source": "orchestrator_verify_wizard_local_mode",
+            "error": str(exc),
+        }
+        _write_csv(pd.DataFrame([summary]), summary_path)
+        _write_csv(pd.DataFrame(), cost_path)
+        _write_csv(pd.DataFrame(), trade_path)
+        _write_text(md_path, f"# Local Wizard Verification Blocked\n\n- reason: {exc}\n- history_path: {history_file}\n- wizard_capture_path: {wizard_file}\n")
+        return CommandResult(
+            paths={
+                "summary": summary_path,
+                "cost_comparison": cost_path,
+                "trade_log": trade_path,
+                "summary_md": md_path,
+            },
+            summary={
+                "pair": payload.get("pair", "unknown"),
+                "rows": 0,
+                "acceptance": "BLOCKED",
+                "acceptance_reason": str(exc),
+                "closed_trades": 0,
+                "profit_factor": 0.0,
+                "sharpe": 0.0,
+                "max_drawdown": 0.0,
+            },
+        )
     signal, trade_log = static_spread_signal(history["zscore"], entry_threshold=entry_threshold, exit_threshold=exit_threshold)
     cost_buckets = _cost_buckets()
     cost_rows = []
@@ -391,6 +444,23 @@ def _batch_markdown(frame: pd.DataFrame, queue_file: Path) -> str:
     ]
     if frame.empty:
         return "\n".join(lines + ["", "No candidates found.", ""])
+    display_frame = frame.reindex(
+        columns=[
+            "pair",
+            "exact_mode",
+            "wizard_sharpe",
+            "wizard_returns_total",
+            "verification_status",
+            "acceptance",
+            "acceptance_reason",
+            "verification_blocker",
+            "local_sharpe",
+            "local_total_return",
+            "local_max_drawdown",
+            "local_closed_trades",
+        ],
+        fill_value="",
+    )
     verified = int((frame["verification_status"] == "verified").sum())
     accepted = int((frame["acceptance"] == "ACCEPT").sum())
     lines.extend(
@@ -400,22 +470,7 @@ def _batch_markdown(frame: pd.DataFrame, queue_file: Path) -> str:
             "",
             "## Ranked Board",
             "",
-            frame[
-                [
-                    "pair",
-                    "exact_mode",
-                    "wizard_sharpe",
-                    "wizard_returns_total",
-                    "verification_status",
-                    "acceptance",
-                    "acceptance_reason",
-                    "verification_blocker",
-                    "local_sharpe",
-                    "local_total_return",
-                    "local_max_drawdown",
-                    "local_closed_trades",
-                ]
-            ].to_markdown(index=False),
+            display_frame.to_markdown(index=False),
             "",
         ]
     )

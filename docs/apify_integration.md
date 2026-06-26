@@ -47,6 +47,7 @@ execution-gating, and learning system.
 
 ```text
 https://mcp.apify.com/?tools=actors,docs,parseforge/dydx-v4-perpetual-markets-scraper,parseforge/dydx-markets-scraper,fraktalapi/funding-pulse,api_merge/coinglass-coin-markets,parseforge/hyperliquid-perp-funding-scraper,parseforge/gmx-arbitrum-stats-scraper,louisdeconinck/coinmarketcap-crypto-scraper,gentle_cloud/cryptocurrency-market-data-scraper,moving_beacon-owner1/my-actor-14,muhammetakkurtt/dexscreener-scraper,muhammetakkurtt/dexscreener-realtime-monitor
+https://mcp.apify.com/?tools=actors,docs,parseforge/dydx-v4-perpetual-markets-scraper,parseforge/dydx-markets-scraper,fraktalapi/funding-pulse,api_merge/coinglass-coin-markets,parseforge/hyperliquid-perp-funding-scraper,parseforge/gmx-arbitrum-stats-scraper,parseforge/gmx-arbitrum-prices-scraper,louisdeconinck/coinmarketcap-crypto-scraper,muhammetakkurtt/coinmarketcap-scraper,muhammetakkurtt/arkham-intelligence-wallet-data-scraper,real1ty/coingecko,gentle_cloud/cryptocurrency-market-data-scraper,moving_beacon-owner1/my-actor-14,muhammetakkurtt/dexscreener-scraper,muhammetakkurtt/dexscreener-realtime-monitor
 ```
 
 ## Expanded Apify MCP server URL
@@ -66,6 +67,7 @@ Recommended MCP config:
   "mcpServers": {
     "apify": {
       "url": "https://mcp.apify.com/?tools=actors,docs,parseforge/dydx-v4-perpetual-markets-scraper,parseforge/dydx-markets-scraper,fraktalapi/funding-pulse,api_merge/coinglass-coin-markets,parseforge/hyperliquid-perp-funding-scraper,parseforge/gmx-arbitrum-stats-scraper,louisdeconinck/coinmarketcap-crypto-scraper,gentle_cloud/cryptocurrency-market-data-scraper,moving_beacon-owner1/my-actor-14,muhammetakkurtt/dexscreener-scraper,muhammetakkurtt/dexscreener-realtime-monitor"
+      "url": "https://mcp.apify.com/?tools=actors,docs,parseforge/dydx-v4-perpetual-markets-scraper,parseforge/dydx-markets-scraper,fraktalapi/funding-pulse,api_merge/coinglass-coin-markets,parseforge/hyperliquid-perp-funding-scraper,parseforge/gmx-arbitrum-stats-scraper,parseforge/gmx-arbitrum-prices-scraper,louisdeconinck/coinmarketcap-crypto-scraper,muhammetakkurtt/coinmarketcap-scraper,muhammetakkurtt/arkham-intelligence-wallet-data-scraper,real1ty/coingecko,gentle_cloud/cryptocurrency-market-data-scraper,moving_beacon-owner1/my-actor-14,muhammetakkurtt/dexscreener-scraper,muhammetakkurtt/dexscreener-realtime-monitor"
     }
   }
 }

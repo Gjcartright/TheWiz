@@ -1,9 +1,9 @@
 agent,memory_path,events,outcomes_known,positive_outcomes,learning_status,next_learning_step
-discovery_agent,data/agent_memory/discovery_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events
+discovery_agent,data/agent_memory/discovery_agent.jsonl,6,0,0,learning_ready,attach outcomes to prior task_ids
 venue_evidence_agent,data/agent_memory/venue_evidence_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events
 data_quality_agent,data/agent_memory/data_quality_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events
 strategy_test_agent,data/agent_memory/strategy_test_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events
-rl_idea_agent,data/agent_memory/rl_idea_agent.jsonl,6,0,0,learning_ready,attach outcomes to prior task_ids
+rl_idea_agent,data/agent_memory/rl_idea_agent.jsonl,10,0,0,learning_ready,attach outcomes to prior task_ids
 cost_risk_agent,data/agent_memory/cost_risk_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events
-red_team_agent,data/agent_memory/red_team_agent.jsonl,4,0,0,learning_ready,attach outcomes to prior task_ids
+red_team_agent,data/agent_memory/red_team_agent.jsonl,8,0,0,learning_ready,attach outcomes to prior task_ids
 decision_agent,data/agent_memory/decision_agent.jsonl,0,0,0,no_memory_events_yet,continue_collecting_agent_events

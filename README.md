@@ -529,7 +529,11 @@ fraktalapi/funding-pulse
 api_merge/coinglass-coin-markets
 parseforge/hyperliquid-perp-funding-scraper
 parseforge/gmx-arbitrum-stats-scraper
+parseforge/gmx-arbitrum-prices-scraper
 louisdeconinck/coinmarketcap-crypto-scraper
+real1ty/coingecko
+muhammetakkurtt/coinmarketcap-scraper
+muhammetakkurtt/arkham-intelligence-wallet-data-scraper
 gentle_cloud/cryptocurrency-market-data-scraper
 moving_beacon-owner1/my-actor-14
 muhammetakkurtt/dexscreener-scraper

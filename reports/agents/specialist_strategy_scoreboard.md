@@ -7,7 +7,7 @@ A high score means run more local testing, not accept a strategy for trading.
 
 | strategy_family   |   combined_score | decision        | blocker                          | next_step                                                      |
 |:------------------|-----------------:|:----------------|:---------------------------------|:---------------------------------------------------------------|
-| Static Spread     |             0.47 | FETCH_MORE_DATA | missing_local_replay             | capture Wizard exact mode and local history for Static Spread  |
+| Static Spread     |             0.27 | FETCH_MORE_DATA | missing_strategy_family_evidence | capture Wizard exact mode and local history for Static Spread  |
 | Static ZScoreR    |             0.27 | FETCH_MORE_DATA | missing_strategy_family_evidence | capture Wizard exact mode and local history for Static ZScoreR |
 | Dyn Spread        |             0.27 | FETCH_MORE_DATA | missing_strategy_family_evidence | capture Wizard exact mode and local history for Dyn Spread     |
 | Dyn ZScoreR       |             0.27 | FETCH_MORE_DATA | missing_strategy_family_evidence | capture Wizard exact mode and local history for Dyn ZScoreR    |
@@ -19,11 +19,11 @@ A high score means run more local testing, not accept a strategy for trading.
 
 | agent           |   average_score |   covered_strategy_families | role                                         |
 |:----------------|----------------:|----------------------------:|:---------------------------------------------|
-| research_agent  |          0.1429 |                           1 | find and rank hypotheses                     |
-| memory_agent    |          0.2    |                           7 | record what each specialist learned          |
-| test_agent      |          0      |                           0 | verify ideas with local replay               |
-| reference_agent |          1      |                           7 | keep formulas and field definitions explicit |
-| rl_agent        |          0.2    |                           7 | suggest ideas and similar-pair fingerprints  |
+| research_agent  |             0   |                           0 | find and rank hypotheses                     |
+| memory_agent    |             0.2 |                           7 | record what each specialist learned          |
+| test_agent      |             0   |                           0 | verify ideas with local replay               |
+| reference_agent |             1   |                           7 | keep formulas and field definitions explicit |
+| rl_agent        |             0.2 |                           7 | suggest ideas and similar-pair fingerprints  |
 
 ## Guardrails
 

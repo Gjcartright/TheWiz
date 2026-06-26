@@ -1,0 +1,2 @@
+pair,market_x,market_y,funding_x_rows,funding_y_rows,funding_x_timestamped_rows,funding_y_timestamped_rows,funding_x_available,funding_y_available,ready,missing,missing_markets,required_markets
+DOGE-USD-LTC-USD,DOGE-USD,LTC-USD,1000,1000,1000,1000,True,True,True,,,DOGE-USD;LTC-USD

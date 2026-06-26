@@ -388,8 +388,15 @@ def _attach_leg_funding_to_rows(
         return
 
     frame = pd.DataFrame(rows).reset_index().rename(columns={"index": "_row_index"})
-    frame["_timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce", utc=True)
-    right = market_funding.dropna(subset=["timestamp"]).sort_values("timestamp")
+    frame["_timestamp"] = (
+        pd.to_datetime(frame["timestamp"], errors="coerce", utc=True)
+        .astype("datetime64[ns, UTC]")
+    )
+    right = market_funding.dropna(subset=["timestamp"]).copy()
+    right["_timestamp"] = (
+        pd.to_datetime(right["timestamp"], errors="coerce", utc=True)
+        .astype("datetime64[ns, UTC]")
+    ).sort_values()
     if right.empty:
         latest = market_funding["funding_bps"].dropna()
         if not latest.empty:
@@ -399,7 +406,7 @@ def _attach_leg_funding_to_rows(
 
     merged = pd.merge_asof(
         frame.sort_values("_timestamp"),
-        right[["timestamp", "funding_bps"]].rename(columns={"timestamp": "_timestamp"}).sort_values("_timestamp"),
+        right[["_timestamp", "funding_bps"]].sort_values("_timestamp"),
         on="_timestamp",
         direction="backward",
     ).sort_values("_row_index")

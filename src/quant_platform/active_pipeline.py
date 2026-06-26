@@ -1316,7 +1316,60 @@ def train_trade_gate(root: Path = ROOT, input_path: Path | None = None, walkforw
     if dataset.empty:
         raise SystemExit(f"trade gate dataset is empty: {source}")
     study_dir = ML_REPORTS / "trade_gate"
-    paths = train_trade_filter_walkforward(dataset, output_dir=study_dir, n_splits=walkforward_splits, min_train_rows=min_train_rows)
+    try:
+        paths = train_trade_filter_walkforward(dataset, output_dir=study_dir, n_splits=walkforward_splits, min_train_rows=min_train_rows)
+    except ValueError as exc:
+        class_counts = dataset[TARGET_COLUMN].value_counts(dropna=False).to_dict() if TARGET_COLUMN in dataset else {}
+        positive_trades = int(class_counts.get(1, 0))
+        negative_trades = int(class_counts.get(0, 0))
+        metrics = {
+            "accepted": False,
+            "best_model": "",
+            "profit_factor_delta": 0.0,
+            "filtered_profit_factor": 0.0,
+            "filtered_sharpe": 0.0,
+            "filtered_drawdown": 1.0,
+            "sharpe_delta": 0.0,
+            "drawdown_delta": 0.0,
+            "median_take_rate": 0.0,
+            "total_filtered_trades": 0,
+            "score_buckets_monotonic": False,
+            "blocker": f"train_trade_filter_walkforward_blocked: {exc}",
+            "created_at": _now(),
+            "label_source": "backtest_trained",
+            "positive_trades": positive_trades,
+            "negative_trades": negative_trades,
+            "class_balance_blocker": "requires both profitable and unprofitable labels",
+        }
+        model_dir = study_dir / "failure"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        empty_predictions = model_dir / "model_walkforward_predictions.csv"
+        _write_json(model_dir / "train_failure.json", {"error": str(exc), "source": str(source), "class_counts": class_counts})
+        failure_predictions = ML_REPORTS / "model_walkforward_predictions.csv"
+        empty_backtest_summary = ML_REPORTS / "model_backtest_comparison.csv"
+        empty_score_bucket = ML_REPORTS / "score_bucket_report.csv"
+        empty_pair_conc = ML_REPORTS / "model_pair_concentration.csv"
+        _write_csv(pd.DataFrame(), empty_predictions)
+        _write_csv(pd.DataFrame(), model_dir / "model_backtest_comparison.csv")
+        _write_csv(pd.DataFrame(), model_dir / "score_bucket_report.csv")
+        _write_csv(pd.DataFrame(), model_dir / "model_pair_concentration.csv")
+        _write_csv(pd.DataFrame(), failure_predictions)
+        _write_csv(pd.DataFrame(), empty_backtest_summary)
+        _write_csv(pd.DataFrame(), empty_score_bucket)
+        _write_csv(pd.DataFrame(), empty_pair_conc)
+        _write_json(model_dir / "train_failure.json", {"error": str(exc), "source": str(source), "class_counts": class_counts})
+        _write_json(MODELS / "feature_schema.json", _feature_schema(dataset))
+        _write_json(MODELS / "metrics.json", metrics)
+        _write_csv(_model_acceptance_frame(metrics), ML_REPORTS / "model_gated_acceptance.csv")
+        return CommandResult(
+            paths={
+                "model": MODELS / "model.pkl",
+                "feature_schema": MODELS / "feature_schema.json",
+                "metrics": MODELS / "metrics.json",
+                "predictions": failure_predictions,
+            },
+            summary={"accepted": False, "best_model": "", "blocker": str(exc)},
+        )
     MODELS.mkdir(parents=True, exist_ok=True)
     model_path = MODELS / "model.pkl"
     shutil.copyfile(paths["best_model"], model_path)
@@ -1343,7 +1396,36 @@ def train_trade_gate(root: Path = ROOT, input_path: Path | None = None, walkforw
 def run_model_gated_backtest(root: Path = ROOT) -> CommandResult:
     predictions = _read_csv(ML_REPORTS / "model_walkforward_predictions.csv")
     if predictions.empty:
-        raise SystemExit("model walk-forward predictions missing; run train-trade-gate first")
+        blocker = "model walk-forward predictions missing; run train-trade-gate first"
+        acceptance = pd.DataFrame(
+            [
+                {
+                    "accepted": False,
+                    "reason": blocker,
+                    "factor": "",
+                    "raw_pf": 0.0,
+                    "raw_sharpe": 0.0,
+                    "raw_maxdd": 0.0,
+                    "raw_trades": 0,
+                    "model_pf": 0.0,
+                    "model_sharpe": 0.0,
+                    "model_maxdd": 0.0,
+                    "model_trades": 0,
+                    "median_pf": 0.0,
+                    "median_sharpe": 0.0,
+                    "median_maxdd": 0.0,
+                    "median_trades": 0,
+                    "confidence": "none",
+                    "improvement_pf": 0.0,
+                    "improvement_sharpe": 0.0,
+                    "improvement_drawdown": 0.0,
+                }
+            ]
+        )
+        _write_csv(acceptance, ML_REPORTS / "model_gated_acceptance.csv")
+        _write_csv(predictions, ML_REPORTS / "model_gated_backtest.csv")
+        _write_csv(pd.DataFrame(), ML_REPORTS / "model_failure_attribution.csv")
+        return CommandResult(paths={"backtest": ML_REPORTS / "model_gated_backtest.csv", "acceptance": ML_REPORTS / "model_gated_acceptance.csv", "failures": ML_REPORTS / "model_failure_attribution.csv"}, summary={"accepted": False, "blocker": blocker})
     comparison = _model_gated_comparison(predictions)
     acceptance = _model_gated_acceptance(comparison)
     failures = _model_failure_attribution(predictions, acceptance)

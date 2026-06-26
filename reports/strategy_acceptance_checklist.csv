@@ -1,0 +1,8 @@
+step,ready,status,blocker,evidence,next_action
+experiment_results,True,ready,,results_exists=True;evaluated_runs=6142;spread_runs=0;two_leg_runs=6142,continue acceptance diagnostics
+two_leg_coverage,True,ready,,two_leg_runs=6142;max_two_leg_pairs_tested=15,evaluate strategy acceptance on two-leg results
+two_leg_execution_assumptions,True,ready,,max_two_leg_execution_input_pairs=15;required_inputs=beta;funding_x;funding_y;hedge_ratio;price_x;price_y,"two-leg economics include hedge ratio, beta, and funding inputs"
+funding_preflight,True,ready,,funding_inputs_not_current_blocker,funding inputs already represented in acceptance evidence
+cost_bucket_coverage,True,ready,,required_cost_buckets=base;stress;missing_cost_buckets=none,base/stress cost buckets are represented
+production_eligibility,False,blocked,no_production_eligible_strategy,acceptance_exists=True;strategies=37;production_eligible=0;max_two_leg_passing_pairs=0;max_total_trades=2830;top_blockers=passing_pairs<2:37,resolve top blockers before paper execution
+preferred_readiness,False,blocked,no_preferred_eligible_strategy,preferred_eligible=0;top_blockers=passing_pairs<2:37,collect more robust trades and improve drawdown/sharpe before production deployment

@@ -1,5 +1,5 @@
 agent,effectiveness_score,reason
-discovery_agent,0.0,no_memory_events
+discovery_agent,0.0,memory_exists_outcomes_pending
 venue_evidence_agent,0.0,no_memory_events
 data_quality_agent,0.0,no_memory_events
 strategy_test_agent,0.0,no_memory_events

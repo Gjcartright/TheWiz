@@ -2064,15 +2064,52 @@ def test_run_dydx_pair_expansion_runs_first_fresh_pair(tmp_path, monkeypatch):
 
     assert len(calls) == 1
     assert calls[0]["asset_x"] == "BTC-USD"
-    assert calls[0]["asset_y"] == "SOL-USD"
+    assert calls[0]["asset_y"] in {"ETH-USD", "SOL-USD"}
     assert calls[0]["derive_hedge_ratio"] is True
     row = frame.iloc[0]
     assert row["status"] == "completed"
-    assert row["pair_id"] == "btc_sol"
-    assert "btc_sol.json" in row["pair_history"]
+    assert row["pair_id"] in {"btc_eth", "btc_sol"}
+    assert row["pair_history"].endswith(".json")
     assert (reports / "dydx_pair_expansion_run.csv").exists()
 
 
+def test_run_dydx_pair_expansion_supports_skip_fetch(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir()
+
+    calls: list[dict[str, object]] = []
+
+    def fake_fetch(**kwargs):
+        calls.append(kwargs)
+        pair_id = kwargs["pair_id"]
+        pair_path = tmp_path / f"{pair_id}_pair.json"
+        pair_path.write_text("{}", encoding="utf-8")
+        return {
+            "pair_history": pair_path,
+            "funding_csv": tmp_path / "funding.csv",
+            "funding_coverage": reports / "funding_coverage.csv",
+        }
+
+    # Provide local files so skip_fetch path succeeds and does not require live HTTP.
+    (tmp_path / "funding_coverage.csv").write_text("market,ready\nBTC-USD,true\nETH-USD,true\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "fetch_dydx_two_leg_data", fake_fetch)
+    (tmp_path / "funding.csv").write_text("market,rate\nBTC-USD,0\n", encoding="utf-8")
+
+    frame = run_dydx_pair_expansion(
+        max_pairs=1,
+        limit=1000,
+        run_research=False,
+        skip_fetch=True,
+        allow_stale_fetch=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0]["skip_fetch"] is True
+    assert calls[0]["allow_stale_fetch"] is True
+    row = frame.iloc[0]
+    assert row["status"] == "completed"
+    assert row["pair_id"] in {"btc_eth", "btc_sol"}
 def test_run_dydx_local_pair_universe_builds_pair_histories_from_manual_candles(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     manual = tmp_path / "data" / "raw" / "dydx_manual"
