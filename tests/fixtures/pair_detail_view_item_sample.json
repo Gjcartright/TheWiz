@@ -1,0 +1,20 @@
+{
+  "pair_id": "1",
+  "pair": "BNB-USD-STX-USD",
+  "asset_x": "BNB-USD",
+  "asset_y": "STX-USD",
+  "exchange": "dydx",
+  "interval": "daily",
+  "period": 320,
+  "hedge_ratio": 1.36,
+  "ecm_x_available": true,
+  "ecm_y_available": true,
+  "ecm_strength_available": true,
+  "viewItem": {
+    "spread": [-0.2, -0.1, 0.0, 0.1],
+    "zscore": [-2.1, -1.0, 0.0, 1.1],
+    "ecm_x": [-0.3, -0.2, -0.1, 0.0],
+    "ecm_y": [-0.1, -0.05, -0.02, 0.0],
+    "ecm_strength": [0.8, 0.8, 0.75, 0.7]
+  }
+}

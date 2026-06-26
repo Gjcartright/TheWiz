@@ -1,0 +1,28 @@
+candidate_pairs_csv: reports/dydx_candidate_pairs_excluding_current.csv
+funding_path: data/processed/dydx_funding.csv
+indexer_base: https://indexer.dydx.trade
+output_dir: reports/multi_timeframe_plans
+manifest_path: reports/candidate_pairs_multi_timeframe_manifest.csv
+summary_path: reports/candidate_pairs_multi_timeframe_summary.csv
+include_statuses: []
+timeframes:
+  - resolution: 5MINS
+    windows: 12
+    limit: 1000
+    role: primary_entry_research
+  - resolution: 15MINS
+    windows: 8
+    limit: 1000
+    role: confirmation_research
+  - resolution: 1HOUR
+    windows: 8
+    limit: 1000
+    role: regime_context
+  - resolution: 4HOURS
+    windows: 6
+    limit: 500
+    role: macro_regime_context
+  - resolution: 1DAY
+    windows: 1
+    limit: 365
+    role: macro_filter_context

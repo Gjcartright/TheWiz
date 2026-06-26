@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+FORMULAS: dict[str, dict[str, str]] = {
+    "cointegration": {
+        "formula": "Engle-Granger/Johansen stationarity test on residual spread: y_t - beta*x_t.",
+        "interpretation": "Tests whether a pair has a persistent equilibrium relation.",
+        "use_case": "Filter/rank pairs before mean-reversion strategies.",
+        "failure_mode": "Breaks during regime shifts, structural changes, or multiple-testing overfit.",
+    },
+    "hedge_ratio": {
+        "formula": "OLS/TLS/Kalman beta in y_t = alpha + beta*x_t + epsilon_t.",
+        "interpretation": "Defines spread neutrality and leg sizing.",
+        "use_case": "Position construction and spread measurement.",
+        "failure_mode": "Unstable beta creates hidden directional exposure.",
+    },
+    "beta": {
+        "formula": "cov(asset, benchmark) / var(benchmark), or pair beta depending on endpoint.",
+        "interpretation": "Sensitivity to common factor or paired asset.",
+        "use_case": "Exposure normalization and risk attribution.",
+        "failure_mode": "Nonlinear exposure is missed by linear beta.",
+    },
+    "ecm_x": {
+        "formula": "Delta x_t = alpha_x * error_{t-1} + lagged deltas + noise.",
+        "interpretation": "Adjustment speed of X toward equilibrium.",
+        "use_case": "Leader/follower and directional leg prediction.",
+        "failure_mode": "Spurious adjustment under unstable cointegration.",
+    },
+    "ecm_y": {
+        "formula": "Delta y_t = alpha_y * error_{t-1} + lagged deltas + noise.",
+        "interpretation": "Adjustment speed of Y toward equilibrium.",
+        "use_case": "Leader/follower and directional leg prediction.",
+        "failure_mode": "Coefficient sign flips across regimes.",
+    },
+    "ecm_strength": {
+        "formula": "Function of adjustment coefficient magnitude, t-statistics, and residual correction reliability.",
+        "interpretation": "How forcefully the pair corrects deviations.",
+        "use_case": "Rank mean-reversion candidates and holding period confidence.",
+        "failure_mode": "High in-sample strength can be overfit or stale.",
+    },
+    "half_life": {
+        "formula": "-ln(2) / ln(phi), where spread_t = c + phi*spread_{t-1} + noise.",
+        "interpretation": "Expected decay horizon of spread shock.",
+        "use_case": "Set entry horizon, max holding period, and threshold timing.",
+        "failure_mode": "Invalid when spread is not stationary or phi is unstable.",
+    },
+    "hurst": {
+        "formula": "Scaling relation E[range/std] ~ n^H.",
+        "interpretation": "H < 0.5 suggests anti-persistence; H > 0.5 suggests trend persistence.",
+        "use_case": "Filter mean-reversion vs trend regimes.",
+        "failure_mode": "Sensitive to sample length, microstructure noise, and jumps.",
+    },
+    "zscore": {
+        "formula": "(spread_t - mean(spread)) / std(spread).",
+        "interpretation": "Distance from estimated equilibrium.",
+        "use_case": "Classic entry/exit trigger.",
+        "failure_mode": "Large z-score may indicate structural break rather than opportunity.",
+    },
+    "rolling_zscore": {
+        "formula": "(spread_t - rolling_mean) / rolling_std.",
+        "interpretation": "Adaptive deviation measure.",
+        "use_case": "Threshold model with recent volatility adaptation.",
+        "failure_mode": "Window choice can chase noise or lag breaks.",
+    },
+    "spread": {
+        "formula": "y_t - beta*x_t - alpha.",
+        "interpretation": "Tradable disequilibrium between hedged legs.",
+        "use_case": "Base series for stationarity, z-score, OU, and ECM.",
+        "failure_mode": "Bad hedge ratio converts spread into directional bet.",
+    },
+    "pearson": {
+        "formula": "cov(x,y)/(std(x)*std(y)).",
+        "interpretation": "Linear co-movement.",
+        "use_case": "Basic dependence filter and breakdown monitor.",
+        "failure_mode": "Misses nonlinear and tail dependence.",
+    },
+    "spearman": {
+        "formula": "Pearson correlation of ranked observations.",
+        "interpretation": "Monotonic dependence robust to nonlinear scaling.",
+        "use_case": "Dependence confirmation.",
+        "failure_mode": "Can miss asymmetric tail structure.",
+    },
+    "kendall": {
+        "formula": "Difference between concordant and discordant pair probabilities.",
+        "interpretation": "Rank concordance often tied to copula parameters.",
+        "use_case": "Copula calibration and dependence stability.",
+        "failure_mode": "No direct spread trading signal by itself.",
+    },
+    "copula": {
+        "formula": "C(u,v) joining marginal CDFs into joint distribution F(x,y)=C(Fx(x),Fy(y)).",
+        "interpretation": "Dependence structure independent of marginal distributions.",
+        "use_case": "Conditional mispricing, tail dependence, and portfolio risk.",
+        "failure_mode": "Wrong family or poor calibration creates false dislocation signals.",
+    },
+    "conditional_probabilities": {
+        "formula": "P(U <= u | V = v) or tail-conditional variants from fitted copula.",
+        "interpretation": "Observed pair state vs expected conditional state.",
+        "use_case": "Pure copula and dual conditional copula entries.",
+        "failure_mode": "Probability distortions can persist instead of reverting.",
+    },
+    "sharpe": {
+        "formula": "annualized mean(return) / std(return).",
+        "interpretation": "Risk-adjusted return quality.",
+        "use_case": "Strategy ranking and acceptance tests.",
+        "failure_mode": "Inflated by non-normal tails, serial correlation, and selection bias.",
+    },
+    "sortino": {
+        "formula": "annualized mean(return) / downside_std(return).",
+        "interpretation": "Reward per downside volatility.",
+        "use_case": "Ranking strategies with asymmetric outcomes.",
+        "failure_mode": "Can ignore crash clustering until enough tail events occur.",
+    },
+    "var": {
+        "formula": "Quantile loss at confidence alpha.",
+        "interpretation": "Expected threshold loss not exceeded most of the time.",
+        "use_case": "Position sizing and risk gating.",
+        "failure_mode": "Does not describe losses beyond the quantile.",
+    },
+    "cvar": {
+        "formula": "Expected loss conditional on loss exceeding VaR.",
+        "interpretation": "Tail severity estimate.",
+        "use_case": "Tail-aware sizing and copula risk controls.",
+        "failure_mode": "Requires enough tail observations or robust stress modeling.",
+    },
+    "drawdown": {
+        "formula": "(equity_peak - equity_t) / equity_peak.",
+        "interpretation": "Capital impairment from peak.",
+        "use_case": "Risk limits, strategy rejection, and kill switches.",
+        "failure_mode": "Backtest drawdown underestimates unseen structural breaks.",
+    },
+    "win_rate": {
+        "formula": "winning_trades / total_trades.",
+        "interpretation": "Hit rate of completed trades.",
+        "use_case": "Diagnostics with payoff ratio.",
+        "failure_mode": "High win rate can hide rare large losses.",
+    },
+    "ml_confidence": {
+        "formula": "Calibrated model probability of target event, usually P(profitable trade).",
+        "interpretation": "Meta-model belief in setup quality.",
+        "use_case": "Ranking, filtering, and sizing after calibration.",
+        "failure_mode": "Leakage, nonstationarity, and uncalibrated probabilities.",
+    },
+    "profile_match": {
+        "formula": "Similarity score between current feature vector and historically profitable clusters.",
+        "interpretation": "How much the current setup resembles known winners.",
+        "use_case": "Meta-learning filter.",
+        "failure_mode": "Historical clusters may not survive new regimes.",
+    },
+    "ou_optimal": {
+        "formula": "OU process dX_t = theta(mu-X_t)dt + sigma dW_t with optimal stopping thresholds.",
+        "interpretation": "Model-based mean-reversion entry/exit attractiveness.",
+        "use_case": "Threshold optimization and expected holding period.",
+        "failure_mode": "OU assumptions fail under jumps, trends, or changing volatility.",
+    },
+}
+

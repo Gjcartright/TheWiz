@@ -1,0 +1,597 @@
+# CHIEF QPA MEMORY (2026-06-21)
+
+## ML Branch Shadow Comparison Command Added (2026-06-21)
+- Added a reproducible branch-level ML shadow comparison path:
+  - module helper: `shadow_model_branch_comparison`
+  - CLI command: `compare-ml-shadow-models`
+- Regenerated narrowed branch comparison from:
+  - `reports/ml_trade_filter/ml_trade_filter_walkforward_predictions.csv`
+  - pairs: `BTC-USD-SOL-USD`, `DOGE-USD-ETH-USD`, `BTC-USD-ETH-USD`, `BTC-USD-DOGE-USD`, `BTC-USD-LINK-USD`
+- Outputs:
+  - `reports/ml_trade_filter/ml_trade_filter_branch_model_comparison.csv`
+  - `reports/ml_trade_filter/ml_trade_filter_branch_pair_comparison.csv`
+- Current reproduced aggregate read:
+  - `gradient_boosting_fallback`: `55/173` takes, taken mean return `-0.012118`, taken PF `0.477960`, taken Sharpe `-2.118059`
+  - `logistic_regression`: `82/173` takes, taken mean return `-0.019632`, taken PF `0.320523`, taken Sharpe `-3.869641`
+- Interpretation is unchanged:
+  - fallback remains the cleaner shadow default on the narrowed branch comparison
+  - neither model is promotion-ready
+  - no execution or paper behavior changed
+
+## Local Learning Store Hygiene Correction (2026-06-21)
+- A duplicate DOGE-ETH realized outcome row was found in `data/meta_learning/trades.jsonl` with the same trade id:
+  - `2026-06-21T20:36:48.263955+00:00_DOGE-ETH_143022`
+- Import behavior is now idempotent for explicit `trade_id` values:
+  - `append-learning-outcome` no-ops when the explicit trade id already exists
+  - `import-learning-outcomes` reports duplicate template rows instead of appending them again
+- The duplicate row was removed from the local learning store and reports were refreshed.
+- Current corrected P5 evidence:
+  - `trade_store_rows = 1`
+  - `outcomes = 1`
+  - `outcomes_remaining = 99`
+  - DOGE-ETH has one imported realized return: `-0.0002899012122637187`
+  - BTC-SOL remains missing `realized_return` in `data/meta_learning/learning_outcome_template.csv`
+
+## Canonical Current State (2026-06-21)
+- Research selection is now effectively complete for the current family.
+- Canonical promoted branch:
+  - `BTC-SOL A5 e1.25 x0.25 h36 ex0.35 st0.62 c0.50`
+  - `DOGE-ETH C2 e1.25 x0.25 h36 ex0.30 st0.60 c0.50`
+- Canonical reviewed gate:
+  - `45 trades per cost bucket`
+  - `PF >= 1.45`
+  - `Sharpe >= 1.2`
+  - `drawdown <= 0.15`
+  - required buckets: `base`, `stress`
+  - regime: `bull`
+- Canonical operating evidence:
+  - `BTC-SOL base`: `46` trades, `PF 1.7642`, `Sharpe 2.9465`, `DD 0.0680`
+  - `BTC-SOL stress`: `46` trades, `PF 1.4965`, `Sharpe 2.1714`, `DD 0.0760`
+  - `DOGE-ETH base`: `51` trades, `PF 2.5894`, `Sharpe 3.3718`, `DD 0.0432`
+  - `DOGE-ETH stress`: `51` trades, `PF 1.9189`, `Sharpe 2.3445`, `DD 0.0482`
+- Canonical interpretation:
+  - the earlier simplified reviewed gate (`90 trades / PF 1.6`) is not the real standard
+  - the original production gate remains the stricter historical reference, but it is not the active operating line for this promoted branch
+  - staged reversion is a negative result for that tested implementation, not proof that every new family is bad
+
+## Canonical Source Documents
+- Branch handoff:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/promoted_branch_handoff.md`
+- Corrected reviewed gate:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/gate_review_corrected.md`
+- Canonical operating contract:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/canonical_operating_contract.md`
+- Live operating spine:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/live_operating_spine.md`
+- Revalidation runbook:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/branch_revalidation_runbook.md`
+- Activation checklist:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/downstream_activation_checklist.md`
+- Current revalidation status:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/current_revalidation_status.md`
+- Yellow operations runbook:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/yellow_operations_runbook.md`
+- Yellow cycle report template:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/yellow_cycle_report_template.md`
+- Latest filled yellow cycle report:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/yellow_cycle_report_2026_06_21.md`
+- Downstream handoff packet:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/downstream_handoff_packet.md`
+- Live monitoring dashboard:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/live_monitoring_dashboard.csv`
+- Red trigger response playbook:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/red_trigger_response_playbook.md`
+- Downstream implementation checklist:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/downstream_implementation_checklist.md`
+- Paper-path readiness package:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_path_readiness_package.md`
+- Journal and event capture flow:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/journal_event_capture_flow.md`
+- Go / no-go control layer:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/go_no_go_control_layer.md`
+- Branch paper-plan seed:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/branch_paper_plan_seed.md`
+- Paper trading journal seed:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_trading_journal_seed.csv`
+- Learning outcome seed:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/learning_outcome_seed.csv`
+- Unified status snapshot:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/unified_status_snapshot.csv`
+- Blocked paper handoff example:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/blocked_paper_handoff_example.md`
+- Paper journal dry run:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_journal_dry_run.md`
+- Learning dry run:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/learning_dry_run.md`
+- Operator decision card:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/operator_decision_card.md`
+- Cycle 2 report:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/yellow_cycle_report_2026_06_21_cycle2.md`
+- Cycle 1 vs cycle 2 comparison:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/cycle1_cycle2_comparison.md`
+- Execution readiness reconciliation:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/execution_readiness_reconciliation.md`
+- Cycle 3 report:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/yellow_cycle_report_2026_06_21_cycle3.md`
+- Cycle 1 / 2 / 3 comparison:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/cycle1_cycle2_cycle3_comparison.md`
+- Repeated blocked journal workflow:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/repeated_blocked_journal_workflow.md`
+- Paper activation sequence:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_activation_sequence.md`
+- Execution status refresh:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/execution_status_refresh_2026_06_21.md`
+- Acceptance gate reconciliation:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/acceptance_gate_reconciliation_2026_06_21.md`
+- Controlled paper activation review:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/controlled_paper_activation_review_2026_06_21.md`
+- Paper submission go/no-go:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_submission_go_no_go_2026_06_21.md`
+- Paper submission toggle runbook:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/paper_submission_toggle_runbook.md`
+- First controlled paper cycle:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/first_controlled_paper_cycle_2026_06_21.md`
+- Two-cycle controlled paper confirmation:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/two_cycle_controlled_paper_confirmation_2026_06_21.md`
+- Pending learning outcomes:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/pending_learning_outcomes_2026_06_21.md`
+- P5 operationalization:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/p5_operationalization_2026_06_21.md`
+- P5 closeout runbook:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/p5_closeout_runbook.md`
+- P5 partial closeout:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/p5_partial_closeout_2026_06_21.md`
+
+## Guardrails Now In Force
+- Use exactly one promoted branch in future summaries: `BTC-SOL A5 + DOGE-ETH C2`.
+- Use exactly one reviewed gate in future summaries: the corrected per-cost-bucket gate above.
+- Treat `BTC-SOL stress` as the first fragility row to monitor on any refreshed evidence.
+- Current branch posture: `YELLOW`, because the branch passes the reviewed gate but with thin slack concentrated in `BTC-SOL base` and `BTC-SOL stress`.
+- Local rerun confirmation on 2026-06-21:
+  - `work/branch_assembly_probe_live_2026_06_21` reproduced the same winning branch
+  - `work/reviewed_gate_corrected_live_2026_06_21` confirmed `A5 + C2` remains `production_eligible=True` under the corrected reviewed gate
+- Do not reopen threshold-only tuning, broad companion scans, or staged reversion tuning unless a deliberate new-family decision is made.
+- If future evidence rejects this reviewed gate, move to a genuinely different family rather than squeezing this one further.
+- The next operating phase is execution-path clarification, not more branch churn.
+- Use the paper activation sequence to move from blocked paper mode toward a controlled activation review:
+  - verify adapter reality
+  - stage credentials without enabling submission
+  - re-run execution preflight
+  - only then consider a deliberate `submit_orders` review
+- Execution-path clarification on 2026-06-21 is now materially improved:
+  - adapter is configured and valid
+  - adapter is exchange-submission-capable
+  - wallet address is present
+  - private key is present
+  - SDK is present
+  - indexer wiring is present
+  - remaining execution blockers are now `submit_orders_false` plus the research-acceptance dependency
+- The research-acceptance dependency has now been reconciled to the canonical reviewed gate path:
+  - `QPA_ACCEPTANCE_REPORT_PATH=work/reviewed_gate_corrected_cycle3_2026_06_21/reviewed_gate_acceptance_report.csv`
+  - `strategy_acceptance` is now ready
+  - `research_acceptance` in `dydx_execution_checklist` is now ready
+  - current remaining gating blockers are:
+    - P3: `submit_orders_false`
+    - P4: blocked only because submission remains intentionally off
+    - P5: missing realized outcomes
+- Canonical `paper-plan` has now been re-tested after acceptance reconciliation:
+  - `BTC-SOL`, strategy `143022`: `paper_plan_status=paper_ready`, `paper_plan_reason=accepted`, then blocked only by `submit_orders_false`
+  - `DOGE-ETH`, strategy `143022`: `paper_plan_status=paper_ready`, `paper_plan_reason=accepted`, then blocked only by `submit_orders_false`
+- Current project state is now an intentional control hold, not a hidden integration failure.
+- Formal go/no-go call on 2026-06-21:
+  - research-governed paper path: `GO`
+  - controlled submission enablement: `NO-GO`
+  - reason: the only remaining P3 blocker is the intentional `submit_orders_false` switch, and P5 still has no realized outcomes
+- If the team later chooses to enable controlled paper submission, use the paper submission toggle runbook:
+  - change only `DYDX_TESTNET_SUBMIT_ORDERS`
+  - immediately rerun execution checklist and paper preflight
+  - keep first-cycle scope narrow
+  - choose rollback immediately if any ambiguity appears
+- On 2026-06-21, one narrow controlled paper cycle was completed and then rolled back to hold mode:
+  - pair: `BTC-SOL`
+  - strategy id: `143022`
+  - notional: `1000`
+  - `paper_plan_status=paper_ready`
+  - fill statuses: `paper_submitted`
+  - journal row captured with non-empty `fills_json`
+  - `DYDX_TESTNET_SUBMIT_ORDERS` was then returned to `false`
+- On 2026-06-21, the second canonical pair was also run through one narrow controlled paper cycle:
+  - pair: `DOGE-ETH`
+  - strategy id: `143022`
+  - notional: `1000`
+  - `paper_plan_status=paper_ready`
+  - fill statuses: `paper_submitted`
+  - journal row captured with non-empty `fills_json`
+  - `DYDX_TESTNET_SUBMIT_ORDERS` was then returned to `false`
+- The canonical branch now has two-cycle controlled paper submission proof across both live pairs.
+- The official learning-outcome template is now pre-staged with the first two submitted cycles:
+  - `2026-06-21T19:46:40.122772+00:00_BTC-SOL_143022`
+  - `2026-06-21T20:36:48.263955+00:00_DOGE-ETH_143022`
+  - both rows intentionally leave `realized_return` blank until real outcome labels exist
+- Repo capability added on 2026-06-21:
+  - `seed-learning-outcome-template` now seeds `data/meta_learning/learning_outcome_template.csv` directly from submitted rows in `reports/paper_trading_journal.csv`
+  - verified result: two seeded rows for the canonical submitted cycles
+  - current remaining P5 blocker is only missing `realized_return`
+- Additional P5 progress on 2026-06-21:
+  - refreshed post-entry pair history allowed one honest exit computation under the chosen zero-cross rule
+  - `DOGE-ETH` outcome imported with realized return `-0.0002899012122637187`
+  - `BTC-SOL` still had no zero-cross exit in refreshed history through `2026-06-21T21:40:00+00:00`
+  - current learning store now has `1` real outcome event
+
+## Current Live Checkpoint (2026-06-19)
+- Follow-up refresh completed in this machine on cached SOL/LINK artifacts (no live indexer).
+  - Rebuilt SOL/LINK 5m pair history from:
+    - `data/raw/dydx_manual/SOL-USD_5MINS_candles.json`
+    - `data/raw/dydx_manual/LINK-USD_5MINS_candles.json`
+    - `data/raw/dydx_manual/SOL-USD_funding.json`
+    - `data/raw/dydx_manual/LINK-USD_funding.json`
+  - Commands executed successfully:
+    - `build-dydx-pair-history --left-candles ... --right-candles ...`
+    - `run-pair-detail-experiments --funding-path data/processed/dydx_funding.csv`
+    - `priority-readiness`
+    - `gap-test`
+  - Current state after rerun:
+    - `production_eligible=0`, `preferred_eligible=0`
+    - `max_total_trades=4342`, `max_two_leg_pairs_tested=103`
+    - P2 remains blocked on `passing_pairs<2:37` / `no_strategy_passes_production_gates`.
+- Clarified blocker source:
+  - `fetch-dydx-two-leg-data` still cannot reach `indexer.dydx.trade` from this environment due network/DNS restrictions (`curl` connect/resolve failures), even with `--indexer-scheme http`.
+  - So the remaining work is still a data-unlock step on a network-capable host or manual import path (e.g., Apify actor outputs saved as local dYdX payloads) before next P2 rerun.
+- Active repo: `/Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are`
+- Executed evidence refresh for the 7-day unblock run:  
+  `run-pair-detail-experiments`, `priority-readiness`, `gap-test` all completed successfully.
+- Added indexer hardening on 2026-06-19:
+  - `src/quant_platform/cli.py`: normalize bare indexer hosts, force scheme normalization via `--indexer-scheme`, and make base candidates safe when missing schemes.
+  - `src/quant_platform/cli.py`: propagate requested scheme through fetch orchestration so `indexer_scheme=http` and `indexer_scheme=https` now remain consistent during retry paths:
+    - `fetch_dydx_two_leg_data` uses `requested_indexer_base` for base candidates and applies `QPA_INDEXER_SCHEME` when forcing.
+    - `fetch_dydx_long_history_windows` now accepts explicit `indexer_base`.
+    - `run_dydx_long_history` now passes requested scheme/base into both planning and fetch stages.
+  - Shell fetch/long-history scripts now normalize host-only indexer base values to `https://...` before request construction.
+  - README guidance now defaults indexer scheme usage to HTTPS and keeps HTTP as explicit legacy override.
+  - Regression tests added for scheme handling and host-only base input.
+- P2 status is unchanged after refresh:
+  - `strategy_acceptance_checklist.csv: production_eligible=0`, `preferred_eligible=0`, `max_two_leg_passing_pairs=0`
+  - `priority-readiness.csv` shows `P2=blocked` with blocker `no_strategy_passes_production_gates`
+  - `priority_gap_test.csv` shows `P2` severity `critical`, gap `no_strategy_passes_production_gates`
+- Network hard block confirmed: direct `fetch-dydx-two-leg-data` for `SOL-USD/LINK-USD` fails in this machine due DNS/egress to `indexer.dydx.trade`; failure path includes retries to fallback IPs and curl fallback.
+- Practical workaround confirmed: `QPA_ALLOW_STALE_FETCH=true` allows fetch/build to complete using cached `data/raw/dydx_manual` artifacts when live pulls are unavailable.
+- Recommended next goal: continue unblock by running the long-history/pair-expansion cycle on a network-capable host and then re-importing into `data/raw/dydx_manual` or `data/raw/dydx_long_history` before rerunning `run-pair-detail-experiments` and acceptance gates.
+
+Context
+- Working repo is: /Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are
+- Wrapper path is /Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you
+
+Repository changes made
+- Added env-driven acceptance overrides in CLI:
+  - `QPA_MIN_TRADES`
+  - `QPA_MIN_PAIRS`
+- Added `_acceptance_gate_from_env`, `_experiment_harness`
+- Wired new harness into experiment commands:
+  - `run-fixture-experiments`, `run-pair-detail-experiments`, rerun branch in `research-spine`
+- Added readiness guard helper: `_assert_ready_for_exploration()`
+  - enforced before commands:
+    - `zscore-threshold-sweep`
+    - `run-dydx-pair-expansion`
+- Added immediate-paper adapter for testing:
+  - `src/quant_platform/dydx_immediate_submission_adapter.py`
+  - class `ImmediateSubmissionDydxOrderAdapter`
+  - `exchange_submission_capable=True`, `record_only=False`
+
+- Latest executed baseline evidence (current run context)
+- `run-pair-detail-experiments --funding-path data/processed/dydx_funding.csv` completed and now writes a refreshed `experiment_results.csv` with 24,198 rows.
+- `gap-test`: P1 pass, P2 gap, P3 gap, P4 gap, P5 gap
+- `priority-readiness`: P1 ready; P2 blocked (`no_strategy_passes_production_gates`); P3 blocked (`submit_orders_false`); P4 blocked (`strategy_or_dydx_gate_not_ready`); P5 blocked (`missing_learning_events`)
+- `strategy-acceptance-checklist`: production_eligible=0, preferred_eligible=0, 37 strategies, max_two_leg_passing_pairs=0, max_total_trades=956
+- `strategy-failure-attribution`: major blocker is `passing_pairs<2` with trades often under 100 per strategy run
+- `dydx-order-adapter-contract` with immediate adapter:
+  - contract valid, `exchange_submission_capable=True`, `record_only=False`
+- `dydx-execution-checklist`:
+  - `DYDX_TESTNET_SUBMIT_ORDERS=false`: blocked on submit flag
+  - `DYDX_TESTNET_ORDER_CLIENT_ADAPTER` now set to `quant_platform.dydx_immediate_submission_adapter:ImmediateSubmissionDydxOrderAdapter`; adapter contract is valid and exchange-capable
+- `learning_event_store` blocked: outcome events=0, outcomes remaining=100
+
+Critical blockers (current)
+- P3 is now adapter-ready; it is only waiting on `DYDX_TESTNET_SUBMIT_ORDERS=true` (kept intentionally false).
+- P5 remains off until realized paper outcomes are written.
+- No preferred-eligible strategies yet; P2 is production-eligible oriented only.
+- Runtime is now executable via `/opt/anaconda3/bin/python3` (Python 3.12.7), so core gates and experiments can run in this machine.
+- DNS to `indexer.dydx.trade` is currently resolving in this session (`curl -I https://indexer.dydx.trade/v4/candles/perpetualMarkets/SOL-USD?resolution=5MINS&limit=1` returns HTTP 200).
+- Expansion/sweep commands are still blocked by project readiness gates rather than indexer transport (`run-dydx-pair-expansion` and `zscore-threshold-sweep --run-research` return `exploration_blocked:strategy_acceptance,dydx_testnet_readiness,learning_event_store`).
+- This means fresh indexer-driven pulls can proceed when run through `fetch-dydx-two-leg-data`; blocker is currently gating policy.
+
+Latest executable refresh (concrete evidence)
+- `run-pair-detail-experiments`, `strategy-acceptance-checklist`, `strategy-failure-attribution`, `gap-test`, `priority-readiness`, `research-unblock-plan` re-ran successfully.
+- Updated blockers remain unchanged for gating: P2 `no_strategy_passes_production_gates`, P3 `submit_orders_false`, P4 not ready, P5 no outcomes.
+- Focused refresh on `--pair SOL-USD-LINK-USD --pair-id sol_link --funding-path data/processed/dydx_funding.csv` also completed:
+  - `run-pair-detail-experiments` wrote 24,198 rows to `reports/experiment_results.csv`.
+  - `strategy_acceptance_checklist` now reports:
+    - `production_eligible=0`, `preferred_eligible=0`
+    - `max_two_leg_pairs_tested=71`, `max_total_trades=1760`
+    - `top_blockers=passing_pairs<2:37`
+- `dydx-pair-expansion-plan --max-pairs 5 --limit 1000` latest top untested expansion candidates: `btc_eth`, `btc_sol`, `eth_sol` (top-ranked research candidates are clean/research-usable, while `aave_uni`, `arb_op`, `matic_arb` remain quality-blocked mostly due stale/funding missing assumptions).
+- Additional local unblock step completed: patched `src/quant_platform/cli.py` so `build-dydx-pair-history` now forwards `--funding-path` into pair-history build.
+- Rebuilt these pairs with local funding injection: `pair_btc_eth_5mins_dydx_candles_derived_history.json`, `pair_btc_sol_5mins_dydx_candles_derived_history.json`, `pair_eth_sol_5mins_dydx_candles_derived_history.json` using `data/processed/dydx_funding.csv`.
+- These pair rebuilds are now clean for funding execution assumptions in quality checks, but `production_eligible=0` and `top_blockers=passing_pairs<2:37` remain.
+- Further diagnostics with same artifacts:
+  - `QPA_MIN_TRADES=1` and `QPA_MIN_PAIRS=1` re-runs of `strategy-acceptance-checklist` still return `production_eligible=0` and `top_blockers=passing_pairs<2:37`.
+  - `strategy-failure-attribution` confirms no strategy has base+stress eligible row pairs; common run-level blockers are `trades<100`, `sharpe<1.2`, `profit_factor<1.8`, `expectancy<=0`, `max_drawdown>0.15`.
+  - `strategy_trade_count_gap` shows only `SOL-USD-LINK-USD` has 57+ eligible trades for several top strategies, but no pair currently achieves two-leg passing criteria at the production gate.
+- `research_unblock_plan` remains unchanged as the active action sequence:
+  - 1) increase trade sample size (`too_few_completed_trades`),
+  - 2) extend trade windows/history depth,
+  - 3) resolve pair universes with stale execution history.
+
+Latest command-run evidence (for quick checks)
+- `dydx_testnet_readiness` still shows `submit_orders_false`; gateway still safe by design.
+- `gap-test`: P1 pass, P2/P3/P4/P5 gap
+- `priority_gap_test`: P2 blocker remains `no_strategy_passes_production_gates`
+- Updated DNS check: `curl -I https://indexer.dydx.trade` -> HTTP 200 in this environment.
+- Immediate next-step attempt made: `fetch-dydx-two-leg-data --asset-x DOGE-USD --asset-y XRP-USD --pair-id doge_xrp --limit 1000 --derive-hedge-ratio --run-research` and `fetch-dydx-two-leg-data --asset-x DOGE-USD --asset-y LTC-USD --pair-id doge_ltc --limit 1000 --derive-hedge-ratio --run-research` both complete successfully in this environment.
+- `run-dydx-pair-expansion --max-pairs 1` is still blocked by readiness gates until P2/P3/P5 clear.
+
+Latest progress notes (2026-06-19)
+- Added additional candidate pairs to `DEFAULT_DYDX_EXPANSION_PAIRS` in `src/quant_platform/cli.py`:
+  - `DOGE-USD`/`XRP-USD`
+  - `DOGE-USD`/`LTC-USD`
+  - `ETH-USD`/`MKR-USD`
+- Added two new successful market captures + pair-history files:
+  - `pair_doge_xrp_5mins_dydx_candles_derived_history.json`
+  - `pair_doge_ltc_5mins_dydx_candles_derived_history.json`
+- Re-ran acceptance evidence after each refresh:
+  - `experiment_results` now 21,938 rows
+  - `max_two_leg_pairs_tested` increased to 73
+  - `production_eligible=0` and P2 remains `no_strategy_passes_production_gates` (top blocker `passing_pairs<2:37`)
+
+Project completion estimate: **20%** (1/5 priorities effectively operational).
+- Added recovery execution batch for fast resume after DNS restoration:
+  - `/Users/gregc/Documents/Codex/2026-06-18/chief-quantitative-research-architect-can-you/outputs/expansion-recovery-batch.md`
+- Added explicit indexer scheme override support to prevent HTTP/HTTPS ambiguity:
+  - `QPA_INDEXER_SCHEME=http|https` now forces `_fetch_url_scheme_variants()` to use one scheme only.
+  - Added regression test: `test_fetch_public_json_respects_forced_indexer_scheme`.
+  - Documented scheme override in README’s network-hardening block.
+
+Operational planning artifact
+- Added 7-day recovery plan + pre-mortem/red-team: `outputs/gap-pre-mortem-red-team-7day.md`
+- Added user-facing recap artifact: `outputs/recap-next-step.md` (in wrapper path)
+- Current project completion snapshot (P1–P5): **20%** (1/5 priorities ready)
+
+Guardrails to preserve
+- Do not enable submit_orders without explicit intent and review.
+- Keep paper submission tied to gating command outputs:
+  - `strategy_acceptance` must be ready
+  - `dydx_testnet_readiness` must be ready
+  - learning evidence should be tracked before claiming modeling-readiness.
+
+Recommended pinned-context usage
+- Add this file explicitly to future prompts:
+  - “Use /Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are/memory.md as context.”
+- If using thread context pinning, pin this same file path.
+
+Project memory artifact
+- Added `project_objective.md` from your provided “QUANTIZED DYDX STATISTICAL ARBITRAGE AGENT MEMORY” text.
+- This objective file is now connected to the operational spine:
+  - `research_spine` now emits a `project_objective` step in `reports/research_spine.csv`.
+  - `priority-runbook` now includes a “Project Objective” section with the source path and objective snippet.
+
+Latest live checkpoint (continued objective pursuit):
+- Network became usable after permission-granted outbound access; HTTP endpoint mode is confirmed and usable via `--indexer-scheme http`.
+- New successful two-leg captures added:
+  - `pair_eth_mkr_5mins_dydx_candles_derived_history.json`
+  - `pair_eth_ada_5mins_dydx_candles_derived_history.json`
+  - `pair_eth_atom_5mins_dydx_candles_derived_history.json`
+- Added 12-window long-history rebuild for ETH-MKR:
+  - `pair_eth_mkr_5mins_dydx_long_history_derived_history.json`
+- Evidence rerun results after new additions:
+  - `pair-detail history dataset(s) = 152`
+  - `two-leg pairs tested = 106`
+  - `production_eligible = 0`
+  - `preferred_eligible = 0`
+  - `max_two_leg_passing_pairs = 0`
+  - `P2 strategy_acceptance` remains `no_strategy_passes_production_gates`
+- Current top blocker remains:
+  - trades still below production thresholds in many strategies and Sharpe/profit/drawdown constraints dominate.
+
+Latest resumed diagnostic (2026-06-20):
+- `dydx-local-pair-universe` was run again against the current local manual cache.
+- Result:
+  - `139` rows with `status=rebuilt`
+  - `14` rows with `status=failed`
+  - every successful row was `rebuilt_existing_pair_history`
+  - **0 new successful pair builds**
+- Acceptance evidence rerun after that sweep:
+  - `run-pair-detail-experiments --funding-path data/processed/dydx_funding.csv`
+  - `priority-readiness`
+  - `gap-test`
+- P2 remained unchanged:
+  - `production_eligible=0`
+  - `preferred_eligible=0`
+  - `max_two_leg_pairs_tested=143`
+  - `max_two_leg_passing_pairs=0`
+  - blocker still `passing_pairs<2:37`
+- Official dYdX docs still describe the same Indexer HTTP API methods for `Get Candles` and `Get Historical Funding`, so the fetch issue is not proven to be an API route-shape change.
+- Stronger failure-mode split is now clear:
+  - some small-sample runs pass most non-trade gates but still fail `trades<100`
+  - large-sample `SOL-USD-LINK-USD` runs can clear trade count but then fail `profit_factor`, `sharpe`, `drawdown`, and `expectancy`
+- Practical implication:
+  - more history still matters, but **more of the same pair alone may not be enough**
+  - the next networked attempt should refresh `SOL-USD/LINK-USD` and also add adjacent candidates such as `ETH-USD/LINK-USD`, `BTC-USD/LINK-USD`, and `ETH-USD/SOL-USD`
+
+Latest family verdict (2026-06-21):
+- Fresh staged reversion family rerun completed:
+  - output dir: `work/staged_reversion_family_live_2026_06_21`
+  - `9` combos evaluated
+  - `production_eligible = 0`
+  - `preferred_eligible = 0`
+  - blocker remained `passing_pairs<2` for every combo
+- Best staged combo was `combo_08`:
+  - `total_trades = 1020`
+  - `median_profit_factor = 0.5106462312797703`
+  - `median_sharpe = -5.543970021058469`
+  - `worst_drawdown = 0.20707595687081892`
+- Pair-level read:
+  - `BTC-USD-SOL-USD` improved versus deeper-family failure levels but still failed hard:
+    - best local staged variant reached `profit_factor = 0.7233880055098585`
+    - best local staged variant reached `sharpe = -3.3899021009172383`
+    - best local staged variant reached `drawdown = 0.1596723480073381`
+  - `DOGE-USD-ETH-USD` remained the anchor drag across all staged combos:
+    - profit factor stayed near `0.33` to `0.34`
+    - sharpe stayed near `-8.18` to `-9.31`
+    - drawdown stayed near `0.207` to `0.270`
+- Comparison to deeper family:
+  - staged reversion was materially less bad than the deeper family batch
+  - but it still did **not** open a viable replacement branch
+  - practical conclusion stays the same:
+    - keep canonical branch `BTC-SOL A5 + DOGE-ETH C2`
+    - do not promote staged reversion
+    - next highest-value work remains P5 learning accumulation and branch evidence tightening, not more staged-family tuning
+
+Canonical checkpoint refresh (2026-06-21):
+- `reports/priority_readiness.csv` currently reads:
+  - `P2 strategy_acceptance = ready`
+    - `production_eligible = 1`
+    - `preferred_eligible = 0`
+    - `max_two_leg_pairs_tested = 2`
+    - `max_two_leg_passing_pairs = 2`
+  - `P3 dydx_testnet_readiness = blocked`
+    - blocker is intentionally `submit_orders_false`
+  - `P4 paper_execution_gate = blocked`
+    - blocked only because `dydx_ready = False` while submissions remain disabled
+  - `P5 learning_event_store = blocked`
+    - `trade_store_rows = 1`
+    - `outcomes = 1`
+    - `outcomes_remaining = 99`
+- Practical state read:
+  - the project is no longer blocked on strategy acceptance
+  - it is intentionally paused on submission risk controls
+  - the real evidence frontier is still P5 realized outcome accumulation
+- Best immediate operating interpretation:
+  - keep the canonical branch active
+  - keep `submit_orders = false` unless a deliberate paper re-arm is approved
+  - use branch-evidence tightening and learning workflow hygiene as the default local workstream
+
+ML filter layer added (2026-06-21):
+- New module: `src/quant_platform/ml_filter.py`
+- New CLI commands:
+  - `build-ml-trade-filter-dataset`
+  - `train-ml-trade-filter`
+  - `shadow-ml-trade-filter`
+- Contract implemented:
+  - one row = one candidate trade entry event
+  - label = profitable after costs under current exit logic
+  - role = filter only
+- Dataset is leakage-safe by construction:
+  - features are captured from the entry row and backward-looking transforms only
+  - labels are built from the same signal/exit path and after-cost return accumulation used for strategy evaluation
+- Baseline modeling path now includes:
+  - logistic regression
+  - XGBoost when installed
+  - LightGBM when installed
+  - local boosted-tree fallback when neither external package is available in the environment
+- Walk-forward outputs now write:
+  - candidate dataset csv
+  - fold-by-fold comparison csv
+  - prediction csv
+  - summary csv
+  - best-model pickle
+  - manifest json
+- Shadow mode is available as a separate scoring pass and does not change execution behavior.
+
+ML shadow segmentation read (2026-06-21):
+- Shadow output now exists at:
+  - `reports/ml_trade_filter_shadow_predictions.csv`
+- Current saved best-model artifact selected:
+  - `gradient_boosting_fallback`
+  - note: logistic regression had stronger filtered PF, but fallback won the current blended internal model-pick score because of a slightly stronger combined Sharpe/expectancy score
+- Aggregate shadow read:
+  - total rows `1176`
+  - shadow-take rows `186`
+  - mean realized return all rows `-0.1490`
+  - mean realized return taken rows `+0.0333`
+  - mean realized return skipped rows `-0.1833`
+- Best current interpretation:
+  - the filter is genuinely separating better from worse trades
+  - the result supports shadow usage
+  - it does **not** support broad live behavior change yet
+- Canonical branch signal was encouraging:
+  - `BTC-USD-SOL-USD`
+    - take rate `12%`
+    - mean take return `+0.0225`
+    - taken-win rate `100%`
+  - `DOGE-USD-ETH-USD`
+    - take rate `33.3%`
+    - mean take return `+0.0989`
+    - taken-win rate `88.2%`
+- Practical next move:
+  - narrow the next ML shadow comparison toward the canonical branch first
+  - compare logistic regression vs fallback directly before using one as the standing shadow default
+
+Branch-specific ML comparison (2026-06-21):
+- Narrowed comparison set used:
+  - `BTC-USD-SOL-USD`
+  - `DOGE-USD-ETH-USD`
+  - `BTC-USD-ETH-USD`
+  - `BTC-USD-DOGE-USD`
+  - `BTC-USD-LINK-USD`
+- Using the saved walk-forward prediction set, neither model was promotion-ready on this narrowed out-of-sample slice.
+- Model verdict:
+  - `gradient_boosting_fallback` clearly outperformed `logistic_regression`
+  - logistic over-selected and degraded branch-specific quality
+- Canonical branch read:
+  - `BTC-USD-SOL-USD`
+    - fallback: selective and slightly positive
+    - logistic: not helpful
+  - `DOGE-USD-ETH-USD`
+    - fallback: selective and positive
+    - logistic: took far too many trades and flipped negative
+- Current standing recommendation:
+  - keep ML in shadow mode only
+  - if one model must remain the shadow default, use `gradient_boosting_fallback`
+  - do not promote either model to behavior-changing use yet
+
+Separate-family + combo framework added (2026-06-21):
+- New module:
+  - `src/quant_platform/family_matrix.py`
+- New CLI command:
+  - `strategy-family-matrix`
+- Workflow behavior:
+  - runs every strategy family separately
+  - writes a per-family report folder
+  - picks the best strategy inside each family
+  - builds pairwise combo tests from family winners
+  - also builds one full-stack combo from all family winners
+- Main outputs:
+  - `family_registry.csv`
+  - `family_separate_summary.csv`
+  - `family_best_strategies.csv`
+  - `family_combo_summary.csv`
+  - `family_combo_pair_summary.csv`
+  - `family_combo_detail.csv`
+  - `family_matrix_runbook.md`
+- Smoke verification completed successfully on:
+  - `BTC-USD-SOL-USD`
+  - `DOGE-USD-ETH-USD`
+  - `BTC-USD-LINK-USD`
+  - output dir: `work/strategy_family_matrix_smoke`
+
+Research quantization layer added (2026-06-21):
+- New module:
+  - `src/quant_platform/research_quantization.py`
+- New CLI command:
+  - `research-quantization`
+- Workflow behavior:
+  - reads an existing family-matrix output folder
+  - converts family and combo candidates into a machine-readable scorecard
+  - ranks candidates into `promote_now`, `shadow_ready`, `watchlist`, or `reject`
+  - keeps execution behavior unchanged
+- Main outputs:
+  - `research_quantization_ranked.csv`
+  - `research_quantization_top.csv`
+  - `research_quantization_summary.csv`
+  - `research_quantization_runbook.md`
+- Current canonical readout:
+  - candidates scored: `386`
+  - `promote_now`: `0`
+  - `shadow_ready`: `0`
+  - `watchlist`: `23`
+  - `reject`: `363`
+  - top current anchor: `regime` / `Regime Filtered Stat-Arb`

@@ -1,0 +1,26 @@
+name,category,role,direction,description,expected_range,required_tests
+cointegration,relationship,filter,higher_is_better,Evidence that a linear spread is stationary.,boolean or p-value/statistic,walk_forward_stability;false_discovery_control;regime_split
+hedge_ratio,relationship,diagnostic,contextual,Position ratio that defines the spread between assets.,real number,rolling_stability;trade_pnl_sensitivity
+beta,relationship,risk,contextual,Market or pair sensitivity used for exposure normalization.,real number,exposure_neutrality;drawdown_attribution
+ecm_x,ecm,entry,signed,Error correction term or adjustment coefficient for asset X.,real number,granger_incremental_value;lead_lag_stability
+ecm_y,ecm,entry,signed,Error correction term or adjustment coefficient for asset Y.,real number,granger_incremental_value;lead_lag_stability
+ecm_strength,ecm,ranking,higher_is_better,Magnitude and reliability of error correction.,0-1 or real number,incremental_alpha;half_life_consistency
+half_life,mean_reversion,filter,bounded_optimal,Estimated time for spread deviation to decay by half.,positive real number,holding_period_fit;capacity_vs_decay
+hurst,mean_reversion,filter,lower_is_better_below_0_5,Long memory statistic; below 0.5 suggests mean reversion.,0-1,regime_conditioned_predictiveness;lookback_sensitivity
+zscore,mean_reversion,entry,absolute_higher,Standardized spread deviation.,real number,threshold_sweep;decay_after_signal
+rolling_zscore,mean_reversion,entry,absolute_higher,Z-score computed on rolling windows.,real number,window_sensitivity;threshold_sweep
+spread,mean_reversion,diagnostic,signed,Hedged price differential.,real number,stationarity;jump_risk
+pearson,dependence,filter,absolute_higher,Linear correlation.,-1 to 1,nonlinear_incremental_value;breakdown_detection
+spearman,dependence,filter,absolute_higher,Rank correlation.,-1 to 1,monotonic_dependence;tail_robustness
+kendall,dependence,filter,absolute_higher,Concordance-based rank dependence.,-1 to 1,copula_consistency;small_sample_stability
+copula,copula,ranking,contextual,Joint distribution model or copula family fit.,categorical/parameters,tail_dependence_alpha;calibration_error
+conditional_probabilities,copula,entry,distortion_higher,Conditional probability distortion between observed and expected co-movement.,0-1,probability_calibration;trade_outcome_prediction
+sharpe,backtest,ranking,higher_is_better,Annualized excess return per volatility.,real number,deflated_sharpe;walk_forward
+sortino,backtest,ranking,higher_is_better,Return per downside volatility.,real number,downside_robustness;walk_forward
+var,risk,risk,lower_is_better,Value-at-risk loss estimate.,positive loss,tail_backtest;exception_rate
+cvar,risk,risk,lower_is_better,Expected shortfall beyond VaR.,positive loss,tail_backtest;stress_periods
+drawdown,risk,risk,lower_is_better,Peak-to-trough equity loss.,0-1,max_dd_constraint;recovery_time
+win_rate,backtest,diagnostic,contextual,Fraction of winning trades.,0-1,payoff_ratio_joint_test;stability
+ml_confidence,ml,ranking,calibrated_higher,Model-estimated probability or confidence for favorable outcome.,0-1,calibration;feature_leakage;walk_forward
+profile_match,ml,filter,higher_is_better,Similarity to historically successful trade profiles.,0-1,nearest_neighbor_outcomes;regime_split
+ou_optimal,mean_reversion,entry,higher_is_better,Ornstein-Uhlenbeck optimal entry/exit assessment.,real number or 0-1,ou_parameter_stability;threshold_sweep

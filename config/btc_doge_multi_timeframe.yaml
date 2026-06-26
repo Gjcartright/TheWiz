@@ -1,0 +1,26 @@
+pair_id: btc_doge
+asset_x: BTC-USD
+asset_y: DOGE-USD
+funding_path: data/processed/dydx_funding.csv
+indexer_base: https://indexer.dydx.trade
+timeframes:
+  - resolution: 5MINS
+    windows: 12
+    limit: 1000
+    role: primary_entry_research
+  - resolution: 15MINS
+    windows: 8
+    limit: 1000
+    role: confirmation_research
+  - resolution: 1HOUR
+    windows: 8
+    limit: 1000
+    role: regime_context
+  - resolution: 4HOURS
+    windows: 6
+    limit: 500
+    role: macro_regime_context
+  - resolution: 1DAY
+    windows: 1
+    limit: 365
+    role: macro_filter_context

@@ -1,0 +1,119 @@
+costs:
+  taker_fee_bps: 5.0
+  maker_fee_bps: 2.0
+  slippage_bps: 4.0
+  execution_risk_bps: 2.0
+  funding_bps_per_day: 1.0
+  partial_fill_probability: 0.10
+  partial_fill_fraction: 0.50
+  partial_fill_penalty_bps: 2.0
+risk:
+  max_pair_weight: 0.08
+  max_cluster_weight: 0.25
+  max_gross_exposure: 1.5
+  max_drawdown_stop: 0.10
+research:
+  min_completed_trades: 100
+  preferred_completed_trades: 250
+  target_profit_factor: 1.8
+  preferred_profit_factor: 2.0
+  target_sharpe: 1.2
+  preferred_sharpe: 1.5
+  max_drawdown: 0.15
+  preferred_max_drawdown: 0.10
+  min_pairs: 2
+  required_cost_buckets:
+    - base
+    - stress
+  required_regime: ALL
+data_sources:
+  crypto_wizards_discovery_gate:
+    min_sharpe: 2.0
+    return_field: returns_total
+    min_return_total: 0.20
+    min_abs_spread_or_zscore: null
+    require_strategy_family: false
+    strategy_families:
+      - DynSpread
+      - DynZScoreR
+      - OUSpread
+      - OUZScoreR
+      - StaticSpread
+      - StaticZScoreR
+      - Copula
+    flag_copula_arbitrage: false
+    active_setup_rule: "Sharpe > 2.0 and returns_total > 20%. Z-score, spread family, and copula are enrichment/audit fields, not initial discovery blockers."
+  operating_flow:
+    - crypto_wizards_api_discovery
+    - apify_dydx_execution_screen
+    - local_point_in_time_acceptance
+    - dashboard_visual_audit
+  source_authority:
+    discovery:
+      sources:
+        - crypto_wizards_api
+        - crypto_wizards_dashboard
+      allowed_buckets:
+        - WATCH
+        - FETCH_MORE_DATA
+        - REJECT
+      promotion_authority: false
+    execution_screen:
+      sources:
+        - apify_mcp
+        - dydx_market_data
+        - local_cache
+      allowed_buckets:
+        - WATCH
+        - FETCH_MORE_DATA
+        - REJECT
+      promotion_authority: false
+    acceptance:
+      sources:
+        - local_point_in_time_backtests
+        - local_cost_model
+        - local_walk_forward
+      allowed_buckets:
+        - PROMOTE
+        - WATCH
+        - FETCH_MORE_DATA
+        - REJECT
+      promotion_authority: true
+    audit:
+      sources:
+        - crypto_wizards_dashboard
+        - reports_dashboard
+      promotion_authority: false
+  crypto_wizards_api_intervals:
+    - Daily
+    - Hourly
+    - Min5
+  crypto_wizards_api_interval_notes: "The tested API path rejected 4H variants; use dashboard 4H only as manual audit unless a new API route is confirmed."
+  market_data_priority:
+    - apify_mcp
+    - local_cache
+    - direct_dydx_indexer_fallback
+  funding_priority:
+    - apify_mcp
+    - local_cache
+    - direct_dydx_indexer_fallback
+  direct_dydx_indexer_policy: fallback_only
+  direct_dydx_indexer_blocker: direct_indexer_requires_explicit_override_or_cache_miss_diagnostic
+  apify_mcp_required_for_refresh: true
+  notes: "Use Apify MCP as the primary refresh path. Direct dYdX indexer calls are diagnostic/fallback only so DNS/connectivity issues do not block the research pipeline."
+execution:
+  mode: dry_run
+  dydx:
+    paper_trading:
+      network: testnet
+      node_url: oegs-testnet.dydx.exchange:443
+      rest_indexer: https://indexer.v4testnet.dydx.exchange
+      websocket_indexer: wss://indexer.v4testnet.dydx.exchange/v4/ws
+      faucet_url: https://faucet.v4testnet.dydx.exchange
+      submit_orders: false
+      wallet_address_env: DYDX_TESTNET_WALLET_ADDRESS
+      private_key_env: DYDX_TESTNET_PRIVATE_KEY
+crypto_wizards:
+  base_url_env: CRYPTO_WIZARDS_BASE_URL
+  api_key_env: CRYPTO_WIZARDS_API_KEY
+  endpoints: []

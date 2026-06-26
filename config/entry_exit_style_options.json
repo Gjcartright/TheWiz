@@ -1,0 +1,645 @@
+{
+  "version": "2026-06-22",
+  "purpose": "Reusable entry/exit style menu for testing regular and creative trade lifecycle logic across pair strategies.",
+  "signal_convention": {
+    "long_spread": "signal > 0: long asset Y and short asset X",
+    "short_spread": "signal < 0: short asset Y and long asset X",
+    "flat": "signal = 0: no open spread position"
+  },
+  "test_dimensions": {
+    "strategy": {
+      "description": "The base strategy or signal family being tested, such as zscore, copula, ECM, Ghost Ambush, or portfolio ranking."
+    },
+    "entry_style": {
+      "description": "The condition or lifecycle pattern that opens a position."
+    },
+    "exit_style": {
+      "description": "The rule that closes, scales down, reverses, or invalidates a position."
+    },
+    "regime_filter": {
+      "description": "A market-state gate that decides whether the signal is allowed."
+    },
+    "regime_behavior": {
+      "description": "Whether the regime filter applies only to entries or also forces exits."
+    }
+  },
+  "regime_filters": [
+    {
+      "id": "all",
+      "rule": "true",
+      "purpose": "Baseline with no regime gate."
+    },
+    {
+      "id": "range_only",
+      "rule": "regime == \"range\"",
+      "purpose": "Only trade mean-reversion-friendly periods."
+    },
+    {
+      "id": "bull_only",
+      "rule": "regime == \"bull\"",
+      "purpose": "Check whether dislocations repair better in rising markets."
+    },
+    {
+      "id": "bear_only",
+      "rule": "regime == \"bear\"",
+      "purpose": "Check whether downside regimes create useful spread repair or only drawdown."
+    },
+    {
+      "id": "crisis_only",
+      "rule": "regime == \"crisis\"",
+      "purpose": "Isolate tail-stress behavior."
+    },
+    {
+      "id": "exclude_crisis",
+      "rule": "regime != \"crisis\"",
+      "purpose": "Avoid relationship breaks during stress."
+    },
+    {
+      "id": "low_tail_only",
+      "rule": "tail_dependence < 0.65",
+      "purpose": "Avoid crash-correlation behavior."
+    },
+    {
+      "id": "calm_vol_only",
+      "rule": "realized_volatility_percentile < 0.60",
+      "purpose": "Trade only when spread behavior is calmer."
+    },
+    {
+      "id": "exclude_high_vol",
+      "rule": "realized_volatility_percentile < 0.80",
+      "purpose": "Skip the worst volatility states."
+    },
+    {
+      "id": "range_low_tail",
+      "rule": "regime == \"range\" && tail_dependence < 0.65",
+      "purpose": "Only trade calm relationship-repair conditions."
+    },
+    {
+      "id": "stable_hedge_regime",
+      "rule": "hedge_ratio_stability >= 0.70",
+      "purpose": "Only trade when the hedge relationship is stable."
+    },
+    {
+      "id": "exclude_crisis_and_high_vol",
+      "rule": "regime != \"crisis\" && realized_volatility_percentile < 0.80",
+      "purpose": "Avoid the two states most likely to widen drawdown."
+    }
+  ],
+  "regime_behaviors": [
+    {
+      "id": "entry_only",
+      "description": "Use the regime filter only to allow or block new entries. Existing trades exit through their normal lifecycle."
+    },
+    {
+      "id": "hard_exit",
+      "description": "Use the regime filter for entry, and close immediately when the regime becomes hostile after entry."
+    }
+  ],
+  "regular": [
+    {
+      "id": "fixed_threshold",
+      "name": "Fixed Threshold",
+      "entry_style": "hard_threshold",
+      "exit_style": "neutral_threshold",
+      "entry": "Enter when the base signal crosses a fixed entry threshold.",
+      "exit": "Exit when the base signal returns to a fixed neutral threshold.",
+      "stop": "Optional fixed stop if the signal moves beyond a maximum adverse threshold.",
+      "best_for": ["zscore", "copula", "ecm"]
+    },
+    {
+      "id": "signal_flip",
+      "name": "Signal Flip",
+      "entry_style": "direction_change",
+      "exit_style": "stop_and_reverse",
+      "entry": "Enter long or short when the base signal points in that direction.",
+      "exit": "Exit and reverse when the opposite signal appears.",
+      "stop": "Optional drawdown or volatility stop to avoid churn.",
+      "best_for": ["continuous_spread", "ranking", "regime"]
+    },
+    {
+      "id": "mean_reversion_exit",
+      "name": "Mean Reversion Exit",
+      "entry_style": "dislocation",
+      "exit_style": "mean_reversion",
+      "entry": "Enter when spread, z-score, or copula distortion is dislocated.",
+      "exit": "Exit when the dislocation returns near fair value.",
+      "stop": "Stop if the dislocation expands by a defined volatility multiple.",
+      "best_for": ["mean_reversion", "copula", "ou"]
+    },
+    {
+      "id": "time_stop",
+      "name": "Time Stop",
+      "entry_style": "base_signal",
+      "exit_style": "max_holding_period",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit after a maximum number of bars if the trade has not resolved.",
+      "stop": "Hard max bars in trade.",
+      "best_for": ["slow_reversion_control", "half_life", "tail_event"]
+    },
+    {
+      "id": "stop_loss",
+      "name": "Stop Loss",
+      "entry_style": "base_signal",
+      "exit_style": "loss_limit",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit if open trade loss exceeds a fixed limit.",
+      "stop": "Fixed adverse PnL, spread, or z-score limit.",
+      "best_for": ["all"]
+    },
+    {
+      "id": "take_profit",
+      "name": "Take Profit",
+      "entry_style": "base_signal",
+      "exit_style": "profit_target",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit when target profit is reached.",
+      "stop": "Pair with stop_loss or volatility_stop.",
+      "best_for": ["fast_reversion", "tail_event", "copula"]
+    },
+    {
+      "id": "trailing_stop",
+      "name": "Trailing Stop",
+      "entry_style": "base_signal",
+      "exit_style": "giveback_limit",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit when a profitable trade gives back more than the allowed amount.",
+      "stop": "Trailing giveback from best open PnL.",
+      "best_for": ["volatile_pairs", "trend_contaminated_reversion"]
+    },
+    {
+      "id": "partial_exit",
+      "name": "Partial Exit",
+      "entry_style": "full_size_signal",
+      "exit_style": "staged_reduction",
+      "entry": "Enter full size when the setup triggers.",
+      "exit": "Reduce size at multiple target milestones.",
+      "stop": "Remaining size exits on neutral signal, time stop, or loss stop.",
+      "best_for": ["high_variance_pairs", "copula", "mean_reversion"]
+    },
+    {
+      "id": "volatility_stop",
+      "name": "Volatility Stop",
+      "entry_style": "base_signal",
+      "exit_style": "volatility_scaled_adverse_move",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit if the spread moves against the trade by N recent volatility units.",
+      "stop": "Volatility-normalized spread loss.",
+      "best_for": ["crypto", "dynamic_threshold", "ou"]
+    },
+    {
+      "id": "max_drawdown_stop",
+      "name": "Max Drawdown Stop",
+      "entry_style": "base_signal",
+      "exit_style": "trade_drawdown_limit",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "Exit if trade-level drawdown exceeds the limit.",
+      "stop": "Open trade drawdown cap.",
+      "best_for": ["all"]
+    },
+    {
+      "id": "break_even_stop",
+      "name": "Break-Even Stop",
+      "entry_style": "base_signal",
+      "exit_style": "protect_open_profit",
+      "entry": "Enter on the normal strategy signal.",
+      "exit": "After the trade reaches a profit trigger, move stop to break-even.",
+      "stop": "Break-even after initial favorable move.",
+      "best_for": ["noisy_reversion", "copula"]
+    },
+    {
+      "id": "risk_reward_target",
+      "name": "Risk Reward Target",
+      "entry_style": "base_signal",
+      "exit_style": "fixed_reward_to_risk",
+      "entry": "Enter on the normal strategy signal with a defined risk unit.",
+      "exit": "Exit at a fixed reward-to-risk multiple, such as 2R.",
+      "stop": "Initial R stop.",
+      "best_for": ["execution_testing", "paper_trading"]
+    },
+    {
+      "id": "scale_in",
+      "name": "Scale In",
+      "entry_style": "staged_entry",
+      "exit_style": "base_exit",
+      "entry": "Add position as signal strength increases or confirmation improves.",
+      "exit": "Exit normally or reduce when signal weakens.",
+      "stop": "Stop if maximum planned size is reached and signal still deteriorates.",
+      "best_for": ["ecm", "ml", "composite"]
+    },
+    {
+      "id": "scale_out",
+      "name": "Scale Out",
+      "entry_style": "base_signal",
+      "exit_style": "gradual_exit",
+      "entry": "Enter full or planned size on the base signal.",
+      "exit": "Reduce gradually as target is approached.",
+      "stop": "Final remainder exits on neutral, time stop, or drawdown stop.",
+      "best_for": ["mean_reversion", "profit_ladder"]
+    },
+    {
+      "id": "regime_exit",
+      "name": "Regime Exit",
+      "entry_style": "base_signal",
+      "exit_style": "regime_break",
+      "entry": "Enter on the normal signal only when regime allows trading.",
+      "exit": "Exit if market regime changes to a hostile state.",
+      "stop": "Immediate regime invalidation.",
+      "best_for": ["regime", "tail_event", "portfolio"]
+    },
+    {
+      "id": "funding_exit",
+      "name": "Funding Exit",
+      "entry_style": "funding_aware_signal",
+      "exit_style": "funding_invalidation",
+      "entry": "Enter only when funding is helpful or small relative to expected edge.",
+      "exit": "Exit if funding flips hostile or exceeds expected edge.",
+      "stop": "Funding drag cap.",
+      "best_for": ["perpetuals", "two_leg"]
+    },
+    {
+      "id": "liquidity_exit",
+      "name": "Liquidity Exit",
+      "entry_style": "liquidity_gated_signal",
+      "exit_style": "liquidity_break",
+      "entry": "Enter only when liquidity, spread, and slippage are acceptable.",
+      "exit": "Exit early if liquidity becomes too thin.",
+      "stop": "Execution risk cap.",
+      "best_for": ["live_trading", "paper_trading"]
+    }
+  ],
+  "creative": [
+    {
+      "id": "rubber_band_snap",
+      "name": "Rubber Band Snap",
+      "personality": "Classic mean reversion with exhaustion.",
+      "entry": "Enter when the spread stretches far from fair value and the last bar shows exhaustion.",
+      "exit": "Exit when the spread snaps back to the inner neutral band.",
+      "danger": "Bad when the stretch is actually the start of a trend."
+    },
+    {
+      "id": "second_knock",
+      "name": "Second Knock",
+      "personality": "Patient fade.",
+      "entry": "Wait for the signal to hit the extreme, pull back, then fail again at the same extreme.",
+      "exit": "Exit partial size at midpoint and final size at mean.",
+      "danger": "Can miss fast one-shot reversions."
+    },
+    {
+      "id": "trap_door_fade",
+      "name": "Trap Door Fade",
+      "personality": "False-break hunter.",
+      "entry": "Let the signal break the extreme level, then enter only when it falls back inside.",
+      "exit": "Exit at the old centerline or after a fixed snapback window.",
+      "danger": "Gets hurt if the breakout is real."
+    },
+    {
+      "id": "pressure_cooker",
+      "name": "Pressure Cooker",
+      "personality": "Persistence before release.",
+      "entry": "Enter only after dislocation stays extreme for several bars without accelerating.",
+      "exit": "Exit when pressure releases below the persistence band.",
+      "danger": "Can enter late."
+    },
+    {
+      "id": "first_crack",
+      "name": "First Crack",
+      "personality": "Early reversal detector.",
+      "entry": "Enter when the extreme signal makes its first lower high or higher low.",
+      "exit": "Exit when half the dislocation is repaired.",
+      "danger": "False cracks happen often."
+    },
+    {
+      "id": "tide_turn",
+      "name": "Tide Turn",
+      "personality": "Regime-aware reversal.",
+      "entry": "Enter only when regime shifts from hostile or trending into range or calm while spread is still stretched.",
+      "exit": "Exit when regime turns hostile again.",
+      "danger": "Regime labels can lag."
+    },
+    {
+      "id": "magnet_pull",
+      "name": "Magnet Pull",
+      "personality": "Fair-value gravity.",
+      "entry": "Enter when the distance to fair value is large and expected pull exceeds fees and funding.",
+      "exit": "Exit at fair value or when expected pull drops below cost.",
+      "danger": "Fair value can move."
+    },
+    {
+      "id": "vanishing_edge",
+      "name": "Vanishing Edge",
+      "personality": "Leave when the reason disappears.",
+      "entry": "Enter when signal strength and confirmation both pass.",
+      "exit": "Exit the moment either the signal or confirmation falls below maintenance threshold.",
+      "danger": "May exit too early in noisy chop."
+    },
+    {
+      "id": "three_key_vault",
+      "name": "Three-Key Vault",
+      "personality": "High-conviction only.",
+      "entry": "Enter only when spread, probability, and correction-force signals all agree.",
+      "exit": "Exit when two keys fail.",
+      "danger": "Very selective, low trade count."
+    },
+    {
+      "id": "two_key_scout",
+      "name": "Two-Key Scout",
+      "personality": "Balanced conviction.",
+      "entry": "Enter when any two of three signals agree, but use smaller size.",
+      "exit": "Exit when only one signal remains.",
+      "danger": "Can admit weaker trades."
+    },
+    {
+      "id": "signal_parliament",
+      "name": "Signal Parliament",
+      "personality": "Voting system.",
+      "entry": "Each model gets a vote weighted by recent reliability; enter when the vote clears quorum.",
+      "exit": "Exit when quorum breaks.",
+      "danger": "Overreacts if reliability weights are unstable."
+    },
+    {
+      "id": "king_of_the_hill",
+      "name": "King Of The Hill",
+      "personality": "Only trade the best opportunity.",
+      "entry": "Enter only if this pair is ranked near the top of the whole universe.",
+      "exit": "Exit when another pair takes the crown.",
+      "danger": "Can churn capital if ranks are noisy."
+    },
+    {
+      "id": "falling_crown",
+      "name": "Falling Crown",
+      "personality": "Rank decay exit.",
+      "entry": "Enter when pair breaks into the top-rank bucket.",
+      "exit": "Exit only after it falls two buckets, not one.",
+      "danger": "Slower exits."
+    },
+    {
+      "id": "shark_fin",
+      "name": "Shark Fin",
+      "personality": "Extreme spike fade.",
+      "entry": "Enter when signal spikes sharply then immediately curls back.",
+      "exit": "Exit fast at partial normalization.",
+      "danger": "Designed for quick trades, not slow reversion."
+    },
+    {
+      "id": "iceberg_melt",
+      "name": "Iceberg Melt",
+      "personality": "Slow compression trade.",
+      "entry": "Enter as dislocation gradually compresses from an extreme, not on the extreme itself.",
+      "exit": "Exit in stages as compression milestones are reached.",
+      "danger": "Needs patience and good time stops."
+    },
+    {
+      "id": "coiled_spring",
+      "name": "Coiled Spring",
+      "personality": "Range compression before move.",
+      "entry": "Wait for volatility to compress while spread remains stretched, then enter on first move toward mean.",
+      "exit": "Exit when volatility expands or mean is reached.",
+      "danger": "Spring can release the wrong way."
+    },
+    {
+      "id": "circuit_breaker",
+      "name": "Circuit Breaker",
+      "personality": "Risk-first.",
+      "entry": "Normal entry rules are allowed only if tail risk, liquidity, and funding are green.",
+      "exit": "Exit immediately if any risk circuit trips.",
+      "danger": "May cut otherwise profitable trades."
+    },
+    {
+      "id": "storm_window",
+      "name": "Storm Window",
+      "personality": "Post-crisis reversion.",
+      "entry": "After a volatility shock, wait for stress to cool before entering.",
+      "exit": "Exit quickly; no heroic holds.",
+      "danger": "Can miss the exact bottom or top."
+    },
+    {
+      "id": "smoke_alarm",
+      "name": "Smoke Alarm",
+      "personality": "Tail-risk escape.",
+      "entry": "Enter normal mean-reversion trades only when tail dependence is low.",
+      "exit": "Exit if tail dependence rises faster than normal.",
+      "danger": "Can exit from harmless volatility."
+    },
+    {
+      "id": "funding_wind",
+      "name": "Funding Wind",
+      "personality": "Carry-aware.",
+      "entry": "Enter only when funding helps or is small relative to expected edge.",
+      "exit": "Exit if funding flips against the position.",
+      "danger": "Funding can change after entry."
+    },
+    {
+      "id": "time_fuse",
+      "name": "Time Fuse",
+      "personality": "No stuck trades.",
+      "entry": "Enter normally.",
+      "exit": "Exit after N bars if the trade has not worked.",
+      "danger": "May close right before delayed reversion."
+    },
+    {
+      "id": "half_life_fuse",
+      "name": "Half-Life Fuse",
+      "personality": "Science-based time stop.",
+      "entry": "Enter only if expected half-life is tradable.",
+      "exit": "Exit after 1-2 half-lives if not resolved.",
+      "danger": "Half-life estimates can be unstable."
+    },
+    {
+      "id": "profit_ladder",
+      "name": "Profit Ladder",
+      "personality": "Harvest in pieces.",
+      "entry": "Enter full or scaled size.",
+      "exit": "Take partial profits at 25%, 50%, 75%, and 100% mean reversion.",
+      "danger": "Can reduce profits on clean full reversions."
+    },
+    {
+      "id": "moonwalk_exit",
+      "name": "Moonwalk Exit",
+      "personality": "Trail the mean.",
+      "entry": "Enter on dislocation.",
+      "exit": "Trail exit behind the moving fair value instead of using a fixed mean.",
+      "danger": "Fair-value drift can delay exits."
+    },
+    {
+      "id": "stop_and_flip",
+      "name": "Stop And Flip",
+      "personality": "Always engaged.",
+      "entry": "Enter long or short based on signal direction.",
+      "exit": "Exit current side and reverse when opposite signal triggers.",
+      "danger": "Can overtrade in chop."
+    },
+    {
+      "id": "ghost_trade",
+      "name": "Ghost Trade",
+      "personality": "Paper-before-real.",
+      "entry": "When signal fires, shadow trade first; enter real only if first few bars behave correctly.",
+      "exit": "Exit if the shadow profile breaks.",
+      "danger": "Late entry."
+    },
+    {
+      "id": "ambush_limit",
+      "name": "Ambush Limit",
+      "personality": "Better price only.",
+      "entry": "Signal creates a limit order at a better spread level; trade only if price comes to you.",
+      "exit": "Exit with passive orders near target.",
+      "danger": "Missed fills."
+    },
+    {
+      "id": "liquidity_tide",
+      "name": "Liquidity Tide",
+      "personality": "Execution-aware.",
+      "entry": "Enter only when order book depth and spread cost are favorable.",
+      "exit": "Exit early if liquidity thins.",
+      "danger": "Requires good live market data."
+    },
+    {
+      "id": "drawdown_ratchet",
+      "name": "Drawdown Ratchet",
+      "personality": "Risk tightens as trade ages.",
+      "entry": "Enter normally.",
+      "exit": "Stop gets tighter each bar the trade fails to improve.",
+      "danger": "Can squeeze out slow winners."
+    },
+    {
+      "id": "winners_leash",
+      "name": "Winner's Leash",
+      "personality": "Let winners breathe.",
+      "entry": "Enter normally.",
+      "exit": "Once profitable, trail by giveback amount rather than fixed target.",
+      "danger": "Can give back too much."
+    }
+  ],
+  "first_batch_for_btc_doge": [
+    {
+      "id": "regular_baseline_fixed_threshold",
+      "label": "Fixed Threshold + Mean Reversion Exit",
+      "entry_style": "fixed_threshold",
+      "exit_style": "mean_reversion_exit",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Baseline lifecycle for comparing every creative style."
+    },
+    {
+      "id": "regular_timeboxed_reversion",
+      "label": "Fixed Threshold + Time Stop",
+      "entry_style": "fixed_threshold",
+      "exit_style": "time_stop",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Checks whether BTC-DOGE edge dies when trades are not allowed to linger."
+    },
+    {
+      "id": "regular_volatility_guard",
+      "label": "Mean Reversion Exit + Volatility Stop",
+      "entry_style": "mean_reversion_exit",
+      "exit_style": "volatility_stop",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Adds a spread-volatility invalidation stop to the plain reversion setup."
+    },
+    {
+      "id": "creative_iceberg_ladder",
+      "label": "Iceberg Melt + Profit Ladder",
+      "entry_style": "iceberg_melt",
+      "exit_style": "profit_ladder",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Favorite first creative test: enter after compression starts and harvest reversion in pieces."
+    },
+    {
+      "id": "creative_trap_time",
+      "label": "Trap Door Fade + Time Fuse",
+      "entry_style": "trap_door_fade",
+      "exit_style": "time_fuse",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Fades false breaks while refusing to sit in dead trades."
+    },
+    {
+      "id": "creative_rank_tail",
+      "label": "King Of The Hill + Smoke Alarm",
+      "entry_style": "king_of_the_hill",
+      "exit_style": "smoke_alarm",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Only trades top dislocations and exits if tail risk wakes up."
+    },
+    {
+      "id": "creative_vault_edge",
+      "label": "Three-Key Vault + Vanishing Edge",
+      "entry_style": "three_key_vault",
+      "exit_style": "vanishing_edge",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "High-conviction entry with strict confirmation decay exit."
+    },
+    {
+      "id": "creative_ghost_ambush",
+      "label": "Ghost Trade + Ambush Limit",
+      "entry_style": "ghost_trade",
+      "exit_style": "ambush_limit",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only",
+      "why": "Lets the first move prove itself, then demands a better execution price."
+    }
+  ],
+  "universal_regime_overlay_tests": [
+    {
+      "id": "overlay_all_entry_only",
+      "regime_filter": "all",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_range_entry_only",
+      "regime_filter": "range_only",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_range_hard_exit",
+      "regime_filter": "range_only",
+      "regime_behavior": "hard_exit"
+    },
+    {
+      "id": "overlay_exclude_crisis_entry_only",
+      "regime_filter": "exclude_crisis",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_exclude_crisis_hard_exit",
+      "regime_filter": "exclude_crisis",
+      "regime_behavior": "hard_exit"
+    },
+    {
+      "id": "overlay_calm_vol_entry_only",
+      "regime_filter": "calm_vol_only",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_exclude_high_vol_hard_exit",
+      "regime_filter": "exclude_high_vol",
+      "regime_behavior": "hard_exit"
+    },
+    {
+      "id": "overlay_range_low_tail_entry_only",
+      "regime_filter": "range_low_tail",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_stable_hedge_entry_only",
+      "regime_filter": "stable_hedge_regime",
+      "regime_behavior": "entry_only"
+    },
+    {
+      "id": "overlay_exclude_crisis_high_vol_hard_exit",
+      "regime_filter": "exclude_crisis_and_high_vol",
+      "regime_behavior": "hard_exit"
+    }
+  ],
+  "test_expansion_rule": {
+    "description": "Any strategy/style test can be expanded across regime overlays.",
+    "base_test_shape": "strategy + entry_style + exit_style",
+    "expanded_test_shape": "strategy + entry_style + exit_style + regime_filter + regime_behavior",
+    "default_regime_filter": "all",
+    "default_regime_behavior": "entry_only"
+  }
+}
