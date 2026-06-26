@@ -23,3 +23,8 @@ reports/rl/
 *.parquet
 *.pkl
 *.onnx
+
+.venv/
+.venv311/
+.vscode/
+*.egg-info/
