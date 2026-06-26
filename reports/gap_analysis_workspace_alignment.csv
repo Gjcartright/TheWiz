@@ -1,0 +1,6 @@
+area,impact,root_cause,mitigation
+config_divergence,high,API keys and runtime config exist in multiple local folders,declare single canonical workspace and enforce pre-run validation
+environment_drift,high,commands run from non-git folders with stale `.env.local`,add workspace validation check before API commands
+execution_confusion,medium,`git status` and artifact outputs interpreted from wrong directory,standardize runbook and launch path
+historical_evidence_scatter,low,legacy folders hold experiments/models not versioned in active branch,record immutable inventory and leave as read-only history
+credential_shadowing,high,mixed key presence across dirs risks using wrong secrets in right flow,add single-source `.env.local` in canonical workspace and avoid duplicated edits

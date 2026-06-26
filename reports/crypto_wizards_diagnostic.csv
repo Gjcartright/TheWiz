@@ -1,0 +1,2 @@
+name,url,dns_ok,dns_error,http_ok,status_code,error
+prescanned,https://api.cryptowizards.net/v1beta/prescanned?priority=Sharpe&strategy=Spread,True,,True,200,

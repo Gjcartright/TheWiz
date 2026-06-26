@@ -3,9 +3,9 @@ strategy_id,strategy_name,status,reason,rows
 1,Classic ZScore Mean Reversion,evaluated,trades<100;max_drawdown>0.15,3
 1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8,1
 1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,10
-1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,49
+1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,48
 1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
-1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,33
+1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,34
 1,Classic ZScore Mean Reversion,evaluated,trades<100;sharpe<1.2,8
 1,Classic ZScore Mean Reversion,evaluated,trades<100;sharpe<1.2;expectancy<=0,6
 1,Classic ZScore Mean Reversion,evaluated,trades<100;sharpe<1.2;max_drawdown>0.15,1
@@ -16,9 +16,9 @@ strategy_id,strategy_name,status,reason,rows
 3,ZScore + Copula,evaluated,trades<100;max_drawdown>0.15,3
 3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8,1
 3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,10
-3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,49
+3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,48
 3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
-3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,33
+3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,34
 3,ZScore + Copula,evaluated,trades<100;sharpe<1.2,8
 3,ZScore + Copula,evaluated,trades<100;sharpe<1.2;expectancy<=0,6
 3,ZScore + Copula,evaluated,trades<100;sharpe<1.2;max_drawdown>0.15,1
@@ -170,18 +170,18 @@ strategy_id,strategy_name,status,reason,rows
 23,KMeans Regime Model,evaluated,trades<100;max_drawdown>0.15,2
 23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8,1
 23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,6
-23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,35
+23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,34
 23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,2
-23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,28
+23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,29
 23,KMeans Regime Model,evaluated,trades<100;sharpe<1.2,6
 23,KMeans Regime Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,24
 23,KMeans Regime Model,evaluated,trades<100;sharpe<1.2;max_drawdown>0.15,2
 23,KMeans Regime Model,skipped,rows<20,6
 24,Regime Filtered Stat-Arb,evaluated,trades<100,29
 24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,6
-24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,31
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,30
 24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
-24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,27
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,28
 24,Regime Filtered Stat-Arb,evaluated,trades<100;sharpe<1.2,8
 24,Regime Filtered Stat-Arb,evaluated,trades<100;sharpe<1.2;expectancy<=0,64
 24,Regime Filtered Stat-Arb,skipped,rows<20,6
