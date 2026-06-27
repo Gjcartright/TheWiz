@@ -210,14 +210,15 @@ def _attach_leg_funding(frame: pd.DataFrame, funding: pd.DataFrame, market: str,
         output[output_column] = float(market_funding["funding_bps"].dropna().iloc[-1])
         return output
     left = output.reset_index().rename(columns={"index": "_row_index"})
-    left["_timestamp"] = pd.to_datetime(left["timestamp"], errors="coerce", utc=True)
+    left["_timestamp"] = pd.to_datetime(left["timestamp"], errors="coerce", utc=True).astype("datetime64[ns, UTC]")
     right = market_funding.dropna(subset=["timestamp"]).sort_values("timestamp")
+    right["_timestamp"] = pd.to_datetime(right["timestamp"], errors="coerce", utc=True).astype("datetime64[ns, UTC]")
     if right.empty:
         output[output_column] = float(market_funding["funding_bps"].dropna().iloc[-1])
         return output
     merged = pd.merge_asof(
         left.sort_values("_timestamp"),
-        right[["timestamp", "funding_bps"]].rename(columns={"timestamp": "_timestamp"}).sort_values("_timestamp"),
+        right[["_timestamp", "funding_bps"]].sort_values("_timestamp"),
         on="_timestamp",
         direction="backward",
     ).sort_values("_row_index")
@@ -269,6 +270,8 @@ def _parse_funding_timestamp(value: Any) -> pd.Timestamp | pd.NaT:
 def _normalize_funding_timestamps(values: pd.Series) -> pd.Series:
     if values.empty:
         return pd.Series(dtype="datetime64[ns, UTC]")
+    if pd.api.types.is_datetime64_any_dtype(values.dtype):
+        return pd.to_datetime(values, utc=True)
     numeric = pd.to_numeric(values, errors="coerce")
     timestamps = pd.Series(pd.NaT, index=values.index, dtype="datetime64[ns, UTC]")
     numeric_mask = numeric.notna()

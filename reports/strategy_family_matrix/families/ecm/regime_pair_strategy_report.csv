@@ -1,0 +1,22 @@
+pair,regime,strategy_id,strategy_name,family,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,total_trades
+BTC-USD-SOL-USD,ALL,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,8,Pure ECM,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,9,ECM Leadership,ecm,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,10,Leader/Follower Prediction,ecm,2,0,inf,0.0,0.0,0

@@ -1,0 +1,10 @@
+strategy_id,strategy_name,status,reason,rows
+2,ZScore + ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+2,ZScore + ECM,skipped,rows<20,4
+3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+3,ZScore + Copula,skipped,rows<20,4
+4,ECM + Copula + ZScore,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+4,ECM + Copula + ZScore,skipped,rows<20,4
+36,Copula + ECM Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+36,Copula + ECM Strategy,skipped,rows<20,4

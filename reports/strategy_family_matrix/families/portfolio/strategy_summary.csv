@@ -1,0 +1,6 @@
+strategy_id,strategy_name,family,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,median_gross_return,median_total_return,median_cost_drag,total_fees,total_slippage,total_funding,total_execution_risk,total_partial_fill_cost,median_avg_gross_exposure,total_trades,two_leg_runs,spread_runs
+25,Pair Ranking Strategy,portfolio,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0
+26,Portfolio Rotation,portfolio,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0
+27,Risk Adjusted Ranking,portfolio,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0
+37,Pure Copula Portfolio,portfolio,14,0,0.18653533350092966,-5.8452522745832205,0.12708256298656173,-0.028705285270025915,-0.09274398574566678,0.04550682512383053,0.59375,0.5700000000000001,0.40333067477114537,0.28500000000000003,0.009500000000000001,0.999,482,14,0
+28,Copula Tail Risk Sizing,portfolio,14,0,0.15779434003481285,-5.768335105467052,0.1375092408807577,-0.046756676291574206,-0.09450150970379967,0.03948816854105519,0.47875,0.4596,0.40333067477114537,0.2298,0.007660000000000001,0.999,390,14,0

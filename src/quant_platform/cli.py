@@ -32,6 +32,7 @@ from quant_platform.active_pipeline import (
     system_check,
     train_trade_gate,
 )
+from quant_platform.apify_sources import infer_apify_venue, parse_apify_sources_from_mcp_url, refresh_apify_sources
 from quant_platform.api_extraction import (
     CryptoWizardsExtractor,
     CryptoWizardsFetchError,
@@ -69,14 +70,18 @@ from quant_platform.execution import (
     SpreadOrderPlan,
     append_paper_trading_record,
     block_paper_plan_for_execution_config,
+    build_execution_venue,
     build_dydx_indexer_adapter,
     build_dydx_order_client_adapter,
     build_research_gated_paper_plan,
     dydx_readiness_report,
+    validate_dydx_order_client_adapter,
+    build_venue_order_client_adapter,
+    validate_venue_order_client_adapter,
+    venue_has_paper_adapter,
     paper_trading_record,
     submit_paper_plan,
     PaperDydxExecution,
-    validate_dydx_order_client_adapter,
 )
 from quant_platform.experiments import AcceptanceGate, ExperimentConfig, ExperimentHarness, PairDataset, strategy_acceptance_report
 from quant_platform.env import load_env_file
@@ -110,6 +115,7 @@ from quant_platform.pair_detail_ingestion import (
     load_pair_detail_snapshots,
     pair_detail_capture_audit,
     pair_detail_capture_checklist,
+    PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS,
     PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS,
     PAIR_DETAIL_QUALITY_COLUMNS,
     pair_detail_history_coverage,
@@ -126,7 +132,7 @@ from quant_platform.orchestration import run_orchestrator
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
-from quant_platform.rl import export_rl_policy, run_rl_research
+from quant_platform.rl import export_rl_policy, run_rl_idea_scout, run_rl_research
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 from quant_platform.strategies import STRATEGIES, strategy_rows, zscore_signal
 from quant_platform.trade_timing import (
@@ -3340,6 +3346,13 @@ def _load_dydx_order_client_adapter():
         return None, str(exc)
 
 
+def _load_venue_order_client_adapter(venue: str):
+    try:
+        return build_venue_order_client_adapter(venue), ""
+    except Exception as exc:
+        return None, str(exc)
+
+
 def dydx_order_adapter_contract_report(output_path: Path | None = None) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
@@ -4837,6 +4850,7 @@ def priority_runbook(output_path: Path | None = None) -> Path:
             "",
             "## Operator Commands",
             "",
+            "- P0 gap analysis checkpoint: `PYTHONPATH=src python3 -m quant_platform.cli gap-analysis-checklist`",
             "- P1 copy browser capture helper: `./scripts/copy_crypto_wizards_capture_helper.sh`",
             "- P1 capture checklist: `PYTHONPATH=src python3 -m quant_platform.cli pair-detail-capture-checklist`",
             "- P1 browser status after refresh: `await __CW_CAPTURE_STATUS__()`",
@@ -4863,10 +4877,15 @@ def priority_runbook(output_path: Path | None = None) -> Path:
             "- P3 adapter contract: `PYTHONPATH=src python3 -m quant_platform.cli dydx-order-adapter-contract`",
             "- P3 dYdX readiness: `PYTHONPATH=src python3 -m quant_platform.cli dydx-execution-checklist`",
             "- P4 paper preflight: `PYTHONPATH=src python3 -m quant_platform.cli paper-execution-preflight`",
+            "- P4 paper venue preflight: `PYTHONPATH=src python3 -m quant_platform.cli paper-venue-preflight --pair ETH-BTC`",
             "- P5 learning report: `PYTHONPATH=src python3 -m quant_platform.cli learning-report`",
             "- P5 learning outcome template: `PYTHONPATH=src python3 -m quant_platform.cli learning-outcome-template --output-path data/meta_learning/learning_outcome_template.csv`",
             "- P5 learning outcome template check: `PYTHONPATH=src python3 -m quant_platform.cli learning-outcome-template-check --input-dir data/meta_learning/learning_outcome_template.csv`",
             "- P5 import learning outcomes: `PYTHONPATH=src python3 -m quant_platform.cli import-learning-outcomes --input-dir data/meta_learning/learning_outcome_template.csv --output-path reports/learning_outcome_import_report.csv`",
+            "- pre-mortem checkpoint: `PYTHONPATH=src python3 -m quant_platform.cli pre-mortem-checklist`",
+            "- post-mortem checkpoint: `PYTHONPATH=src python3 -m quant_platform.cli post-mortem-checklist`",
+            "- supreme team checkpoint: `PYTHONPATH=src python3 -m quant_platform.cli supreme-team`",
+            "- red-team checkpoint: `PYTHONPATH=src python3 -m quant_platform.cli red-team-checklist`",
             "",
         ]
     )
@@ -4948,6 +4967,188 @@ def print_paper_execution_preflight() -> None:
     print(f"paper_execution_preflight: {output}")
 
 
+def paper_venue_preflight_report(
+    pair: str | None = None,
+    output_path: Path | None = None,
+    max_pairs: int = 25,
+) -> pd.DataFrame:
+    """Build compact per-venue paper readiness for one pair or top pairs."""
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output = output_path or reports / "paper_venue_preflight.csv"
+    universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
+    rows: list[dict[str, object]] = []
+
+    if pair:
+        pair_rows: list[str] = [_normalize_dydx_pair(pair)]
+    else:
+        pair_rows = []
+        if not universe.empty and "pair" in universe.columns:
+            score_col = pd.to_numeric(universe.get("combined_score", pd.Series(dtype=float)), errors="coerce")
+            ranked = universe.copy()
+            ranked["combined_score"] = score_col
+            pair_rows = (
+                ranked.sort_values("combined_score", ascending=False, na_position="last")["pair"]
+                .dropna()
+                .astype(str)
+                .head(max_pairs)
+                .tolist()
+            )
+
+    if not pair_rows:
+        frame = pd.DataFrame(
+            [
+                {
+                    "pair": _md_text(pair or ""),
+                    "venue": "",
+                    "preference": "",
+                    "venue_lanes": "",
+                    "execution_ready": False,
+                    "adapter_ready": False,
+                    "ready_for_submission": False,
+                    "contract_configured": False,
+                    "contract_valid": False,
+                    "exchange_submission_capable": False,
+                    "record_only": False,
+                    "contract_error": "no_candidate_pairs_found",
+                    "blockers": "no_market_venue_context_or_pair_universe",
+                    "evidence": "missing_market_venue_context_or_pair_universe",
+                }
+            ]
+        )
+        _write_csv_atomic(frame, output)
+        return frame
+
+    for candidate_pair in pair_rows:
+        options = _build_paper_venue_options(candidate_pair)
+        if not options:
+            rows.append(
+                {
+                    "pair": candidate_pair,
+                    "venue": "dydx",
+                    "preference": "candidate",
+                    "venue_lanes": "",
+                    "execution_ready": False,
+                    "adapter_ready": False,
+                    "ready_for_submission": False,
+                    "contract_configured": False,
+                    "contract_valid": False,
+                    "exchange_submission_capable": False,
+                    "record_only": False,
+                    "contract_error": "missing_market_venue_context",
+                    "blockers": "no_market_venue_context",
+                    "evidence": "pair_venue_context_missing_in_market_venue_context.csv",
+                }
+            )
+            continue
+
+        for venue_row in options:
+            venue = str(venue_row.get("venue", "")).strip().lower()
+            venue_lanes = str(venue_row.get("venue_lanes", ""))
+            preference = str(venue_row.get("preference", "candidate"))
+            execution_ready = bool(venue_row.get("execution_ready", False))
+            blockers: list[str] = [item for item in str(venue_row.get("blockers", "")).split(";") if item]
+
+            if venue == "dydx":
+                config = DydxNetworkConfig.paper_testnet_from_env()
+                indexer_ready = build_dydx_indexer_adapter(config) is not None
+                order_client, order_adapter_error = _load_dydx_order_client_adapter()
+                adapter_contract = validate_dydx_order_client_adapter()
+                adapter_ready = (
+                    order_client is not None
+                    and not bool(order_adapter_error)
+                    and bool(adapter_contract.get("valid"))
+                    and bool(adapter_contract.get("exchange_submission_capable"))
+                )
+                blockers.extend(config.paper_trading_blockers())
+                if order_adapter_error:
+                    blockers.append(f"invalid_dydx_order_client_adapter:{order_adapter_error}")
+                elif not adapter_contract.get("configured"):
+                    blockers.append("missing_dydx_order_client_adapter")
+                elif not adapter_contract.get("valid"):
+                    blockers.append(f"dydx_order_client_adapter_invalid:{adapter_contract.get('error')}")
+                if not indexer_ready:
+                    blockers.append("missing_dydx_indexer_adapter")
+                if not adapter_ready:
+                    blockers.append("dydx_not_submission_ready")
+                ready_for_submission = execution_ready and adapter_ready and indexer_ready and not bool(config.paper_trading_blockers())
+
+                rows.append(
+                    {
+                        "pair": candidate_pair,
+                        "venue": venue,
+                        "preference": preference,
+                        "venue_lanes": venue_lanes,
+                        "execution_ready": execution_ready,
+                        "adapter_ready": bool(adapter_ready),
+                        "ready_for_submission": bool(ready_for_submission),
+                        "contract_configured": bool(adapter_contract.get("configured")),
+                        "contract_valid": bool(adapter_contract.get("valid")),
+                        "exchange_submission_capable": bool(adapter_contract.get("exchange_submission_capable")),
+                        "record_only": bool(adapter_contract.get("record_only")),
+                        "contract_error": str(adapter_contract.get("error") or ""),
+                        "blockers": ";".join(sorted(set([item for item in blockers if item]))),
+                        "evidence": (
+                            f"dydx_submit_orders={config.submit_orders};"
+                            f"dydx_indexer_ready={indexer_ready};"
+                            f"dydx_order_adapter_ready={order_client is not None}"
+                        ),
+                    }
+                )
+                continue
+
+            order_client, order_adapter_error = _load_venue_order_client_adapter(venue)
+            adapter_contract = validate_venue_order_client_adapter(venue)
+            adapter_ready = (
+                order_client is not None
+                and not bool(order_adapter_error)
+                and bool(adapter_contract.get("valid"))
+                and bool(adapter_contract.get("exchange_submission_capable"))
+            )
+            if order_adapter_error:
+                blockers.append(f"invalid_{venue}_order_client_adapter:{order_adapter_error}")
+            elif not adapter_contract.get("configured"):
+                blockers.append(f"missing_{venue}_order_client_adapter")
+            elif not adapter_contract.get("valid"):
+                blockers.append(f"{venue}_order_client_adapter_invalid:{adapter_contract.get('error')}")
+            if not adapter_ready:
+                blockers.append(f"{venue}_not_submission_ready")
+            ready_for_submission = execution_ready and adapter_ready
+
+            rows.append(
+                {
+                    "pair": candidate_pair,
+                    "venue": venue,
+                    "preference": preference,
+                    "venue_lanes": venue_lanes,
+                    "execution_ready": execution_ready,
+                    "adapter_ready": bool(adapter_ready),
+                    "ready_for_submission": bool(ready_for_submission),
+                    "contract_configured": bool(adapter_contract.get("configured")),
+                    "contract_valid": bool(adapter_contract.get("valid")),
+                    "exchange_submission_capable": bool(adapter_contract.get("exchange_submission_capable")),
+                    "record_only": bool(adapter_contract.get("record_only")),
+                    "contract_error": str(adapter_contract.get("error") or ""),
+                    "blockers": ";".join(sorted(set([item for item in blockers if item]))),
+                    "evidence": (
+                        f"adapter_path={adapter_contract.get('adapter_path') or ''};"
+                        f"venue_contract={adapter_contract.get('signature_accepts_intent_config')}"
+                    ),
+                }
+            )
+
+    frame = pd.DataFrame(rows)
+    _write_csv_atomic(frame, output)
+    return frame
+
+
+def print_paper_venue_preflight(pair: str | None = None, max_pairs: int = 25) -> None:
+    output = ROOT / "reports" / "paper_venue_preflight.csv"
+    frame = paper_venue_preflight_report(pair=pair, output_path=output, max_pairs=max_pairs)
+    print(frame.to_string(index=False))
+    print(f"paper_venue_preflight: {output}")
+
+
 def priority_gap_test_report(
     readiness: pd.DataFrame | None = None,
     output_path: Path | None = None,
@@ -4988,6 +5189,831 @@ def print_gap_test() -> None:
     frame = priority_gap_test_report(readiness, output)
     print(frame.to_string(index=False))
     print(f"priority_gap_test: {output}")
+
+
+def print_gap_analysis_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_dir = run_dir or (reports / "gap_analysis")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    run_id = f"gap_analysis_{timestamp}"
+
+    gap_frame = priority_gap_test_report()
+    if gap_frame.empty:
+        gap_rows = [
+            {
+                "run_id": run_id,
+                "timestamp_utc": timestamp,
+                "priority": "N/A",
+                "area": "unknown",
+                "status": "blocked",
+                "severity": "high",
+                "gap": "priority_gap_test_report_empty",
+                "current_evidence": "",
+                "required_proof": "rerun_priority_gap_report",
+                "source_report": str(reports / "priority_gap_test.csv"),
+                "next_action": "rerun gap-test and then rebuild checklist",
+                "done": False,
+            }
+        ]
+        gap_table = pd.DataFrame(gap_rows)
+    else:
+        gap_table = gap_frame.copy()
+        gap_table["run_id"] = run_id
+        gap_table["timestamp_utc"] = timestamp
+        gap_table["done"] = gap_table["status"].eq("pass")
+
+    selected_cols = [
+        "run_id",
+        "timestamp_utc",
+        "priority",
+        "area",
+        "status",
+        "severity",
+        "gap",
+        "current_evidence",
+        "required_proof",
+        "source_report",
+        "next_action",
+        "done",
+    ]
+    checklist_frame = gap_table[selected_cols]
+
+    csv_path = output_dir / f"{run_id}.csv"
+    _write_csv_atomic(checklist_frame, csv_path)
+
+    open_count = int((checklist_frame["status"] == "gap").sum())
+    pass_count = int((checklist_frame["status"] == "pass").sum())
+    critical_count = int((checklist_frame["severity"] == "critical").sum())
+    high_count = int((checklist_frame["severity"] == "high").sum())
+    medium_count = int((checklist_frame["severity"] == "medium").sum())
+    lines: list[str] = [
+        "# Gap Analysis Checkpoint",
+        "",
+        f"run_id: {run_id}",
+        f"created_utc: {timestamp}",
+        f"open_gaps: {open_count} / {len(checklist_frame)}",
+        f"pass_gates: {pass_count}",
+        f"critical: {critical_count}",
+        f"high: {high_count}",
+        f"medium: {medium_count}",
+        "",
+        "## Checklist",
+        "",
+    ]
+    for _, row in checklist_frame.iterrows():
+        status = str(row["status"])
+        area = str(row["area"])
+        priority = str(row["priority"])
+        gap = str(row["gap"])
+        next_action = str(row["next_action"])
+        if status == "pass":
+            lines.append(f"- [x] {priority} {area}: PASS ({row['gap']})")
+        else:
+            lines.append(f"- [ ] {priority} {area}: GAP ({gap}) -> {next_action}")
+            lines.append(f"  - evidence: {row['current_evidence']}")
+            lines.append(f"  - required proof: {row['required_proof']}")
+            lines.append(f"  - source report: {row['source_report']}")
+        lines.append("")
+
+    latest_md = output_dir / "latest_gap_analysis.md"
+    checkpoint_md = output_dir / f"{run_id}.md"
+    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
+    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    index_path = reports / "gap_analysis_index.csv"
+    index_frame = _read_csv_or_empty(index_path)
+    if index_frame.empty:
+        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+    index_frame = pd.concat(
+        [
+            index_frame,
+            pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "open_gaps": open_count,
+                        "pass_gates": pass_count,
+                        "critical": critical_count,
+                        "high": high_count,
+                        "medium": medium_count,
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
+    )
+    _write_csv_atomic(index_frame, index_path)
+
+    print(f"gap_analysis_checklist_csv: {csv_path}")
+    print(f"gap_analysis_checklist_md: {checkpoint_md}")
+    print(f"gap_analysis_checkpoint: {latest_md}")
+    print(f"gap_analysis_index: {index_path}")
+    return csv_path, checkpoint_md
+
+
+def print_pre_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_dir = run_dir or (reports / "pre_mortem")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    run_id = f"pre_mortem_{timestamp}"
+
+    gap_frame = priority_gap_test_report()
+    if gap_frame.empty:
+        pm_frame = pd.DataFrame(
+            [
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": "N/A",
+                    "area": "unknown",
+                    "status": "blocked",
+                    "severity": "high",
+                    "gap": "priority_gap_test_report_empty",
+                    "current_evidence": "",
+                    "required_proof": "rerun_priority_gap_report",
+                    "source_report": str(reports / "priority_gap_test.csv"),
+                    "pre_mortem_question": "Can we trust execution readiness if no gap evidence is present?",
+                    "failure_mode": "No evidence exists, so readiness decisions become guesswork.",
+                    "prevention": "Re-run gap test and rerun pre-mortem before any acceptance changes.",
+                    "done": False,
+                }
+            ]
+        )
+    else:
+        pm_rows: list[dict[str, object]] = []
+        for _, row in gap_frame.iterrows():
+            priority = str(row["priority"])
+            area = str(row["area"])
+            status = str(row["status"])
+            severity = str(row["severity"])
+            gap = str(row["gap"] or "")
+            required_proof = str(row["required_proof"] or "")
+            evidence = str(row["current_evidence"] or "")
+            source_report = str(row["source_report"] or "")
+            pm_rows.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": priority,
+                    "area": area,
+                    "status": status,
+                    "severity": severity,
+                    "gap": gap,
+                    "current_evidence": evidence,
+                    "required_proof": required_proof,
+                    "source_report": source_report,
+                    "pre_mortem_question": _pre_mortem_question(priority, area, severity),
+                    "failure_mode": _pre_mortem_failure_mode(area, gap),
+                    "prevention": _pre_mortem_prevention(area, required_proof),
+                    "done": status == "pass",
+                }
+            )
+        pm_frame = pd.DataFrame(pm_rows)
+
+    selected_cols = [
+        "run_id",
+        "timestamp_utc",
+        "priority",
+        "area",
+        "status",
+        "severity",
+        "gap",
+        "current_evidence",
+        "required_proof",
+        "source_report",
+        "pre_mortem_question",
+        "failure_mode",
+        "prevention",
+        "done",
+    ]
+    pre_mortem_report = pm_frame[selected_cols]
+
+    csv_path = output_dir / f"{run_id}.csv"
+    _write_csv_atomic(pre_mortem_report, csv_path)
+
+    open_count = int((pre_mortem_report["status"] == "gap").sum())
+    pass_count = int((pre_mortem_report["status"] == "pass").sum())
+    critical_count = int((pre_mortem_report["severity"] == "critical").sum())
+    high_count = int((pre_mortem_report["severity"] == "high").sum())
+    medium_count = int((pre_mortem_report["severity"] == "medium").sum())
+
+    lines: list[str] = [
+        "# Pre-Mortem Checkpoint",
+        "",
+        f"run_id: {run_id}",
+        f"created_utc: {timestamp}",
+        f"open_gaps: {open_count} / {len(pre_mortem_report)}",
+        f"pass_gates: {pass_count}",
+        f"critical: {critical_count}",
+        f"high: {high_count}",
+        f"medium: {medium_count}",
+        "",
+        "## Checklist",
+        "",
+    ]
+    for _, row in pre_mortem_report.iterrows():
+        status = str(row["status"])
+        area = str(row["area"])
+        priority = str(row["priority"])
+        gap = str(row["gap"])
+        if status == "pass":
+            lines.append(f"- [x] {priority} {area}: PASS ({gap or 'no pre-mortem blocker'})")
+        else:
+            lines.append(f"- [ ] {priority} {area}: PRE-MORTEM RISK ({gap})")
+            lines.append(f"  - preemptive question: {row['pre_mortem_question']}")
+            lines.append(f"  - failure_mode: {row['failure_mode']}")
+            lines.append(f"  - prevention: {row['prevention']}")
+            lines.append(f"  - required proof: {row['required_proof']}")
+            lines.append(f"  - evidence: {row['current_evidence']}")
+            lines.append(f"  - source report: {row['source_report']}")
+        lines.append("")
+
+    latest_md = output_dir / "latest_pre_mortem.md"
+    checkpoint_md = output_dir / f"{run_id}.md"
+    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
+    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    index_path = reports / "pre_mortem_index.csv"
+    index_frame = _read_csv_or_empty(index_path)
+    if index_frame.empty:
+        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+    index_frame = pd.concat(
+        [
+            index_frame,
+            pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "open_gaps": open_count,
+                        "pass_gates": pass_count,
+                        "critical": critical_count,
+                        "high": high_count,
+                        "medium": medium_count,
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
+    )
+    _write_csv_atomic(index_frame, index_path)
+
+    print(f"pre_mortem_checklist_csv: {csv_path}")
+    print(f"pre_mortem_checklist_md: {checkpoint_md}")
+    print(f"pre_mortem_checkpoint: {latest_md}")
+    print(f"pre_mortem_index: {index_path}")
+    return csv_path, checkpoint_md
+
+
+def print_post_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_dir = run_dir or (reports / "post_mortem")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    run_id = f"post_mortem_{timestamp}"
+
+    previous_path = reports / "post_mortem" / "latest_post_mortem.csv"
+    previous = _read_csv_or_empty(previous_path)
+    previous_by_area: dict[str, str] = {}
+    if not previous.empty and "area" in previous.columns and "status" in previous.columns:
+        previous_by_area = {
+            str(area): str(status)
+            for area, status in zip(previous["area"].astype(str), previous["status"].astype(str))
+        }
+
+    gap_frame = priority_gap_test_report()
+    if gap_frame.empty:
+        pm_frame = pd.DataFrame(
+            [
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": "N/A",
+                    "area": "unknown",
+                    "status": "blocked",
+                    "severity": "high",
+                    "gap": "priority_gap_test_report_empty",
+                    "current_evidence": "",
+                    "required_proof": "rerun_priority_gap_report",
+                    "source_report": str(reports / "priority_gap_test.csv"),
+                    "incident_observed": "none",
+                    "trajectory": "unknown",
+                    "post_mortem_insight": "No evidence exists; run gap-test before post-mortem review.",
+                    "prevention_from_pre_mortem": _post_mortem_prevention("unknown", ""),
+                    "done": False,
+                }
+            ]
+        )
+    else:
+        rows: list[dict[str, object]] = []
+        for _, row in gap_frame.iterrows():
+            priority = str(row["priority"])
+            area = str(row["area"])
+            status = str(row["status"])
+            severity = str(row["severity"])
+            gap = str(row["gap"] or "")
+            required_proof = str(row["required_proof"] or "")
+            evidence = str(row["current_evidence"] or "")
+            source_report = str(row["source_report"] or "")
+            prev_status = str(previous_by_area.get(area, "unknown"))
+            trajectory = _post_mortem_status_trajectory(area=area, current_status=status, previous_status=prev_status)
+            rows.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": priority,
+                    "area": area,
+                    "status": status,
+                    "severity": severity,
+                    "gap": gap,
+                    "current_evidence": evidence,
+                    "required_proof": required_proof,
+                    "source_report": source_report,
+                    "incident_observed": _post_mortem_incident(area, gap),
+                    "trajectory": trajectory,
+                    "post_mortem_insight": _post_mortem_insight(area, trajectory, evidence),
+                    "prevention_from_pre_mortem": _post_mortem_prevention(area, required_proof),
+                    "done": status == "pass",
+                }
+            )
+        pm_frame = pd.DataFrame(rows)
+
+    selected_cols = [
+        "run_id",
+        "timestamp_utc",
+        "priority",
+        "area",
+        "status",
+        "severity",
+        "gap",
+        "current_evidence",
+        "required_proof",
+        "source_report",
+        "incident_observed",
+        "trajectory",
+        "post_mortem_insight",
+        "prevention_from_pre_mortem",
+        "done",
+    ]
+    post_mortem_report = pm_frame[selected_cols]
+
+    csv_path = output_dir / f"{run_id}.csv"
+    _write_csv_atomic(post_mortem_report, csv_path)
+
+    open_count = int((post_mortem_report["status"] == "gap").sum())
+    pass_count = int((post_mortem_report["status"] == "pass").sum())
+    critical_count = int((post_mortem_report["severity"] == "critical").sum())
+    high_count = int((post_mortem_report["severity"] == "high").sum())
+    medium_count = int((post_mortem_report["severity"] == "medium").sum())
+
+    lines: list[str] = [
+        "# Post-Mortem Checkpoint",
+        "",
+        f"run_id: {run_id}",
+        f"created_utc: {timestamp}",
+        f"open_gaps: {open_count} / {len(post_mortem_report)}",
+        f"pass_gates: {pass_count}",
+        f"critical: {critical_count}",
+        f"high: {high_count}",
+        f"medium: {medium_count}",
+        "",
+        "## Checklist",
+        "",
+    ]
+    for _, row in post_mortem_report.iterrows():
+        status = str(row["status"])
+        area = str(row["area"])
+        priority = str(row["priority"])
+        gap = str(row["gap"])
+        if status == "pass":
+            lines.append(f"- [x] {priority} {area}: PASS ({gap or 'resolved'})")
+        else:
+            lines.append(f"- [ ] {priority} {area}: POST-MORTEM GATE ({gap})")
+            lines.append(f"  - trajectory: {row['trajectory']}")
+            lines.append(f"  - incident observed: {row['incident_observed']}")
+            lines.append(f"  - postmortem insight: {row['post_mortem_insight']}")
+            lines.append(f"  - prevention evidence source: {row['prevention_from_pre_mortem']}")
+            lines.append(f"  - required proof: {row['required_proof']}")
+            lines.append(f"  - evidence: {row['current_evidence']}")
+            lines.append(f"  - source report: {row['source_report']}")
+        lines.append("")
+
+    latest_md = output_dir / "latest_post_mortem.md"
+    checkpoint_md = output_dir / f"{run_id}.md"
+    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
+    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    index_path = reports / "post_mortem_index.csv"
+    index_frame = _read_csv_or_empty(index_path)
+    if index_frame.empty:
+        index_frame = pd.DataFrame(
+            columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"]
+        )
+    index_frame = pd.concat(
+        [
+            index_frame,
+            pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "open_gaps": open_count,
+                        "pass_gates": pass_count,
+                        "critical": critical_count,
+                        "high": high_count,
+                        "medium": medium_count,
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
+    )
+    _write_csv_atomic(index_frame, index_path)
+
+    print(f"post_mortem_checklist_csv: {csv_path}")
+    print(f"post_mortem_checklist_md: {checkpoint_md}")
+    print(f"post_mortem_checkpoint: {latest_md}")
+    print(f"post_mortem_index: {index_path}")
+    return csv_path, checkpoint_md
+
+
+def print_red_team_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_dir = run_dir or (reports / "red_team")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    run_id = f"red_team_{timestamp}"
+
+    gap_frame = priority_gap_test_report()
+    if gap_frame.empty:
+        rt_frame = pd.DataFrame(
+            [
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": "N/A",
+                    "area": "unknown",
+                    "status": "blocked",
+                    "severity": "high",
+                    "gap": "priority_gap_test_report_empty",
+                    "current_evidence": "",
+                    "required_proof": "rerun_priority_gap_report",
+                    "source_report": str(reports / "priority_gap_test.csv"),
+                    "red_team_hypothesis": "No evidence present; do not proceed until gap evidence exists.",
+                    "attack_vector": "Unknown",
+                    "adversarial_question": "Can we trust this run for production decisions?",
+                    "control_test": "Re-run gap test and complete readiness evidence before strategy deployment.",
+                    "done": False,
+                }
+            ]
+        )
+    else:
+        rows: list[dict[str, object]] = []
+        for _, row in gap_frame.iterrows():
+            priority = str(row["priority"])
+            area = str(row["area"])
+            status = str(row["status"])
+            severity = str(row["severity"])
+            gap = str(row["gap"] or "")
+            required_proof = str(row["required_proof"] or "")
+            evidence = str(row["current_evidence"] or "")
+            source_report = str(row["source_report"] or "")
+            rows.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "priority": priority,
+                    "area": area,
+                    "status": status,
+                    "severity": severity,
+                    "gap": gap,
+                    "current_evidence": evidence,
+                    "required_proof": required_proof,
+                    "source_report": source_report,
+                    "red_team_hypothesis": f"Could `{area}` be gamed by stale, leveraged, or mislabeled evidence?",
+                    "attack_vector": (
+                        "adversarial data assumptions, silent venue drift, model overfit, or operational bypass"
+                        if status == "gap"
+                        else "No active attack vector while gate is passed."
+                    ),
+                    "adversarial_question": (
+                        f"What specific adversarial scenario could produce false confidence in `{area}` despite `{required_proof}`?"
+                    ),
+                    "control_test": _pre_mortem_prevention(area, required_proof),
+                    "done": status == "pass",
+                }
+            )
+        rt_frame = pd.DataFrame(rows)
+
+    selected_cols = [
+        "run_id",
+        "timestamp_utc",
+        "priority",
+        "area",
+        "status",
+        "severity",
+        "gap",
+        "current_evidence",
+        "required_proof",
+        "source_report",
+        "red_team_hypothesis",
+        "attack_vector",
+        "adversarial_question",
+        "control_test",
+        "done",
+    ]
+    red_team_report = rt_frame[selected_cols]
+
+    csv_path = output_dir / f"{run_id}.csv"
+    _write_csv_atomic(red_team_report, csv_path)
+
+    open_count = int((red_team_report["status"] == "gap").sum())
+    pass_count = int((red_team_report["status"] == "pass").sum())
+    critical_count = int((red_team_report["severity"] == "critical").sum())
+    high_count = int((red_team_report["severity"] == "high").sum())
+    medium_count = int((red_team_report["severity"] == "medium").sum())
+
+    lines: list[str] = [
+        "# Red Team Checkpoint",
+        "",
+        f"run_id: {run_id}",
+        f"created_utc: {timestamp}",
+        f"open_gaps: {open_count} / {len(red_team_report)}",
+        f"pass_gates: {pass_count}",
+        f"critical: {critical_count}",
+        f"high: {high_count}",
+        f"medium: {medium_count}",
+        "",
+        "## Checklist",
+        "",
+    ]
+    for _, row in red_team_report.iterrows():
+        status = str(row["status"])
+        area = str(row["area"])
+        priority = str(row["priority"])
+        gap = str(row["gap"])
+        if status == "pass":
+            lines.append(f"- [x] {priority} {area}: PASS ({gap or 'no red-team blocker'})")
+        else:
+            lines.append(f"- [ ] {priority} {area}: RED TEAM CHALLENGE ({gap})")
+            lines.append(f"  - hypothesis: {row['red_team_hypothesis']}")
+            lines.append(f"  - attack vector: {row['attack_vector']}")
+            lines.append(f"  - adversarial question: {row['adversarial_question']}")
+            lines.append(f"  - control test: {row['control_test']}")
+            lines.append(f"  - required proof: {row['required_proof']}")
+            lines.append(f"  - evidence: {row['current_evidence']}")
+            lines.append(f"  - source report: {row['source_report']}")
+        lines.append("")
+
+    latest_md = output_dir / "latest_red_team.md"
+    checkpoint_md = output_dir / f"{run_id}.md"
+    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
+    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    index_path = reports / "red_team_index.csv"
+    index_frame = _read_csv_or_empty(index_path)
+    if index_frame.empty:
+        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+    index_frame = pd.concat(
+        [
+            index_frame,
+            pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "open_gaps": open_count,
+                        "pass_gates": pass_count,
+                        "critical": critical_count,
+                        "high": high_count,
+                        "medium": medium_count,
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
+    )
+    _write_csv_atomic(index_frame, index_path)
+
+    print(f"red_team_checklist_csv: {csv_path}")
+    print(f"red_team_checklist_md: {checkpoint_md}")
+    print(f"red_team_checkpoint: {latest_md}")
+    print(f"red_team_index: {index_path}")
+    return csv_path, checkpoint_md
+
+
+def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Path]:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_dir = run_dir or (reports / "supreme_team")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    run_id = f"supreme_team_{timestamp}"
+
+    gap_csv, _ = print_gap_analysis_checklist()
+    pm_csv, _ = print_pre_mortem_checklist()
+    post_csv, _ = print_post_mortem_checklist()
+    rt_csv, _ = print_red_team_checklist()
+
+    def _checkpoint_rows(path: Path, source: str) -> pd.DataFrame:
+        frame = _read_csv_or_empty(path)
+        if frame.empty:
+            return pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "source_checkpoint": source,
+                        "source_run_id": "",
+                        "priority": "N/A",
+                        "area": "unknown",
+                        "status": "blocked",
+                        "severity": "high",
+                        "gap": f"{source}_missing_rows",
+                        "current_evidence": "",
+                        "required_proof": f"rerun {source.replace('_', '-')}",
+                        "source_report": f"reports/{source}_index.csv",
+                        "source_row": "",
+                        "next_action": f"rerun {source.replace('_', '-')}",
+                        "done": False,
+                    }
+                ]
+            )
+        local = frame.copy()
+        local["run_id"] = local.get("run_id", pd.Series(dtype=str)).fillna("").astype(str).replace({"": run_id})
+        local["source_checkpoint"] = source
+        local["timestamp_utc"] = local.get("timestamp_utc", pd.Series([timestamp] * len(local))).fillna(timestamp)
+        local["source_run_id"] = local["run_id"]
+        local["source_row"] = source
+        if "next_action" in local.columns:
+            local["next_action"] = local["next_action"].fillna("")
+        elif "prevention" in local.columns:
+            local["next_action"] = local["prevention"].fillna("")
+        elif source == "post_mortem":
+            local["next_action"] = local["post_mortem_insight"].fillna("")
+        elif source == "red_team":
+            local["next_action"] = local["control_test"].fillna("")
+        else:
+            local["next_action"] = ""
+        return local
+
+    all_checkpoints = pd.concat(
+        [
+            _checkpoint_rows(gap_csv, "gap_analysis"),
+            _checkpoint_rows(pm_csv, "pre_mortem"),
+            _checkpoint_rows(post_csv, "post_mortem"),
+            _checkpoint_rows(rt_csv, "red_team"),
+        ],
+        ignore_index=True,
+    )
+
+    def _severity_rank(value: object) -> int:
+        return {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 4, "": 5}.get(str(value).strip().lower(), 5)
+
+    worklist = all_checkpoints[all_checkpoints["status"] != "pass"].copy()
+    if not worklist.empty:
+        worklist["_priority_rank"] = worklist["priority"].map(_priority_sort_key)
+        worklist["_severity_rank"] = worklist["severity"].map(_severity_rank)
+        worklist = worklist.sort_values(["_severity_rank", "_priority_rank", "source_checkpoint", "area"]).reset_index(drop=True)
+        worklist["rank"] = list(range(1, len(worklist) + 1))
+        worklist_rows = [
+            {
+                "run_id": run_id,
+                "timestamp_utc": timestamp,
+                "rank": int(row["rank"]),
+                "source_checkpoint": row["source_checkpoint"],
+                "source_run_id": row.get("source_run_id", ""),
+                "priority": row.get("priority", ""),
+                "area": row.get("area", ""),
+                "status": row.get("status", ""),
+                "severity": row.get("severity", ""),
+                "gap": row.get("gap", ""),
+                "current_evidence": row.get("current_evidence", ""),
+                "required_proof": row.get("required_proof", ""),
+                "next_action": row.get("next_action", ""),
+                "source_report": row.get("source_report", ""),
+                "done": bool(row.get("done", False)),
+                "source_row": row.get("source_row", ""),
+            }
+            for _, row in worklist.iterrows()
+        ]
+    else:
+        worklist_rows = []
+
+    plan_frame = pd.DataFrame(
+        worklist_rows,
+        columns=[
+            "run_id",
+            "timestamp_utc",
+            "rank",
+            "source_checkpoint",
+            "source_run_id",
+            "priority",
+            "area",
+            "status",
+            "severity",
+            "gap",
+            "current_evidence",
+            "required_proof",
+            "next_action",
+            "source_report",
+            "done",
+            "source_row",
+        ],
+    )
+
+    open_count = int((plan_frame["status"] != "pass").sum()) if not plan_frame.empty else 0
+    pass_count = int((all_checkpoints["status"] == "pass").sum())
+    critical_count = int((all_checkpoints["severity"] == "critical").sum())
+    high_count = int((all_checkpoints["severity"] == "high").sum())
+    medium_count = int((all_checkpoints["severity"] == "medium").sum())
+
+    csv_path = output_dir / f"{run_id}.csv"
+    _write_csv_atomic(plan_frame, csv_path)
+
+    lines: list[str] = [
+        "# Supreme Team Checkpoint",
+        "",
+        f"run_id: {run_id}",
+        f"created_utc: {timestamp}",
+        f"open_actions: {open_count}",
+        f"pass_gates: {pass_count}",
+        f"critical: {critical_count}",
+        f"high: {high_count}",
+        f"medium: {medium_count}",
+        "",
+        "## Checkpoint Artifacts",
+        f"- gap_analysis_checklist_csv: {gap_csv}",
+        f"- pre_mortem_checklist_csv: {pm_csv}",
+        f"- post_mortem_checklist_csv: {post_csv}",
+        f"- red_team_checklist_csv: {rt_csv}",
+        "",
+        "## Supreme Team Next Actions",
+    ]
+
+    if plan_frame.empty:
+        lines.extend(["- [x] No open actions; all checkpoints are passing."])
+    else:
+        for _, row in plan_frame.iterrows():
+            rank = int(row["rank"])
+            area = row["area"]
+            priority = row["priority"]
+            source = row["source_checkpoint"]
+            status = row["status"]
+            lines.append(
+                f"- [ ] {rank}. {priority} {area} ({source}/{status}) "
+                f"=> {row['severity']} | {row['gap']}"
+            )
+            lines.append(f"  - required proof: {row['required_proof']}")
+            lines.append(f"  - action: {row['next_action']}")
+            lines.append(f"  - evidence: {row['current_evidence']}")
+            lines.append(f"  - source report: {row['source_report']}")
+            lines.append("")
+
+    checkpoint_md = output_dir / f"{run_id}.md"
+    latest_md = output_dir / "latest_supreme_team.md"
+    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
+    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+
+    index_path = reports / "supreme_team_index.csv"
+    index_frame = _read_csv_or_empty(index_path)
+    if index_frame.empty:
+        index_frame = pd.DataFrame(
+            columns=["run_id", "timestamp_utc", "open_actions", "pass_gates", "critical", "high", "medium"]
+        )
+    index_frame = pd.concat(
+        [
+            index_frame,
+            pd.DataFrame(
+                [
+                    {
+                        "run_id": run_id,
+                        "timestamp_utc": timestamp,
+                        "open_actions": open_count,
+                        "pass_gates": pass_count,
+                        "critical": critical_count,
+                        "high": high_count,
+                        "medium": medium_count,
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
+    )
+    _write_csv_atomic(index_frame, index_path)
+
+    print(f"supreme_team_checklist_csv: {csv_path}")
+    print(f"supreme_team_checklist_md: {checkpoint_md}")
+    print(f"supreme_team_checkpoint: {latest_md}")
+    print(f"supreme_team_index: {index_path}")
+    return csv_path, checkpoint_md
 
 
 def strategy_trade_count_gap_report(
@@ -5211,15 +6237,18 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
         )
     )
 
-    capture_report_path = reports / "pair_detail_capture_checklist.csv"
+    capture_report_path = reports / "pair_detail_capture_audit.csv"
     cached_capture = _read_csv_or_empty(capture_report_path)
     if not cached_capture.empty:
-        capture_rows = cached_capture.to_dict("records")
+        capture_rows = [
+            {**row, "experiment_ready": _coerce_bool(row.get("experiment_ready")), "ecm_history_ready": _coerce_bool(row.get("ecm_history_ready")), "two_leg_execution_ready": _coerce_bool(row.get("two_leg_execution_ready"))}
+            for row in cached_capture.to_dict("records")
+        ]
     else:
         capture_rows = pair_detail_capture_audit(pair_detail_dir) if pair_detail_dir.exists() else []
-        if capture_rows:
+    if capture_rows:
             _write_csv_atomic(
-                pd.DataFrame(capture_rows, columns=PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS),
+                pd.DataFrame(capture_rows, columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS),
                 capture_report_path,
             )
     capture_experiment_ready = [row for row in capture_rows if bool(row.get("experiment_ready"))]
@@ -6025,6 +7054,99 @@ def _required_gap_proof(area: str) -> str:
     return proofs.get(area, "documented readiness evidence")
 
 
+def _pre_mortem_question(priority: str, area: str, severity: str) -> str:
+    if severity == "critical":
+        return (
+            f"{priority} {area}: If we move to execution without this, what hard failure would most likely break us first?"
+        )
+    if severity == "high":
+        return f"{priority} {area}: What would fail and what signal would we watch first?"
+    return f"{priority} {area}: What is the most likely downside risk we are accepting by skipping this?"
+
+
+def _pre_mortem_failure_mode(area: str, gap: str) -> str:
+    if area == "crypto_wizards_capture":
+        return (
+            "Selection decisions may be based on incomplete spread/score history, producing false positives and "
+            "pairs that are untradeable in practice."
+        )
+    if area == "strategy_acceptance":
+        return "A strategy might appear good in dashboards but be rejected by production-style gates after deployment."
+    if area == "dydx_testnet_readiness":
+        if "submit" in str(gap or "").lower():
+            return "Paper/live requests can fail at submit time and silently degrade into partial or dropped hedges."
+        return "Venue adapter drift or config gaps can cause wrong orders or invalid venue assumptions."
+    if area == "paper_execution_gate":
+        return "Paper gating might pass with assumptions that do not hold in real or execution-tied backtests."
+    if area == "learning_event_store":
+        return "No realized outcomes means no feedback loop; model quality and execution bias drift undetected."
+    return "A hidden evidence gap may only appear during live conditions and invalidate recent decisions."
+
+
+def _pre_mortem_prevention(area: str, required_proof: str) -> str:
+    preventions = {
+        "crypto_wizards_capture": "Require capture completeness on spread/z-score/ECM metrics before any research promotion.",
+        "strategy_acceptance": "Keep strategy acceptance gates as mandatory before moving any pair into execution lanes.",
+        "dydx_testnet_readiness": "Keep all venue execution checks and adapter wiring as hard blockers before paper/live signals.",
+        "paper_execution_gate": "Run paper preflight as a strict step with explicit block reasons and no override path.",
+        "learning_event_store": "Collect learning outcomes before model score updates and prevent model retraining on missing labels.",
+    }
+    return preventions.get(area, f"Use required proof: {required_proof}")
+
+
+def _post_mortem_status_trajectory(area: str, current_status: str, previous_status: str) -> str:
+    if current_status == "pass" and previous_status == "gap":
+        return "resolved"
+    if current_status == "gap" and previous_status == "pass":
+        return "regressed"
+    if current_status == "gap" and previous_status == "gap":
+        return "persistent"
+    if current_status == "gap" and previous_status == "unknown":
+        return "new"
+    return "unchanged" if current_status == previous_status else "unknown"
+
+
+def _post_mortem_incident(area: str, gap: str) -> str:
+    if area == "crypto_wizards_capture":
+        return (
+            "We likely selected a candidate on stale or incomplete pair-structure data and entered with misleading "
+            "spread/z-score/ECM signal quality."
+        )
+    if area == "strategy_acceptance":
+        return "A strategy likely performed in simulation but failed production-grade constraints not met in earlier runs."
+    if area == "dydx_testnet_readiness":
+        if "submit" in str(gap or "").lower():
+            return "Order submission path likely failed or dropped in paper/live paths."
+        return "Venue or adapter readiness assumptions likely diverged from current execution environment."
+    if area == "paper_execution_gate":
+        return "Paper validation became out of sync with actual execution readiness and generated false-positive acceptance."
+    if area == "learning_event_store":
+        return "No realized outcomes blocked learning feedback; weak or unsafe settings were not corrected in time."
+    return "A non-blocked gate likely failed to transfer into reliable real-world outcomes."
+
+
+def _post_mortem_insight(area: str, trajectory: str, evidence: str) -> str:
+    if trajectory in {"resolved", "new"}:
+        return (
+            f"{area} is actionable to investigate now; evidence is available (`{evidence}`), "
+            "so a concrete regression cause can be logged."
+        )
+    if trajectory == "regressed":
+        return (
+            f"{area} was previously passing and regressed; this indicates a recent process or dependency change. "
+            "Prioritize root-cause containment and replay controls."
+        )
+    if trajectory == "persistent":
+        return (
+            f"{area} remained open in previous checks and continues to pose operational risk until evidence is completed."
+        )
+    return "No recent trajectory comparison data was available; treat this as first-observed post-run evidence."
+
+
+def _post_mortem_prevention(area: str, required_proof: str) -> str:
+    return _pre_mortem_prevention(area, required_proof)
+
+
 def _join_missing(items: list[tuple[str, bool]]) -> str:
     return ";".join(name for name, missing in items if missing)
 
@@ -6388,6 +7510,19 @@ def _normalize_dydx_market(asset: str) -> str:
         return f"{parts[0]}-USD"
     if len(parts) == 1:
         return f"{parts[0]}-USD"
+    return text
+
+
+def _normalize_dydx_pair(pair: str) -> str:
+    text = str(pair).upper().replace("/", "-").strip()
+    parsed = _markets_from_pair_name(text)
+    if parsed:
+        return f"{parsed[0]}-{parsed[1]}"
+    parts = [part for part in re.split(r"[-_/]", text) if part]
+    if len(parts) == 2 and parts[1] == "USD":
+        return f"{parts[0]}-USD"
+    if len(parts) == 2:
+        return "-".join(parts)
     return text
 
 
@@ -6794,10 +7929,12 @@ def build_paper_plan_from_cli(
     beta: float,
     notional_usd: float,
     acceptance_path: Path | None = None,
+    venue: str = "dydx",
 ) -> tuple[SpreadOrderPlan, list[dict[str, object]]]:
     acceptance_path = acceptance_path or _acceptance_report_path()
     if not acceptance_path.exists():
         raise SystemExit(f"acceptance report not found: {acceptance_path}")
+    venue = (venue or "").lower()
     acceptance = pd.read_csv(acceptance_path)
     plan = build_research_gated_paper_plan(
         {
@@ -6809,8 +7946,183 @@ def build_paper_plan_from_cli(
         },
         acceptance,
         notional_usd=notional_usd,
+        venue=venue,
     )
     return plan, [_intent_row(intent) for intent in plan.intents]
+
+
+def _venue_asset_key(value: str) -> str:
+    text = str(value or "").replace("/", "-").upper().strip()
+    if text.endswith("-USD"):
+        text = text[:-4]
+    if text.endswith("_USD"):
+        text = text[:-4]
+    return text
+
+
+def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
+    parts = _split_pair_assets(pair)
+    if len(parts) != 2:
+        return []
+    x, y = parts
+
+    context = _read_csv_or_empty(ROOT / "data" / "processed" / "market_venue_context.csv")
+    if not context.empty:
+        context["asset_key"] = context["asset"].map(_venue_asset_key)
+        context["venue"] = context["venue"].astype(str)
+
+    context_by_asset: dict[str, dict[str, pd.Series]] = {}
+    if not context.empty and {"asset_key", "venue"}.issubset(context.columns):
+        for (asset_key, venue), row in context.groupby(["asset_key", "venue"]):
+            context_by_asset.setdefault(asset_key, {})[str(venue).lower()] = row.iloc[0]
+
+    universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
+    row = _lookup_pair_universe_row(universe, pair)
+    preferred = ""
+    preferreds: list[str] = []
+    if not row.empty:
+        preferred = str(row.iloc[0].get("best_execution_venue", "") or "").strip().lower()
+        available = str(row.iloc[0].get("available_venues", "") or "")
+        preferreds = [venue.strip().lower() for venue in available.split(";") if venue.strip()]
+
+    left_map = context_by_asset.get(x, {})
+    right_map = context_by_asset.get(y, {})
+    context_venues = set(left_map) | set(right_map)
+    venues = sorted(context_venues | set(preferreds))
+    if not venues:
+        return []
+
+    options: list[dict[str, object]] = []
+    for venue in venues:
+        normalized_venue = venue.lower()
+        left = left_map.get(normalized_venue)
+        right = right_map.get(normalized_venue)
+        blockers: list[str] = []
+
+        left_exists = isinstance(left, pd.Series)
+        right_exists = isinstance(right, pd.Series)
+        if not left_exists or not right_exists:
+            if not left_exists:
+                blockers.append(f"missing_{x}_venue_data")
+            if not right_exists:
+                blockers.append(f"missing_{y}_venue_data")
+            options.append(
+                {
+                    "venue": normalized_venue,
+                    "executable": False,
+                    "execution_ready": False,
+                    "research_ready": left_exists and right_exists,
+                    "blockers": ";".join(sorted(blockers)),
+                    "preference": "preferred" if venue == preferred else "candidate",
+                    "venue_lanes": ";".join(
+                        sorted(
+                            {
+                                str(item)
+                                for item in [
+                                    left.get("venue_lane") if left_exists else None,
+                                    right.get("venue_lane") if right_exists else None,
+                                ]
+                                if item
+                            }
+                        )
+                    ),
+                }
+            )
+            continue
+
+        left_authority = bool(_coerce_bool(left.get("execution_authority", False)))
+        right_authority = bool(_coerce_bool(right.get("execution_authority", False)))
+        left_tradable = bool(_coerce_bool(left.get("tradable", False)))
+        right_tradable = bool(_coerce_bool(right.get("tradable", False)))
+        leg_blockers = [
+            value
+            for value in [
+                str(left.get("blocker", "")).strip(),
+                str(right.get("blocker", "")).strip(),
+            ]
+            if value and value.lower() not in {"nan", "none"}
+        ]
+        if not left_authority or not right_authority:
+            blockers.append("execution_not_authorized")
+        if not left_tradable or not right_tradable:
+            blockers.append("thin_venue_liquidity")
+        blockers.extend(leg_blockers)
+
+        has_execution_support = venue_has_paper_adapter(normalized_venue) or normalized_venue == "dydx"
+        execution_ready = left_authority and right_authority and left_tradable and right_tradable and has_execution_support
+        if (left_authority and right_authority and left_tradable and right_tradable) and not has_execution_support:
+            blockers.append("paper_execution_not_implemented")
+        options.append(
+            {
+                "venue": normalized_venue,
+                "executable": execution_ready,
+                "execution_ready": execution_ready,
+                "research_ready": left_tradable and right_tradable,
+                "blockers": ";".join(sorted(set(blockers))),
+                "preference": "preferred" if venue == preferred else "candidate",
+                "venue_lanes": ";".join(
+                    sorted(
+                        {
+                            str(item)
+                            for item in [
+                                str(left.get("venue_lane", "")).strip(),
+                                str(right.get("venue_lane", "")).strip(),
+                            ]
+                            if item
+                        }
+                    )
+                ),
+            }
+        )
+
+    if not options:
+        return []
+
+    def _score(row: dict[str, object]) -> tuple[int, int, str]:
+        executable = 2 if bool(row["executable"]) else 0
+        preferred_weight = 1 if str(row["preference"]) == "preferred" else 0
+        venue = str(row["venue"])
+        in_preferred = 1 if venue in preferreds else 0
+        return (executable, preferred_weight + in_preferred, venue)
+
+    return sorted(options, key=_score, reverse=True)
+
+
+def _format_paper_venue_options(options: list[dict[str, object]]) -> str:
+    if not options:
+        return "none"
+    rendered: list[str] = []
+    for row in options:
+        venue = str(row.get("venue", ""))
+        executable = bool(row.get("executable", False))
+        reason = str(row.get("blockers", "")).strip() or "ready"
+        preference = str(row.get("preference", "candidate"))
+        rendered.append(f"{venue}(pref={preference},executable={executable},reason={reason})")
+    return "; ".join(rendered)
+
+
+def _lookup_pair_universe_row(universe: pd.DataFrame, pair: str) -> pd.DataFrame:
+    if universe.empty or "pair" not in universe.columns:
+        return pd.DataFrame()
+    normalized = pair.replace("/", "-").upper().strip()
+    rows = universe[universe["pair"].astype(str).str.upper() == normalized]
+    if rows.empty:
+        normalized_alt = normalized.replace("-", "/")
+        rows = universe[universe["pair"].astype(str).str.upper() == normalized_alt]
+    return rows
+
+
+def _split_pair_assets(pair: str) -> list[str]:
+    if not pair:
+        return []
+    normalized = pair.replace("/", "-").upper().strip()
+    parsed = _markets_from_pair_name(normalized)
+    if parsed:
+        return [_venue_asset_key(parsed[0]), _venue_asset_key(parsed[1])]
+    left, sep, right = normalized.partition("-")
+    if not sep or not left or not right:
+        return []
+    return [_venue_asset_key(left), _venue_asset_key(right)]
 
 
 def run_paper_plan(
@@ -6822,7 +8134,14 @@ def run_paper_plan(
     notional_usd: float,
     acceptance_path: Path | None = None,
     journal_path: Path | None = None,
+    venue: str | None = None,
 ) -> None:
+    venue = (venue or "").lower().strip() or "auto"
+    selected_venue = _resolve_paper_venue(pair, venue)
+    venue_options = _build_paper_venue_options(pair)
+    print(f"paper_plan_requested_venue: {venue}")
+    if venue_options:
+        print(f"paper_plan_venue_options: {_format_paper_venue_options(venue_options)}")
     plan, intent_rows = build_paper_plan_from_cli(
         pair=pair,
         strategy_id=strategy_id,
@@ -6831,9 +8150,12 @@ def run_paper_plan(
         beta=beta,
         notional_usd=notional_usd,
         acceptance_path=acceptance_path,
+        venue=selected_venue,
     )
+    selected_venue = str(plan.venue or selected_venue).lower()
     print(f"paper_plan_status: {plan.status}")
     print(f"paper_plan_reason: {plan.reason}")
+    print(f"paper_plan_venue: {selected_venue}")
     if intent_rows:
         print(pd.DataFrame(intent_rows).to_string(index=False))
     if plan.status != "paper_ready":
@@ -6844,18 +8166,37 @@ def run_paper_plan(
         print(f"paper_trading_journal: {path}")
         return
 
+    blockers: list[str] = []
     config = DydxNetworkConfig.paper_testnet_from_env()
-    blockers = config.paper_trading_blockers()
-    order_client, order_adapter_error = _load_dydx_order_client_adapter()
-    adapter_contract = validate_dydx_order_client_adapter()
-    if order_adapter_error:
-        blockers.append("invalid_dydx_order_client_adapter")
-    elif adapter_contract["configured"] and adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]:
-        blockers.append("record_only_dydx_order_client_adapter")
-    if order_client is None and "missing_dydx_v4_client" not in blockers:
-        blockers.append("missing_dydx_order_client_adapter")
+    order_client: object | None = None
+    if selected_venue == "dydx":
+        config = DydxNetworkConfig.paper_testnet_from_env()
+        blockers = config.paper_trading_blockers()
+        order_client, order_adapter_error = _load_dydx_order_client_adapter()
+        adapter_contract = validate_dydx_order_client_adapter()
+        if order_adapter_error:
+            blockers.append("invalid_dydx_order_client_adapter")
+        elif adapter_contract["configured"] and adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]:
+            blockers.append("record_only_dydx_order_client_adapter")
+        if order_client is None and "missing_dydx_v4_client" not in blockers:
+            blockers.append("missing_dydx_order_client_adapter")
+    else:
+        order_client, order_adapter_error = _load_venue_order_client_adapter(selected_venue)
+        adapter_contract = validate_venue_order_client_adapter(selected_venue)
+        if order_adapter_error:
+            blockers.append(f"invalid_{selected_venue}_order_client_adapter")
+        else:
+            if not adapter_contract["configured"]:
+                blockers.append(f"missing_{selected_venue}_order_client_adapter")
+            elif not adapter_contract["valid"]:
+                blockers.append(f"{selected_venue}_order_client_adapter_invalid:{adapter_contract.get('error')}")
+            elif not adapter_contract["exchange_submission_capable"]:
+                blockers.append(f"record_only_{selected_venue}_order_client_adapter")
+    if order_client is None and not blockers:
+        blockers.append(f"paper_execution_not_implemented_for_{selected_venue}")
+
     if blockers:
-        print(f"dydx_testnet_blockers: {','.join(blockers)}")
+        print(f"execution_blockers: {','.join(blockers)}")
         blocked_plan = block_paper_plan_for_execution_config(plan, blockers)
         path = append_paper_trading_record(
             paper_trading_record(blocked_plan, blockers=blockers),
@@ -6863,8 +8204,8 @@ def run_paper_plan(
         )
         print(f"paper_trading_journal: {path}")
         return
-    venue = PaperDydxExecution(config, client=order_client, market_data_client=build_dydx_indexer_adapter(config))
-    fills = submit_paper_plan(plan, venue)
+    execution = build_execution_venue(selected_venue, config=config, order_client=order_client, market_data_client=build_dydx_indexer_adapter(config))
+    fills = submit_paper_plan(plan, execution)
     if fills:
         print(pd.DataFrame([fill.__dict__ for fill in fills]).to_string(index=False))
     path = append_paper_trading_record(
@@ -6909,6 +8250,7 @@ def main() -> None:
             "build-orchestrator-assistant",
             "build-specialist-scoreboard",
             "run-rl-research",
+            "run-rl-idea-scout",
             "train-rl-ppo",
             "export-rl-policy",
             "archive-from-index",
@@ -6972,6 +8314,8 @@ def main() -> None:
             "export-dydx-funding",
             "funding-coverage",
             "funded-research-spine",
+            "refresh-apify-sources",
+            "apify-source-summary",
             "strategy-acceptance-checklist",
             "strategy-failure-attribution",
             "research-unblock-plan",
@@ -6996,7 +8340,16 @@ def main() -> None:
             "priority-dashboard",
             "priority-runbook",
             "paper-execution-preflight",
+            "paper-venue-preflight",
             "gap-test",
+            "gap-analysis-checklist",
+            "pre-mortem-checklist",
+            "post-mortem-checklist",
+            "postmortem-checklist",
+            "supreme-team",
+            "supreme-team-checklist",
+            "red-team-checklist",
+            "redteam-checklist",
             "learning-report",
             "build-ml-trade-filter-dataset",
             "train-ml-trade-filter",
@@ -7042,6 +8395,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--windows", type=int, default=12)
     parser.add_argument("--to-iso", default=None)
+    parser.add_argument("--similarity-k", type=int, default=6)
     parser.add_argument("--priority", default="Sharpe")
     parser.add_argument("--cw-strategy", default="Spread")
     parser.add_argument("--exchange", default="Dydx")
@@ -7082,6 +8436,7 @@ def main() -> None:
     parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--model-path", type=Path, default=None)
     parser.add_argument("--market", default=None)
+    parser.add_argument("--venue", default=None, help="Execution venue to target: dydx|hyperliquid|binance|binanceus|coinbase|bybit|auto")
     parser.add_argument(
         "--indexer-base",
         default="",
@@ -7110,6 +8465,11 @@ def main() -> None:
     parser.add_argument("--diagnostic-output", type=Path, default=None)
     parser.add_argument("--json-path", type=Path, default=None)
     parser.add_argument("--download-dir", type=Path, default=None)
+    parser.add_argument("--mcp-url", default=None, help="Apify MCP server URL; defaults to APIFY_MCP_SERVER_URL")
+    parser.add_argument("--source-filter", dest="source_filter", default=None, help="Limit Apify source refresh to a single source_id")
+    parser.add_argument("--wait-seconds", type=int, default=90, help="Actor fetch timeout for Apify (seconds)")
+    parser.add_argument("--no-fetch", action="store_true", help="Skip actor runs while building the Apify source coverage table")
+    parser.add_argument("--apify-token", default=None, help="Optional APIFY_API_TOKEN override")
     parser.add_argument("--endpoint-name", default="manual")
     parser.add_argument("--output-name", default=None)
     parser.add_argument("--realized-return", type=float, default=None)
@@ -7248,6 +8608,13 @@ def main() -> None:
     elif args.command == "run-rl-research":
         pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
         result = run_rl_research(pair_id=pair_id)
+        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+    elif args.command == "run-rl-idea-scout":
+        result = run_rl_idea_scout(
+            pair_filter=args.pair,
+            top_ideas=args.top_n,
+            similarity_k=args.similarity_k,
+        )
         print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
     elif args.command == "train-rl-ppo":
         pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
@@ -7500,6 +8867,50 @@ def main() -> None:
             require_two_leg=not args.allow_spread_only,
             output_path=args.output_path,
         )
+    elif args.command == "refresh-apify-sources":
+        mcp_url = args.mcp_url or os.getenv("APIFY_MCP_SERVER_URL", "").strip()
+        if not mcp_url:
+            raise SystemExit("refresh-apify-sources requires --mcp-url or APIFY_MCP_SERVER_URL")
+        token = args.apify_token or os.getenv("APIFY_API_TOKEN", "").strip()
+        result = refresh_apify_sources(
+            root=ROOT,
+            mcp_url=mcp_url,
+            source_filter=args.source_filter,
+            do_fetch=not args.no_fetch,
+            api_token=token if token else None,
+            wait_seconds=args.wait_seconds,
+        )
+        print(
+            json.dumps(
+                {
+                    "coverage_path": str(result.coverage_path),
+                    "manifest_path": str(result.manifest_path),
+                    "source_count": result.source_count,
+                    "sampled_count": result.sampled_count,
+                    "needs_api_key_count": result.needs_key_count,
+                    "failed_count": result.failed_count,
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "apify-source-summary":
+        mcp_url = args.mcp_url or os.getenv("APIFY_MCP_SERVER_URL", "").strip()
+        if not mcp_url:
+            raise SystemExit("apify-source-summary requires --mcp-url or APIFY_MCP_SERVER_URL")
+        sources = parse_apify_sources_from_mcp_url(mcp_url)
+        print(
+            json.dumps(
+                [
+                    {
+                        "source_id": source,
+                        "venue": infer_apify_venue(source),
+                        "type": "utility" if source.startswith("apify/") else "market_or_context_feed",
+                    }
+                    for source in sources
+                ],
+                indent=2,
+            )
+        )
     elif args.command == "strategy-acceptance-checklist":
         print_strategy_acceptance_checklist()
     elif args.command == "strategy-failure-attribution":
@@ -7652,8 +9063,20 @@ def main() -> None:
         print_priority_runbook()
     elif args.command == "paper-execution-preflight":
         print_paper_execution_preflight()
+    elif args.command == "paper-venue-preflight":
+        print_paper_venue_preflight(pair=args.pair, max_pairs=args.max_pairs)
     elif args.command == "gap-test":
         print_gap_test()
+    elif args.command == "gap-analysis-checklist":
+        print_gap_analysis_checklist(args.output_path)
+    elif args.command == "pre-mortem-checklist":
+        print_pre_mortem_checklist(args.output_path)
+    elif args.command in {"post-mortem-checklist", "postmortem-checklist"}:
+        print_post_mortem_checklist(args.output_path)
+    elif args.command in {"supreme-team", "supreme-team-checklist"}:
+        print_supreme_team_checkpoint()
+    elif args.command in {"red-team-checklist", "redteam-checklist"}:
+        print_red_team_checklist(args.output_path)
     elif args.command == "learning-report":
         write_learning_report()
     elif args.command == "build-ml-trade-filter-dataset":
@@ -7756,7 +9179,39 @@ def main() -> None:
             notional_usd=args.notional_usd,
             acceptance_path=args.acceptance_path,
             journal_path=args.journal_path,
+            venue=args.venue,
         )
+
+
+def _resolve_paper_venue(pair: str, requested_venue: str = "auto") -> str:
+    requested = (requested_venue or "").lower().strip()
+    if requested and requested != "auto":
+        return requested
+
+    options = _build_paper_venue_options(pair)
+    for option in options:
+        if bool(option.get("executable", False)):
+            return str(option.get("venue", "dydx"))
+    if options:
+        return str(options[0].get("venue", "dydx"))
+
+    target = (pair or "").replace("/", "-").upper()
+    universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
+    if not universe.empty and "pair" in universe.columns and "best_execution_venue" in universe.columns:
+        universe_pairs = universe[universe["pair"].astype(str).str.upper() == target]
+        if universe_pairs.empty:
+            alt = target.replace("-", "/")
+            universe_pairs = universe[universe["pair"].astype(str).str.upper() == alt]
+        if not universe_pairs.empty:
+            best = universe_pairs.iloc[0]
+            venue = str(best.get("best_execution_venue", "") or best.get("exchange", "") or "").strip().lower()
+            if venue:
+                return venue
+            if bool(best.get("dydx_tradable", False)):
+                return "dydx"
+            if str(best.get("decision_bucket", "")).upper() == "PROMOTE":
+                return "dydx"
+    return "dydx"
 
 
 if __name__ == "__main__":

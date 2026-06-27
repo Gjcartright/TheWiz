@@ -404,6 +404,15 @@ def _attach_leg_funding_to_rows(
                 row[output_column] = float(latest.iloc[-1])
         return
 
+    frame["_timestamp"] = (
+        pd.to_datetime(frame["_timestamp"], utc=True, errors="coerce")
+        .astype("datetime64[ns, UTC]")
+    )
+    right["_timestamp"] = (
+        pd.to_datetime(right["_timestamp"], utc=True, errors="coerce")
+        .astype("datetime64[ns, UTC]")
+    )
+
     merged = pd.merge_asof(
         frame.sort_values("_timestamp"),
         right[["_timestamp", "funding_bps"]].sort_values("_timestamp"),

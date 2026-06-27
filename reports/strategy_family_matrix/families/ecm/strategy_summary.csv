@@ -1,0 +1,4 @@
+strategy_id,strategy_name,family,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,median_gross_return,median_total_return,median_cost_drag,total_fees,total_slippage,total_funding,total_execution_risk,total_partial_fill_cost,median_avg_gross_exposure,total_trades,two_leg_runs,spread_runs
+8,Pure ECM,ecm,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0
+9,ECM Leadership,ecm,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0
+10,Leader/Follower Prediction,ecm,14,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,14,0

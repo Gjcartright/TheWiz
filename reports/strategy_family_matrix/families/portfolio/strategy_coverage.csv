@@ -1,0 +1,13 @@
+strategy_id,strategy_name,status,reason,rows
+25,Pair Ranking Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+25,Pair Ranking Strategy,skipped,rows<20,4
+26,Portfolio Rotation,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+26,Portfolio Rotation,skipped,rows<20,4
+27,Risk Adjusted Ranking,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+27,Risk Adjusted Ranking,skipped,rows<20,4
+28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+28,Copula Tail Risk Sizing,skipped,rows<20,4
+37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+37,Pure Copula Portfolio,skipped,rows<20,4

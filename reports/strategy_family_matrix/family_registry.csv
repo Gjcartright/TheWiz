@@ -1,0 +1,38 @@
+id,name,family,hypothesis,primary_fields,required_tests,executable_signal
+20,Dynamic Threshold Model,adaptive,Thresholds adapt to volatility/regime.,zscore;realized_volatility_percentile;regime,regime_walk_forward,True
+17,Proprietary Signal Stack,composite,Internal feature stack improves robust ranking.,ml_confidence;profile_match;ou_optimal,ablation,True
+18,Composite Quant Score,composite,Explainable factor blend ranks opportunities.,composite_score,weight_sensitivity,True
+19,Weighted Voting Model,composite,Independent model votes reduce false positives.,cointegration_score;ecm_score;copula_dislocation_score,vote_ablation,True
+5,Pure Copula,copula,Conditional probability distortion is alpha without spread z-score.,copula;conditional_probabilities,calibration;alpha_without_zscore,True
+6,Dual Conditional Copula,copula,Both conditional directions identify asymmetric mispricing.,conditional_probabilities;kendall,directional_calibration,True
+7,Tail Event Reversion,copula,Tail co-movement extremes mean-revert when systemic risk is contained.,tail_dependence;cvar;conditional_probabilities,stress_split,True
+29,Copula Risk Filter,copula,Avoid trades when copula implies crash co-dependence.,copula;tail_dependence,tail_filter_ablation,True
+33,Copula Dislocation Ranking Engine,copula,Largest calibrated copula dislocations outperform.,conditional_probabilities;copula_calibration_score,rank_ic,True
+34,Copula + Regime Strategy,copula,Copula edge is regime dependent.,conditional_probabilities;regime,regime_interaction,True
+35,Copula Divergence Persistence,copula,Persistence of probability distortion predicts trade timing.,conditional_probability_distortion,persistence_alpha,True
+8,Pure ECM,ecm,Adjustment coefficients predict next leg movement.,ecm_x;ecm_y;ecm_strength,granger_incremental_value,True
+9,ECM Leadership,ecm,Leader/follower asymmetry predicts follower catch-up.,ecm_x;ecm_y,lead_lag_stability,True
+10,Leader/Follower Prediction,ecm,One asset leads the equilibrium correction.,ecm_x;ecm_y;beta,directional_accuracy,True
+2,ZScore + ECM,hybrid,Z-score entries improve when ECM confirms correction.,zscore;ecm_strength;ecm_x;ecm_y,incremental_alpha;ablation,True
+3,ZScore + Copula,hybrid,Linear spread dislocation improves when joint probability is distorted.,zscore;conditional_probabilities;copula,ablation;calibration,True
+4,ECM + Copula + ZScore,hybrid,Three independent views agree on disequilibrium.,zscore;ecm_strength;conditional_probabilities,interaction_effects;walk_forward,True
+36,Copula + ECM Strategy,hybrid,Copula dislocation plus correction force improves entries.,conditional_probabilities;ecm_strength,ablation,True
+11,Half-Life Optimized,mean_reversion,Entries work best when holding horizon matches decay.,half_life;zscore,holding_period_fit,True
+12,Hurst Filter,mean_reversion,Mean-reversion signals work only under anti-persistent regimes.,hurst;zscore,filter_ablation,True
+13,Hurst + Half-Life,mean_reversion,Anti-persistence plus tradable decay improves z-score.,hurst;half_life;zscore,interaction_effects,True
+14,OU Optimal,mean_reversion,OU optimal stopping beats static thresholds.,ou_optimal;half_life;spread,threshold_comparison,True
+15,ML Confidence,ml,Calibrated model confidence ranks profitable trades.,ml_confidence,calibration;leakage_audit,True
+16,Profile Match,ml,Historical winner profile similarity predicts outcome.,profile_match,nearest_neighbor_validation,True
+30,Meta Model,ml,Trade outcome model improves selection.,all_features,walk_forward;calibration,True
+31,Feature Importance Model,ml,Feature attribution identifies true edge drivers.,all_features,permutation_importance,True
+32,Trade Outcome Predictor,ml,Predict expected return/drawdown/PF per setup.,all_features,target_separation,True
+25,Pair Ranking Strategy,portfolio,Top-ranked pairs outperform all signals.,composite_score,cross_sectional_rank_ic,True
+26,Portfolio Rotation,portfolio,Capital rotates to strongest pairs as edge decays.,composite_score;drawdown,turnover_costs,True
+27,Risk Adjusted Ranking,portfolio,Ranking by return per tail risk improves portfolio PF.,sharpe;cvar;drawdown,risk_adjusted_ic,True
+28,Copula Tail Risk Sizing,portfolio,Tail dependence controls size.,tail_dependence;cvar,sizing_ablation,True
+37,Pure Copula Portfolio,portfolio,Portfolio built entirely from copula-ranked dislocations.,copula_dislocation_score,portfolio_walk_forward,True
+21,HMM Regime Model,regime,Hidden-state regimes condition strategy selection.,returns;volatility,state_stability,True
+22,GMM Regime Model,regime,Distribution clusters identify market regimes.,returns;volatility,cluster_stability,True
+23,KMeans Regime Model,regime,Feature clusters separate favorable and hostile states.,returns;volatility,cluster_stability,True
+24,Regime Filtered Stat-Arb,regime,Stat-arb trades only in regimes with positive expectancy.,regime_strategy_match,regime_split,True
+1,Classic ZScore Mean Reversion,zscore,Spread extremes revert after costs.,zscore;spread;hedge_ratio,threshold_sweep;walk_forward,True

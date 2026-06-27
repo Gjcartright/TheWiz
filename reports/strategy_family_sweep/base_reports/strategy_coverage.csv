@@ -1,165 +1,112 @@
 strategy_id,strategy_name,status,reason,rows
-1,Classic ZScore Mean Reversion,evaluated,trades<100,4
-1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-1,Classic ZScore Mean Reversion,skipped,rows<20,2
-2,ZScore + ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-2,ZScore + ECM,skipped,rows<20,2
-3,ZScore + Copula,evaluated,trades<100,4
-3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+1,Classic ZScore Mean Reversion,skipped,rows<20,4
+2,ZScore + ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+2,ZScore + ECM,skipped,rows<20,4
+3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 3,ZScore + Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-3,ZScore + Copula,skipped,rows<20,2
-4,ECM + Copula + ZScore,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-4,ECM + Copula + ZScore,skipped,rows<20,2
-5,Pure Copula,evaluated,profit_factor<1.8;sharpe<1.2,1
-5,Pure Copula,evaluated,profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,1
-5,Pure Copula,evaluated,trades<100,2
-5,Pure Copula,evaluated,trades<100;profit_factor<1.8,1
-5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
-5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,5
-5,Pure Copula,skipped,rows<20,2
-6,Dual Conditional Copula,evaluated,trades<100,2
-6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8,1
-6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
+3,ZScore + Copula,skipped,rows<20,4
+4,ECM + Copula + ZScore,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+4,ECM + Copula + ZScore,skipped,rows<20,4
+5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+5,Pure Copula,skipped,rows<20,4
+6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-6,Dual Conditional Copula,skipped,rows<20,2
-7,Tail Event Reversion,evaluated,trades<100,2
-7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8,2
-7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
+6,Dual Conditional Copula,skipped,rows<20,4
+7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-7,Tail Event Reversion,skipped,rows<20,2
-8,Pure ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-8,Pure ECM,skipped,rows<20,2
-9,ECM Leadership,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-9,ECM Leadership,skipped,rows<20,2
-10,Leader/Follower Prediction,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-10,Leader/Follower Prediction,skipped,rows<20,2
-11,Half-Life Optimized,evaluated,trades<100,2
-11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8,2
-11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
-11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
-11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,1
+7,Tail Event Reversion,skipped,rows<20,4
+8,Pure ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+8,Pure ECM,skipped,rows<20,4
+9,ECM Leadership,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+9,ECM Leadership,skipped,rows<20,4
+10,Leader/Follower Prediction,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+10,Leader/Follower Prediction,skipped,rows<20,4
+11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+11,Half-Life Optimized,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
 11,Half-Life Optimized,evaluated,trades<100;sharpe<1.2,2
-11,Half-Life Optimized,skipped,rows<20,2
-12,Hurst Filter,evaluated,trades<100,5
-12,Hurst Filter,evaluated,trades<100;max_drawdown>0.15,1
-12,Hurst Filter,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-12,Hurst Filter,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
+11,Half-Life Optimized,skipped,rows<20,4
+12,Hurst Filter,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,2
 12,Hurst Filter,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
+12,Hurst Filter,evaluated,trades<100;sharpe<1.2,2
 12,Hurst Filter,evaluated,trades<100;sharpe<1.2;expectancy<=0,8
-12,Hurst Filter,skipped,rows<20,2
-13,Hurst + Half-Life,evaluated,trades<100,5
-13,Hurst + Half-Life,evaluated,trades<100;max_drawdown>0.15,1
-13,Hurst + Half-Life,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-13,Hurst + Half-Life,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
+12,Hurst Filter,skipped,rows<20,4
+13,Hurst + Half-Life,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,2
 13,Hurst + Half-Life,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
+13,Hurst + Half-Life,evaluated,trades<100;sharpe<1.2,2
 13,Hurst + Half-Life,evaluated,trades<100;sharpe<1.2;expectancy<=0,8
-13,Hurst + Half-Life,skipped,rows<20,2
-14,OU Optimal,evaluated,trades<100,1
-14,OU Optimal,evaluated,trades<100;profit_factor<1.8,3
+13,Hurst + Half-Life,skipped,rows<20,4
 14,OU Optimal,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 14,OU Optimal,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-14,OU Optimal,skipped,rows<20,2
-15,ML Confidence,evaluated,trades<100;profit_factor<1.8,4
+14,OU Optimal,skipped,rows<20,4
 15,ML Confidence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 15,ML Confidence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-15,ML Confidence,skipped,rows<20,2
-16,Profile Match,evaluated,trades<100,6
-16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
-16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
-16,Profile Match,skipped,rows<20,2
-17,Proprietary Signal Stack,evaluated,trades<100,2
-17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8,2
-17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
+15,ML Confidence,skipped,rows<20,4
+16,Profile Match,evaluated,trades<100,2
+16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
+16,Profile Match,skipped,rows<20,4
 17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
-17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
-17,Proprietary Signal Stack,skipped,rows<20,2
-18,Composite Quant Score,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-18,Composite Quant Score,skipped,rows<20,2
-19,Weighted Voting Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-19,Weighted Voting Model,skipped,rows<20,2
-20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8,4
-20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+17,Proprietary Signal Stack,skipped,rows<20,4
+18,Composite Quant Score,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+18,Composite Quant Score,skipped,rows<20,4
+19,Weighted Voting Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,2
+19,Weighted Voting Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+19,Weighted Voting Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,8
+19,Weighted Voting Model,skipped,rows<20,4
+20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-20,Dynamic Threshold Model,skipped,rows<20,2
-21,HMM Regime Model,evaluated,trades<100,6
-21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,6
-21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-21,HMM Regime Model,skipped,rows<20,2
-22,GMM Regime Model,evaluated,trades<100,6
-22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,4
-22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-22,GMM Regime Model,evaluated,trades<100;sharpe<1.2,3
-22,GMM Regime Model,skipped,rows<20,2
-23,KMeans Regime Model,evaluated,trades<100,6
-23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
+20,Dynamic Threshold Model,skipped,rows<20,4
+21,HMM Regime Model,evaluated,trades<100,2
+21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
+21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
+21,HMM Regime Model,skipped,rows<20,4
+22,GMM Regime Model,evaluated,trades<100,2
+22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
+22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
+22,GMM Regime Model,evaluated,trades<100;sharpe<1.2,2
+22,GMM Regime Model,skipped,rows<20,4
+23,KMeans Regime Model,evaluated,trades<100,2
+23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
 23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
-23,KMeans Regime Model,evaluated,trades<100;sharpe<1.2,1
-23,KMeans Regime Model,skipped,rows<20,2
-24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,2
-24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
-24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
-24,Regime Filtered Stat-Arb,evaluated,trades<100;sharpe<1.2;expectancy<=0,6
-24,Regime Filtered Stat-Arb,skipped,rows<20,2
-25,Pair Ranking Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-25,Pair Ranking Strategy,skipped,rows<20,2
-26,Portfolio Rotation,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-26,Portfolio Rotation,skipped,rows<20,2
-27,Risk Adjusted Ranking,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-27,Risk Adjusted Ranking,skipped,rows<20,2
-28,Copula Tail Risk Sizing,evaluated,profit_factor<1.8;sharpe<1.2,1
-28,Copula Tail Risk Sizing,evaluated,profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,1
-28,Copula Tail Risk Sizing,evaluated,trades<100,2
-28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8,1
-28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
-28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,5
-28,Copula Tail Risk Sizing,skipped,rows<20,2
-29,Copula Risk Filter,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-29,Copula Risk Filter,skipped,rows<20,2
-30,Meta Model,evaluated,trades<100,2
-30,Meta Model,evaluated,trades<100;profit_factor<1.8,2
-30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,11
-30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
-30,Meta Model,skipped,rows<20,2
-31,Feature Importance Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+23,KMeans Regime Model,skipped,rows<20,4
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,6
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+24,Regime Filtered Stat-Arb,evaluated,trades<100;sharpe<1.2;expectancy<=0,4
+24,Regime Filtered Stat-Arb,skipped,rows<20,4
+25,Pair Ranking Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+25,Pair Ranking Strategy,skipped,rows<20,4
+26,Portfolio Rotation,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+26,Portfolio Rotation,skipped,rows<20,4
+27,Risk Adjusted Ranking,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+27,Risk Adjusted Ranking,skipped,rows<20,4
+28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+28,Copula Tail Risk Sizing,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+28,Copula Tail Risk Sizing,skipped,rows<20,4
+29,Copula Risk Filter,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+29,Copula Risk Filter,skipped,rows<20,4
+30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+30,Meta Model,skipped,rows<20,4
 31,Feature Importance Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
-31,Feature Importance Model,skipped,rows<20,2
-32,Trade Outcome Predictor,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-32,Trade Outcome Predictor,skipped,rows<20,2
-33,Copula Dislocation Ranking Engine,evaluated,profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
-33,Copula Dislocation Ranking Engine,evaluated,trades<100,1
-33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8,2
-33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
-33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,5
-33,Copula Dislocation Ranking Engine,skipped,rows<20,2
+31,Feature Importance Model,skipped,rows<20,4
+32,Trade Outcome Predictor,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+32,Trade Outcome Predictor,skipped,rows<20,4
+33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+33,Copula Dislocation Ranking Engine,skipped,rows<20,4
 34,Copula + Regime Strategy,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,6
-34,Copula + Regime Strategy,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
-34,Copula + Regime Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,6
-34,Copula + Regime Strategy,skipped,rows<20,2
-35,Copula Divergence Persistence,evaluated,trades<100,2
-35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8,1
-35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
-35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15,1
+34,Copula + Regime Strategy,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+34,Copula + Regime Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,4
+34,Copula + Regime Strategy,skipped,rows<20,4
+35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
 35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
-35,Copula Divergence Persistence,skipped,rows<20,2
-36,Copula + ECM Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,18
-36,Copula + ECM Strategy,skipped,rows<20,2
-37,Pure Copula Portfolio,evaluated,profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
-37,Pure Copula Portfolio,evaluated,trades<100,1
-37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8,2
-37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2,1
-37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
-37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,5
-37,Pure Copula Portfolio,skipped,rows<20,2
+35,Copula Divergence Persistence,skipped,rows<20,4
+36,Copula + ECM Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+36,Copula + ECM Strategy,skipped,rows<20,4
+37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+37,Pure Copula Portfolio,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+37,Pure Copula Portfolio,skipped,rows<20,4

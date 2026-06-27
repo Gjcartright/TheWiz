@@ -1,0 +1,16 @@
+regime,strategy_name,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,median_gross_return,median_total_return,median_cost_drag,total_fees,total_slippage,total_funding,total_execution_risk,total_partial_fill_cost,median_avg_gross_exposure,total_trades,two_leg_runs,spread_runs
+ALL,ECM Leadership,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0
+ALL,Leader/Follower Prediction,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0
+ALL,Pure ECM,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0
+bear,ECM Leadership,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+bear,Leader/Follower Prediction,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+bear,Pure ECM,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+bull,ECM Leadership,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+bull,Leader/Follower Prediction,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+bull,Pure ECM,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+crisis,ECM Leadership,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+crisis,Leader/Follower Prediction,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+crisis,Pure ECM,2,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,2,0
+range,ECM Leadership,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0
+range,Leader/Follower Prediction,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0
+range,Pure ECM,4,0,inf,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,4,0

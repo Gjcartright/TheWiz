@@ -686,8 +686,16 @@ def _detailed_backtest_frame(frame: pd.DataFrame, signal: pd.Series, cost_model:
             * cost_model.partial_fill_penalty_bps
             / 10_000.0
         )
-        funding_x = pd.to_numeric(data.get("funding_x_bps", cost_model.funding_bps_per_day), errors="coerce").fillna(cost_model.funding_bps_per_day)
-        funding_y = pd.to_numeric(data.get("funding_y_bps", cost_model.funding_bps_per_day), errors="coerce").fillna(cost_model.funding_bps_per_day)
+        default_funding = pd.Series(
+            float(cost_model.funding_bps_per_day),
+            index=data.index,
+        )
+        funding_x = pd.to_numeric(data.get("funding_x_bps", default_funding), errors="coerce").fillna(
+            float(cost_model.funding_bps_per_day)
+        )
+        funding_y = pd.to_numeric(data.get("funding_y_bps", default_funding), errors="coerce").fillna(
+            float(cost_model.funding_bps_per_day)
+        )
         funding_cost = (
             weight_x.abs() * funding_x.abs() / 10_000.0 / cost_model.bars_per_day
             + weight_y.abs() * funding_y.abs() / 10_000.0 / cost_model.bars_per_day

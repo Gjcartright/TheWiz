@@ -1,0 +1,10 @@
+strategy_id,strategy_name,status,reason,rows
+17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+17,Proprietary Signal Stack,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+17,Proprietary Signal Stack,skipped,rows<20,4
+18,Composite Quant Score,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+18,Composite Quant Score,skipped,rows<20,4
+19,Weighted Voting Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,2
+19,Weighted Voting Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+19,Weighted Voting Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,8
+19,Weighted Voting Model,skipped,rows<20,4

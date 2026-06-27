@@ -1,0 +1,2 @@
+indexer_base,total_markets,active_markets,active_cross_markets,excluded_markets,cached_markets,risky_markets,anchor_markets,untested_candidate_markets,untested_candidate_pairs,tested_pairs,fetched_pairs
+https://indexer.dydx.trade,290,118,108,2,20,10,3,55,165,36,36

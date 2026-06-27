@@ -11,6 +11,7 @@ from quant_platform.orchestration.specialist_scoreboard import build_specialist_
 from quant_platform.rl.features import build_rl_feature_frame
 from quant_platform.rl.pair_trading_env import PairTradingEnv
 from quant_platform.rl.quantization import export_rl_policy
+from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
 from quant_platform.rl.rl_backtest import run_rl_research
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
@@ -164,6 +165,16 @@ def test_orchestrator_agents_stage_runs_mini_agent_reports():
     assert frame.loc[frame["stage"] == "mini_agents", "status"].iloc[0] == "passed"
 
 
+def test_orchestrator_supreme_team_stage_runs_and_records_checkpoint(tmp_path):
+    result = run_orchestrator(stage="supreme_team", report_only=True, root=tmp_path)
+    frame = pd.read_csv(result.paths["orchestrator_status"])
+
+    assert "supreme_team_checkpoint" in set(frame["stage"])
+    assert frame.loc[frame["stage"] == "supreme_team_checkpoint", "status"].iloc[0] == "passed"
+    evidence = str(frame.loc[frame["stage"] == "supreme_team_checkpoint", "evidence_path"].iloc[0])
+    assert "; " in evidence or ";" in evidence
+
+
 def test_rl_feature_builder_blocks_future_columns():
     frame = pd.DataFrame({"zscore": [1.0], "profit_after_cost": [0.1]})
 
@@ -205,9 +216,19 @@ def test_dashboard_includes_orchestrator_and_rl_views():
     result = build_command_dashboard()
 
     assert "orchestrator_run_status" in result.paths
+    assert "supreme_team_checkpoint" in result.paths
     assert "rl_research_status" in result.paths
     assert "rl_acceptance" in result.paths
     assert "quantization_readiness" in result.paths
+
+
+def test_orchestrator_all_runs_checkpoint_before_dashboard():
+    result = run_orchestrator(stage="all", report_only=True)
+    frame = pd.read_csv(result.paths["orchestrator_status"])
+
+    stage_order = list(frame["stage"])
+    if "supreme_team_checkpoint" in stage_order and "build_dashboard" in stage_order:
+        assert stage_order.index("supreme_team_checkpoint") < stage_order.index("build_dashboard")
 
 
 def test_train_ppo_reports_dependency_status_without_live_enablement():
@@ -228,3 +249,73 @@ def test_export_rl_policy_blocks_until_acceptance_passes():
     assert result.summary["exported"] is False
     assert result.summary["blocker"] == "rl_acceptance_not_passed"
     assert parity["blocker"].iloc[0] == "rl_acceptance_not_passed"
+
+
+def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "timeframe": "1d",
+                "strategy": "Static Spread",
+                "regime": "trend",
+                "exact_mode": "Static Spread",
+                "profit_after_cost": 0.15,
+                "zscore": 1.2,
+                "spread": 0.08,
+                "closed_trades": 4,
+                "spread_slope": 0.11,
+                "beta_stability": 0.5,
+            },
+            {
+                "pair": "SOL-USD/WLD-USD",
+                "timeframe": "1d",
+                "strategy": "OU Spread",
+                "regime": "range",
+                "exact_mode": "OU Spread",
+                "profit_after_cost": 0.06,
+                "zscore": -1.1,
+                "spread": 0.04,
+                "closed_trades": 6,
+                "spread_slope": -0.03,
+                "beta_stability": 0.64,
+            },
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_rl_idea_scout(root=tmp_path, top_ideas=1, similarity_k=1)
+    ideas = pd.read_csv(result.paths["rl_ideas"])
+    sim = pd.read_csv(result.paths["rl_pair_similarity"])
+    summary = pd.read_csv(result.paths["rl_idea_summary"])
+
+    assert int(summary.loc[0, "generated_ideas"]) == 1
+    assert int(summary.loc[0, "generated_similar_pairs"]) == len(sim)
+    assert "pair" in ideas.columns
+    assert "similar_pair" in sim.columns
+    assert {"generated_ideas", "generated_similar_pairs", "policy_type", "evidence_source"}.issubset(summary.columns)
+    assert not ideas.empty
+
+
+def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "profit_after_cost": 0.11,
+                "timeframe": "1d",
+                "strategy": "Static Spread",
+                "regime": "range",
+                "exact_mode": "Static Spread",
+            }
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_orchestrator(stage="rl", root=tmp_path, report_only=True)
+    frame = pd.read_csv(result.paths["orchestrator_status"])
+
+    assert "run_rl_idea_scout" in set(frame["stage"])
+    assert frame.loc[frame["stage"] == "run_rl_idea_scout", "status"].iloc[0] == "passed"

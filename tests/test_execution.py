@@ -5,11 +5,13 @@ from quant_platform.execution import (
     ExecutionMode,
     FillReport,
     OrderIntent,
+    PaperVenueExecution,
     PaperDydxExecution,
     SpreadOrderPlan,
     append_paper_trading_record,
     build_dydx_indexer_adapter,
     build_dydx_order_client_adapter,
+    build_venue_order_client_adapter,
     build_market_neutral_spread_intents,
     build_execution_venue,
     DydxV4IndexerAdapter,
@@ -18,6 +20,7 @@ from quant_platform.execution import (
     paper_trading_record,
     build_research_gated_paper_plan,
     submit_paper_plan,
+    validate_venue_order_client_adapter,
     validate_dydx_order_client_adapter,
 )
 
@@ -36,6 +39,24 @@ class FakeDydxClient:
             avg_price=float(intent.limit_price or 0.0),
             fee=0.01,
             slippage_bps=1.0,
+            status="paper_submitted",
+        )
+
+
+class FakeVenueClient:
+    def __init__(self):
+        self.orders = []
+
+    def place_order(self, intent, config):
+        self.orders.append((intent, config))
+        return FillReport(
+            order_id="fake-venue-order",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=float(intent.limit_price or 0.0),
+            fee=0.0,
+            slippage_bps=0.0,
             status="paper_submitted",
         )
 
@@ -244,6 +265,60 @@ class BadOrderAdapter:
     assert report["signature_accepts_intent_config"] is False
     assert report["valid"] is False
     assert report["error"] == "place_order must accept intent and config arguments"
+
+
+def test_load_venue_specific_order_client_respects_venue_adapter_env(tmp_path, monkeypatch):
+    adapter_module = tmp_path / "venue_order_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+
+class VenueAdapter:
+    def place_order(self, intent, config):
+        return FillReport(
+            order_id="loaded-venue-adapter",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=0.0,
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("HYPERLIQUID_PAPER_ORDER_ADAPTER", "venue_order_adapter:VenueAdapter")
+
+    adapter = build_venue_order_client_adapter("hyperliquid")
+
+    fill = adapter.place_order(OrderIntent(market="BTC-USD", side="BUY", size=0.25), None)
+
+    assert fill.order_id == "loaded-venue-adapter"
+    assert fill.status == "paper_submitted"
+
+
+def test_build_execution_venue_routes_generic_venue_through_paper_execution():
+    client = FakeVenueClient()
+    venue = build_execution_venue("hyperliquid", config=DydxNetworkConfig.paper_testnet(), order_client=client)
+
+    fill = venue.place_order(OrderIntent(market="BTC-USD", side="BUY", size=0.25))
+
+    assert isinstance(venue, PaperVenueExecution)
+    assert fill.status == "paper_submitted"
+
+
+def test_validate_venue_order_client_adapter_checks_venue_contract():
+    report = validate_venue_order_client_adapter(
+        "hyperliquid",
+        adapter_path="quant_platform.dydx_record_only_adapter:RecordOnlyDydxOrderAdapter",
+    )
+
+    assert report["configured"] is True
+    assert report["venue"] == "hyperliquid"
+    assert report["valid"] is True
 
 
 def test_paper_testnet_config_loads_credentials_from_env(monkeypatch):

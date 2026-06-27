@@ -1,0 +1,9 @@
+item_id,area,status,severity,owner,required_proof,action,evidence
+G1,rl_policy_type,gap,critical,orchestration,"proof of non-baseline trained policy exists","Replace safe_quantile_baseline with trained RL policy and persist training artifacts","reports/rl/rl_training_report.csv"
+G2,rl_dependency,blocked,critical,ops,"stable-baselines3 installed","install dependency and rerun train-rl-ppo","reports/rl/rl_ppo_dependency_report.csv"
+G3,rl_acceptance,gap,high,orchestration,"acceptance gates all pass","improve RL policy metrics and concentration checks to clear `rl_acceptance_report`","reports/rl/rl_acceptance_report.csv"
+G4,rl_artifacts_missing,gap,high,orchestrator,"rl_ideas and rl_pair_similarity produced","materialize files required by rl_idea_agent output contract","reports/agents/mini_agent_registry.csv"
+G5,rl_quantization,gap,high,ml_ops,"parity report accepted","enable onnx/int8 only after RL acceptance pass","reports/rl/rl_quantization_parity.csv"
+G6,rl_execution_blocked,blocked,high,execution,"execution_manager returns explicit policy state","retain hard gate: rl_live_submission_blocked_in_v1 until strategy+model+rl accepted","src/quant_platform/rl/rl_execution_manager.py"
+G7,rl_evidence_visibility,improvement,medium,dashboard,"supreme team captures RL + evidence status","add RL-specific Supreme Team file and reference in command dashboard","reports/supreme_team/rl_supreme_team_plan.md;reports/supreme_team/latest_supreme_team.md"
+G8,rl_similarity_search,improvement,medium,research,"pair similarity task has outputs","add evaluator to generate rl_pair_similarity.csv from pair feature vectors and recent RL winners","reports/agents/rl_pair_similarity.csv"

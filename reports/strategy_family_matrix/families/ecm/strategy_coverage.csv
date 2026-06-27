@@ -1,0 +1,7 @@
+strategy_id,strategy_name,status,reason,rows
+8,Pure ECM,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+8,Pure ECM,skipped,rows<20,4
+9,ECM Leadership,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+9,ECM Leadership,skipped,rows<20,4
+10,Leader/Follower Prediction,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+10,Leader/Follower Prediction,skipped,rows<20,4

@@ -1,0 +1,4 @@
+strategy_id,strategy_name,status,reason,rows
+20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+20,Dynamic Threshold Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+20,Dynamic Threshold Model,skipped,rows<20,4

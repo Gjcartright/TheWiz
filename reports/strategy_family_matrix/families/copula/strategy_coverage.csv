@@ -1,0 +1,22 @@
+strategy_id,strategy_name,status,reason,rows
+5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+5,Pure Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+5,Pure Copula,skipped,rows<20,4
+6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+6,Dual Conditional Copula,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+6,Dual Conditional Copula,skipped,rows<20,4
+7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+7,Tail Event Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+7,Tail Event Reversion,skipped,rows<20,4
+29,Copula Risk Filter,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+29,Copula Risk Filter,skipped,rows<20,4
+33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,8
+33,Copula Dislocation Ranking Engine,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,6
+33,Copula Dislocation Ranking Engine,skipped,rows<20,4
+34,Copula + Regime Strategy,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,6
+34,Copula + Regime Strategy,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+34,Copula + Regime Strategy,evaluated,trades<100;sharpe<1.2;expectancy<=0,4
+34,Copula + Regime Strategy,skipped,rows<20,4
+35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+35,Copula Divergence Persistence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+35,Copula Divergence Persistence,skipped,rows<20,4

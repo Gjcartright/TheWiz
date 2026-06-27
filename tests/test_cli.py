@@ -60,6 +60,7 @@ from quant_platform.cli import (
     run_dydx_long_history,
     run_pair_detail_experiments,
     run_paper_plan,
+    paper_venue_preflight_report,
     strategy_acceptance_checklist_report,
     strategy_failure_attribution_report,
     zscore_threshold_sweep_report,
@@ -206,6 +207,346 @@ def test_cli_paper_plan_blocks_record_only_adapter_before_submission(tmp_path, m
     assert list(journal["plan_status"]) == ["blocked"]
     assert "record_only_dydx_order_client_adapter" in journal["plan_reason"].iloc[0]
     assert journal["fills_json"].iloc[0] == "[]"
+
+
+def test_resolve_paper_venue_prefers_executable_dydx_when_multiple_venues_available(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    market_context = pd.DataFrame(
+        [
+            {
+                "asset": "ETH",
+                "venue": "dydx",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "dydx_execution_candidate",
+            },
+            {
+                "asset": "BTC",
+                "venue": "dydx",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "dydx_execution_candidate",
+            },
+            {
+                "asset": "ETH",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_research_candidate",
+            },
+            {
+                "asset": "BTC",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_research_candidate",
+            },
+        ]
+    )
+    processed = tmp_path / "data" / "processed"
+    processed.mkdir(parents=True)
+    market_context.to_csv(processed / "market_venue_context.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-BTC",
+                "best_execution_venue": "hyperliquid",
+                "available_venues": "dydx;hyperliquid",
+                "asset_x": "ETH",
+                "asset_y": "BTC",
+                "exchange": "hyperliquid",
+            }
+        ]
+    ).to_csv(processed / "pair_universe.csv", index=False)
+
+    assert cli._resolve_paper_venue("ETH-BTC", "auto") == "dydx"
+
+
+def test_run_paper_plan_with_explicit_non_dydx_venue_blocks_for_execution_readiness(tmp_path):
+    acceptance_path = tmp_path / "acceptance_report.csv"
+    journal_path = tmp_path / "paper_trading_journal.csv"
+    pd.DataFrame([{"strategy_id": 1, "production_eligible": True, "acceptance_reason": "passed"}]).to_csv(
+        acceptance_path,
+        index=False,
+    )
+
+    cli.run_paper_plan(
+        pair="ETH-BTC",
+        strategy_id=1,
+        signal=1.0,
+        hedge_ratio=1.0,
+        beta=1.0,
+        notional_usd=1000.0,
+        acceptance_path=acceptance_path,
+        journal_path=journal_path,
+        venue="hyperliquid",
+    )
+
+    journal = pd.read_csv(journal_path)
+    assert list(journal["plan_status"]) == ["blocked"]
+    assert journal["plan_reason"].iloc[0].startswith("hyperliquid_not_ready")
+    assert "missing_hyperliquid_order_client_adapter" in journal["blockers"].iloc[0]
+
+
+def test_run_paper_plan_with_explicit_non_dydx_venue_runs_with_adapter(tmp_path, monkeypatch):
+    acceptance_path = tmp_path / "acceptance_report.csv"
+    journal_path = tmp_path / "paper_trading_journal.csv"
+    pd.DataFrame([{"strategy_id": 1, "production_eligible": True, "acceptance_reason": "passed"}]).to_csv(
+        acceptance_path,
+        index=False,
+    )
+
+    adapter_module = tmp_path / "fake_hyperliquid_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+
+class FakeHyperliquidAdapter:
+    def __init__(self):
+        self.calls = 0
+
+    def place_order(self, intent, config):
+        self.calls += 1
+        return FillReport(
+            order_id="hyperliquid-test",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=float(intent.limit_price or 0.0),
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("HYPERLIQUID_PAPER_ORDER_ADAPTER", "fake_hyperliquid_adapter:FakeHyperliquidAdapter")
+
+    cli.run_paper_plan(
+        pair="ETH-BTC",
+        strategy_id=1,
+        signal=1.0,
+        hedge_ratio=1.0,
+        beta=1.0,
+        notional_usd=1000.0,
+        acceptance_path=acceptance_path,
+        journal_path=journal_path,
+        venue="hyperliquid",
+    )
+
+    journal = pd.read_csv(journal_path)
+    assert list(journal["plan_status"]) == ["paper_ready"]
+    fills = json.loads(journal["fills_json"].iloc[0])
+    assert fills and fills[0]["status"] == "paper_submitted"
+
+
+def test_paper_venue_preflight_reports_missing_venue_blockers(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
+    monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
+    monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
+    monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+
+    adapter_module = tmp_path / "dydx_order_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+
+class ReadyOrderAdapter:
+    def place_order(self, intent, config):
+        return FillReport(
+            order_id="ready",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=0.0,
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "dydx_order_adapter:ReadyOrderAdapter")
+
+    data_dir = tmp_path / "data" / "processed"
+    reports = tmp_path / "reports"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    reports.mkdir()
+    market_context = pd.DataFrame(
+        [
+            {
+                "asset": "ETH",
+                "venue": "dydx",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "dydx_execution_candidate",
+            },
+            {
+                "asset": "BTC",
+                "venue": "dydx",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "dydx_execution_candidate",
+            },
+            {
+                "asset": "ETH",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_candidate",
+            },
+            {
+                "asset": "BTC",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_candidate",
+            },
+        ]
+    )
+    market_context.to_csv(data_dir / "market_venue_context.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-BTC",
+                "best_execution_venue": "dydx",
+                "available_venues": "dydx;hyperliquid",
+                "asset_x": "ETH",
+                "asset_y": "BTC",
+                "exchange": "dydx",
+                "combined_score": 10,
+            }
+        ]
+    ).to_csv(data_dir / "pair_universe.csv", index=False)
+
+    frame = paper_venue_preflight_report(pair="ETH-BTC")
+    rows = frame.set_index("venue")
+
+    assert bool(rows.loc["dydx", "ready_for_submission"]) is True
+    assert bool(rows.loc["dydx", "execution_ready"]) is True
+    assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is False
+    assert "missing_hyperliquid_order_client_adapter" in rows.loc["hyperliquid", "blockers"]
+
+
+def test_paper_venue_preflight_marks_ready_when_non_dydx_adapter_ready(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    adapter_module = tmp_path / "hyperliquid_order_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+
+class ReadyOrderAdapter:
+    def place_order(self, intent, config):
+        return FillReport(
+            order_id="ready",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=0.0,
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("HYPERLIQUID_PAPER_ORDER_ADAPTER", "hyperliquid_order_adapter:ReadyOrderAdapter")
+
+    data_dir = tmp_path / "data" / "processed"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "asset": "ETH",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_candidate",
+            },
+            {
+                "asset": "BTC",
+                "venue": "hyperliquid",
+                "tradable": True,
+                "execution_authority": True,
+                "blocker": "",
+                "open_interest": 0,
+                "open_interest_usd": 0,
+                "volume_24h": 0,
+                "venue_lane": "hyperliquid_candidate",
+            },
+        ]
+    ).to_csv(data_dir / "market_venue_context.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-BTC",
+                "best_execution_venue": "hyperliquid",
+                "available_venues": "hyperliquid",
+                "asset_x": "ETH",
+                "asset_y": "BTC",
+                "exchange": "hyperliquid",
+                "combined_score": 10,
+            }
+        ]
+    ).to_csv(data_dir / "pair_universe.csv", index=False)
+
+    frame = paper_venue_preflight_report(pair="ETH-BTC")
+    rows = frame.set_index("venue")
+
+    assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is True
+    assert bool(rows.loc["hyperliquid", "execution_ready"]) is True
+    assert bool(rows.loc["hyperliquid", "adapter_ready"]) is True
+
+
+def test_split_pair_assets_handles_dydx_four_segment_pairs():
+    assert cli._split_pair_assets("DOGE-USD-LTC-USD") == ["DOGE", "LTC"]
+
+
+def test_normalize_dydx_pair_keeps_four_segment_structure():
+    assert cli._normalize_dydx_pair("DOGE-USD-LTC-USD") == "DOGE-USD-LTC-USD"
 
 
 def test_verify_crypto_wizards_live_artifacts_reports_missing_payloads(tmp_path, monkeypatch):
@@ -3790,6 +4131,325 @@ def test_priority_gap_test_report_classifies_open_gaps(tmp_path, monkeypatch):
     assert rows.loc["paper_execution_gate", "severity"] == "high"
     assert rows.loc["learning_event_store", "severity"] == "medium"
     assert "spread,zscore,ecm_x" in rows.loc["crypto_wizards_capture", "required_proof"]
+
+
+def test_gap_analysis_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    fake_gap_report = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "captures=0",
+                "required_proof": "run capture helper",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "capture history",
+            },
+            {
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "gap",
+                "severity": "high",
+                "gap": "missing_strategy_results",
+                "current_evidence": "results=0",
+                "required_proof": "run strategy experiments",
+                "source_report": "reports/acceptance_report.csv",
+                "next_action": "run experiments",
+            },
+        ]
+    )
+    monkeypatch.setattr(cli, "priority_gap_test_report", lambda readiness=None: fake_gap_report)
+
+    gap_csv, gap_md = cli.print_gap_analysis_checklist()
+
+    assert gap_csv.exists()
+    assert gap_md.exists()
+    csv_rows = pd.read_csv(gap_csv)
+    assert len(csv_rows) == 2
+    assert set(csv_rows["status"]) == {"gap"}
+    assert set(csv_rows["severity"]) == {"critical", "high"}
+    assert (tmp_path / "reports" / "gap_analysis_index.csv").exists()
+    assert "Gap Analysis Checkpoint" in gap_md.read_text(encoding="utf-8")
+
+
+def test_pre_mortem_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    fake_gap_report = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "captures=0",
+                "required_proof": "run capture helper",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "capture history",
+            },
+            {
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "gap",
+                "severity": "high",
+                "gap": "missing_strategy_results",
+                "current_evidence": "results=0",
+                "required_proof": "run strategy experiments",
+                "source_report": "reports/acceptance_report.csv",
+                "next_action": "run experiments",
+            },
+        ]
+    )
+    monkeypatch.setattr(cli, "priority_gap_test_report", lambda readiness=None: fake_gap_report)
+
+    pm_csv, pm_md = cli.print_pre_mortem_checklist()
+
+    assert pm_csv.exists()
+    assert pm_md.exists()
+    rows = pd.read_csv(pm_csv)
+    assert len(rows) == 2
+    assert set(rows["status"]) == {"gap"}
+    assert set(rows["failure_mode"])  # non-empty
+    assert set(rows["prevention"])  # non-empty
+    assert "pre_mortem_question" in rows.columns
+    assert "Pre-Mortem Checkpoint" in pm_md.read_text(encoding="utf-8")
+    assert (tmp_path / "reports" / "pre_mortem_index.csv").exists()
+
+
+def test_post_mortem_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    fake_gap_report = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "captures=0",
+                "required_proof": "run capture helper",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "capture history",
+            },
+            {
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "pass",
+                "severity": "none",
+                "gap": "",
+                "current_evidence": "results=100",
+                "required_proof": "run strategy experiments",
+                "source_report": "reports/acceptance_report.csv",
+                "next_action": "run experiments",
+            },
+        ]
+    )
+    monkeypatch.setattr(cli, "priority_gap_test_report", lambda readiness=None: fake_gap_report)
+
+    pm_path = tmp_path / "reports" / "post_mortem" / "latest_post_mortem.csv"
+    pm_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "run_id": "post_mortem_previous",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "pass",
+            },
+            {
+                "run_id": "post_mortem_previous",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "gap",
+            },
+        ]
+    ).to_csv(pm_path, index=False)
+
+    post_csv, post_md = cli.print_post_mortem_checklist()
+
+    assert post_csv.exists()
+    assert post_md.exists()
+    rows = pd.read_csv(post_csv)
+    assert len(rows) == 2
+    assert set(rows["trajectory"]) == {"regressed", "resolved"}
+    assert set(rows["incident_observed"])  # non-empty
+    assert "trajectory" in rows.columns
+    assert "post_mortem_insight" in rows.columns
+    assert "Post-Mortem Checkpoint" in post_md.read_text(encoding="utf-8")
+    assert (tmp_path / "reports" / "post_mortem_index.csv").exists()
+
+
+def test_red_team_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    fake_gap_report = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "captures=0",
+                "required_proof": "run capture helper",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "capture history",
+            },
+            {
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "pass",
+                "severity": "low",
+                "gap": "",
+                "current_evidence": "results=100",
+                "required_proof": "run strategy experiments",
+                "source_report": "reports/acceptance_report.csv",
+                "next_action": "run experiments",
+            },
+        ]
+    )
+    monkeypatch.setattr(cli, "priority_gap_test_report", lambda readiness=None: fake_gap_report)
+
+    red_csv, red_md = cli.print_red_team_checklist()
+
+    assert red_csv.exists()
+    assert red_md.exists()
+    rows = pd.read_csv(red_csv)
+    assert len(rows) == 2
+    assert set(rows["status"]) == {"gap", "pass"}
+    assert "red_team_hypothesis" in rows.columns
+    assert "attack_vector" in rows.columns
+    assert "adversarial_question" in rows.columns
+    assert "control_test" in rows.columns
+    assert (rows.loc[rows["status"] == "pass", "done"] == True).all()
+    assert "Red Team Checkpoint" in red_md.read_text(encoding="utf-8")
+    assert (tmp_path / "reports" / "red_team_index.csv").exists()
+
+
+def test_supreme_team_checkpoint_builds_next_action_plan(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    reports = tmp_path / "reports"
+    gap_dir = reports / "gap_analysis"
+    pre_dir = reports / "pre_mortem"
+    post_dir = reports / "post_mortem"
+    red_dir = reports / "red_team"
+    gap_dir.mkdir(parents=True, exist_ok=True)
+    pre_dir.mkdir(parents=True, exist_ok=True)
+    post_dir.mkdir(parents=True, exist_ok=True)
+    red_dir.mkdir(parents=True, exist_ok=True)
+
+    fake_gap = gap_dir / "gap_fake.csv"
+    fake_pre = pre_dir / "pre_fake.csv"
+    fake_post = post_dir / "post_fake.csv"
+    fake_red = red_dir / "red_fake.csv"
+
+    pd.DataFrame(
+        [
+            {
+                "run_id": "run_1",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "missing payload",
+                "required_proof": "capture quality feed",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "capture history",
+                "done": False,
+            }
+        ]
+    ).to_csv(fake_gap, index=False)
+    pd.DataFrame(
+        [
+            {
+                "run_id": "run_1",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "status": "gap",
+                "severity": "critical",
+                "gap": "missing_nested_payload",
+                "current_evidence": "none",
+                "required_proof": "capture quality feed",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "pre_mortem_question": "q",
+                "failure_mode": "f",
+                "prevention": "collect missing feeds",
+                "done": False,
+            }
+        ]
+    ).to_csv(fake_pre, index=False)
+    pd.DataFrame(
+        [
+            {
+                "run_id": "run_1",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P2",
+                "area": "strategy_acceptance",
+                "status": "pass",
+                "severity": "high",
+                "gap": "",
+                "current_evidence": "",
+                "required_proof": "strategy evidence",
+                "source_report": "reports/strategy_acceptance_checklist.csv",
+                "incident_observed": "",
+                "trajectory": "resolved",
+                "post_mortem_insight": "resolved already",
+                "prevention_from_pre_mortem": "",
+                "done": True,
+            }
+        ]
+    ).to_csv(fake_post, index=False)
+    pd.DataFrame(
+        [
+            {
+                "run_id": "run_1",
+                "timestamp_utc": "2026-01-01_000000Z",
+                "priority": "P3",
+                "area": "dydx_testnet_readiness",
+                "status": "pass",
+                "severity": "high",
+                "gap": "",
+                "current_evidence": "",
+                "required_proof": "execute checklist",
+                "source_report": "reports/dydx_execution_checklist.csv",
+                "red_team_hypothesis": "",
+                "attack_vector": "",
+                "adversarial_question": "",
+                "control_test": "run adapter contract check",
+                "done": True,
+            }
+        ]
+    ).to_csv(fake_red, index=False)
+
+    monkeypatch.setattr(cli, "print_gap_analysis_checklist", lambda run_dir=None: (fake_gap, fake_gap.with_suffix(".md")))
+    monkeypatch.setattr(cli, "print_pre_mortem_checklist", lambda run_dir=None: (fake_pre, fake_pre.with_suffix(".md")))
+    monkeypatch.setattr(cli, "print_post_mortem_checklist", lambda run_dir=None: (fake_post, fake_post.with_suffix(".md")))
+    monkeypatch.setattr(cli, "print_red_team_checklist", lambda run_dir=None: (fake_red, fake_red.with_suffix(".md")))
+
+    (fake_gap.with_suffix(".md")).write_text("# gap", encoding="utf-8")
+    (fake_pre.with_suffix(".md")).write_text("# pre", encoding="utf-8")
+    (fake_post.with_suffix(".md")).write_text("# post", encoding="utf-8")
+    (fake_red.with_suffix(".md")).write_text("# red", encoding="utf-8")
+
+    plan_csv, plan_md = cli.print_supreme_team_checkpoint()
+
+    assert plan_csv.exists()
+    assert plan_md.exists()
+    rows = pd.read_csv(plan_csv)
+    assert len(rows) == 2
+    assert set(rows["source_checkpoint"]) == {"gap_analysis", "pre_mortem"}
+    assert list(rows["status"]) == ["gap", "gap"]
+    assert "Supreme Team Checkpoint" in plan_md.read_text(encoding="utf-8")
+    assert (tmp_path / "reports" / "supreme_team_index.csv").exists()
+    assert plan_csv.exists()
 
 
 def test_research_spine_skips_experiments_when_two_leg_history_missing(tmp_path, monkeypatch):

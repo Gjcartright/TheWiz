@@ -1,0 +1,22 @@
+pair,regime,strategy_id,strategy_name,family,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,total_trades
+BTC-USD-SOL-USD,ALL,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,17,Proprietary Signal Stack,composite,2,0,0.20855171791549193,-1.7668381630353407,0.20898834921286358,52
+BTC-USD-SOL-USD,ALL,19,Weighted Voting Model,composite,2,0,0.14353173405828434,-2.30753940387084,0.2558102940966541,64
+BTC-USD-SOL-USD,crisis,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,17,Proprietary Signal Stack,composite,2,0,0.6216711635080265,-1.1126531267470443,0.12338657060018027,14
+BTC-USD-SOL-USD,crisis,19,Weighted Voting Model,composite,2,0,0.5969831595485726,-1.299678698577904,0.12878350575731623,14
+BTC-USD-SOL-USD,range,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,17,Proprietary Signal Stack,composite,2,0,0.14252583026210047,-2.2939352666564243,0.2039473542629079,52
+BTC-USD-SOL-USD,range,19,Weighted Voting Model,composite,2,0,0.0965169840163411,-2.8860873886506164,0.24495903358148902,60
+SOL-USD-LINK-USD,ALL,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,19,Weighted Voting Model,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,17,Proprietary Signal Stack,composite,2,0,0.6555559789836678,-0.6249239022949935,0.05113459052235039,8
+SOL-USD-LINK-USD,bear,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,19,Weighted Voting Model,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,17,Proprietary Signal Stack,composite,2,0,0.0,-9.315733813731372,0.04756704019722659,4
+SOL-USD-LINK-USD,bull,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,19,Weighted Voting Model,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,17,Proprietary Signal Stack,composite,2,0,0.800342901333674,-1.5907018655623864,0.03072370988178552,6
+SOL-USD-LINK-USD,range,18,Composite Quant Score,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,19,Weighted Voting Model,composite,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,17,Proprietary Signal Stack,composite,2,0,0.06435547790709449,-0.38298813955136934,0.026210788212442007,4

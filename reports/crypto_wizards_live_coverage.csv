@@ -1,0 +1,63 @@
+type,name,present_in_live,missing_fields,prescanned_present,pair_detail_present,source_fields,notes
+field,cointegration,True,,True,False,[].johansen_coint;[].coint_eg,Evidence that a linear spread is stationary.
+field,hedge_ratio,True,,True,True,[].hedge_ratio;pair_detail:ETH-USD-SOL-USD:hedge_ratio;pair_detail:BNB-USD-LINK-USD:hedge_ratio;pair_detail:AAVE-USD-UNI-USD:hedge_ratio;pair_detail:ARB-USD-OP-USD:hedge_ratio;pair_detail:BTC-USD-AVAX-USD:hedge_ratio;pair_detail:BTC-USD-ETH-USD:hedge_ratio;pair_detail:BTCUSDT-ETHUSDT:hedge_ratio;pair_detail:BTC-USD-LINK-USD:hedge_ratio;pair_detail:BTC-USD-SOL-USD:hedge_ratio;pair_detail:BTCUSDT-SOLUSDT:hedge_ratio;pair_detail:DOGE-USD-LTC-USD:hedge_ratio;pair_detail:DOGE-USD-XRP-USD:hedge_ratio;pair_detail:ETH-USD-AVAX-USD:hedge_ratio;pair_detail:ETH-USD-LINK-USD:hedge_ratio;pair_detail:ETH-USD-MKR-USD:hedge_ratio;pair_detail:ETHUSDT-SOLUSDT:hedge_ratio;pair_detail:MATIC-USD-ARB-USD:hedge_ratio;pair_detail:SOL-USD-AVAX-USD:hedge_ratio;pair_detail:SOL-USD-LINK-USD:hedge_ratio,Position ratio that defines the spread between assets.
+field,beta,False,beta,False,False,,Market or pair sensitivity used for exposure normalization.
+field,ecm_x,True,,False,True,pair_detail:dependency_chart_option,Error correction term or adjustment coefficient for asset X.
+field,ecm_y,True,,False,True,pair_detail:dependency_chart_option,Error correction term or adjustment coefficient for asset Y.
+field,ecm_strength,True,,False,True,pair_detail:dependency_chart_option,Magnitude and reliability of error correction.
+field,half_life,True,,True,False,[].half_life,Estimated time for spread deviation to decay by half.
+field,hurst,True,,True,False,[].hurst,Long memory statistic; below 0.5 suggests mean reversion.
+field,zscore,True,,True,False,[].zscore_last,Standardized spread deviation.
+field,rolling_zscore,True,,True,False,[].zscore_roll_last,Z-score computed on rolling windows.
+field,spread,False,spread,False,False,,Hedged price differential.
+field,pearson,False,pearson,False,False,,Linear correlation.
+field,spearman,False,spearman,False,False,,Rank correlation.
+field,kendall,False,kendall,False,False,,Concordance-based rank dependence.
+field,copula,True,,True,False,[].copula,Joint distribution model or copula family fit.
+field,conditional_probabilities,True,,True,False,[].u1_given_u2;[].u2_given_u1,Conditional probability distortion between observed and expected co-movement.
+field,sharpe,True,,True,False,[].sharpe,Annualized excess return per volatility.
+field,sortino,False,sortino,False,False,,Return per downside volatility.
+field,var,True,,True,False,[].var,Value-at-risk loss estimate.
+field,cvar,True,,True,False,[].cvar,Expected shortfall beyond VaR.
+field,drawdown,True,,True,False,[].mdd,Peak-to-trough equity loss.
+field,win_rate,True,,True,False,[].win_rate,Fraction of winning trades.
+field,ml_confidence,True,,True,False,[].ml_confidence,Model-estimated probability or confidence for favorable outcome.
+field,profile_match,True,,True,False,[].profile_match,Similarity to historically successful trade profiles.
+field,ou_optimal,True,,True,False,[].ou_optimal,Ornstein-Uhlenbeck optimal entry/exit assessment.
+strategy,1: Classic ZScore Mean Reversion,False,spread,False,False,,zscore
+strategy,2: ZScore + ECM,False,spread,False,False,,hybrid
+strategy,3: ZScore + Copula,False,spread,False,False,,hybrid
+strategy,4: ECM + Copula + ZScore,False,spread,False,False,,hybrid
+strategy,5: Pure Copula,False,spread,False,False,,copula
+strategy,6: Dual Conditional Copula,False,spread,False,False,,copula
+strategy,7: Tail Event Reversion,False,spread;tail_dependence,False,False,,copula
+strategy,8: Pure ECM,False,spread,False,False,,ecm
+strategy,9: ECM Leadership,False,spread,False,False,,ecm
+strategy,10: Leader/Follower Prediction,False,spread,False,False,,ecm
+strategy,11: Half-Life Optimized,False,spread,False,False,,mean_reversion
+strategy,12: Hurst Filter,False,spread,False,False,,mean_reversion
+strategy,13: Hurst + Half-Life,False,spread,False,False,,mean_reversion
+strategy,14: OU Optimal,False,spread,False,False,,mean_reversion
+strategy,15: ML Confidence,False,spread,False,False,,ml
+strategy,16: Profile Match,False,spread,False,False,,ml
+strategy,17: Proprietary Signal Stack,False,spread,False,False,,composite
+strategy,18: Composite Quant Score,False,composite_score;spread,False,False,,composite
+strategy,19: Weighted Voting Model,False,cointegration_score;copula_dislocation_score;ecm_score;spread,False,False,,composite
+strategy,20: Dynamic Threshold Model,False,spread,False,False,,adaptive
+strategy,21: HMM Regime Model,False,spread,False,False,,regime
+strategy,22: GMM Regime Model,False,spread,False,False,,regime
+strategy,23: KMeans Regime Model,False,spread,False,False,,regime
+strategy,24: Regime Filtered Stat-Arb,False,regime;spread,False,False,,regime
+strategy,25: Pair Ranking Strategy,False,spread,False,False,,portfolio
+strategy,26: Portfolio Rotation,False,spread,False,False,,portfolio
+strategy,27: Risk Adjusted Ranking,False,spread,False,False,,portfolio
+strategy,28: Copula Tail Risk Sizing,False,spread;tail_dependence,False,False,,portfolio
+strategy,29: Copula Risk Filter,False,spread;tail_dependence,False,False,,copula
+strategy,30: Meta Model,False,spread,False,False,,ml
+strategy,31: Feature Importance Model,False,spread,False,False,,ml
+strategy,32: Trade Outcome Predictor,False,spread,False,False,,ml
+strategy,33: Copula Dislocation Ranking Engine,False,spread,False,False,,copula
+strategy,34: Copula + Regime Strategy,False,regime;spread,False,False,,copula
+strategy,35: Copula Divergence Persistence,False,spread,False,False,,copula
+strategy,36: Copula + ECM Strategy,False,spread,False,False,,hybrid
+strategy,37: Pure Copula Portfolio,False,spread,False,False,,portfolio

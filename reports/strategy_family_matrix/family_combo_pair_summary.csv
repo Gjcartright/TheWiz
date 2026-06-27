@@ -1,0 +1,753 @@
+combo_name,pair,families,strategies,component_count,total_trades,median_profit_factor,median_sharpe,worst_drawdown,eligible_rows
+combo_2way_01,BTC-USD-SOL-USD,adaptive;composite,Dynamic Threshold Model;Composite Quant Score,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_01,SOL-USD-LINK-USD,adaptive;composite,Dynamic Threshold Model;Composite Quant Score,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_02,BTC-USD-SOL-USD,adaptive;copula,Dynamic Threshold Model;Copula Risk Filter,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_02,SOL-USD-LINK-USD,adaptive;copula,Dynamic Threshold Model;Copula Risk Filter,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_03,BTC-USD-SOL-USD,adaptive;ecm,Dynamic Threshold Model;Pure ECM,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_03,SOL-USD-LINK-USD,adaptive;ecm,Dynamic Threshold Model;Pure ECM,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_04,BTC-USD-SOL-USD,adaptive;hybrid,Dynamic Threshold Model;ZScore + ECM,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_04,SOL-USD-LINK-USD,adaptive;hybrid,Dynamic Threshold Model;ZScore + ECM,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_05,BTC-USD-SOL-USD,adaptive;mean_reversion,Dynamic Threshold Model;Hurst Filter,2,148,0.13474582899231502,-2.0760712597457887,0.26875228106983406,0
+combo_2way_05,SOL-USD-LINK-USD,adaptive;mean_reversion,Dynamic Threshold Model;Hurst Filter,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_06,BTC-USD-SOL-USD,adaptive;ml,Dynamic Threshold Model;Feature Importance Model,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_06,SOL-USD-LINK-USD,adaptive;ml,Dynamic Threshold Model;Feature Importance Model,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_07,BTC-USD-SOL-USD,adaptive;portfolio,Dynamic Threshold Model;Pair Ranking Strategy,2,114,0.0,-0.6016278656950126,0.26875228106983406,0
+combo_2way_07,SOL-USD-LINK-USD,adaptive;portfolio,Dynamic Threshold Model;Pair Ranking Strategy,2,22,0.0,-0.013122728943118198,0.06866862808740533,0
+combo_2way_08,BTC-USD-SOL-USD,adaptive;regime,Dynamic Threshold Model;KMeans Regime Model,2,200,0.1976151526150086,-2.3085225801956435,0.26875228106983406,0
+combo_2way_08,SOL-USD-LINK-USD,adaptive;regime,Dynamic Threshold Model;KMeans Regime Model,2,32,0.2924124467072723,-1.5795164860118143,0.06866862808740533,0
+combo_2way_09,BTC-USD-SOL-USD,adaptive;zscore,Dynamic Threshold Model;Classic ZScore Mean Reversion,2,232,0.21166931446334827,-2.1555374589070992,0.26875228106983406,0
+combo_2way_09,SOL-USD-LINK-USD,adaptive;zscore,Dynamic Threshold Model;Classic ZScore Mean Reversion,2,44,0.25462020079372377,-4.231362390792632,0.07193196906596552,0
+combo_2way_10,BTC-USD-SOL-USD,composite;copula,Composite Quant Score;Copula Risk Filter,2,0,0.0,0.0,0.0,0
+combo_2way_10,SOL-USD-LINK-USD,composite;copula,Composite Quant Score;Copula Risk Filter,2,0,0.0,0.0,0.0,0
+combo_2way_11,BTC-USD-SOL-USD,composite;ecm,Composite Quant Score;Pure ECM,2,0,0.0,0.0,0.0,0
+combo_2way_11,SOL-USD-LINK-USD,composite;ecm,Composite Quant Score;Pure ECM,2,0,0.0,0.0,0.0,0
+combo_2way_12,BTC-USD-SOL-USD,composite;hybrid,Composite Quant Score;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_12,SOL-USD-LINK-USD,composite;hybrid,Composite Quant Score;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_13,BTC-USD-SOL-USD,composite;mean_reversion,Composite Quant Score;Hurst Filter,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_13,SOL-USD-LINK-USD,composite;mean_reversion,Composite Quant Score;Hurst Filter,2,0,0.0,0.0,0.0,0
+combo_2way_14,BTC-USD-SOL-USD,composite;ml,Composite Quant Score;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_14,SOL-USD-LINK-USD,composite;ml,Composite Quant Score;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_15,BTC-USD-SOL-USD,composite;portfolio,Composite Quant Score;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_15,SOL-USD-LINK-USD,composite;portfolio,Composite Quant Score;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_16,BTC-USD-SOL-USD,composite;regime,Composite Quant Score;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_16,SOL-USD-LINK-USD,composite;regime,Composite Quant Score;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_17,BTC-USD-SOL-USD,composite;zscore,Composite Quant Score;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_17,SOL-USD-LINK-USD,composite;zscore,Composite Quant Score;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_18,BTC-USD-SOL-USD,copula;ecm,Copula Risk Filter;Pure ECM,2,0,0.0,0.0,0.0,0
+combo_2way_18,SOL-USD-LINK-USD,copula;ecm,Copula Risk Filter;Pure ECM,2,0,0.0,0.0,0.0,0
+combo_2way_19,BTC-USD-SOL-USD,copula;hybrid,Copula Risk Filter;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_19,SOL-USD-LINK-USD,copula;hybrid,Copula Risk Filter;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_20,BTC-USD-SOL-USD,copula;mean_reversion,Copula Risk Filter;Hurst Filter,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_20,SOL-USD-LINK-USD,copula;mean_reversion,Copula Risk Filter;Hurst Filter,2,0,0.0,0.0,0.0,0
+combo_2way_21,BTC-USD-SOL-USD,copula;ml,Copula Risk Filter;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_21,SOL-USD-LINK-USD,copula;ml,Copula Risk Filter;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_22,BTC-USD-SOL-USD,copula;portfolio,Copula Risk Filter;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_22,SOL-USD-LINK-USD,copula;portfolio,Copula Risk Filter;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_23,BTC-USD-SOL-USD,copula;regime,Copula Risk Filter;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_23,SOL-USD-LINK-USD,copula;regime,Copula Risk Filter;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_24,BTC-USD-SOL-USD,copula;zscore,Copula Risk Filter;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_24,SOL-USD-LINK-USD,copula;zscore,Copula Risk Filter;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_25,BTC-USD-SOL-USD,ecm;hybrid,Pure ECM;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_25,SOL-USD-LINK-USD,ecm;hybrid,Pure ECM;ZScore + ECM,2,0,0.0,0.0,0.0,0
+combo_2way_26,BTC-USD-SOL-USD,ecm;mean_reversion,Pure ECM;Hurst Filter,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_26,SOL-USD-LINK-USD,ecm;mean_reversion,Pure ECM;Hurst Filter,2,0,0.0,0.0,0.0,0
+combo_2way_27,BTC-USD-SOL-USD,ecm;ml,Pure ECM;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_27,SOL-USD-LINK-USD,ecm;ml,Pure ECM;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_28,BTC-USD-SOL-USD,ecm;portfolio,Pure ECM;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_28,SOL-USD-LINK-USD,ecm;portfolio,Pure ECM;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_29,BTC-USD-SOL-USD,ecm;regime,Pure ECM;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_29,SOL-USD-LINK-USD,ecm;regime,Pure ECM;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_30,BTC-USD-SOL-USD,ecm;zscore,Pure ECM;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_30,SOL-USD-LINK-USD,ecm;zscore,Pure ECM;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_31,BTC-USD-SOL-USD,hybrid;mean_reversion,ZScore + ECM;Hurst Filter,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_31,SOL-USD-LINK-USD,hybrid;mean_reversion,ZScore + ECM;Hurst Filter,2,0,0.0,0.0,0.0,0
+combo_2way_32,BTC-USD-SOL-USD,hybrid;ml,ZScore + ECM;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_32,SOL-USD-LINK-USD,hybrid;ml,ZScore + ECM;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_33,BTC-USD-SOL-USD,hybrid;portfolio,ZScore + ECM;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_33,SOL-USD-LINK-USD,hybrid;portfolio,ZScore + ECM;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_34,BTC-USD-SOL-USD,hybrid;regime,ZScore + ECM;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_34,SOL-USD-LINK-USD,hybrid;regime,ZScore + ECM;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_35,BTC-USD-SOL-USD,hybrid;zscore,ZScore + ECM;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_35,SOL-USD-LINK-USD,hybrid;zscore,ZScore + ECM;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_36,BTC-USD-SOL-USD,mean_reversion;ml,Hurst Filter;Feature Importance Model,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_36,SOL-USD-LINK-USD,mean_reversion;ml,Hurst Filter;Feature Importance Model,2,0,0.0,0.0,0.0,0
+combo_2way_37,BTC-USD-SOL-USD,mean_reversion;portfolio,Hurst Filter;Pair Ranking Strategy,2,34,0.0,0.0,0.23415871402374777,0
+combo_2way_37,SOL-USD-LINK-USD,mean_reversion;portfolio,Hurst Filter;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_38,BTC-USD-SOL-USD,mean_reversion;regime,Hurst Filter;KMeans Regime Model,2,120,0.1316496890224438,-1.6893738283926283,0.25198594387995527,0
+combo_2way_38,SOL-USD-LINK-USD,mean_reversion;regime,Hurst Filter;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_39,BTC-USD-SOL-USD,mean_reversion;zscore,Hurst Filter;Classic ZScore Mean Reversion,2,152,0.20503490001032237,-1.5650664968727113,0.2575112374854235,0
+combo_2way_39,SOL-USD-LINK-USD,mean_reversion;zscore,Hurst Filter;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_40,BTC-USD-SOL-USD,ml;portfolio,Feature Importance Model;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_40,SOL-USD-LINK-USD,ml;portfolio,Feature Importance Model;Pair Ranking Strategy,2,0,0.0,0.0,0.0,0
+combo_2way_41,BTC-USD-SOL-USD,ml;regime,Feature Importance Model;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_41,SOL-USD-LINK-USD,ml;regime,Feature Importance Model;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_42,BTC-USD-SOL-USD,ml;zscore,Feature Importance Model;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_42,SOL-USD-LINK-USD,ml;zscore,Feature Importance Model;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_43,BTC-USD-SOL-USD,portfolio;regime,Pair Ranking Strategy;KMeans Regime Model,2,86,0.0,-0.5402320438257499,0.25198594387995527,0
+combo_2way_43,SOL-USD-LINK-USD,portfolio;regime,Pair Ranking Strategy;KMeans Regime Model,2,10,0.0,0.0,0.046819709109089884,0
+combo_2way_44,BTC-USD-SOL-USD,portfolio;zscore,Pair Ranking Strategy;Classic ZScore Mean Reversion,2,118,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_2way_44,SOL-USD-LINK-USD,portfolio;zscore,Pair Ranking Strategy;Classic ZScore Mean Reversion,2,22,0.0,-0.6167140240387389,0.07193196906596552,0
+combo_2way_45,BTC-USD-SOL-USD,regime;zscore,KMeans Regime Model;Classic ZScore Mean Reversion,2,204,0.264999005017395,-1.8657570707464677,0.2575112374854235,0
+combo_2way_45,SOL-USD-LINK-USD,regime;zscore,KMeans Regime Model;Classic ZScore Mean Reversion,2,32,0.11642146405694118,-1.7032854840174643,0.07193196906596552,0
+combo_3way_100,BTC-USD-SOL-USD,composite;mean_reversion;ml,Composite Quant Score;Hurst Filter;Feature Importance Model,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_100,SOL-USD-LINK-USD,composite;mean_reversion;ml,Composite Quant Score;Hurst Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_101,BTC-USD-SOL-USD,composite;mean_reversion;portfolio,Composite Quant Score;Hurst Filter;Pair Ranking Strategy,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_101,SOL-USD-LINK-USD,composite;mean_reversion;portfolio,Composite Quant Score;Hurst Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_102,BTC-USD-SOL-USD,composite;mean_reversion;regime,Composite Quant Score;Hurst Filter;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_102,SOL-USD-LINK-USD,composite;mean_reversion;regime,Composite Quant Score;Hurst Filter;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_103,BTC-USD-SOL-USD,composite;mean_reversion;zscore,Composite Quant Score;Hurst Filter;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_103,SOL-USD-LINK-USD,composite;mean_reversion;zscore,Composite Quant Score;Hurst Filter;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_104,BTC-USD-SOL-USD,composite;ml;portfolio,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_104,SOL-USD-LINK-USD,composite;ml;portfolio,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_105,BTC-USD-SOL-USD,composite;ml;regime,Composite Quant Score;Feature Importance Model;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_105,SOL-USD-LINK-USD,composite;ml;regime,Composite Quant Score;Feature Importance Model;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_106,BTC-USD-SOL-USD,composite;ml;zscore,Composite Quant Score;Feature Importance Model;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_106,SOL-USD-LINK-USD,composite;ml;zscore,Composite Quant Score;Feature Importance Model;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_107,BTC-USD-SOL-USD,composite;portfolio;regime,Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_107,SOL-USD-LINK-USD,composite;portfolio;regime,Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_108,BTC-USD-SOL-USD,composite;portfolio;zscore,Composite Quant Score;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_108,SOL-USD-LINK-USD,composite;portfolio;zscore,Composite Quant Score;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_109,BTC-USD-SOL-USD,composite;regime;zscore,Composite Quant Score;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_109,SOL-USD-LINK-USD,composite;regime;zscore,Composite Quant Score;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_110,BTC-USD-SOL-USD,copula;ecm;hybrid,Copula Risk Filter;Pure ECM;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_110,SOL-USD-LINK-USD,copula;ecm;hybrid,Copula Risk Filter;Pure ECM;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_111,BTC-USD-SOL-USD,copula;ecm;mean_reversion,Copula Risk Filter;Pure ECM;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_111,SOL-USD-LINK-USD,copula;ecm;mean_reversion,Copula Risk Filter;Pure ECM;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_112,BTC-USD-SOL-USD,copula;ecm;ml,Copula Risk Filter;Pure ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_112,SOL-USD-LINK-USD,copula;ecm;ml,Copula Risk Filter;Pure ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_113,BTC-USD-SOL-USD,copula;ecm;portfolio,Copula Risk Filter;Pure ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_113,SOL-USD-LINK-USD,copula;ecm;portfolio,Copula Risk Filter;Pure ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_114,BTC-USD-SOL-USD,copula;ecm;regime,Copula Risk Filter;Pure ECM;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_114,SOL-USD-LINK-USD,copula;ecm;regime,Copula Risk Filter;Pure ECM;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_115,BTC-USD-SOL-USD,copula;ecm;zscore,Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_115,SOL-USD-LINK-USD,copula;ecm;zscore,Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_116,BTC-USD-SOL-USD,copula;hybrid;mean_reversion,Copula Risk Filter;ZScore + ECM;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_116,SOL-USD-LINK-USD,copula;hybrid;mean_reversion,Copula Risk Filter;ZScore + ECM;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_117,BTC-USD-SOL-USD,copula;hybrid;ml,Copula Risk Filter;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_117,SOL-USD-LINK-USD,copula;hybrid;ml,Copula Risk Filter;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_118,BTC-USD-SOL-USD,copula;hybrid;portfolio,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_118,SOL-USD-LINK-USD,copula;hybrid;portfolio,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_119,BTC-USD-SOL-USD,copula;hybrid;regime,Copula Risk Filter;ZScore + ECM;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_119,SOL-USD-LINK-USD,copula;hybrid;regime,Copula Risk Filter;ZScore + ECM;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_120,BTC-USD-SOL-USD,copula;hybrid;zscore,Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_120,SOL-USD-LINK-USD,copula;hybrid;zscore,Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_121,BTC-USD-SOL-USD,copula;mean_reversion;ml,Copula Risk Filter;Hurst Filter;Feature Importance Model,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_121,SOL-USD-LINK-USD,copula;mean_reversion;ml,Copula Risk Filter;Hurst Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_122,BTC-USD-SOL-USD,copula;mean_reversion;portfolio,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_122,SOL-USD-LINK-USD,copula;mean_reversion;portfolio,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_123,BTC-USD-SOL-USD,copula;mean_reversion;regime,Copula Risk Filter;Hurst Filter;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_123,SOL-USD-LINK-USD,copula;mean_reversion;regime,Copula Risk Filter;Hurst Filter;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_124,BTC-USD-SOL-USD,copula;mean_reversion;zscore,Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_124,SOL-USD-LINK-USD,copula;mean_reversion;zscore,Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_125,BTC-USD-SOL-USD,copula;ml;portfolio,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_125,SOL-USD-LINK-USD,copula;ml;portfolio,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_126,BTC-USD-SOL-USD,copula;ml;regime,Copula Risk Filter;Feature Importance Model;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_126,SOL-USD-LINK-USD,copula;ml;regime,Copula Risk Filter;Feature Importance Model;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_127,BTC-USD-SOL-USD,copula;ml;zscore,Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_127,SOL-USD-LINK-USD,copula;ml;zscore,Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_128,BTC-USD-SOL-USD,copula;portfolio;regime,Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_128,SOL-USD-LINK-USD,copula;portfolio;regime,Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_129,BTC-USD-SOL-USD,copula;portfolio;zscore,Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_129,SOL-USD-LINK-USD,copula;portfolio;zscore,Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_130,BTC-USD-SOL-USD,copula;regime;zscore,Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_130,SOL-USD-LINK-USD,copula;regime;zscore,Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_131,BTC-USD-SOL-USD,ecm;hybrid;mean_reversion,Pure ECM;ZScore + ECM;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_131,SOL-USD-LINK-USD,ecm;hybrid;mean_reversion,Pure ECM;ZScore + ECM;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_132,BTC-USD-SOL-USD,ecm;hybrid;ml,Pure ECM;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_132,SOL-USD-LINK-USD,ecm;hybrid;ml,Pure ECM;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_133,BTC-USD-SOL-USD,ecm;hybrid;portfolio,Pure ECM;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_133,SOL-USD-LINK-USD,ecm;hybrid;portfolio,Pure ECM;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_134,BTC-USD-SOL-USD,ecm;hybrid;regime,Pure ECM;ZScore + ECM;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_134,SOL-USD-LINK-USD,ecm;hybrid;regime,Pure ECM;ZScore + ECM;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_135,BTC-USD-SOL-USD,ecm;hybrid;zscore,Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_135,SOL-USD-LINK-USD,ecm;hybrid;zscore,Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_136,BTC-USD-SOL-USD,ecm;mean_reversion;ml,Pure ECM;Hurst Filter;Feature Importance Model,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_136,SOL-USD-LINK-USD,ecm;mean_reversion;ml,Pure ECM;Hurst Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_137,BTC-USD-SOL-USD,ecm;mean_reversion;portfolio,Pure ECM;Hurst Filter;Pair Ranking Strategy,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_137,SOL-USD-LINK-USD,ecm;mean_reversion;portfolio,Pure ECM;Hurst Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_138,BTC-USD-SOL-USD,ecm;mean_reversion;regime,Pure ECM;Hurst Filter;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_138,SOL-USD-LINK-USD,ecm;mean_reversion;regime,Pure ECM;Hurst Filter;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_139,BTC-USD-SOL-USD,ecm;mean_reversion;zscore,Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_139,SOL-USD-LINK-USD,ecm;mean_reversion;zscore,Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_140,BTC-USD-SOL-USD,ecm;ml;portfolio,Pure ECM;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_140,SOL-USD-LINK-USD,ecm;ml;portfolio,Pure ECM;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_141,BTC-USD-SOL-USD,ecm;ml;regime,Pure ECM;Feature Importance Model;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_141,SOL-USD-LINK-USD,ecm;ml;regime,Pure ECM;Feature Importance Model;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_142,BTC-USD-SOL-USD,ecm;ml;zscore,Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_142,SOL-USD-LINK-USD,ecm;ml;zscore,Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_143,BTC-USD-SOL-USD,ecm;portfolio;regime,Pure ECM;Pair Ranking Strategy;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_143,SOL-USD-LINK-USD,ecm;portfolio;regime,Pure ECM;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_144,BTC-USD-SOL-USD,ecm;portfolio;zscore,Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_144,SOL-USD-LINK-USD,ecm;portfolio;zscore,Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_145,BTC-USD-SOL-USD,ecm;regime;zscore,Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_145,SOL-USD-LINK-USD,ecm;regime;zscore,Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_146,BTC-USD-SOL-USD,hybrid;mean_reversion;ml,ZScore + ECM;Hurst Filter;Feature Importance Model,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_146,SOL-USD-LINK-USD,hybrid;mean_reversion;ml,ZScore + ECM;Hurst Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_147,BTC-USD-SOL-USD,hybrid;mean_reversion;portfolio,ZScore + ECM;Hurst Filter;Pair Ranking Strategy,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_147,SOL-USD-LINK-USD,hybrid;mean_reversion;portfolio,ZScore + ECM;Hurst Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_148,BTC-USD-SOL-USD,hybrid;mean_reversion;regime,ZScore + ECM;Hurst Filter;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_148,SOL-USD-LINK-USD,hybrid;mean_reversion;regime,ZScore + ECM;Hurst Filter;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_149,BTC-USD-SOL-USD,hybrid;mean_reversion;zscore,ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_149,SOL-USD-LINK-USD,hybrid;mean_reversion;zscore,ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_150,BTC-USD-SOL-USD,hybrid;ml;portfolio,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_150,SOL-USD-LINK-USD,hybrid;ml;portfolio,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_151,BTC-USD-SOL-USD,hybrid;ml;regime,ZScore + ECM;Feature Importance Model;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_151,SOL-USD-LINK-USD,hybrid;ml;regime,ZScore + ECM;Feature Importance Model;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_152,BTC-USD-SOL-USD,hybrid;ml;zscore,ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_152,SOL-USD-LINK-USD,hybrid;ml;zscore,ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_153,BTC-USD-SOL-USD,hybrid;portfolio;regime,ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_153,SOL-USD-LINK-USD,hybrid;portfolio;regime,ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_154,BTC-USD-SOL-USD,hybrid;portfolio;zscore,ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_154,SOL-USD-LINK-USD,hybrid;portfolio;zscore,ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_155,BTC-USD-SOL-USD,hybrid;regime;zscore,ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_155,SOL-USD-LINK-USD,hybrid;regime;zscore,ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_156,BTC-USD-SOL-USD,mean_reversion;ml;portfolio,Hurst Filter;Feature Importance Model;Pair Ranking Strategy,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_156,SOL-USD-LINK-USD,mean_reversion;ml;portfolio,Hurst Filter;Feature Importance Model;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_157,BTC-USD-SOL-USD,mean_reversion;ml;regime,Hurst Filter;Feature Importance Model;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_157,SOL-USD-LINK-USD,mean_reversion;ml;regime,Hurst Filter;Feature Importance Model;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_158,BTC-USD-SOL-USD,mean_reversion;ml;zscore,Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_158,SOL-USD-LINK-USD,mean_reversion;ml;zscore,Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_159,BTC-USD-SOL-USD,mean_reversion;portfolio;regime,Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,3,120,0.2826611646069673,-1.1602192432928917,0.25198594387995527,0
+combo_3way_159,SOL-USD-LINK-USD,mean_reversion;portfolio;regime,Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_160,BTC-USD-SOL-USD,mean_reversion;portfolio;zscore,Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,152,0.5584279534142295,-1.1479605809858282,0.2575112374854235,0
+combo_3way_160,SOL-USD-LINK-USD,mean_reversion;portfolio;zscore,Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_161,BTC-USD-SOL-USD,mean_reversion;regime;zscore,Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,3,238,0.22558291393197125,-1.6893738283926283,0.2575112374854235,0
+combo_3way_161,SOL-USD-LINK-USD,mean_reversion;regime;zscore,Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_162,BTC-USD-SOL-USD,ml;portfolio;regime,Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_162,SOL-USD-LINK-USD,ml;portfolio;regime,Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_163,BTC-USD-SOL-USD,ml;portfolio;zscore,Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_163,SOL-USD-LINK-USD,ml;portfolio;zscore,Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_164,BTC-USD-SOL-USD,ml;regime;zscore,Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_164,SOL-USD-LINK-USD,ml;regime;zscore,Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_165,BTC-USD-SOL-USD,portfolio;regime;zscore,Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,3,204,0.3229531658261544,-1.2380222996551553,0.2575112374854235,0
+combo_3way_165,SOL-USD-LINK-USD,portfolio;regime;zscore,Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,3,32,0.4071464569608182,-0.876881313417597,0.07193196906596552,0
+combo_3way_46,BTC-USD-SOL-USD,adaptive;composite;copula,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_46,SOL-USD-LINK-USD,adaptive;composite;copula,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_47,BTC-USD-SOL-USD,adaptive;composite;ecm,Dynamic Threshold Model;Composite Quant Score;Pure ECM,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_47,SOL-USD-LINK-USD,adaptive;composite;ecm,Dynamic Threshold Model;Composite Quant Score;Pure ECM,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_48,BTC-USD-SOL-USD,adaptive;composite;hybrid,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_48,SOL-USD-LINK-USD,adaptive;composite;hybrid,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_49,BTC-USD-SOL-USD,adaptive;composite;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Hurst Filter,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_49,SOL-USD-LINK-USD,adaptive;composite;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Hurst Filter,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_50,BTC-USD-SOL-USD,adaptive;composite;ml,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_50,SOL-USD-LINK-USD,adaptive;composite;ml,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_51,BTC-USD-SOL-USD,adaptive;composite;portfolio,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_51,SOL-USD-LINK-USD,adaptive;composite;portfolio,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_52,BTC-USD-SOL-USD,adaptive;composite;regime,Dynamic Threshold Model;Composite Quant Score;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_52,SOL-USD-LINK-USD,adaptive;composite;regime,Dynamic Threshold Model;Composite Quant Score;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_53,BTC-USD-SOL-USD,adaptive;composite;zscore,Dynamic Threshold Model;Composite Quant Score;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_53,SOL-USD-LINK-USD,adaptive;composite;zscore,Dynamic Threshold Model;Composite Quant Score;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_54,BTC-USD-SOL-USD,adaptive;copula;ecm,Dynamic Threshold Model;Copula Risk Filter;Pure ECM,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_54,SOL-USD-LINK-USD,adaptive;copula;ecm,Dynamic Threshold Model;Copula Risk Filter;Pure ECM,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_55,BTC-USD-SOL-USD,adaptive;copula;hybrid,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_55,SOL-USD-LINK-USD,adaptive;copula;hybrid,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_56,BTC-USD-SOL-USD,adaptive;copula;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_56,SOL-USD-LINK-USD,adaptive;copula;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_57,BTC-USD-SOL-USD,adaptive;copula;ml,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_57,SOL-USD-LINK-USD,adaptive;copula;ml,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_58,BTC-USD-SOL-USD,adaptive;copula;portfolio,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_58,SOL-USD-LINK-USD,adaptive;copula;portfolio,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_59,BTC-USD-SOL-USD,adaptive;copula;regime,Dynamic Threshold Model;Copula Risk Filter;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_59,SOL-USD-LINK-USD,adaptive;copula;regime,Dynamic Threshold Model;Copula Risk Filter;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_60,BTC-USD-SOL-USD,adaptive;copula;zscore,Dynamic Threshold Model;Copula Risk Filter;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_60,SOL-USD-LINK-USD,adaptive;copula;zscore,Dynamic Threshold Model;Copula Risk Filter;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_61,BTC-USD-SOL-USD,adaptive;ecm;hybrid,Dynamic Threshold Model;Pure ECM;ZScore + ECM,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_61,SOL-USD-LINK-USD,adaptive;ecm;hybrid,Dynamic Threshold Model;Pure ECM;ZScore + ECM,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_62,BTC-USD-SOL-USD,adaptive;ecm;mean_reversion,Dynamic Threshold Model;Pure ECM;Hurst Filter,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_62,SOL-USD-LINK-USD,adaptive;ecm;mean_reversion,Dynamic Threshold Model;Pure ECM;Hurst Filter,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_63,BTC-USD-SOL-USD,adaptive;ecm;ml,Dynamic Threshold Model;Pure ECM;Feature Importance Model,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_63,SOL-USD-LINK-USD,adaptive;ecm;ml,Dynamic Threshold Model;Pure ECM;Feature Importance Model,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_64,BTC-USD-SOL-USD,adaptive;ecm;portfolio,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_64,SOL-USD-LINK-USD,adaptive;ecm;portfolio,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_65,BTC-USD-SOL-USD,adaptive;ecm;regime,Dynamic Threshold Model;Pure ECM;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_65,SOL-USD-LINK-USD,adaptive;ecm;regime,Dynamic Threshold Model;Pure ECM;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_66,BTC-USD-SOL-USD,adaptive;ecm;zscore,Dynamic Threshold Model;Pure ECM;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_66,SOL-USD-LINK-USD,adaptive;ecm;zscore,Dynamic Threshold Model;Pure ECM;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_67,BTC-USD-SOL-USD,adaptive;hybrid;mean_reversion,Dynamic Threshold Model;ZScore + ECM;Hurst Filter,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_67,SOL-USD-LINK-USD,adaptive;hybrid;mean_reversion,Dynamic Threshold Model;ZScore + ECM;Hurst Filter,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_68,BTC-USD-SOL-USD,adaptive;hybrid;ml,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_68,SOL-USD-LINK-USD,adaptive;hybrid;ml,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_69,BTC-USD-SOL-USD,adaptive;hybrid;portfolio,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_69,SOL-USD-LINK-USD,adaptive;hybrid;portfolio,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_70,BTC-USD-SOL-USD,adaptive;hybrid;regime,Dynamic Threshold Model;ZScore + ECM;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_70,SOL-USD-LINK-USD,adaptive;hybrid;regime,Dynamic Threshold Model;ZScore + ECM;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_71,BTC-USD-SOL-USD,adaptive;hybrid;zscore,Dynamic Threshold Model;ZScore + ECM;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_71,SOL-USD-LINK-USD,adaptive;hybrid;zscore,Dynamic Threshold Model;ZScore + ECM;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_72,BTC-USD-SOL-USD,adaptive;mean_reversion;ml,Dynamic Threshold Model;Hurst Filter;Feature Importance Model,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_72,SOL-USD-LINK-USD,adaptive;mean_reversion;ml,Dynamic Threshold Model;Hurst Filter;Feature Importance Model,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_73,BTC-USD-SOL-USD,adaptive;mean_reversion;portfolio,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy,3,148,0.26868303904838126,-1.3042504928074887,0.26875228106983406,0
+combo_3way_73,SOL-USD-LINK-USD,adaptive;mean_reversion;portfolio,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_74,BTC-USD-SOL-USD,adaptive;mean_reversion;regime,Dynamic Threshold Model;Hurst Filter;KMeans Regime Model,3,234,0.1642347156527471,-2.0139487969651793,0.26875228106983406,0
+combo_3way_74,SOL-USD-LINK-USD,adaptive;mean_reversion;regime,Dynamic Threshold Model;Hurst Filter;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_75,BTC-USD-SOL-USD,adaptive;mean_reversion;zscore,Dynamic Threshold Model;Hurst Filter;Classic ZScore Mean Reversion,3,266,0.1747417352397393,-1.8857602091223673,0.26875228106983406,0
+combo_3way_75,SOL-USD-LINK-USD,adaptive;mean_reversion;zscore,Dynamic Threshold Model;Hurst Filter;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_76,BTC-USD-SOL-USD,adaptive;ml;portfolio,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy,3,114,0.0,0.0,0.26875228106983406,0
+combo_3way_76,SOL-USD-LINK-USD,adaptive;ml;portfolio,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy,3,22,0.0,0.0,0.06866862808740533,0
+combo_3way_77,BTC-USD-SOL-USD,adaptive;ml;regime,Dynamic Threshold Model;Feature Importance Model;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_77,SOL-USD-LINK-USD,adaptive;ml;regime,Dynamic Threshold Model;Feature Importance Model;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_78,BTC-USD-SOL-USD,adaptive;ml;zscore,Dynamic Threshold Model;Feature Importance Model;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_78,SOL-USD-LINK-USD,adaptive;ml;zscore,Dynamic Threshold Model;Feature Importance Model;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_79,BTC-USD-SOL-USD,adaptive;portfolio;regime,Dynamic Threshold Model;Pair Ranking Strategy;KMeans Regime Model,3,200,0.27259675621927504,-1.4910548623440598,0.26875228106983406,0
+combo_3way_79,SOL-USD-LINK-USD,adaptive;portfolio;regime,Dynamic Threshold Model;Pair Ranking Strategy;KMeans Regime Model,3,32,0.5298877048230883,-0.31418259329480136,0.06866862808740533,0
+combo_3way_80,BTC-USD-SOL-USD,adaptive;portfolio;zscore,Dynamic Threshold Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,232,0.3419347207065325,-1.3647954315450144,0.26875228106983406,0
+combo_3way_80,SOL-USD-LINK-USD,adaptive;portfolio;zscore,Dynamic Threshold Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,3,44,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_3way_81,BTC-USD-SOL-USD,adaptive;regime;zscore,Dynamic Threshold Model;KMeans Regime Model;Classic ZScore Mean Reversion,3,318,0.21166931446334827,-2.117567403581911,0.26875228106983406,0
+combo_3way_81,SOL-USD-LINK-USD,adaptive;regime;zscore,Dynamic Threshold Model;KMeans Regime Model;Classic ZScore Mean Reversion,3,54,0.25462020079372377,-1.7032854840174643,0.07193196906596552,0
+combo_3way_82,BTC-USD-SOL-USD,composite;copula;ecm,Composite Quant Score;Copula Risk Filter;Pure ECM,3,0,0.0,0.0,0.0,0
+combo_3way_82,SOL-USD-LINK-USD,composite;copula;ecm,Composite Quant Score;Copula Risk Filter;Pure ECM,3,0,0.0,0.0,0.0,0
+combo_3way_83,BTC-USD-SOL-USD,composite;copula;hybrid,Composite Quant Score;Copula Risk Filter;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_83,SOL-USD-LINK-USD,composite;copula;hybrid,Composite Quant Score;Copula Risk Filter;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_84,BTC-USD-SOL-USD,composite;copula;mean_reversion,Composite Quant Score;Copula Risk Filter;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_84,SOL-USD-LINK-USD,composite;copula;mean_reversion,Composite Quant Score;Copula Risk Filter;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_85,BTC-USD-SOL-USD,composite;copula;ml,Composite Quant Score;Copula Risk Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_85,SOL-USD-LINK-USD,composite;copula;ml,Composite Quant Score;Copula Risk Filter;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_86,BTC-USD-SOL-USD,composite;copula;portfolio,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_86,SOL-USD-LINK-USD,composite;copula;portfolio,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_87,BTC-USD-SOL-USD,composite;copula;regime,Composite Quant Score;Copula Risk Filter;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_87,SOL-USD-LINK-USD,composite;copula;regime,Composite Quant Score;Copula Risk Filter;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_88,BTC-USD-SOL-USD,composite;copula;zscore,Composite Quant Score;Copula Risk Filter;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_88,SOL-USD-LINK-USD,composite;copula;zscore,Composite Quant Score;Copula Risk Filter;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_89,BTC-USD-SOL-USD,composite;ecm;hybrid,Composite Quant Score;Pure ECM;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_89,SOL-USD-LINK-USD,composite;ecm;hybrid,Composite Quant Score;Pure ECM;ZScore + ECM,3,0,0.0,0.0,0.0,0
+combo_3way_90,BTC-USD-SOL-USD,composite;ecm;mean_reversion,Composite Quant Score;Pure ECM;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_90,SOL-USD-LINK-USD,composite;ecm;mean_reversion,Composite Quant Score;Pure ECM;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_91,BTC-USD-SOL-USD,composite;ecm;ml,Composite Quant Score;Pure ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_91,SOL-USD-LINK-USD,composite;ecm;ml,Composite Quant Score;Pure ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_92,BTC-USD-SOL-USD,composite;ecm;portfolio,Composite Quant Score;Pure ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_92,SOL-USD-LINK-USD,composite;ecm;portfolio,Composite Quant Score;Pure ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_93,BTC-USD-SOL-USD,composite;ecm;regime,Composite Quant Score;Pure ECM;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_93,SOL-USD-LINK-USD,composite;ecm;regime,Composite Quant Score;Pure ECM;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_94,BTC-USD-SOL-USD,composite;ecm;zscore,Composite Quant Score;Pure ECM;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_94,SOL-USD-LINK-USD,composite;ecm;zscore,Composite Quant Score;Pure ECM;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_3way_95,BTC-USD-SOL-USD,composite;hybrid;mean_reversion,Composite Quant Score;ZScore + ECM;Hurst Filter,3,34,0.0,0.0,0.23415871402374777,0
+combo_3way_95,SOL-USD-LINK-USD,composite;hybrid;mean_reversion,Composite Quant Score;ZScore + ECM;Hurst Filter,3,0,0.0,0.0,0.0,0
+combo_3way_96,BTC-USD-SOL-USD,composite;hybrid;ml,Composite Quant Score;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_96,SOL-USD-LINK-USD,composite;hybrid;ml,Composite Quant Score;ZScore + ECM;Feature Importance Model,3,0,0.0,0.0,0.0,0
+combo_3way_97,BTC-USD-SOL-USD,composite;hybrid;portfolio,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_97,SOL-USD-LINK-USD,composite;hybrid;portfolio,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy,3,0,0.0,0.0,0.0,0
+combo_3way_98,BTC-USD-SOL-USD,composite;hybrid;regime,Composite Quant Score;ZScore + ECM;KMeans Regime Model,3,86,0.0,0.0,0.25198594387995527,0
+combo_3way_98,SOL-USD-LINK-USD,composite;hybrid;regime,Composite Quant Score;ZScore + ECM;KMeans Regime Model,3,10,0.0,0.0,0.046819709109089884,0
+combo_3way_99,BTC-USD-SOL-USD,composite;hybrid;zscore,Composite Quant Score;ZScore + ECM;Classic ZScore Mean Reversion,3,118,0.0,0.0,0.2575112374854235,0
+combo_3way_99,SOL-USD-LINK-USD,composite;hybrid;zscore,Composite Quant Score;ZScore + ECM;Classic ZScore Mean Reversion,3,22,0.0,0.0,0.07193196906596552,0
+combo_4way_166,BTC-USD-SOL-USD,adaptive;composite;copula;ecm,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pure ECM,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_166,SOL-USD-LINK-USD,adaptive;composite;copula;ecm,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pure ECM,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_167,BTC-USD-SOL-USD,adaptive;composite;copula;hybrid,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;ZScore + ECM,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_167,SOL-USD-LINK-USD,adaptive;composite;copula;hybrid,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;ZScore + ECM,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_168,BTC-USD-SOL-USD,adaptive;composite;copula;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_168,SOL-USD-LINK-USD,adaptive;composite;copula;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_169,BTC-USD-SOL-USD,adaptive;composite;copula;ml,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_169,SOL-USD-LINK-USD,adaptive;composite;copula;ml,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_170,BTC-USD-SOL-USD,adaptive;composite;copula;portfolio,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_170,SOL-USD-LINK-USD,adaptive;composite;copula;portfolio,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_171,BTC-USD-SOL-USD,adaptive;composite;copula;regime,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_171,SOL-USD-LINK-USD,adaptive;composite;copula;regime,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_172,BTC-USD-SOL-USD,adaptive;composite;copula;zscore,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_172,SOL-USD-LINK-USD,adaptive;composite;copula;zscore,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_173,BTC-USD-SOL-USD,adaptive;composite;ecm;hybrid,Dynamic Threshold Model;Composite Quant Score;Pure ECM;ZScore + ECM,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_173,SOL-USD-LINK-USD,adaptive;composite;ecm;hybrid,Dynamic Threshold Model;Composite Quant Score;Pure ECM;ZScore + ECM,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_174,BTC-USD-SOL-USD,adaptive;composite;ecm;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_174,SOL-USD-LINK-USD,adaptive;composite;ecm;mean_reversion,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_175,BTC-USD-SOL-USD,adaptive;composite;ecm;ml,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_175,SOL-USD-LINK-USD,adaptive;composite;ecm;ml,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_176,BTC-USD-SOL-USD,adaptive;composite;ecm;portfolio,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_176,SOL-USD-LINK-USD,adaptive;composite;ecm;portfolio,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_177,BTC-USD-SOL-USD,adaptive;composite;ecm;regime,Dynamic Threshold Model;Composite Quant Score;Pure ECM;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_177,SOL-USD-LINK-USD,adaptive;composite;ecm;regime,Dynamic Threshold Model;Composite Quant Score;Pure ECM;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_178,BTC-USD-SOL-USD,adaptive;composite;ecm;zscore,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_178,SOL-USD-LINK-USD,adaptive;composite;ecm;zscore,Dynamic Threshold Model;Composite Quant Score;Pure ECM;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_179,BTC-USD-SOL-USD,adaptive;composite;hybrid;mean_reversion,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_179,SOL-USD-LINK-USD,adaptive;composite;hybrid;mean_reversion,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_180,BTC-USD-SOL-USD,adaptive;composite;hybrid;ml,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_180,SOL-USD-LINK-USD,adaptive;composite;hybrid;ml,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_181,BTC-USD-SOL-USD,adaptive;composite;hybrid;portfolio,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_181,SOL-USD-LINK-USD,adaptive;composite;hybrid;portfolio,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_182,BTC-USD-SOL-USD,adaptive;composite;hybrid;regime,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_182,SOL-USD-LINK-USD,adaptive;composite;hybrid;regime,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_183,BTC-USD-SOL-USD,adaptive;composite;hybrid;zscore,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_183,SOL-USD-LINK-USD,adaptive;composite;hybrid;zscore,Dynamic Threshold Model;Composite Quant Score;ZScore + ECM;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_184,BTC-USD-SOL-USD,adaptive;composite;mean_reversion;ml,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Feature Importance Model,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_184,SOL-USD-LINK-USD,adaptive;composite;mean_reversion;ml,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_185,BTC-USD-SOL-USD,adaptive;composite;mean_reversion;portfolio,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Pair Ranking Strategy,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_185,SOL-USD-LINK-USD,adaptive;composite;mean_reversion;portfolio,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_186,BTC-USD-SOL-USD,adaptive;composite;mean_reversion;regime,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_186,SOL-USD-LINK-USD,adaptive;composite;mean_reversion;regime,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_187,BTC-USD-SOL-USD,adaptive;composite;mean_reversion;zscore,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_187,SOL-USD-LINK-USD,adaptive;composite;mean_reversion;zscore,Dynamic Threshold Model;Composite Quant Score;Hurst Filter;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_188,BTC-USD-SOL-USD,adaptive;composite;ml;portfolio,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_188,SOL-USD-LINK-USD,adaptive;composite;ml;portfolio,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_189,BTC-USD-SOL-USD,adaptive;composite;ml;regime,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_189,SOL-USD-LINK-USD,adaptive;composite;ml;regime,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_190,BTC-USD-SOL-USD,adaptive;composite;ml;zscore,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_190,SOL-USD-LINK-USD,adaptive;composite;ml;zscore,Dynamic Threshold Model;Composite Quant Score;Feature Importance Model;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_191,BTC-USD-SOL-USD,adaptive;composite;portfolio;regime,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_191,SOL-USD-LINK-USD,adaptive;composite;portfolio;regime,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_192,BTC-USD-SOL-USD,adaptive;composite;portfolio;zscore,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_192,SOL-USD-LINK-USD,adaptive;composite;portfolio;zscore,Dynamic Threshold Model;Composite Quant Score;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_193,BTC-USD-SOL-USD,adaptive;composite;regime;zscore,Dynamic Threshold Model;Composite Quant Score;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_193,SOL-USD-LINK-USD,adaptive;composite;regime;zscore,Dynamic Threshold Model;Composite Quant Score;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_194,BTC-USD-SOL-USD,adaptive;copula;ecm;hybrid,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;ZScore + ECM,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_194,SOL-USD-LINK-USD,adaptive;copula;ecm;hybrid,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;ZScore + ECM,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_195,BTC-USD-SOL-USD,adaptive;copula;ecm;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_195,SOL-USD-LINK-USD,adaptive;copula;ecm;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_196,BTC-USD-SOL-USD,adaptive;copula;ecm;ml,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_196,SOL-USD-LINK-USD,adaptive;copula;ecm;ml,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_197,BTC-USD-SOL-USD,adaptive;copula;ecm;portfolio,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_197,SOL-USD-LINK-USD,adaptive;copula;ecm;portfolio,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_198,BTC-USD-SOL-USD,adaptive;copula;ecm;regime,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_198,SOL-USD-LINK-USD,adaptive;copula;ecm;regime,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_199,BTC-USD-SOL-USD,adaptive;copula;ecm;zscore,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_199,SOL-USD-LINK-USD,adaptive;copula;ecm;zscore,Dynamic Threshold Model;Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_200,BTC-USD-SOL-USD,adaptive;copula;hybrid;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_200,SOL-USD-LINK-USD,adaptive;copula;hybrid;mean_reversion,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_201,BTC-USD-SOL-USD,adaptive;copula;hybrid;ml,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_201,SOL-USD-LINK-USD,adaptive;copula;hybrid;ml,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_202,BTC-USD-SOL-USD,adaptive;copula;hybrid;portfolio,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_202,SOL-USD-LINK-USD,adaptive;copula;hybrid;portfolio,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_203,BTC-USD-SOL-USD,adaptive;copula;hybrid;regime,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_203,SOL-USD-LINK-USD,adaptive;copula;hybrid;regime,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_204,BTC-USD-SOL-USD,adaptive;copula;hybrid;zscore,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_204,SOL-USD-LINK-USD,adaptive;copula;hybrid;zscore,Dynamic Threshold Model;Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_205,BTC-USD-SOL-USD,adaptive;copula;mean_reversion;ml,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Feature Importance Model,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_205,SOL-USD-LINK-USD,adaptive;copula;mean_reversion;ml,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_206,BTC-USD-SOL-USD,adaptive;copula;mean_reversion;portfolio,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_206,SOL-USD-LINK-USD,adaptive;copula;mean_reversion;portfolio,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_207,BTC-USD-SOL-USD,adaptive;copula;mean_reversion;regime,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_207,SOL-USD-LINK-USD,adaptive;copula;mean_reversion;regime,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_208,BTC-USD-SOL-USD,adaptive;copula;mean_reversion;zscore,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_208,SOL-USD-LINK-USD,adaptive;copula;mean_reversion;zscore,Dynamic Threshold Model;Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_209,BTC-USD-SOL-USD,adaptive;copula;ml;portfolio,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_209,SOL-USD-LINK-USD,adaptive;copula;ml;portfolio,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_210,BTC-USD-SOL-USD,adaptive;copula;ml;regime,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_210,SOL-USD-LINK-USD,adaptive;copula;ml;regime,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_211,BTC-USD-SOL-USD,adaptive;copula;ml;zscore,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_211,SOL-USD-LINK-USD,adaptive;copula;ml;zscore,Dynamic Threshold Model;Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_212,BTC-USD-SOL-USD,adaptive;copula;portfolio;regime,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_212,SOL-USD-LINK-USD,adaptive;copula;portfolio;regime,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_213,BTC-USD-SOL-USD,adaptive;copula;portfolio;zscore,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_213,SOL-USD-LINK-USD,adaptive;copula;portfolio;zscore,Dynamic Threshold Model;Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_214,BTC-USD-SOL-USD,adaptive;copula;regime;zscore,Dynamic Threshold Model;Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_214,SOL-USD-LINK-USD,adaptive;copula;regime;zscore,Dynamic Threshold Model;Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_215,BTC-USD-SOL-USD,adaptive;ecm;hybrid;mean_reversion,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Hurst Filter,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_215,SOL-USD-LINK-USD,adaptive;ecm;hybrid;mean_reversion,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Hurst Filter,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_216,BTC-USD-SOL-USD,adaptive;ecm;hybrid;ml,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Feature Importance Model,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_216,SOL-USD-LINK-USD,adaptive;ecm;hybrid;ml,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_217,BTC-USD-SOL-USD,adaptive;ecm;hybrid;portfolio,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_217,SOL-USD-LINK-USD,adaptive;ecm;hybrid;portfolio,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_218,BTC-USD-SOL-USD,adaptive;ecm;hybrid;regime,Dynamic Threshold Model;Pure ECM;ZScore + ECM;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_218,SOL-USD-LINK-USD,adaptive;ecm;hybrid;regime,Dynamic Threshold Model;Pure ECM;ZScore + ECM;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_219,BTC-USD-SOL-USD,adaptive;ecm;hybrid;zscore,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_219,SOL-USD-LINK-USD,adaptive;ecm;hybrid;zscore,Dynamic Threshold Model;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_220,BTC-USD-SOL-USD,adaptive;ecm;mean_reversion;ml,Dynamic Threshold Model;Pure ECM;Hurst Filter;Feature Importance Model,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_220,SOL-USD-LINK-USD,adaptive;ecm;mean_reversion;ml,Dynamic Threshold Model;Pure ECM;Hurst Filter;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_221,BTC-USD-SOL-USD,adaptive;ecm;mean_reversion;portfolio,Dynamic Threshold Model;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_221,SOL-USD-LINK-USD,adaptive;ecm;mean_reversion;portfolio,Dynamic Threshold Model;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_222,BTC-USD-SOL-USD,adaptive;ecm;mean_reversion;regime,Dynamic Threshold Model;Pure ECM;Hurst Filter;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_222,SOL-USD-LINK-USD,adaptive;ecm;mean_reversion;regime,Dynamic Threshold Model;Pure ECM;Hurst Filter;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_223,BTC-USD-SOL-USD,adaptive;ecm;mean_reversion;zscore,Dynamic Threshold Model;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_223,SOL-USD-LINK-USD,adaptive;ecm;mean_reversion;zscore,Dynamic Threshold Model;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_224,BTC-USD-SOL-USD,adaptive;ecm;ml;portfolio,Dynamic Threshold Model;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_224,SOL-USD-LINK-USD,adaptive;ecm;ml;portfolio,Dynamic Threshold Model;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_225,BTC-USD-SOL-USD,adaptive;ecm;ml;regime,Dynamic Threshold Model;Pure ECM;Feature Importance Model;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_225,SOL-USD-LINK-USD,adaptive;ecm;ml;regime,Dynamic Threshold Model;Pure ECM;Feature Importance Model;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_226,BTC-USD-SOL-USD,adaptive;ecm;ml;zscore,Dynamic Threshold Model;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_226,SOL-USD-LINK-USD,adaptive;ecm;ml;zscore,Dynamic Threshold Model;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_227,BTC-USD-SOL-USD,adaptive;ecm;portfolio;regime,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_227,SOL-USD-LINK-USD,adaptive;ecm;portfolio;regime,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_228,BTC-USD-SOL-USD,adaptive;ecm;portfolio;zscore,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_228,SOL-USD-LINK-USD,adaptive;ecm;portfolio;zscore,Dynamic Threshold Model;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_229,BTC-USD-SOL-USD,adaptive;ecm;regime;zscore,Dynamic Threshold Model;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_229,SOL-USD-LINK-USD,adaptive;ecm;regime;zscore,Dynamic Threshold Model;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_230,BTC-USD-SOL-USD,adaptive;hybrid;mean_reversion;ml,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Feature Importance Model,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_230,SOL-USD-LINK-USD,adaptive;hybrid;mean_reversion;ml,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Feature Importance Model,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_231,BTC-USD-SOL-USD,adaptive;hybrid;mean_reversion;portfolio,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_231,SOL-USD-LINK-USD,adaptive;hybrid;mean_reversion;portfolio,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_232,BTC-USD-SOL-USD,adaptive;hybrid;mean_reversion;regime,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_232,SOL-USD-LINK-USD,adaptive;hybrid;mean_reversion;regime,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_233,BTC-USD-SOL-USD,adaptive;hybrid;mean_reversion;zscore,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_233,SOL-USD-LINK-USD,adaptive;hybrid;mean_reversion;zscore,Dynamic Threshold Model;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_234,BTC-USD-SOL-USD,adaptive;hybrid;ml;portfolio,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,114,0.0,0.0,0.26875228106983406,0
+combo_4way_234,SOL-USD-LINK-USD,adaptive;hybrid;ml;portfolio,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_235,BTC-USD-SOL-USD,adaptive;hybrid;ml;regime,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_235,SOL-USD-LINK-USD,adaptive;hybrid;ml;regime,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_236,BTC-USD-SOL-USD,adaptive;hybrid;ml;zscore,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_236,SOL-USD-LINK-USD,adaptive;hybrid;ml;zscore,Dynamic Threshold Model;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_237,BTC-USD-SOL-USD,adaptive;hybrid;portfolio;regime,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_237,SOL-USD-LINK-USD,adaptive;hybrid;portfolio;regime,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_238,BTC-USD-SOL-USD,adaptive;hybrid;portfolio;zscore,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_238,SOL-USD-LINK-USD,adaptive;hybrid;portfolio;zscore,Dynamic Threshold Model;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_239,BTC-USD-SOL-USD,adaptive;hybrid;regime;zscore,Dynamic Threshold Model;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_239,SOL-USD-LINK-USD,adaptive;hybrid;regime;zscore,Dynamic Threshold Model;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_240,BTC-USD-SOL-USD,adaptive;mean_reversion;ml;portfolio,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,148,0.0,0.0,0.26875228106983406,0
+combo_4way_240,SOL-USD-LINK-USD,adaptive;mean_reversion;ml;portfolio,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,22,0.0,0.0,0.06866862808740533,0
+combo_4way_241,BTC-USD-SOL-USD,adaptive;mean_reversion;ml;regime,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_241,SOL-USD-LINK-USD,adaptive;mean_reversion;ml;regime,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_242,BTC-USD-SOL-USD,adaptive;mean_reversion;ml;zscore,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_242,SOL-USD-LINK-USD,adaptive;mean_reversion;ml;zscore,Dynamic Threshold Model;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_243,BTC-USD-SOL-USD,adaptive;mean_reversion;portfolio;regime,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,234,0.23963707578031093,-1.5209287926281863,0.26875228106983406,0
+combo_4way_243,SOL-USD-LINK-USD,adaptive;mean_reversion;portfolio;regime,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_244,BTC-USD-SOL-USD,adaptive;mean_reversion;portfolio;zscore,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,266,0.29404496828546534,-1.449382958469477,0.26875228106983406,0
+combo_4way_244,SOL-USD-LINK-USD,adaptive;mean_reversion;portfolio;zscore,Dynamic Threshold Model;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_245,BTC-USD-SOL-USD,adaptive;mean_reversion;regime;zscore,Dynamic Threshold Model;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,352,0.1976151526150086,-1.8857602091223673,0.26875228106983406,0
+combo_4way_245,SOL-USD-LINK-USD,adaptive;mean_reversion;regime;zscore,Dynamic Threshold Model;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_246,BTC-USD-SOL-USD,adaptive;ml;portfolio;regime,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,200,0.0,-0.5402320438257499,0.26875228106983406,0
+combo_4way_246,SOL-USD-LINK-USD,adaptive;ml;portfolio;regime,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,32,0.0,0.0,0.06866862808740533,0
+combo_4way_247,BTC-USD-SOL-USD,adaptive;ml;portfolio;zscore,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,232,0.0,-0.5299254807978149,0.26875228106983406,0
+combo_4way_247,SOL-USD-LINK-USD,adaptive;ml;portfolio;zscore,Dynamic Threshold Model;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,44,0.0,-0.013122728943118198,0.07193196906596552,0
+combo_4way_248,BTC-USD-SOL-USD,adaptive;ml;regime;zscore,Dynamic Threshold Model;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_248,SOL-USD-LINK-USD,adaptive;ml;regime;zscore,Dynamic Threshold Model;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_249,BTC-USD-SOL-USD,adaptive;portfolio;regime;zscore,Dynamic Threshold Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,318,0.27492215967289546,-1.6178279942339189,0.26875228106983406,0
+combo_4way_249,SOL-USD-LINK-USD,adaptive;portfolio;regime;zscore,Dynamic Threshold Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,54,0.3319717512385236,-1.3418791939591985,0.07193196906596552,0
+combo_4way_250,BTC-USD-SOL-USD,composite;copula;ecm;hybrid,Composite Quant Score;Copula Risk Filter;Pure ECM;ZScore + ECM,4,0,0.0,0.0,0.0,0
+combo_4way_250,SOL-USD-LINK-USD,composite;copula;ecm;hybrid,Composite Quant Score;Copula Risk Filter;Pure ECM;ZScore + ECM,4,0,0.0,0.0,0.0,0
+combo_4way_251,BTC-USD-SOL-USD,composite;copula;ecm;mean_reversion,Composite Quant Score;Copula Risk Filter;Pure ECM;Hurst Filter,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_251,SOL-USD-LINK-USD,composite;copula;ecm;mean_reversion,Composite Quant Score;Copula Risk Filter;Pure ECM;Hurst Filter,4,0,0.0,0.0,0.0,0
+combo_4way_252,BTC-USD-SOL-USD,composite;copula;ecm;ml,Composite Quant Score;Copula Risk Filter;Pure ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_252,SOL-USD-LINK-USD,composite;copula;ecm;ml,Composite Quant Score;Copula Risk Filter;Pure ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_253,BTC-USD-SOL-USD,composite;copula;ecm;portfolio,Composite Quant Score;Copula Risk Filter;Pure ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_253,SOL-USD-LINK-USD,composite;copula;ecm;portfolio,Composite Quant Score;Copula Risk Filter;Pure ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_254,BTC-USD-SOL-USD,composite;copula;ecm;regime,Composite Quant Score;Copula Risk Filter;Pure ECM;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_254,SOL-USD-LINK-USD,composite;copula;ecm;regime,Composite Quant Score;Copula Risk Filter;Pure ECM;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_255,BTC-USD-SOL-USD,composite;copula;ecm;zscore,Composite Quant Score;Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_255,SOL-USD-LINK-USD,composite;copula;ecm;zscore,Composite Quant Score;Copula Risk Filter;Pure ECM;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_256,BTC-USD-SOL-USD,composite;copula;hybrid;mean_reversion,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Hurst Filter,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_256,SOL-USD-LINK-USD,composite;copula;hybrid;mean_reversion,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Hurst Filter,4,0,0.0,0.0,0.0,0
+combo_4way_257,BTC-USD-SOL-USD,composite;copula;hybrid;ml,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_257,SOL-USD-LINK-USD,composite;copula;hybrid;ml,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_258,BTC-USD-SOL-USD,composite;copula;hybrid;portfolio,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_258,SOL-USD-LINK-USD,composite;copula;hybrid;portfolio,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_259,BTC-USD-SOL-USD,composite;copula;hybrid;regime,Composite Quant Score;Copula Risk Filter;ZScore + ECM;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_259,SOL-USD-LINK-USD,composite;copula;hybrid;regime,Composite Quant Score;Copula Risk Filter;ZScore + ECM;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_260,BTC-USD-SOL-USD,composite;copula;hybrid;zscore,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_260,SOL-USD-LINK-USD,composite;copula;hybrid;zscore,Composite Quant Score;Copula Risk Filter;ZScore + ECM;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_261,BTC-USD-SOL-USD,composite;copula;mean_reversion;ml,Composite Quant Score;Copula Risk Filter;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_261,SOL-USD-LINK-USD,composite;copula;mean_reversion;ml,Composite Quant Score;Copula Risk Filter;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_262,BTC-USD-SOL-USD,composite;copula;mean_reversion;portfolio,Composite Quant Score;Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_262,SOL-USD-LINK-USD,composite;copula;mean_reversion;portfolio,Composite Quant Score;Copula Risk Filter;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_263,BTC-USD-SOL-USD,composite;copula;mean_reversion;regime,Composite Quant Score;Copula Risk Filter;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_263,SOL-USD-LINK-USD,composite;copula;mean_reversion;regime,Composite Quant Score;Copula Risk Filter;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_264,BTC-USD-SOL-USD,composite;copula;mean_reversion;zscore,Composite Quant Score;Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_264,SOL-USD-LINK-USD,composite;copula;mean_reversion;zscore,Composite Quant Score;Copula Risk Filter;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_265,BTC-USD-SOL-USD,composite;copula;ml;portfolio,Composite Quant Score;Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_265,SOL-USD-LINK-USD,composite;copula;ml;portfolio,Composite Quant Score;Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_266,BTC-USD-SOL-USD,composite;copula;ml;regime,Composite Quant Score;Copula Risk Filter;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_266,SOL-USD-LINK-USD,composite;copula;ml;regime,Composite Quant Score;Copula Risk Filter;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_267,BTC-USD-SOL-USD,composite;copula;ml;zscore,Composite Quant Score;Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_267,SOL-USD-LINK-USD,composite;copula;ml;zscore,Composite Quant Score;Copula Risk Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_268,BTC-USD-SOL-USD,composite;copula;portfolio;regime,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_268,SOL-USD-LINK-USD,composite;copula;portfolio;regime,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_269,BTC-USD-SOL-USD,composite;copula;portfolio;zscore,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_269,SOL-USD-LINK-USD,composite;copula;portfolio;zscore,Composite Quant Score;Copula Risk Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_270,BTC-USD-SOL-USD,composite;copula;regime;zscore,Composite Quant Score;Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_270,SOL-USD-LINK-USD,composite;copula;regime;zscore,Composite Quant Score;Copula Risk Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_271,BTC-USD-SOL-USD,composite;ecm;hybrid;mean_reversion,Composite Quant Score;Pure ECM;ZScore + ECM;Hurst Filter,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_271,SOL-USD-LINK-USD,composite;ecm;hybrid;mean_reversion,Composite Quant Score;Pure ECM;ZScore + ECM;Hurst Filter,4,0,0.0,0.0,0.0,0
+combo_4way_272,BTC-USD-SOL-USD,composite;ecm;hybrid;ml,Composite Quant Score;Pure ECM;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_272,SOL-USD-LINK-USD,composite;ecm;hybrid;ml,Composite Quant Score;Pure ECM;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_273,BTC-USD-SOL-USD,composite;ecm;hybrid;portfolio,Composite Quant Score;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_273,SOL-USD-LINK-USD,composite;ecm;hybrid;portfolio,Composite Quant Score;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_274,BTC-USD-SOL-USD,composite;ecm;hybrid;regime,Composite Quant Score;Pure ECM;ZScore + ECM;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_274,SOL-USD-LINK-USD,composite;ecm;hybrid;regime,Composite Quant Score;Pure ECM;ZScore + ECM;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_275,BTC-USD-SOL-USD,composite;ecm;hybrid;zscore,Composite Quant Score;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_275,SOL-USD-LINK-USD,composite;ecm;hybrid;zscore,Composite Quant Score;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_276,BTC-USD-SOL-USD,composite;ecm;mean_reversion;ml,Composite Quant Score;Pure ECM;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_276,SOL-USD-LINK-USD,composite;ecm;mean_reversion;ml,Composite Quant Score;Pure ECM;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_277,BTC-USD-SOL-USD,composite;ecm;mean_reversion;portfolio,Composite Quant Score;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_277,SOL-USD-LINK-USD,composite;ecm;mean_reversion;portfolio,Composite Quant Score;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_278,BTC-USD-SOL-USD,composite;ecm;mean_reversion;regime,Composite Quant Score;Pure ECM;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_278,SOL-USD-LINK-USD,composite;ecm;mean_reversion;regime,Composite Quant Score;Pure ECM;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_279,BTC-USD-SOL-USD,composite;ecm;mean_reversion;zscore,Composite Quant Score;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_279,SOL-USD-LINK-USD,composite;ecm;mean_reversion;zscore,Composite Quant Score;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_280,BTC-USD-SOL-USD,composite;ecm;ml;portfolio,Composite Quant Score;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_280,SOL-USD-LINK-USD,composite;ecm;ml;portfolio,Composite Quant Score;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_281,BTC-USD-SOL-USD,composite;ecm;ml;regime,Composite Quant Score;Pure ECM;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_281,SOL-USD-LINK-USD,composite;ecm;ml;regime,Composite Quant Score;Pure ECM;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_282,BTC-USD-SOL-USD,composite;ecm;ml;zscore,Composite Quant Score;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_282,SOL-USD-LINK-USD,composite;ecm;ml;zscore,Composite Quant Score;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_283,BTC-USD-SOL-USD,composite;ecm;portfolio;regime,Composite Quant Score;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_283,SOL-USD-LINK-USD,composite;ecm;portfolio;regime,Composite Quant Score;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_284,BTC-USD-SOL-USD,composite;ecm;portfolio;zscore,Composite Quant Score;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_284,SOL-USD-LINK-USD,composite;ecm;portfolio;zscore,Composite Quant Score;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_285,BTC-USD-SOL-USD,composite;ecm;regime;zscore,Composite Quant Score;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_285,SOL-USD-LINK-USD,composite;ecm;regime;zscore,Composite Quant Score;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_286,BTC-USD-SOL-USD,composite;hybrid;mean_reversion;ml,Composite Quant Score;ZScore + ECM;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_286,SOL-USD-LINK-USD,composite;hybrid;mean_reversion;ml,Composite Quant Score;ZScore + ECM;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_287,BTC-USD-SOL-USD,composite;hybrid;mean_reversion;portfolio,Composite Quant Score;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_287,SOL-USD-LINK-USD,composite;hybrid;mean_reversion;portfolio,Composite Quant Score;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_288,BTC-USD-SOL-USD,composite;hybrid;mean_reversion;regime,Composite Quant Score;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_288,SOL-USD-LINK-USD,composite;hybrid;mean_reversion;regime,Composite Quant Score;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_289,BTC-USD-SOL-USD,composite;hybrid;mean_reversion;zscore,Composite Quant Score;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_289,SOL-USD-LINK-USD,composite;hybrid;mean_reversion;zscore,Composite Quant Score;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_290,BTC-USD-SOL-USD,composite;hybrid;ml;portfolio,Composite Quant Score;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_290,SOL-USD-LINK-USD,composite;hybrid;ml;portfolio,Composite Quant Score;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_291,BTC-USD-SOL-USD,composite;hybrid;ml;regime,Composite Quant Score;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_291,SOL-USD-LINK-USD,composite;hybrid;ml;regime,Composite Quant Score;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_292,BTC-USD-SOL-USD,composite;hybrid;ml;zscore,Composite Quant Score;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_292,SOL-USD-LINK-USD,composite;hybrid;ml;zscore,Composite Quant Score;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_293,BTC-USD-SOL-USD,composite;hybrid;portfolio;regime,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_293,SOL-USD-LINK-USD,composite;hybrid;portfolio;regime,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_294,BTC-USD-SOL-USD,composite;hybrid;portfolio;zscore,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_294,SOL-USD-LINK-USD,composite;hybrid;portfolio;zscore,Composite Quant Score;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_295,BTC-USD-SOL-USD,composite;hybrid;regime;zscore,Composite Quant Score;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_295,SOL-USD-LINK-USD,composite;hybrid;regime;zscore,Composite Quant Score;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_296,BTC-USD-SOL-USD,composite;mean_reversion;ml;portfolio,Composite Quant Score;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_296,SOL-USD-LINK-USD,composite;mean_reversion;ml;portfolio,Composite Quant Score;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_297,BTC-USD-SOL-USD,composite;mean_reversion;ml;regime,Composite Quant Score;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_297,SOL-USD-LINK-USD,composite;mean_reversion;ml;regime,Composite Quant Score;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_298,BTC-USD-SOL-USD,composite;mean_reversion;ml;zscore,Composite Quant Score;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_298,SOL-USD-LINK-USD,composite;mean_reversion;ml;zscore,Composite Quant Score;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_299,BTC-USD-SOL-USD,composite;mean_reversion;portfolio;regime,Composite Quant Score;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_299,SOL-USD-LINK-USD,composite;mean_reversion;portfolio;regime,Composite Quant Score;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_300,BTC-USD-SOL-USD,composite;mean_reversion;portfolio;zscore,Composite Quant Score;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_300,SOL-USD-LINK-USD,composite;mean_reversion;portfolio;zscore,Composite Quant Score;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_301,BTC-USD-SOL-USD,composite;mean_reversion;regime;zscore,Composite Quant Score;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_301,SOL-USD-LINK-USD,composite;mean_reversion;regime;zscore,Composite Quant Score;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_302,BTC-USD-SOL-USD,composite;ml;portfolio;regime,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_302,SOL-USD-LINK-USD,composite;ml;portfolio;regime,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_303,BTC-USD-SOL-USD,composite;ml;portfolio;zscore,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_303,SOL-USD-LINK-USD,composite;ml;portfolio;zscore,Composite Quant Score;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_304,BTC-USD-SOL-USD,composite;ml;regime;zscore,Composite Quant Score;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_304,SOL-USD-LINK-USD,composite;ml;regime;zscore,Composite Quant Score;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_305,BTC-USD-SOL-USD,composite;portfolio;regime;zscore,Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_305,SOL-USD-LINK-USD,composite;portfolio;regime;zscore,Composite Quant Score;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_306,BTC-USD-SOL-USD,copula;ecm;hybrid;mean_reversion,Copula Risk Filter;Pure ECM;ZScore + ECM;Hurst Filter,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_306,SOL-USD-LINK-USD,copula;ecm;hybrid;mean_reversion,Copula Risk Filter;Pure ECM;ZScore + ECM;Hurst Filter,4,0,0.0,0.0,0.0,0
+combo_4way_307,BTC-USD-SOL-USD,copula;ecm;hybrid;ml,Copula Risk Filter;Pure ECM;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_307,SOL-USD-LINK-USD,copula;ecm;hybrid;ml,Copula Risk Filter;Pure ECM;ZScore + ECM;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_308,BTC-USD-SOL-USD,copula;ecm;hybrid;portfolio,Copula Risk Filter;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_308,SOL-USD-LINK-USD,copula;ecm;hybrid;portfolio,Copula Risk Filter;Pure ECM;ZScore + ECM;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_309,BTC-USD-SOL-USD,copula;ecm;hybrid;regime,Copula Risk Filter;Pure ECM;ZScore + ECM;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_309,SOL-USD-LINK-USD,copula;ecm;hybrid;regime,Copula Risk Filter;Pure ECM;ZScore + ECM;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_310,BTC-USD-SOL-USD,copula;ecm;hybrid;zscore,Copula Risk Filter;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_310,SOL-USD-LINK-USD,copula;ecm;hybrid;zscore,Copula Risk Filter;Pure ECM;ZScore + ECM;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_311,BTC-USD-SOL-USD,copula;ecm;mean_reversion;ml,Copula Risk Filter;Pure ECM;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_311,SOL-USD-LINK-USD,copula;ecm;mean_reversion;ml,Copula Risk Filter;Pure ECM;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_312,BTC-USD-SOL-USD,copula;ecm;mean_reversion;portfolio,Copula Risk Filter;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_312,SOL-USD-LINK-USD,copula;ecm;mean_reversion;portfolio,Copula Risk Filter;Pure ECM;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_313,BTC-USD-SOL-USD,copula;ecm;mean_reversion;regime,Copula Risk Filter;Pure ECM;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_313,SOL-USD-LINK-USD,copula;ecm;mean_reversion;regime,Copula Risk Filter;Pure ECM;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_314,BTC-USD-SOL-USD,copula;ecm;mean_reversion;zscore,Copula Risk Filter;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_314,SOL-USD-LINK-USD,copula;ecm;mean_reversion;zscore,Copula Risk Filter;Pure ECM;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_315,BTC-USD-SOL-USD,copula;ecm;ml;portfolio,Copula Risk Filter;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_315,SOL-USD-LINK-USD,copula;ecm;ml;portfolio,Copula Risk Filter;Pure ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_316,BTC-USD-SOL-USD,copula;ecm;ml;regime,Copula Risk Filter;Pure ECM;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_316,SOL-USD-LINK-USD,copula;ecm;ml;regime,Copula Risk Filter;Pure ECM;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_317,BTC-USD-SOL-USD,copula;ecm;ml;zscore,Copula Risk Filter;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_317,SOL-USD-LINK-USD,copula;ecm;ml;zscore,Copula Risk Filter;Pure ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_318,BTC-USD-SOL-USD,copula;ecm;portfolio;regime,Copula Risk Filter;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_318,SOL-USD-LINK-USD,copula;ecm;portfolio;regime,Copula Risk Filter;Pure ECM;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_319,BTC-USD-SOL-USD,copula;ecm;portfolio;zscore,Copula Risk Filter;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_319,SOL-USD-LINK-USD,copula;ecm;portfolio;zscore,Copula Risk Filter;Pure ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_320,BTC-USD-SOL-USD,copula;ecm;regime;zscore,Copula Risk Filter;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_320,SOL-USD-LINK-USD,copula;ecm;regime;zscore,Copula Risk Filter;Pure ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_321,BTC-USD-SOL-USD,copula;hybrid;mean_reversion;ml,Copula Risk Filter;ZScore + ECM;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_321,SOL-USD-LINK-USD,copula;hybrid;mean_reversion;ml,Copula Risk Filter;ZScore + ECM;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_322,BTC-USD-SOL-USD,copula;hybrid;mean_reversion;portfolio,Copula Risk Filter;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_322,SOL-USD-LINK-USD,copula;hybrid;mean_reversion;portfolio,Copula Risk Filter;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_323,BTC-USD-SOL-USD,copula;hybrid;mean_reversion;regime,Copula Risk Filter;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_323,SOL-USD-LINK-USD,copula;hybrid;mean_reversion;regime,Copula Risk Filter;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_324,BTC-USD-SOL-USD,copula;hybrid;mean_reversion;zscore,Copula Risk Filter;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_324,SOL-USD-LINK-USD,copula;hybrid;mean_reversion;zscore,Copula Risk Filter;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_325,BTC-USD-SOL-USD,copula;hybrid;ml;portfolio,Copula Risk Filter;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_325,SOL-USD-LINK-USD,copula;hybrid;ml;portfolio,Copula Risk Filter;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_326,BTC-USD-SOL-USD,copula;hybrid;ml;regime,Copula Risk Filter;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_326,SOL-USD-LINK-USD,copula;hybrid;ml;regime,Copula Risk Filter;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_327,BTC-USD-SOL-USD,copula;hybrid;ml;zscore,Copula Risk Filter;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_327,SOL-USD-LINK-USD,copula;hybrid;ml;zscore,Copula Risk Filter;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_328,BTC-USD-SOL-USD,copula;hybrid;portfolio;regime,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_328,SOL-USD-LINK-USD,copula;hybrid;portfolio;regime,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_329,BTC-USD-SOL-USD,copula;hybrid;portfolio;zscore,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_329,SOL-USD-LINK-USD,copula;hybrid;portfolio;zscore,Copula Risk Filter;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_330,BTC-USD-SOL-USD,copula;hybrid;regime;zscore,Copula Risk Filter;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_330,SOL-USD-LINK-USD,copula;hybrid;regime;zscore,Copula Risk Filter;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_331,BTC-USD-SOL-USD,copula;mean_reversion;ml;portfolio,Copula Risk Filter;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_331,SOL-USD-LINK-USD,copula;mean_reversion;ml;portfolio,Copula Risk Filter;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_332,BTC-USD-SOL-USD,copula;mean_reversion;ml;regime,Copula Risk Filter;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_332,SOL-USD-LINK-USD,copula;mean_reversion;ml;regime,Copula Risk Filter;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_333,BTC-USD-SOL-USD,copula;mean_reversion;ml;zscore,Copula Risk Filter;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_333,SOL-USD-LINK-USD,copula;mean_reversion;ml;zscore,Copula Risk Filter;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_334,BTC-USD-SOL-USD,copula;mean_reversion;portfolio;regime,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_334,SOL-USD-LINK-USD,copula;mean_reversion;portfolio;regime,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_335,BTC-USD-SOL-USD,copula;mean_reversion;portfolio;zscore,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_335,SOL-USD-LINK-USD,copula;mean_reversion;portfolio;zscore,Copula Risk Filter;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_336,BTC-USD-SOL-USD,copula;mean_reversion;regime;zscore,Copula Risk Filter;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_336,SOL-USD-LINK-USD,copula;mean_reversion;regime;zscore,Copula Risk Filter;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_337,BTC-USD-SOL-USD,copula;ml;portfolio;regime,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_337,SOL-USD-LINK-USD,copula;ml;portfolio;regime,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_338,BTC-USD-SOL-USD,copula;ml;portfolio;zscore,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_338,SOL-USD-LINK-USD,copula;ml;portfolio;zscore,Copula Risk Filter;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_339,BTC-USD-SOL-USD,copula;ml;regime;zscore,Copula Risk Filter;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_339,SOL-USD-LINK-USD,copula;ml;regime;zscore,Copula Risk Filter;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_340,BTC-USD-SOL-USD,copula;portfolio;regime;zscore,Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_340,SOL-USD-LINK-USD,copula;portfolio;regime;zscore,Copula Risk Filter;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_341,BTC-USD-SOL-USD,ecm;hybrid;mean_reversion;ml,Pure ECM;ZScore + ECM;Hurst Filter;Feature Importance Model,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_341,SOL-USD-LINK-USD,ecm;hybrid;mean_reversion;ml,Pure ECM;ZScore + ECM;Hurst Filter;Feature Importance Model,4,0,0.0,0.0,0.0,0
+combo_4way_342,BTC-USD-SOL-USD,ecm;hybrid;mean_reversion;portfolio,Pure ECM;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_342,SOL-USD-LINK-USD,ecm;hybrid;mean_reversion;portfolio,Pure ECM;ZScore + ECM;Hurst Filter;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_343,BTC-USD-SOL-USD,ecm;hybrid;mean_reversion;regime,Pure ECM;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_343,SOL-USD-LINK-USD,ecm;hybrid;mean_reversion;regime,Pure ECM;ZScore + ECM;Hurst Filter;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_344,BTC-USD-SOL-USD,ecm;hybrid;mean_reversion;zscore,Pure ECM;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_344,SOL-USD-LINK-USD,ecm;hybrid;mean_reversion;zscore,Pure ECM;ZScore + ECM;Hurst Filter;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_345,BTC-USD-SOL-USD,ecm;hybrid;ml;portfolio,Pure ECM;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_345,SOL-USD-LINK-USD,ecm;hybrid;ml;portfolio,Pure ECM;ZScore + ECM;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_346,BTC-USD-SOL-USD,ecm;hybrid;ml;regime,Pure ECM;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_346,SOL-USD-LINK-USD,ecm;hybrid;ml;regime,Pure ECM;ZScore + ECM;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_347,BTC-USD-SOL-USD,ecm;hybrid;ml;zscore,Pure ECM;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_347,SOL-USD-LINK-USD,ecm;hybrid;ml;zscore,Pure ECM;ZScore + ECM;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_348,BTC-USD-SOL-USD,ecm;hybrid;portfolio;regime,Pure ECM;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_348,SOL-USD-LINK-USD,ecm;hybrid;portfolio;regime,Pure ECM;ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_349,BTC-USD-SOL-USD,ecm;hybrid;portfolio;zscore,Pure ECM;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_349,SOL-USD-LINK-USD,ecm;hybrid;portfolio;zscore,Pure ECM;ZScore + ECM;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_350,BTC-USD-SOL-USD,ecm;hybrid;regime;zscore,Pure ECM;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_350,SOL-USD-LINK-USD,ecm;hybrid;regime;zscore,Pure ECM;ZScore + ECM;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_351,BTC-USD-SOL-USD,ecm;mean_reversion;ml;portfolio,Pure ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_351,SOL-USD-LINK-USD,ecm;mean_reversion;ml;portfolio,Pure ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_352,BTC-USD-SOL-USD,ecm;mean_reversion;ml;regime,Pure ECM;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_352,SOL-USD-LINK-USD,ecm;mean_reversion;ml;regime,Pure ECM;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_353,BTC-USD-SOL-USD,ecm;mean_reversion;ml;zscore,Pure ECM;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_353,SOL-USD-LINK-USD,ecm;mean_reversion;ml;zscore,Pure ECM;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_354,BTC-USD-SOL-USD,ecm;mean_reversion;portfolio;regime,Pure ECM;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_354,SOL-USD-LINK-USD,ecm;mean_reversion;portfolio;regime,Pure ECM;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_355,BTC-USD-SOL-USD,ecm;mean_reversion;portfolio;zscore,Pure ECM;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_355,SOL-USD-LINK-USD,ecm;mean_reversion;portfolio;zscore,Pure ECM;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_356,BTC-USD-SOL-USD,ecm;mean_reversion;regime;zscore,Pure ECM;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_356,SOL-USD-LINK-USD,ecm;mean_reversion;regime;zscore,Pure ECM;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_357,BTC-USD-SOL-USD,ecm;ml;portfolio;regime,Pure ECM;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_357,SOL-USD-LINK-USD,ecm;ml;portfolio;regime,Pure ECM;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_358,BTC-USD-SOL-USD,ecm;ml;portfolio;zscore,Pure ECM;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_358,SOL-USD-LINK-USD,ecm;ml;portfolio;zscore,Pure ECM;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_359,BTC-USD-SOL-USD,ecm;ml;regime;zscore,Pure ECM;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_359,SOL-USD-LINK-USD,ecm;ml;regime;zscore,Pure ECM;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_360,BTC-USD-SOL-USD,ecm;portfolio;regime;zscore,Pure ECM;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_360,SOL-USD-LINK-USD,ecm;portfolio;regime;zscore,Pure ECM;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_361,BTC-USD-SOL-USD,hybrid;mean_reversion;ml;portfolio,ZScore + ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,34,0.0,0.0,0.23415871402374777,0
+combo_4way_361,SOL-USD-LINK-USD,hybrid;mean_reversion;ml;portfolio,ZScore + ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy,4,0,0.0,0.0,0.0,0
+combo_4way_362,BTC-USD-SOL-USD,hybrid;mean_reversion;ml;regime,ZScore + ECM;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_362,SOL-USD-LINK-USD,hybrid;mean_reversion;ml;regime,ZScore + ECM;Hurst Filter;Feature Importance Model;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_363,BTC-USD-SOL-USD,hybrid;mean_reversion;ml;zscore,ZScore + ECM;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_363,SOL-USD-LINK-USD,hybrid;mean_reversion;ml;zscore,ZScore + ECM;Hurst Filter;Feature Importance Model;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_364,BTC-USD-SOL-USD,hybrid;mean_reversion;portfolio;regime,ZScore + ECM;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_364,SOL-USD-LINK-USD,hybrid;mean_reversion;portfolio;regime,ZScore + ECM;Hurst Filter;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_365,BTC-USD-SOL-USD,hybrid;mean_reversion;portfolio;zscore,ZScore + ECM;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_365,SOL-USD-LINK-USD,hybrid;mean_reversion;portfolio;zscore,ZScore + ECM;Hurst Filter;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_366,BTC-USD-SOL-USD,hybrid;mean_reversion;regime;zscore,ZScore + ECM;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_366,SOL-USD-LINK-USD,hybrid;mean_reversion;regime;zscore,ZScore + ECM;Hurst Filter;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_367,BTC-USD-SOL-USD,hybrid;ml;portfolio;regime,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,86,0.0,0.0,0.25198594387995527,0
+combo_4way_367,SOL-USD-LINK-USD,hybrid;ml;portfolio;regime,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_368,BTC-USD-SOL-USD,hybrid;ml;portfolio;zscore,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,118,0.0,0.0,0.2575112374854235,0
+combo_4way_368,SOL-USD-LINK-USD,hybrid;ml;portfolio;zscore,ZScore + ECM;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_369,BTC-USD-SOL-USD,hybrid;ml;regime;zscore,ZScore + ECM;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_369,SOL-USD-LINK-USD,hybrid;ml;regime;zscore,ZScore + ECM;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_370,BTC-USD-SOL-USD,hybrid;portfolio;regime;zscore,ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_370,SOL-USD-LINK-USD,hybrid;portfolio;regime;zscore,ZScore + ECM;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_371,BTC-USD-SOL-USD,mean_reversion;ml;portfolio;regime,Hurst Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,120,0.0,0.0,0.25198594387995527,0
+combo_4way_371,SOL-USD-LINK-USD,mean_reversion;ml;portfolio;regime,Hurst Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model,4,10,0.0,0.0,0.046819709109089884,0
+combo_4way_372,BTC-USD-SOL-USD,mean_reversion;ml;portfolio;zscore,Hurst Filter;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,152,0.0,0.0,0.2575112374854235,0
+combo_4way_372,SOL-USD-LINK-USD,mean_reversion;ml;portfolio;zscore,Hurst Filter;Feature Importance Model;Pair Ranking Strategy;Classic ZScore Mean Reversion,4,22,0.0,0.0,0.07193196906596552,0
+combo_4way_373,BTC-USD-SOL-USD,mean_reversion;ml;regime;zscore,Hurst Filter;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_373,SOL-USD-LINK-USD,mean_reversion;ml;regime;zscore,Hurst Filter;Feature Importance Model;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_374,BTC-USD-SOL-USD,mean_reversion;portfolio;regime;zscore,Hurst Filter;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,238,0.2826611646069673,-1.322609826579618,0.2575112374854235,0
+combo_4way_374,SOL-USD-LINK-USD,mean_reversion;portfolio;regime;zscore,Hurst Filter;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+combo_4way_375,BTC-USD-SOL-USD,ml;portfolio;regime;zscore,Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,204,0.0,-0.5299254807978149,0.2575112374854235,0
+combo_4way_375,SOL-USD-LINK-USD,ml;portfolio;regime;zscore,Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,4,32,0.0,0.0,0.07193196906596552,0
+full_stack_376,BTC-USD-SOL-USD,adaptive;composite;copula;ecm;hybrid;mean_reversion;ml;portfolio;regime;zscore,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pure ECM;ZScore + ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,10,352,0.0,0.0,0.26875228106983406,0
+full_stack_376,SOL-USD-LINK-USD,adaptive;composite;copula;ecm;hybrid;mean_reversion;ml;portfolio;regime;zscore,Dynamic Threshold Model;Composite Quant Score;Copula Risk Filter;Pure ECM;ZScore + ECM;Hurst Filter;Feature Importance Model;Pair Ranking Strategy;KMeans Regime Model;Classic ZScore Mean Reversion,10,54,0.0,0.0,0.07193196906596552,0

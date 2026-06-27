@@ -1,0 +1,1333 @@
+strategy_id,strategy_name,pair,required_trades,status,base_trades,stress_trades,base_observations,stress_observations,base_multiplier,stress_multiplier,pair_multiplier,missing_cost_buckets,notes
+2,ZScore + ECM,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+2,ZScore + ECM,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+4,ECM + Copula + ZScore,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+8,Pure ECM,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+9,ECM Leadership,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+10,Leader/Follower Prediction,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+11,Half-Life Optimized,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+12,Hurst Filter,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+13,Hurst + Half-Life,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+16,Profile Match,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+18,Composite Quant Score,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+19,Weighted Voting Model,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+21,HMM Regime Model,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+21,HMM Regime Model,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+22,GMM Regime Model,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+22,GMM Regime Model,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+22,GMM Regime Model,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+22,GMM Regime Model,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+22,GMM Regime Model,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+23,KMeans Regime Model,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+25,Pair Ranking Strategy,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+26,Portfolio Rotation,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+27,Risk Adjusted Ranking,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+29,Copula Risk Filter,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+31,Feature Importance Model,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+32,Trade Outcome Predictor,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,AAVE-USD-UNI-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ARB-USD-OP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BNB-USD-LINK-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-ETH-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTC-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTCUSDT-ETHUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,BTCUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,DOGE-USD-LTC-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,DOGE-USD-XRP-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-BONK-USD,100,gap,0,0,98,98,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-LINK-USD,100,gap,0,0,23999,23999,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-MKR-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETH-USD-SOL-USD,100,gap,0,0,12000,12000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,ETHUSDT-SOLUSDT,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,MATIC-USD-ARB-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-ALGO-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-APT-USD,100,gap,0,0,200,200,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-AVAX-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-BNB-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-ETC-USD,100,gap,0,0,99,99,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-LINK-USD,100,gap,0,0,1000,1000,0,0,0,none,near_zero_signals_in_bucket
+36,Copula + ECM Strategy,SOL-USD-PENGU-USD,100,gap,0,0,400,400,0,0,0,none,near_zero_signals_in_bucket
+5,Pure Copula,BNB-USD-LINK-USD,100,ready,106,106,12000,12000,1,1,1,none,ready
+5,Pure Copula,BTC-USD-LINK-USD,100,ready,262,262,23999,23999,1,1,1,none,ready
+5,Pure Copula,ETH-USD-LINK-USD,100,ready,264,264,23999,23999,1,1,1,none,ready
+5,Pure Copula,ETH-USD-SOL-USD,100,ready,136,136,12000,12000,1,1,1,none,ready
+6,Dual Conditional Copula,BTC-USD-LINK-USD,100,ready,214,214,23999,23999,1,1,1,none,ready
+6,Dual Conditional Copula,ETH-USD-LINK-USD,100,ready,199,199,23999,23999,1,1,1,none,ready
+6,Dual Conditional Copula,ETH-USD-SOL-USD,100,ready,110,110,12000,12000,1,1,1,none,ready
+7,Tail Event Reversion,BTC-USD-LINK-USD,100,ready,172,172,23999,23999,1,1,1,none,ready
+7,Tail Event Reversion,ETH-USD-LINK-USD,100,ready,183,183,23999,23999,1,1,1,none,ready
+14,OU Optimal,BTC-USD-LINK-USD,100,ready,100,100,23999,23999,1,1,1,none,ready
+14,OU Optimal,ETH-USD-LINK-USD,100,ready,111,111,23999,23999,1,1,1,none,ready
+28,Copula Tail Risk Sizing,BNB-USD-LINK-USD,100,ready,106,106,12000,12000,1,1,1,none,ready
+28,Copula Tail Risk Sizing,BTC-USD-LINK-USD,100,ready,262,262,23999,23999,1,1,1,none,ready
+28,Copula Tail Risk Sizing,ETH-USD-LINK-USD,100,ready,264,264,23999,23999,1,1,1,none,ready
+29,Copula Risk Filter,BNB-USD-LINK-USD,100,ready,106,106,12000,12000,1,1,1,none,ready
+29,Copula Risk Filter,BTC-USD-LINK-USD,100,ready,262,262,23999,23999,1,1,1,none,ready
+29,Copula Risk Filter,ETH-USD-LINK-USD,100,ready,264,264,23999,23999,1,1,1,none,ready
+30,Meta Model,ETH-USD-LINK-USD,100,ready,105,105,23999,23999,1,1,1,none,ready
+33,Copula Dislocation Ranking Engine,BNB-USD-LINK-USD,100,ready,150,150,12000,12000,1,1,1,none,ready
+33,Copula Dislocation Ranking Engine,BTC-USD-ETH-USD,100,ready,136,136,12000,12000,1,1,1,none,ready
+33,Copula Dislocation Ranking Engine,BTC-USD-LINK-USD,100,ready,324,324,23999,23999,1,1,1,none,ready
+33,Copula Dislocation Ranking Engine,ETH-USD-LINK-USD,100,ready,332,332,23999,23999,1,1,1,none,ready
+33,Copula Dislocation Ranking Engine,ETH-USD-SOL-USD,100,ready,188,188,12000,12000,1,1,1,none,ready
+34,Copula + Regime Strategy,BTC-USD-LINK-USD,100,ready,208,208,23999,23999,1,1,1,none,ready
+34,Copula + Regime Strategy,ETH-USD-LINK-USD,100,ready,205,205,23999,23999,1,1,1,none,ready
+34,Copula + Regime Strategy,ETH-USD-SOL-USD,100,ready,104,104,12000,12000,1,1,1,none,ready
+35,Copula Divergence Persistence,BTC-USD-LINK-USD,100,ready,212,212,23999,23999,1,1,1,none,ready
+35,Copula Divergence Persistence,ETH-USD-LINK-USD,100,ready,206,206,23999,23999,1,1,1,none,ready
+37,Pure Copula Portfolio,BNB-USD-LINK-USD,100,ready,150,150,12000,12000,1,1,1,none,ready
+37,Pure Copula Portfolio,BTC-USD-ETH-USD,100,ready,136,136,12000,12000,1,1,1,none,ready
+37,Pure Copula Portfolio,BTC-USD-LINK-USD,100,ready,324,324,23999,23999,1,1,1,none,ready
+37,Pure Copula Portfolio,ETH-USD-LINK-USD,100,ready,332,332,23999,23999,1,1,1,none,ready
+37,Pure Copula Portfolio,ETH-USD-SOL-USD,100,ready,188,188,12000,12000,1,1,1,none,ready
+1,Classic ZScore Mean Reversion,BTC-USD-LINK-USD,100,gap,74,74,23999,23999,2,2,2,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-LINK-USD,100,gap,67,67,23999,23999,2,2,2,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-LINK-USD,100,gap,74,74,23999,23999,2,2,2,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-LINK-USD,100,gap,67,67,23999,23999,2,2,2,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-ETH-USD,100,gap,90,90,12000,12000,2,2,2,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-SOL-USD,100,gap,74,74,12000,12000,2,2,2,none,trade_frequency_limited
+6,Dual Conditional Copula,BNB-USD-LINK-USD,100,gap,94,94,12000,12000,2,2,2,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-ETH-USD,100,gap,78,78,12000,12000,2,2,2,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-SOL-USD,100,gap,62,62,12000,12000,2,2,2,none,trade_frequency_limited
+7,Tail Event Reversion,BNB-USD-LINK-USD,100,gap,80,80,12000,12000,2,2,2,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-ETH-USD,100,gap,52,52,12000,12000,2,2,2,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-LINK-USD,100,gap,88,88,23999,23999,2,2,2,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-LINK-USD,100,gap,99,99,23999,23999,2,2,2,none,trade_frequency_limited
+14,OU Optimal,BNB-USD-LINK-USD,100,gap,52,52,12000,12000,2,2,2,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-SOL-USD,100,gap,54,54,12000,12000,2,2,2,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-LINK-USD,100,gap,96,96,23999,23999,2,2,2,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-LINK-USD,100,gap,99,99,23999,23999,2,2,2,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-SOL-USD,100,gap,52,52,12000,12000,2,2,2,none,trade_frequency_limited
+16,Profile Match,BTC-USD-LINK-USD,100,gap,66,66,23999,23999,2,2,2,none,trade_frequency_limited
+16,Profile Match,ETH-USD-LINK-USD,100,gap,75,75,23999,23999,2,2,2,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-LINK-USD,100,gap,92,92,23999,23999,2,2,2,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-LINK-USD,100,gap,93,93,23999,23999,2,2,2,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-LINK-USD,100,gap,86,86,23999,23999,2,2,2,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-LINK-USD,100,gap,79,79,23999,23999,2,2,2,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-LINK-USD,100,gap,59,59,23999,23999,2,2,2,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-LINK-USD,100,gap,55,55,23999,23999,2,2,2,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-LINK-USD,100,gap,58,58,23999,23999,2,2,2,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-LINK-USD,100,gap,53,53,23999,23999,2,2,2,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-LINK-USD,100,gap,56,56,23999,23999,2,2,2,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-ETH-USD,100,gap,90,90,12000,12000,2,2,2,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-SOL-USD,100,gap,74,74,12000,12000,2,2,2,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-ETH-USD,100,gap,90,90,12000,12000,2,2,2,none,trade_frequency_limited
+30,Meta Model,BTC-USD-LINK-USD,100,gap,92,92,23999,23999,2,2,2,none,trade_frequency_limited
+30,Meta Model,ETH-USD-SOL-USD,100,gap,52,52,12000,12000,2,2,2,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-SOL-USD,100,gap,94,94,12000,12000,2,2,2,none,trade_frequency_limited
+34,Copula + Regime Strategy,BNB-USD-LINK-USD,100,gap,94,94,12000,12000,2,2,2,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-ETH-USD,100,gap,90,90,12000,12000,2,2,2,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-SOL-USD,100,gap,72,72,12000,12000,2,2,2,none,trade_frequency_limited
+35,Copula Divergence Persistence,BNB-USD-LINK-USD,100,gap,94,94,12000,12000,2,2,2,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-ETH-USD,100,gap,78,78,12000,12000,2,2,2,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-SOL-USD,100,gap,72,72,12000,12000,2,2,2,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-SOL-USD,100,gap,90,90,12000,12000,2,2,2,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-SOL-USD,100,gap,94,94,12000,12000,2,2,2,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BNB-USD-LINK-USD,100,gap,36,36,12000,12000,3,3,3,none,trade_frequency_limited
+3,ZScore + Copula,BNB-USD-LINK-USD,100,gap,36,36,12000,12000,3,3,3,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-SOL-USD,100,gap,46,46,12000,12000,3,3,3,none,trade_frequency_limited
+11,Half-Life Optimized,BNB-USD-LINK-USD,100,gap,44,44,12000,12000,3,3,3,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-ETH-USD,100,gap,34,34,12000,12000,3,3,3,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-SOL-USD,100,gap,48,48,12000,12000,3,3,3,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-LINK-USD,100,gap,38,38,23999,23999,3,3,3,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-LINK-USD,100,gap,40,40,23999,23999,3,3,3,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-LINK-USD,100,gap,38,38,23999,23999,3,3,3,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-LINK-USD,100,gap,40,40,23999,23999,3,3,3,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-ETH-USD,100,gap,38,38,12000,12000,3,3,3,none,trade_frequency_limited
+15,ML Confidence,BNB-USD-LINK-USD,100,gap,46,46,12000,12000,3,3,3,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-ETH-USD,100,gap,38,38,12000,12000,3,3,3,none,trade_frequency_limited
+16,Profile Match,BNB-USD-LINK-USD,100,gap,34,34,12000,12000,3,3,3,none,trade_frequency_limited
+16,Profile Match,BTC-USD-ETH-USD,100,gap,34,34,12000,12000,3,3,3,none,trade_frequency_limited
+17,Proprietary Signal Stack,BNB-USD-LINK-USD,100,gap,46,46,12000,12000,3,3,3,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-ETH-USD,100,gap,36,36,12000,12000,3,3,3,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-SOL-USD,100,gap,44,44,12000,12000,3,3,3,none,trade_frequency_limited
+20,Dynamic Threshold Model,BNB-USD-LINK-USD,100,gap,42,42,12000,12000,3,3,3,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-ETH-USD,100,gap,34,34,12000,12000,3,3,3,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-SOL-USD,100,gap,40,40,12000,12000,3,3,3,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-LINK-USD,100,gap,49,49,23999,23999,3,3,3,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-LINK-USD,100,gap,35,35,23999,23999,3,3,3,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-LINK-USD,100,gap,37,37,23999,23999,3,3,3,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-SOL-USD,100,gap,34,34,12000,12000,3,3,3,none,trade_frequency_limited
+30,Meta Model,BNB-USD-LINK-USD,100,gap,48,48,12000,12000,3,3,3,none,trade_frequency_limited
+30,Meta Model,BTC-USD-ETH-USD,100,gap,38,38,12000,12000,3,3,3,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-ETH-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-SOL-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-ETH-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-SOL-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-SOL-USD,100,gap,28,28,12000,12000,4,4,4,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-SOL-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-SOL-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+16,Profile Match,ETH-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-SOL-USD,100,gap,32,32,12000,12000,4,4,4,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-ETH-USD,100,gap,27,27,12000,12000,4,4,4,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-ETH-USD,100,gap,25,25,12000,12000,4,4,4,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-ETH-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-SOL-USD,100,gap,26,26,12000,12000,4,4,4,none,trade_frequency_limited
+30,Meta Model,BTC-USD-SOL-USD,100,gap,30,30,12000,12000,4,4,4,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-SOL-USD,100,gap,22,22,12000,12000,5,5,5,none,trade_frequency_limited
+12,Hurst Filter,BNB-USD-LINK-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+13,Hurst + Half-Life,BNB-USD-LINK-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+21,HMM Regime Model,BNB-USD-LINK-USD,100,gap,22,22,12000,12000,5,5,5,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-SOL-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-SOL-USD,100,gap,24,24,12000,12000,5,5,5,none,trade_frequency_limited
+22,GMM Regime Model,BNB-USD-LINK-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-SOL-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+23,KMeans Regime Model,BNB-USD-LINK-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-SOL-USD,100,gap,20,20,12000,12000,5,5,5,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BNB-USD-LINK-USD,100,gap,24,24,12000,12000,5,5,5,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-ETH-USD,100,gap,24,24,12000,12000,5,5,5,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-MKR-USD,100,gap,21,21,1000,1000,5,5,5,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-MKR-USD,100,gap,21,21,1000,1000,5,5,5,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-MKR-USD,100,gap,19,19,1000,1000,6,6,6,none,trade_frequency_limited
+5,Pure Copula,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+16,Profile Match,BTC-USD-SOL-USD,100,gap,17,17,12000,12000,6,6,6,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-SOL-USD,100,gap,19,19,12000,12000,6,6,6,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-SOL-USD,100,gap,18,18,12000,12000,6,6,6,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-SOL-USD,100,gap,18,18,12000,12000,6,6,6,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-MKR-USD,100,gap,19,19,1000,1000,6,6,6,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-MKR-USD,100,gap,19,19,1000,1000,6,6,6,none,trade_frequency_limited
+29,Copula Risk Filter,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-AVAX-USD,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,DOGE-USD-XRP-USD,100,gap,19,19,1000,1000,6,6,6,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-LINK-USD,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-AVAX-USD,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+37,Pure Copula Portfolio,DOGE-USD-XRP-USD,100,gap,19,19,1000,1000,6,6,6,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETHUSDT-SOLUSDT,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-LINK-USD,100,gap,17,17,1000,1000,6,6,6,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-LINK-USD,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-ETH-USD,100,gap,16,16,12000,12000,7,7,7,none,trade_frequency_limited
+19,Weighted Voting Model,ETH-USD-SOL-USD,100,gap,16,16,12000,12000,7,7,7,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-LINK-USD,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-ALGO-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-BNB-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-PENGU-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTCUSDT-ETHUSDT,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTCUSDT-SOLUSDT,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-ALGO-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-BNB-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-PENGU-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-LINK-USD,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-ALGO-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-BNB-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-PENGU-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTCUSDT-ETHUSDT,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTCUSDT-SOLUSDT,100,gap,15,15,1000,1000,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-ALGO-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-BNB-USD,100,gap,15,15,400,400,7,7,7,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-PENGU-USD,100,gap,16,16,400,400,7,7,7,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-BNB-USD,100,gap,14,14,400,400,8,8,8,none,trade_frequency_limited
+5,Pure Copula,DOGE-USD-XRP-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-ALGO-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-BNB-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-PENGU-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-BNB-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-MKR-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-LINK-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-LINK-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-ETH-USD,100,gap,14,14,12000,12000,8,8,8,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-ETH-USD,100,gap,14,14,12000,12000,8,8,8,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-BNB-USD,100,gap,14,14,400,400,8,8,8,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,DOGE-USD-XRP-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-ALGO-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-BNB-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-PENGU-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-BNB-USD,100,gap,14,14,400,400,8,8,8,none,trade_frequency_limited
+29,Copula Risk Filter,DOGE-USD-XRP-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-ALGO-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-BNB-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-PENGU-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-BNB-USD,100,gap,14,14,400,400,8,8,8,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-MKR-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-BNB-USD,100,gap,13,13,400,400,8,8,8,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-MKR-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETHUSDT-SOLUSDT,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-LINK-USD,100,gap,13,13,1000,1000,8,8,8,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-BNB-USD,100,gap,12,12,400,400,9,9,9,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-PENGU-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+5,Pure Copula,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+5,Pure Copula,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+6,Dual Conditional Copula,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+6,Dual Conditional Copula,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+6,Dual Conditional Copula,DOGE-USD-XRP-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+6,Dual Conditional Copula,ETHUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,DOGE-USD-XRP-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-BNB-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-MKR-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+7,Tail Event Reversion,ETHUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-PENGU-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-PENGU-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+29,Copula Risk Filter,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+29,Copula Risk Filter,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+31,Feature Importance Model,ETH-USD-LINK-USD,100,gap,10,10,23999,23999,10,10,10,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-BNB-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-PENGU-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-AVAX-USD,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-BNB-USD,100,gap,10,10,400,400,10,10,10,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTCUSDT-ETHUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTCUSDT-SOLUSDT,100,gap,11,11,1000,1000,10,10,10,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-PENGU-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-ALGO-USD,100,gap,11,11,400,400,10,10,10,none,trade_frequency_limited
+5,Pure Copula,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+6,Dual Conditional Copula,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-PENGU-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-BNB-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-PENGU-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+14,OU Optimal,DOGE-USD-XRP-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+15,ML Confidence,DOGE-USD-XRP-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+17,Proprietary Signal Stack,DOGE-USD-XRP-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+29,Copula Risk Filter,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+30,Meta Model,DOGE-USD-XRP-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+31,Feature Importance Model,BNB-USD-LINK-USD,100,gap,9,9,12000,12000,12,12,12,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-PENGU-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+34,Copula + Regime Strategy,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-PENGU-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-ALGO-USD,100,gap,9,9,400,400,12,12,12,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+37,Pure Copula Portfolio,DOGE-USD-LTC-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-AVAX-USD,100,gap,9,9,1000,1000,12,12,12,none,trade_frequency_limited
+5,Pure Copula,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-SOL-USD,100,gap,8,8,12000,12000,13,13,13,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-SOL-USD,100,gap,8,8,12000,12000,13,13,13,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+29,Copula Risk Filter,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-PENGU-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+34,Copula + Regime Strategy,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+35,Copula Divergence Persistence,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+37,Pure Copula Portfolio,AAVE-USD-UNI-USD,100,gap,8,8,1000,1000,13,13,13,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-BNB-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-PENGU-USD,100,gap,8,8,400,400,13,13,13,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,DOGE-USD-XRP-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+3,ZScore + Copula,DOGE-USD-XRP-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-PENGU-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-PENGU-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,DOGE-USD-LTC-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+11,Half-Life Optimized,DOGE-USD-XRP-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-BNB-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-PENGU-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-BNB-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-BNB-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-PENGU-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+20,Dynamic Threshold Model,DOGE-USD-XRP-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+30,Meta Model,BTC-USD-BNB-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+30,Meta Model,BTC-USD-PENGU-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+30,Meta Model,ETH-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+35,Copula Divergence Persistence,DOGE-USD-LTC-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+35,Copula Divergence Persistence,DOGE-USD-XRP-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-ALGO-USD,100,gap,7,7,400,400,15,15,15,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-APT-USD,100,gap,7,7,200,200,15,15,15,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-AVAX-USD,100,gap,7,7,1000,1000,15,15,15,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-ALGO-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-BNB-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-ALGO-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-BNB-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+5,Pure Copula,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-PENGU-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+6,Dual Conditional Copula,AAVE-USD-UNI-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+6,Dual Conditional Copula,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-PENGU-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+7,Tail Event Reversion,AAVE-USD-UNI-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+7,Tail Event Reversion,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+11,Half-Life Optimized,AAVE-USD-UNI-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-BNB-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+14,OU Optimal,BTCUSDT-ETHUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+14,OU Optimal,BTCUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+14,OU Optimal,ETHUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-LINK-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+15,ML Confidence,BTCUSDT-ETHUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+15,ML Confidence,BTCUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+15,ML Confidence,ETHUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-LINK-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-ALGO-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETHUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+19,Weighted Voting Model,AAVE-USD-UNI-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+19,Weighted Voting Model,BTCUSDT-ETHUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+19,Weighted Voting Model,BTCUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+19,Weighted Voting Model,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+19,Weighted Voting Model,ETHUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-ALGO-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-BNB-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-PENGU-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+29,Copula Risk Filter,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-SOL-USD,100,gap,6,6,12000,12000,17,17,17,none,trade_frequency_limited
+30,Meta Model,ETH-USD-MKR-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+30,Meta Model,ETHUSDT-SOLUSDT,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+30,Meta Model,SOL-USD-LINK-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+34,Copula + Regime Strategy,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-PENGU-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+35,Copula Divergence Persistence,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-APT-USD,100,gap,6,6,200,200,17,17,17,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-AVAX-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-PENGU-USD,100,gap,6,6,400,400,17,17,17,none,trade_frequency_limited
+37,Pure Copula Portfolio,ARB-USD-OP-USD,100,gap,6,6,1000,1000,17,17,17,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-ETC-USD,100,gap,6,6,99,99,17,17,17,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+5,Pure Copula,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+6,Dual Conditional Copula,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,BTCUSDT-ETHUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,BTCUSDT-SOLUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,ETHUSDT-SOLUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+14,OU Optimal,AAVE-USD-UNI-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+14,OU Optimal,DOGE-USD-LTC-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+15,ML Confidence,AAVE-USD-UNI-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+15,ML Confidence,DOGE-USD-LTC-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+16,Profile Match,ETHUSDT-SOLUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+17,Proprietary Signal Stack,AAVE-USD-UNI-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+17,Proprietary Signal Stack,DOGE-USD-LTC-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-PENGU-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTCUSDT-ETHUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTCUSDT-SOLUSDT,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-MKR-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+29,Copula Risk Filter,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+30,Meta Model,AAVE-USD-UNI-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+30,Meta Model,BTC-USD-ALGO-USD,100,gap,5,5,400,400,20,20,20,none,trade_frequency_limited
+30,Meta Model,BTC-USD-AVAX-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+30,Meta Model,DOGE-USD-LTC-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+31,Feature Importance Model,BTC-USD-ETH-USD,100,gap,5,5,12000,12000,20,20,20,none,trade_frequency_limited
+31,Feature Importance Model,BTC-USD-LINK-USD,100,gap,5,5,23999,23999,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,BTC-USD-BONK-USD,100,gap,5,5,98,98,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-BONK-USD,100,gap,5,5,98,98,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,ETH-USD-ETC-USD,100,gap,5,5,99,99,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+34,Copula + Regime Strategy,DOGE-USD-XRP-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+34,Copula + Regime Strategy,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+35,Copula Divergence Persistence,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,BTC-USD-BONK-USD,100,gap,5,5,98,98,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-BONK-USD,100,gap,5,5,98,98,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,ETH-USD-ETC-USD,100,gap,5,5,99,99,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,MATIC-USD-ARB-USD,100,gap,5,5,1000,1000,20,20,20,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-APT-USD,100,gap,5,5,200,200,20,20,20,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,AAVE-USD-UNI-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+3,ZScore + Copula,AAVE-USD-UNI-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-PENGU-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+12,Hurst Filter,DOGE-USD-XRP-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+13,Hurst + Half-Life,DOGE-USD-XRP-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-PENGU-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+16,Profile Match,AAVE-USD-UNI-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+16,Profile Match,BTC-USD-AVAX-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+16,Profile Match,BTCUSDT-ETHUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+16,Profile Match,BTCUSDT-SOLUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+16,Profile Match,ETH-USD-MKR-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+16,Profile Match,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTCUSDT-ETHUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTCUSDT-SOLUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+20,Dynamic Threshold Model,AAVE-USD-UNI-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETHUSDT-SOLUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-AVAX-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+23,KMeans Regime Model,AAVE-USD-UNI-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-ALGO-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-LINK-USD,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-SOL-USD,100,gap,4,4,12000,12000,25,25,25,none,trade_frequency_limited
+30,Meta Model,BTCUSDT-ETHUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+30,Meta Model,BTCUSDT-SOLUSDT,100,gap,4,4,1000,1000,25,25,25,none,trade_frequency_limited
+30,Meta Model,ETH-USD-BNB-USD,100,gap,4,4,400,400,25,25,25,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-ETC-USD,100,gap,4,4,99,99,25,25,25,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETHUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+3,ZScore + Copula,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+3,ZScore + Copula,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+3,ZScore + Copula,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+3,ZScore + Copula,ETHUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+5,Pure Copula,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+5,Pure Copula,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+5,Pure Copula,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+6,Dual Conditional Copula,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+6,Dual Conditional Copula,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+6,Dual Conditional Copula,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-APT-USD,100,gap,3,3,200,200,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,BTC-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+7,Tail Event Reversion,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+11,Half-Life Optimized,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-BNB-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+11,Half-Life Optimized,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+12,Hurst Filter,AAVE-USD-UNI-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+13,Hurst + Half-Life,AAVE-USD-UNI-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+14,OU Optimal,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+15,ML Confidence,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+16,Profile Match,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+16,Profile Match,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+16,Profile Match,DOGE-USD-XRP-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+16,Profile Match,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+16,Profile Match,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+17,Proprietary Signal Stack,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+19,Weighted Voting Model,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+20,Dynamic Threshold Model,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-BNB-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+20,Dynamic Threshold Model,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,ETHUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+21,HMM Regime Model,SOL-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,ETHUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+22,GMM Regime Model,SOL-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,DOGE-USD-LTC-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,DOGE-USD-XRP-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,ETHUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+23,KMeans Regime Model,SOL-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTCUSDT-ETHUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,DOGE-USD-XRP-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-ALGO-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+28,Copula Tail Risk Sizing,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+29,Copula Risk Filter,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+29,Copula Risk Filter,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+29,Copula Risk Filter,SOL-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+30,Meta Model,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+30,Meta Model,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+30,Meta Model,ETH-USD-PENGU-USD,100,gap,3,3,400,400,34,34,34,none,trade_frequency_limited
+30,Meta Model,MATIC-USD-ARB-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+30,Meta Model,SOL-USD-AVAX-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+30,Meta Model,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+31,Feature Importance Model,AAVE-USD-UNI-USD,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+31,Feature Importance Model,BTCUSDT-SOLUSDT,100,gap,3,3,1000,1000,34,34,34,none,trade_frequency_limited
+33,Copula Dislocation Ranking Engine,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+34,Copula + Regime Strategy,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+34,Copula + Regime Strategy,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+34,Copula + Regime Strategy,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+35,Copula Divergence Persistence,BTC-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-BONK-USD,100,gap,3,3,98,98,34,34,34,none,trade_frequency_limited
+35,Copula Divergence Persistence,ETH-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+35,Copula Divergence Persistence,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+37,Pure Copula Portfolio,SOL-USD-ETC-USD,100,gap,3,3,99,99,34,34,34,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+11,Half-Life Optimized,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,BTCUSDT-ETHUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,BTCUSDT-SOLUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+12,Hurst Filter,SOL-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,BTCUSDT-ETHUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,BTCUSDT-SOLUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+13,Hurst + Half-Life,SOL-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+14,OU Optimal,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+14,OU Optimal,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+14,OU Optimal,ETH-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+14,OU Optimal,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+15,ML Confidence,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+15,ML Confidence,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+15,ML Confidence,ETH-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+15,ML Confidence,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,BTC-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,BTC-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+16,Profile Match,BTC-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,ETH-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,ETH-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+16,Profile Match,SOL-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+16,Profile Match,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,ETH-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+18,Composite Quant Score,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+19,Weighted Voting Model,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+19,Weighted Voting Model,ETH-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+19,Weighted Voting Model,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,AAVE-USD-UNI-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,DOGE-USD-LTC-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,DOGE-USD-XRP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,SOL-USD-LINK-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+21,HMM Regime Model,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,AAVE-USD-UNI-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,DOGE-USD-XRP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+22,GMM Regime Model,SOL-USD-LINK-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+23,KMeans Regime Model,SOL-USD-LINK-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,AAVE-USD-UNI-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-BONK-USD,100,gap,2,2,98,98,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,DOGE-USD-LTC-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-MKR-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETHUSDT-SOLUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+25,Pair Ranking Strategy,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+26,Portfolio Rotation,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+27,Risk Adjusted Ranking,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+30,Meta Model,ARB-USD-OP-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+30,Meta Model,BTC-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+30,Meta Model,BTC-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+30,Meta Model,ETH-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+30,Meta Model,ETH-USD-AVAX-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+30,Meta Model,ETH-USD-ETC-USD,100,gap,2,2,99,99,50,50,50,none,trade_frequency_limited
+30,Meta Model,SOL-USD-ALGO-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+30,Meta Model,SOL-USD-APT-USD,100,gap,2,2,200,200,50,50,50,none,trade_frequency_limited
+30,Meta Model,SOL-USD-BNB-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+30,Meta Model,SOL-USD-PENGU-USD,100,gap,2,2,400,400,50,50,50,none,trade_frequency_limited
+31,Feature Importance Model,MATIC-USD-ARB-USD,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+32,Trade Outcome Predictor,BTCUSDT-SOLUSDT,100,gap,2,2,1000,1000,50,50,50,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+1,Classic ZScore Mean Reversion,SOL-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+3,ZScore + Copula,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+3,ZScore + Copula,SOL-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+11,Half-Life Optimized,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,BTC-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,DOGE-USD-LTC-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,ETH-USD-MKR-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,MATIC-USD-ARB-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+12,Hurst Filter,SOL-USD-ALGO-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,BTC-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,DOGE-USD-LTC-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,ETH-USD-MKR-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,MATIC-USD-ARB-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+13,Hurst + Half-Life,SOL-USD-ALGO-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+16,Profile Match,ARB-USD-OP-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+16,Profile Match,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+16,Profile Match,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+16,Profile Match,ETH-USD-AVAX-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+16,Profile Match,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+16,Profile Match,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+16,Profile Match,SOL-USD-PENGU-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+17,Proprietary Signal Stack,SOL-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+20,Dynamic Threshold Model,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+20,Dynamic Threshold Model,SOL-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,BTC-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+21,HMM Regime Model,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,BTC-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,MATIC-USD-ARB-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+22,GMM Regime Model,SOL-USD-PENGU-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+23,KMeans Regime Model,BTC-USD-PENGU-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+23,KMeans Regime Model,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+23,KMeans Regime Model,SOL-USD-PENGU-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+24,Regime Filtered Stat-Arb,SOL-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,ARB-USD-OP-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,BTC-USD-APT-USD,100,gap,1,1,200,200,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,BTC-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,BTCUSDT-ETHUSDT,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,DOGE-USD-XRP-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,ETH-USD-AVAX-USD,100,gap,1,1,1000,1000,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,ETH-USD-BNB-USD,100,gap,1,1,400,400,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,ETH-USD-BONK-USD,100,gap,1,1,98,98,100,100,100,none,trade_frequency_limited
+31,Feature Importance Model,ETH-USD-ETC-USD,100,gap,1,1,99,99,100,100,100,none,trade_frequency_limited
+32,Trade Outcome Predictor,BNB-USD-LINK-USD,100,gap,1,1,12000,12000,100,100,100,none,trade_frequency_limited

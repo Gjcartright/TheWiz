@@ -21,6 +21,7 @@ from quant_platform.ml_filter import (
     build_trade_filter_dataset,
     train_trade_filter_walkforward,
 )
+from quant_platform.apify_sources import infer_apify_venue
 from quant_platform.pair_detail_ingestion import datasets_from_pair_detail_snapshots
 from quant_platform.regimes import RegimeConfig, classify_regimes
 from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol, wizard_exchange_lane
@@ -52,6 +53,10 @@ PAIR_UNIVERSE_COLUMNS = [
     "asset_y",
     "exchange",
     "dydx_tradable",
+    "best_execution_venue",
+    "execution_venue_ready",
+    "available_venues",
+    "venue_decision_reason",
     "available_timeframes",
     "wizards_pair_id",
     "cointegration_score",
@@ -101,6 +106,8 @@ CANONICAL_COMMANDS = [
     "PYTHONPATH=src python -m quant_platform.cli run-model-gated-backtest",
     "PYTHONPATH=src python -m quant_platform.cli export-trade-gate-model",
     "PYTHONPATH=src python -m quant_platform.cli build-command-dashboard",
+    "PYTHONPATH=src python -m quant_platform.cli apify-source-summary",
+    "PYTHONPATH=src python -m quant_platform.cli refresh-apify-sources",
     "PYTHONPATH=src python -m quant_platform.cli archive-from-index --dry-run",
 ]
 
@@ -927,6 +934,55 @@ def _planned_source_rows(source_coverage: pd.DataFrame) -> list[dict[str, object
                 "notes": "Funding Pulse remains planned; pipeline must continue without using it for promotion.",
             }
         )
+    for _, row in source_coverage.iterrows():
+        source_id = str(row.get("source_id", "")).strip()
+        if not source_id:
+            continue
+        if source_id == "fraktalapi/funding-pulse":
+            continue
+        sample_status = str(row.get("sample_status", "not_sampled")).strip()
+        venue = infer_apify_venue(source_id)
+        source_system = _source_system_from_market_source(source_id, venue)
+        execution_authority = source_system in {"dydx", "hyperliquid"} and sample_status == "sampled"
+        lane = _venue_lane(
+            "ALL",
+            venue,
+            "dydx_execution_ok" if execution_authority else "research_only",
+            source_system,
+        )
+        blocker = (
+            "needs_api_key"
+            if sample_status == "needs_api_key"
+            else "context_only_not_promotion_authority"
+            if source_system in {"funding_pulse", "coinglass", "gmx", "dexscreener"}
+            else ("missing_hyperliquid_local_replay" if source_system == "hyperliquid" else "")
+        )
+        rows.append(
+            {
+                "asset": "ALL",
+                "venue": venue,
+                "tradable": False,
+                "volume_24h": "",
+                "open_interest": "",
+                "open_interest_usd": "",
+                "funding_rate": "",
+                "liquidity_usd": "",
+                "transaction_count_24h": "",
+                "market_cap": "",
+                "source_timestamp": _now(),
+                "source_system": source_system,
+                "source_status": sample_status,
+                "source_role": _market_source_role(source_system, venue),
+                "execution_authority": execution_authority,
+                "promotion_allowed": bool(execution_authority and not blocker),
+                "venue_lane": lane,
+                "liquidity_bucket": "",
+                "funding_pulse_status": "needs_api_key" if source_system == "funding_pulse" else "",
+                "blocker": blocker,
+                "evidence_path": str(row.get("evidence", "reports/active/apify_mcp_source_coverage_2026-06-25.csv")),
+                "notes": str(row.get("limitations", "")),
+            }
+        )
     return rows
 
 
@@ -1199,6 +1255,8 @@ def build_pair_universe(root: Path = ROOT) -> CommandResult:
     pairs = _candidate_pairs(root)
     candle_index = _dydx_candle_index(root)
     market_snapshot = _latest_apify_markets(root)
+    venue_context = _read_csv(root / "data" / "processed" / "market_venue_context.csv")
+    market_context = _venue_context_by_pair(venue_context)
     for pair, assets, evidence_paths in pairs:
         asset_x, asset_y = assets
         metrics = _local_pair_metrics(pair, experiment, acceptance)
@@ -1207,23 +1265,39 @@ def build_pair_universe(root: Path = ROOT) -> CommandResult:
         _apply_market_snapshot_metrics(metrics, asset_x, asset_y, market_snapshot)
         funding_drag = _funding_drag(asset_x, asset_y, funding, market_snapshot)
         timeframes = sorted(set(candle_index.get(asset_x, set())) & set(candle_index.get(asset_y, set())))
-        dydx_tradable = bool(candle_index.get(asset_x) and candle_index.get(asset_y)) or (
-            asset_x in market_snapshot and asset_y in market_snapshot
-        )
-        discovery_components = _discovery_components(dydx_tradable, timeframes, metrics, funding_drag)
-        acceptance_components = _acceptance_components(dydx_tradable, metrics, funding_drag)
+        venue_profile = _venue_profile_for_pair(market_context, asset_x, asset_y)
+        if not venue_profile:
+            venue_profile = _venue_profile_from_dydx(candle_index, timeframes, market_snapshot, asset_x, asset_y)
+        execution_venue = str(venue_profile.get("best_venue", "dydx")).lower()
+        execution_ready = bool(venue_profile.get("execution_ready", bool(candle_index.get(asset_x) and candle_index.get(asset_y))))
+        available_venues = str(venue_profile.get("available_venues", ""))
+        venue_reason = str(venue_profile.get("reason", ""))
+        discovery_components = _discovery_components(execution_ready, timeframes, metrics, funding_drag, available_venues=available_venues)
+        acceptance_components = _acceptance_components(execution_ready, metrics, funding_drag, best_venue=execution_venue, venue_ready=venue_profile.get("execution_ready", False))
         discovery_score = round(sum(discovery_components.values()), 3)
         acceptance_score = round(sum(acceptance_components.values()), 3)
         combined_score = round(discovery_score + acceptance_score, 3)
-        bucket, reason = _decision_bucket(discovery_score, acceptance_score, metrics, dydx_tradable, timeframes)
-        missing = _missing_pair_data(dydx_tradable, timeframes, metrics, funding_drag)
+        bucket, reason = _decision_bucket(
+            discovery_score,
+            acceptance_score,
+            metrics,
+            execution_ready,
+            timeframes,
+            best_venue=execution_venue,
+            available_venues=available_venues,
+        )
+        missing = _missing_pair_data(execution_ready, timeframes, metrics, funding_drag, best_venue=execution_venue)
         pair_rows.append(
             {
                 "pair": pair,
                 "asset_x": asset_x,
                 "asset_y": asset_y,
-                "exchange": "dydx",
-                "dydx_tradable": dydx_tradable,
+                "exchange": execution_venue,
+                "dydx_tradable": execution_ready if execution_venue == "dydx" else bool(candle_index.get(asset_x) and candle_index.get(asset_y)),
+                "best_execution_venue": execution_venue,
+                "execution_venue_ready": bool(execution_ready),
+                "available_venues": available_venues,
+                "venue_decision_reason": venue_reason,
                 "available_timeframes": ";".join(timeframes),
                 "wizards_pair_id": "",
                 "cointegration_score": metrics.get("cointegration_score", 0.0),
@@ -1471,6 +1545,7 @@ def build_command_dashboard(root: Path = ROOT) -> CommandResult:
         "wizard_local_verification": DASHBOARD / "wizard_local_verification_dashboard.csv",
         "model_training": DASHBOARD / "model_training_dashboard.csv",
         "orchestrator_run_status": DASHBOARD / "orchestrator_run_status.csv",
+        "supreme_team_checkpoint": DASHBOARD / "supreme_team_checkpoint.csv",
         "project_spine_audit": DASHBOARD / "project_spine_audit.md",
         "rl_research_status": DASHBOARD / "rl_research_status.csv",
         "rl_execution_backtest": DASHBOARD / "rl_execution_backtest.csv",
@@ -1494,6 +1569,7 @@ def build_command_dashboard(root: Path = ROOT) -> CommandResult:
     _write_csv(_read_csv(batch_verification if batch_verification.exists() else single_verification), paths["wizard_local_verification"])
     _write_csv(_model_training_dashboard(model_acceptance), paths["model_training"])
     _write_csv(_read_csv(root / "reports" / "active" / "orchestrator_run_status.csv"), paths["orchestrator_run_status"])
+    _write_csv(_supreme_team_checkpoint_rows(root), paths["supreme_team_checkpoint"])
     _write_text(paths["project_spine_audit"], _read_text(root / "reports" / "active" / "project_spine_audit.md"))
     _write_csv(_read_csv(root / "reports" / "rl" / "rl_training_report.csv"), paths["rl_research_status"])
     _write_csv(_read_csv(root / "reports" / "rl" / "rl_execution_backtest.csv"), paths["rl_execution_backtest"])
@@ -1507,7 +1583,7 @@ def build_command_dashboard(root: Path = ROOT) -> CommandResult:
     _write_csv(data_health, paths["data_health"])
     _write_csv(_api_credit_usage_rows(), paths["api_credit_usage"])
     _write_csv(live, paths["scoring_audit"])
-    _write_text(paths["command_center"], _command_center_markdown(pair_universe, current, model_acceptance, data_health))
+    _write_text(paths["command_center"], _command_center_markdown(pair_universe, current, model_acceptance, data_health, root=root))
     return CommandResult(paths=paths, summary={"dashboard_files": len(paths), "blocked_rows": len(blocked)})
 
 
@@ -1662,6 +1738,103 @@ def _candidate_pairs(root: Path) -> list[tuple[str, tuple[str, str], set[str]]]:
             path = str(row.get("evidence_path", "data/processed/wizard_evidence.csv") or "data/processed/wizard_evidence.csv")
             found.setdefault(pair, (assets, set()))[1].add(path)
     return [(pair, assets, paths) for pair, (assets, paths) in found.items()]
+
+
+def _venue_context_by_pair(context: pd.DataFrame) -> dict[tuple[str, str], dict[str, object]]:
+    if context.empty:
+        return {}
+    table = context.copy()
+    if {"asset", "venue"}.issubset(table.columns):
+        venue_map: dict[tuple[str, str], dict[str, object]] = {}
+        for asset, group in table.groupby("asset"):
+            normalized_asset = str(asset or "").upper().strip()
+            if not normalized_asset:
+                continue
+            for _, row in group.iterrows():
+                venue = str(row.get("venue", "")).lower().strip()
+                if not venue:
+                    continue
+                key = (normalized_asset, venue)
+                venue_map[key] = {
+                    "asset": normalized_asset,
+                    "venue": venue,
+                    "tradable": bool(row.get("tradable")),
+                    "execution_authority": bool(row.get("execution_authority")),
+                    "funding_pulse_status": str(row.get("funding_pulse_status", "")),
+                    "blocker": str(row.get("blocker", "") or "").strip(),
+                    "liquidity_24h": _clean_numeric(row.get("volume_24h")),
+                    "open_interest_usd": _clean_numeric(row.get("open_interest_usd")),
+                    "evidence_path": str(row.get("evidence_path", "")),
+                }
+        return venue_map
+    return {}
+
+
+def _venue_profile_from_dydx(candle_index: dict[str, set[str]], timeframes: list[str], market_snapshot: dict[str, dict[str, object]], asset_x: str, asset_y: str) -> dict[str, object]:
+    dydx_ready = bool(candle_index.get(asset_x) and candle_index.get(asset_y)) or (
+        asset_x in market_snapshot and asset_y in market_snapshot
+    )
+    return {
+        "best_venue": "dydx",
+        "execution_ready": dydx_ready,
+        "available_venues": "dydx",
+        "reason": "dyDx_fallback" if dydx_ready else "no_multi_venue_context_available",
+    }
+
+
+def _venue_profile_for_pair(context: dict[tuple[str, str], dict[str, object]], asset_x: str, asset_y: str) -> dict[str, object]:
+    def _venue_asset_key(value: str) -> str:
+        candidate = str(value or "").upper().replace("_", "-")
+        return candidate[:-4] if candidate.endswith("-USD") else candidate
+
+    normalized_x = _venue_asset_key(asset_x)
+    normalized_y = _venue_asset_key(asset_y)
+    candidates: list[tuple[str, float, dict[str, str]]] = []
+    venues = set(
+        row.get("venue")
+        for key, row in context.items()
+        if _venue_asset_key(key[0]) in {normalized_x, normalized_y}
+    )
+    venues = {str(venue) for venue in venues if venue}
+    for venue in sorted(venues):
+        left = context.get((normalized_x, venue), {})
+        right = context.get((normalized_y, venue), {})
+        if not left:
+            left = context.get((f"{normalized_x}-USD", venue), {})
+        if not right:
+            right = context.get((f"{normalized_y}-USD", venue), {})
+        if not left or not right:
+            continue
+        left_blockers = set(str(left.get("blocker", "")).split(";")) if left.get("blocker") else set()
+        right_blockers = set(str(right.get("blocker", "")).split(";")) if right.get("blocker") else set()
+        combined_blockers = left_blockers | right_blockers
+        execution_ready = bool(left.get("execution_authority")) and bool(right.get("execution_authority"))
+        tradable = bool(left.get("tradable")) and bool(right.get("tradable"))
+        liquidity = 0.0
+        for row in (left, right):
+            try:
+                liquidity += float(row.get("liquidity_24h") or 0.0)
+            except (TypeError, ValueError):
+                pass
+        try:
+            oi = float(left.get("open_interest_usd") or 0.0) + float(right.get("open_interest_usd") or 0.0)
+        except (TypeError, ValueError):
+            oi = 0.0
+        blocker_penalty = 0 if not combined_blockers else -10.0
+        score = 120.0 if execution_ready else (30.0 if tradable else 0.0)
+        score += min(liquidity / 1_000_000.0, 20.0)
+        score += min(oi / 5_000_000.0, 10.0)
+        score += blocker_penalty
+        candidates.append((venue, score, {"reason": ";".join(sorted(combined_blockers)) if combined_blockers else "tradeable", "ready": execution_ready}))
+    if not candidates:
+        return {}
+    best_venue, _, info = max(candidates, key=lambda row: row[1])
+    return {
+        "best_venue": best_venue,
+        "execution_ready": bool(info.get("ready", False)),
+        "available_venues": ";".join(sorted(venue for venue, _, _ in candidates)),
+        "reason": str(info.get("reason", "")),
+    }
 
 
 def _apify_market_candidate_pairs(root: Path, max_markets: int = 10) -> list[tuple[str, tuple[str, str], str]]:
@@ -1842,7 +2015,12 @@ def _latest_apify_markets(root: Path) -> dict[str, dict[str, object]]:
         payload = json.loads(latest.read_text(encoding="utf-8"))
     except Exception:
         return {}
-    items = payload.get("items", payload if isinstance(payload, list) else [])
+    if isinstance(payload, dict):
+        items = payload.get("items", [])
+    elif isinstance(payload, list):
+        items = payload
+    else:
+        return {}
     markets: dict[str, dict[str, object]] = {}
     for item in items:
         if not isinstance(item, dict):
@@ -1901,24 +2079,40 @@ def _funding_drag(asset_x: str, asset_y: str, funding: pd.DataFrame, markets: di
     return round(sum(values), 6)
 
 
-def _discovery_components(dydx_tradable: bool, timeframes: list[str], metrics: dict[str, float], funding_drag: float) -> dict[str, float]:
+def _discovery_components(
+    execution_ready: bool,
+    timeframes: list[str],
+    metrics: dict[str, float],
+    funding_drag: float,
+    *,
+    available_venues: str | None = None,
+) -> dict[str, float]:
     return {
         "mean_reversion_hint": 8.0 if timeframes else 0.0,
         "cointegration_hint": metrics.get("cointegration_score", 0.0),
         "copula_hint": metrics.get("copula_score", 0.0),
-        "liquidity_hint": max(metrics.get("liquidity_hint", 0.0), 8.0 if dydx_tradable else 0.0),
+        "liquidity_hint": max(metrics.get("liquidity_hint", 0.0), 8.0 if execution_ready else 0.0),
         "dashboard_confirmation_hint": min(metrics.get("local_backtest_score", 0.0) / 5, 10.0),
         "obvious_instability_penalty": -min(funding_drag / 5, 5.0),
+        "venue_diversity_hint": min(len([value for value in str(available_venues or "").split(";") if value]), 2.0),
     }
 
 
-def _acceptance_components(dydx_tradable: bool, metrics: dict[str, float], funding_drag: float) -> dict[str, float]:
+def _acceptance_components(
+    execution_ready: bool,
+    metrics: dict[str, float],
+    funding_drag: float,
+    *,
+    best_venue: str | None = None,
+    venue_ready: bool | None = None,
+) -> dict[str, float]:
     return {
         "local_backtest_score": metrics.get("local_backtest_score", 0.0),
         "walk_forward_score": 0.0,
         "regime_stability_score": 0.0,
         "trade_count_score": 0.0,
-        "dydx_tradeability_score": 15.0 if dydx_tradable else 0.0,
+        "tradeability_score": 15.0 if (venue_ready if venue_ready is not None else execution_ready) else 0.0,
+        "venue_fallback_penalty": -5.0 if (best_venue or "dydx") != "dydx" and not (venue_ready or False) else 0.0,
         "funding_drag_penalty": -min(funding_drag / 2, 10.0),
         "drawdown_penalty": 0.0,
         "cost_failure_penalty": 0.0,
@@ -1926,20 +2120,38 @@ def _acceptance_components(dydx_tradable: bool, metrics: dict[str, float], fundi
     }
 
 
-def _decision_bucket(discovery: float, acceptance: float, metrics: dict[str, float], dydx_tradable: bool, timeframes: list[str]) -> tuple[str, str]:
-    if acceptance >= 70 and dydx_tradable:
-        return "PROMOTE", "local_acceptance_score_passed_with_dydx_tradeability"
-    if not dydx_tradable or not timeframes:
-        return "FETCH_MORE_DATA", "missing_dydx_tradeability_or_timeframe_history"
+def _decision_bucket(
+    discovery: float,
+    acceptance: float,
+    metrics: dict[str, float],
+    execution_ready: bool,
+    timeframes: list[str],
+    *,
+    best_venue: str | None = None,
+    available_venues: str | None = None,
+) -> tuple[str, str]:
+    venue = (best_venue or "").lower() or "dydx"
+    if acceptance >= 70 and execution_ready and (not available_venues or venue in available_venues):
+        return "PROMOTE", f"local_acceptance_score_passed_with_tradeability_venue_{venue}"
+    if not execution_ready or not timeframes:
+        return "FETCH_MORE_DATA", f"missing_{venue}_tradeability_or_timeframe_history"
     if acceptance >= 25 or discovery >= 20:
-        return "WATCH", "promising_discovery_or_partial_local_evidence_but_not_promoted"
+        return "WATCH", f"promising_discovery_or_partial_local_evidence_but_not_promoted_for_{venue}"
     return "REJECT", "insufficient_local_acceptance_evidence"
 
 
-def _missing_pair_data(dydx_tradable: bool, timeframes: list[str], metrics: dict[str, float], funding_drag: float) -> str:
+def _missing_pair_data(
+    execution_ready: bool,
+    timeframes: list[str],
+    metrics: dict[str, float],
+    funding_drag: float,
+    *,
+    best_venue: str | None = None,
+) -> str:
     missing = []
-    if not dydx_tradable:
-        missing.append("dydx_leg_candles")
+    venue = (best_venue or "dydx").lower()
+    if not execution_ready:
+        missing.append(f"{venue}_leg_readiness")
     if not timeframes:
         missing.append("common_timeframes")
     if metrics.get("local_backtest_score", 0.0) <= 0:
@@ -2512,7 +2724,13 @@ def _pair_universe_markdown(frame: pd.DataFrame) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _command_center_markdown(pair_universe: pd.DataFrame, current: pd.DataFrame, acceptance: pd.DataFrame, data_health: pd.DataFrame) -> str:
+def _command_center_markdown(
+    pair_universe: pd.DataFrame,
+    current: pd.DataFrame,
+    acceptance: pd.DataFrame,
+    data_health: pd.DataFrame,
+    root: Path = ROOT,
+) -> str:
     lines = ["# Command Center", "", "## Current State", ""]
     if current.empty:
         lines.append("- current state not built")
@@ -2531,5 +2749,43 @@ def _command_center_markdown(pair_universe: pd.DataFrame, current: pd.DataFrame,
         lines.append("- blocked: model acceptance missing")
     else:
         lines.append(f"- accepted: {bool(acceptance.get('accepted', pd.Series([False])).astype(bool).iloc[0])}")
+    lines.extend(["", "## Supreme Team", ""])
+    team = _supreme_team_checkpoint_rows(root)
+    if team.empty:
+        lines.append("- latest checkpoint not yet run")
+    else:
+        rows = int(len(team))
+        open_actions = int(team["open_actions"].astype(float).iloc[0]) if "open_actions" in team.columns else rows
+        pass_gates = int(team["pass_gates"].astype(float).iloc[0]) if "pass_gates" in team.columns else 0
+        lines.append(f"- open actions: {open_actions}")
+        lines.append(f"- pass gates: {pass_gates}")
+        lines.append(f"- rows: {rows}")
     lines.extend(["", "## Data Health", f"- rows: {len(data_health)}", "", "Blockers are intentionally visible. No stale row is actionable."])
     return "\n".join(lines) + "\n"
+
+
+def _supreme_team_checkpoint_rows(root: Path) -> pd.DataFrame:
+    latest = root / "reports" / "supreme_team" / "latest_supreme_team.md"
+    team_index = _read_csv(root / "reports" / "supreme_team_index.csv")
+    if team_index.empty:
+        return pd.DataFrame([{"status": "missing", "evidence": latest.as_posix(), "run_id": "", "source": "reports/supreme_team_index.csv"}])
+    latest_row = team_index.sort_values("timestamp_utc").iloc[-1]
+    open_actions = int(latest_row.get("open_actions", 0) or 0)
+    pass_gates = int(latest_row.get("pass_gates", 0) or 0)
+    critical = int(latest_row.get("critical", 0) or 0)
+    high = int(latest_row.get("high", 0) or 0)
+    medium = int(latest_row.get("medium", 0) or 0)
+    return pd.DataFrame(
+        [
+            {
+                "status": "ready" if open_actions == 0 else "open_actions_pending",
+                "run_id": str(latest_row.get("run_id", "")),
+                "open_actions": open_actions,
+                "pass_gates": pass_gates,
+                "critical": critical,
+                "high": high,
+                "medium": medium,
+                "evidence": str(latest),
+            }
+        ]
+    )

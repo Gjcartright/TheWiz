@@ -1,0 +1,22 @@
+ablation,tested_component,tested_strategy_id,tested_strategy_name,baseline_strategy_id,baseline_strategy_name,hypothesis,status,matched_runs,tested_eligible_runs,baseline_eligible_runs,median_pf_delta,median_sharpe_delta,median_expectancy_delta,median_drawdown_improvement,median_win_rate_delta,median_trade_delta,incremental_score,conclusion
+dynamic_threshold_vs_zscore,dynamic_threshold,20,Dynamic Threshold Model,1,,Dynamic thresholds improve static z-score.,missing_baseline_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_baseline_strategy
+zscore_plus_ecm_vs_zscore,ecm,2,,1,,ECM confirmation improves classic z-score mean reversion.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+zscore_plus_copula_vs_zscore,copula,3,,1,,Copula confirmation improves classic z-score mean reversion.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+ecm_copula_zscore_vs_zscore,ecm+copula,4,,1,,ECM and copula together improve classic z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+ecm_copula_zscore_vs_zscore_copula,ecm,4,,3,,ECM adds incremental value beyond z-score plus copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+pure_copula_vs_zscore,copula_only,5,,1,,Copula-only dislocation can outperform z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+dual_conditional_copula_vs_pure_copula,dual_conditional_copula,6,,5,,Dual conditional copula improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+tail_event_reversion_vs_pure_copula,tail_event_filter,7,,5,,Tail-event filtering improves copula entries.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+pure_ecm_vs_zscore,ecm_only,8,,1,,ECM-only signals can outperform z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+ecm_leadership_vs_pure_ecm,ecm_leadership,9,,8,,ECM leadership improves pure ECM.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+half_life_optimized_vs_zscore,half_life,11,,1,,Half-life thresholds improve z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+hurst_filter_vs_zscore,hurst,12,,1,,Hurst filtering improves z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+hurst_half_life_vs_zscore,hurst+half_life,13,,1,,Hurst plus half-life improves z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+ou_optimal_vs_zscore,ou_optimal,14,,1,,OU optimal filtering improves z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+proprietary_stack_vs_zscore,proprietary_stack,17,,1,,Proprietary confidence stack improves z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+regime_filtered_vs_zscore,regime_filter,24,,1,,Regime filtering improves z-score.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+copula_risk_filter_vs_pure_copula,copula_tail_risk_filter,29,,5,,Copula tail-risk filtering improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+copula_dislocation_ranking_vs_pure_copula,copula_dislocation_ranking,33,,5,,Lower copula threshold improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+copula_regime_vs_pure_copula,copula_regime_filter,34,,5,,Regime filtering improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+copula_persistence_vs_pure_copula,copula_persistence,35,,5,,Copula persistence improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy
+copula_ecm_vs_pure_copula,ecm,36,,5,,ECM filtering improves pure copula.,missing_tested_strategy,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0,-1000000.0,missing_tested_strategy

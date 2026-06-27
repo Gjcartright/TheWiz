@@ -212,6 +212,38 @@ def test_enrich_pair_dataset_with_timestamped_asof_funding():
     assert list(enriched.frame["funding_y_bps"]) == [3.0, 4.0]
 
 
+def test_enrich_pair_dataset_with_timestamp_precision_mismatch():
+    dataset = PairDataset(
+        pair="ETH-BTC",
+        frame=pd.DataFrame(
+            {
+                "timestamp": ["2026-01-01T01:00:00.123456+00:00", "2026-01-01T03:00:00.123456+00:00"],
+                "spread": [0.1, 0.2],
+            }
+        ),
+    )
+    funding = pd.DataFrame(
+        {
+            "market": ["ETH-USD", "ETH-USD", "BTC-USD", "BTC-USD"],
+            "timestamp": pd.to_datetime(
+                [
+                    "2026-01-01T00:00:00.123456+00:00",
+                    "2026-01-01T02:00:00.123456+00:00",
+                    "2026-01-01T00:00:00.123456+00:00",
+                    "2026-01-01T02:00:00.123456+00:00",
+                ],
+                utc=True,
+            ).astype("datetime64[us, UTC]"),
+            "funding_bps": [1.0, 2.0, 3.0, 4.0],
+        }
+    )
+
+    enriched = enrich_pair_dataset_with_funding(dataset, funding)
+
+    assert list(enriched.frame["funding_x_bps"]) == [1.0, 2.0]
+    assert list(enriched.frame["funding_y_bps"]) == [3.0, 4.0]
+
+
 def test_enrich_pair_dataset_preserves_existing_funding_columns():
     dataset = PairDataset(
         pair="ETH-BTC",

@@ -1,0 +1,15 @@
+strategy_id,strategy_name,status,reason,rows
+15,ML Confidence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+15,ML Confidence,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+15,ML Confidence,skipped,rows<20,4
+16,Profile Match,evaluated,trades<100,2
+16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+16,Profile Match,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,2
+16,Profile Match,skipped,rows<20,4
+30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+30,Meta Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+30,Meta Model,skipped,rows<20,4
+31,Feature Importance Model,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+31,Feature Importance Model,skipped,rows<20,4
+32,Trade Outcome Predictor,evaluated,trades<100;sharpe<1.2;expectancy<=0,14
+32,Trade Outcome Predictor,skipped,rows<20,4

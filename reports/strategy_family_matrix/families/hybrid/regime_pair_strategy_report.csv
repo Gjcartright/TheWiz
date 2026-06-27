@@ -1,0 +1,29 @@
+pair,regime,strategy_id,strategy_name,family,runs,eligible_runs,median_profit_factor,median_sharpe,median_max_drawdown,total_trades
+BTC-USD-SOL-USD,ALL,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,ALL,3,ZScore + Copula,hybrid,2,0,0.2529246524313896,-1.6907735318353645,0.2038724788435625,52
+BTC-USD-SOL-USD,crisis,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,crisis,3,ZScore + Copula,hybrid,2,0,0.5584279534142295,-1.6127245080575632,0.12192615462194853,14
+BTC-USD-SOL-USD,range,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+BTC-USD-SOL-USD,range,3,ZScore + Copula,hybrid,2,0,0.17815923737057796,-2.2163227138528647,0.19959550147879193,52
+SOL-USD-LINK-USD,ALL,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,ALL,3,ZScore + Copula,hybrid,2,0,0.27475819698094606,-1.653936228932204,0.06954126456171647,8
+SOL-USD-LINK-USD,bear,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bear,3,ZScore + Copula,hybrid,2,0,0.0,-11.352570639610844,0.05206777602531516,4
+SOL-USD-LINK-USD,bull,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,bull,3,ZScore + Copula,hybrid,2,0,0.3118337550513014,-7.173250809961527,0.049141770512717786,6
+SOL-USD-LINK-USD,range,2,ZScore + ECM,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,4,ECM + Copula + ZScore,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,36,Copula + ECM Strategy,hybrid,2,0,inf,0.0,0.0,0
+SOL-USD-LINK-USD,range,3,ZScore + Copula,hybrid,2,0,0.0,-1.3418791939591985,0.03716962786776465,4

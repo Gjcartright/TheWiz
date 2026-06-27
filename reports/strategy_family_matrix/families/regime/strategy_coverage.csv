@@ -1,0 +1,18 @@
+strategy_id,strategy_name,status,reason,rows
+21,HMM Regime Model,evaluated,trades<100,2
+21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
+21,HMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
+21,HMM Regime Model,skipped,rows<20,4
+22,GMM Regime Model,evaluated,trades<100,2
+22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,7
+22,GMM Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
+22,GMM Regime Model,evaluated,trades<100;sharpe<1.2,2
+22,GMM Regime Model,skipped,rows<20,4
+23,KMeans Regime Model,evaluated,trades<100,2
+23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,9
+23,KMeans Regime Model,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,3
+23,KMeans Regime Model,skipped,rows<20,4
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,6
+24,Regime Filtered Stat-Arb,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+24,Regime Filtered Stat-Arb,evaluated,trades<100;sharpe<1.2;expectancy<=0,4
+24,Regime Filtered Stat-Arb,skipped,rows<20,4

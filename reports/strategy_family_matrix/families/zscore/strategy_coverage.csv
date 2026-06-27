@@ -1,0 +1,4 @@
+strategy_id,strategy_name,status,reason,rows
+1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;expectancy<=0,10
+1,Classic ZScore Mean Reversion,evaluated,trades<100;profit_factor<1.8;sharpe<1.2;max_drawdown>0.15;expectancy<=0,4
+1,Classic ZScore Mean Reversion,skipped,rows<20,4
