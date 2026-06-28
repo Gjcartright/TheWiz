@@ -24,7 +24,7 @@ rl_idea_0001,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6107411626206903,0.6659212328624593,0.6659212328624593,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6659212328624593; confidence=0.6107411626206903,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6107411626206903,0.6659212328624593,0.6659212328624593,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6659212328624593; confidence=0.6107411626206903,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0002,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -50,7 +50,7 @@ rl_idea_0002,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6107411626206903,0.6659212328624593,0.6659212328624593,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6659212328624593; confidence=0.6107411626206903,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6107411626206903,0.6659212328624593,0.6659212328624593,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6659212328624593; confidence=0.6107411626206903,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0003,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -76,7 +76,7 @@ rl_idea_0003,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6100546497164681,0.6650261346150224,0.6650261346150224,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.6650261346150224; confidence=0.6100546497164681,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.6100546497164681,0.6650261346150224,0.6650261346150224,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.6650261346150224; confidence=0.6100546497164681,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0004,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -102,7 +102,7 @@ rl_idea_0004,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.604646695773656,0.6579750652663485,0.6579750652663485,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6579750652663485; confidence=0.604646695773656,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.604646695773656,0.6579750652663485,0.6579750652663485,1,0.0,0.0,0.0,0.0,0.8015213206509443,1.0,rl_research_backtest,rl-policy=unknown; return=0.6579750652663485; confidence=0.604646695773656,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0005,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -128,7 +128,7 @@ rl_idea_0005,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.5089502687452139,0.5332028962476554,0.5332028962476554,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.5332028962476554; confidence=0.5089502687452139,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.5089502687452139,0.5332028962476554,0.5332028962476554,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.5332028962476554; confidence=0.5089502687452139,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0006,ETHUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -154,7 +154,7 @@ rl_idea_0006,ETHUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.4369407914009439,0.4393145562422693,0.4393145562422693,1,0.0,0.0,0.0,0.0,0.7393719552586241,1.0,rl_research_backtest,rl-policy=unknown; return=0.4393145562422693; confidence=0.4369407914009439,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.4369407914009439,0.4393145562422693,0.4393145562422693,1,0.0,0.0,0.0,0.0,0.7393719552586241,1.0,rl_research_backtest,rl-policy=unknown; return=0.4393145562422693; confidence=0.4369407914009439,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0007,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -180,7 +180,7 @@ rl_idea_0007,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.42750328554339434,0.4270096237328968,0.4270096237328968,1,0.0,0.0,0.0,0.0,0.5841560951610643,1.0,rl_research_backtest,rl-policy=unknown; return=0.4270096237328968; confidence=0.42750328554339434,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.42750328554339434,0.4270096237328968,0.4270096237328968,1,0.0,0.0,0.0,0.0,0.5841560951610643,1.0,rl_research_backtest,rl-policy=unknown; return=0.4270096237328968; confidence=0.42750328554339434,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0008,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -206,7 +206,7 @@ rl_idea_0008,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.42750328554339434,0.4270096237328968,0.4270096237328968,1,0.0,0.0,0.0,0.0,0.5841560951610643,1.0,rl_research_backtest,rl-policy=unknown; return=0.4270096237328968; confidence=0.42750328554339434,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.42750328554339434,0.4270096237328968,0.4270096237328968,1,0.0,0.0,0.0,0.0,0.5841560951610643,1.0,rl_research_backtest,rl-policy=unknown; return=0.4270096237328968; confidence=0.42750328554339434,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0009,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -232,7 +232,7 @@ rl_idea_0009,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0010,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -258,7 +258,7 @@ rl_idea_0010,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0011,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -284,7 +284,7 @@ rl_idea_0011,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.3665671768192481,0.3475591082521998,0.3475591082521998,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.3475591082521998; confidence=0.3665671768192481,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0012,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -310,7 +310,7 @@ rl_idea_0012,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.34641894764169445,0.3212891801636421,0.3212891801636421,1,0.0,0.0,0.0,0.0,0.7720919833746067,1.0,rl_research_backtest,rl-policy=unknown; return=0.3212891801636421; confidence=0.34641894764169445,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.34641894764169445,0.3212891801636421,0.3212891801636421,1,0.0,0.0,0.0,0.0,0.7720919833746067,1.0,rl_research_backtest,rl-policy=unknown; return=0.3212891801636421; confidence=0.34641894764169445,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0013,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -336,7 +336,7 @@ rl_idea_0013,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.33332260271652503,0.3042137321738787,0.3042137321738787,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.3042137321738787; confidence=0.33332260271652503,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.33332260271652503,0.3042137321738787,0.3042137321738787,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.3042137321738787; confidence=0.33332260271652503,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0014,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -362,7 +362,7 @@ rl_idea_0014,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2979321339052971,0.2580704675475735,0.2580704675475735,1,0.0,0.0,0.0,0.0,0.6591494624245324,1.0,rl_research_backtest,rl-policy=unknown; return=0.2580704675475735; confidence=0.2979321339052971,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2979321339052971,0.2580704675475735,0.2580704675475735,1,0.0,0.0,0.0,0.0,0.6591494624245324,1.0,rl_research_backtest,rl-policy=unknown; return=0.2580704675475735; confidence=0.2979321339052971,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0015,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -388,7 +388,7 @@ rl_idea_0015,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.28943934266681925,0.2469972852276851,0.2469972852276851,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.2469972852276851; confidence=0.28943934266681925,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",bear,quantile_policy,quantile_boundary,safe_quantile_baseline,0.28943934266681925,0.2469972852276851,0.2469972852276851,1,0.0,0.0,0.0,0.0,0.6057931310743521,1.0,rl_research_backtest,rl-policy=unknown; return=0.2469972852276851; confidence=0.28943934266681925,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0016,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -414,8 +414,8 @@ rl_idea_0016,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2782025373084872,0.2323463664741223,0.2323463664741223,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.2323463664741223; confidence=0.2782025373084872,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0017,BTC-USD-ETH-USD,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2782025373084872,0.2323463664741223,0.2323463664741223,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.2323463664741223; confidence=0.2782025373084872,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0017,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -440,8 +440,8 @@ rl_idea_0017,BTC-USD-ETH-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2713590783479857,0.2234236381695598,0.2234236381695598,1,0.0,0.0,0.0,0.0,0.7599889988228204,1.0,rl_research_backtest,rl-policy=unknown; return=0.2234236381695598; confidence=0.2713590783479857,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0018,ETH-USD-SOL-USD,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.22140013628654803,0.1582855159172825,0.1582855159172825,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.1582855159172825; confidence=0.22140013628654803,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0018,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -466,7 +466,7 @@ rl_idea_0018,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.22140013628654803,0.1582855159172825,0.1582855159172825,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.1582855159172825; confidence=0.22140013628654803,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.21705568754552212,0.1526210798516891,0.1526210798516891,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.1526210798516891; confidence=0.21705568754552212,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
 rl_idea_0019,BTCUSDT-SOLUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
@@ -492,8 +492,8 @@ rl_idea_0019,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.21705568754552212,0.1526210798516891,0.1526210798516891,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.1526210798516891; confidence=0.21705568754552212,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0020,BTCUSDT-SOLUSDT,,"0     unspecified
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.21705568754552212,0.1526210798516891,0.1526210798516891,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.1526210798516891; confidence=0.21705568754552212,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0020,BTC-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -518,8 +518,8 @@ rl_idea_0020,BTCUSDT-SOLUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.21705568754552212,0.1526210798516891,0.1526210798516891,1,0.0,0.0,0.0,0.0,0.8011867187254809,1.0,rl_research_backtest,rl-policy=unknown; return=0.1526210798516891; confidence=0.21705568754552212,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0021,BTC-USD-SOL-USD,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.200008931317869,0.1303949548509612,0.1303949548509612,1,0.0,0.0,0.0,0.0,0.7997812486063516,1.0,rl_research_backtest,rl-policy=unknown; return=0.1303949548509612; confidence=0.200008931317869,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0021,BTCUSDT-ETHUSDT,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -544,8 +544,8 @@ rl_idea_0021,BTC-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.2056900428323878,0.1378021760828772,0.1378021760828772,1,0.0,0.0,0.0,0.0,0.672780131467261,1.0,rl_research_backtest,rl-policy=unknown; return=0.1378021760828772; confidence=0.2056900428323878,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0022,BTC-USD-SOL-USD,,"0     unspecified
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1941599749664594,0.1227688919652054,0.1227688919652054,1,0.0,0.0,0.0,0.0,0.8004184065728844,1.0,rl_research_backtest,rl-policy=unknown; return=0.1227688919652054; confidence=0.1941599749664594,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0022,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -570,8 +570,8 @@ rl_idea_0022,BTC-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.200008931317869,0.1303949548509612,0.1303949548509612,1,0.0,0.0,0.0,0.0,0.7997812486063516,1.0,rl_research_backtest,rl-policy=unknown; return=0.1303949548509612; confidence=0.200008931317869,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0023,BTCUSDT-ETHUSDT,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1930020968372078,0.121259212135643,0.121259212135643,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.121259212135643; confidence=0.1930020968372078,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0023,ETH-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -596,8 +596,8 @@ rl_idea_0023,BTCUSDT-ETHUSDT,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1941599749664594,0.1227688919652054,0.1227688919652054,1,0.0,0.0,0.0,0.0,0.8004184065728844,1.0,rl_research_backtest,rl-policy=unknown; return=0.1227688919652054; confidence=0.1941599749664594,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0024,ETH-USD-SOL-USD,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1930020968372078,0.121259212135643,0.121259212135643,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.121259212135643; confidence=0.1930020968372078,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0024,BTC-USD-SOL-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -622,8 +622,8 @@ rl_idea_0024,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1930020968372078,0.121259212135643,0.121259212135643,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.121259212135643; confidence=0.1930020968372078,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
-rl_idea_0025,ETH-USD-SOL-USD,,"0     unspecified
+dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.17816260946004,0.1019109973206381,0.1019109973206381,1,0.0,0.0,0.0,0.0,0.7997812486063516,1.0,rl_research_backtest,rl-policy=unknown; return=0.1019109973206381; confidence=0.17816260946004,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate
+rl_idea_0025,BNB-USD-LINK-USD,,"0     unspecified
 1     unspecified
 2     unspecified
 3     unspecified
@@ -648,4 +648,4 @@ rl_idea_0025,ETH-USD-SOL-USD,,"0     unspecified
 22    unspecified
 23    unspecified
 24    unspecified
-dtype: object",crisis,quantile_policy,quantile_boundary,safe_quantile_baseline,0.1930020968372078,0.121259212135643,0.121259212135643,1,0.0,0.0,0.0,0.0,0.8078194523619033,1.0,rl_research_backtest,rl-policy=unknown; return=0.121259212135643; confidence=0.1930020968372078,reports/rl/rl_training_report.csv,2026-06-26T22:13:13.820676+00:00,candidate
+dtype: object",range,quantile_policy,quantile_boundary,safe_quantile_baseline,0.16633653890988592,0.0864917751058708,0.0864917751058708,1,0.0,0.0,0.0,0.0,0.8129829253471254,0.00288548,rl_research_backtest,rl-policy=unknown; return=0.0864917751058708; confidence=0.16633653890988592,reports/rl/rl_training_report.csv,2026-06-27T22:39:09.947900+00:00,candidate

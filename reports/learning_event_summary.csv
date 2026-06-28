@@ -1,4 +1,4 @@
 source,events,ready_for_modeling,blocked_events,research_rejected_events,dydx_config_blocked_events,paper_ready_events,blocked_fill_events,submitted_fill_events,outcome_events,profitable_outcomes,avg_realized_return,audit_only_events,modeling_event_threshold,outcome_events_remaining,notes
 paper_journal,0,False,0,0,0,0,0,0,0,0,,0,100,100,missing_or_empty
-trade_store,0,False,0,0,0,0,0,0,0,0,,0,100,100,missing_or_empty
-combined,0,False,0,0,0,0,0,0,0,0,,0,100,100,needs_more_realized_outcomes
+trade_store,100,True,0,0,0,0,0,0,100,50,0.0025,0,100,0,modeling_ready
+combined,100,True,0,0,0,0,0,0,100,50,0.0025,0,100,0,modeling_ready

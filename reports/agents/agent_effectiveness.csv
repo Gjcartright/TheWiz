@@ -3,7 +3,8 @@ discovery_agent,0.0,memory_exists_outcomes_pending
 venue_evidence_agent,0.0,no_memory_events
 data_quality_agent,0.0,no_memory_events
 strategy_test_agent,0.0,no_memory_events
-rl_idea_agent,0.0,memory_exists_outcomes_pending
+rl_idea_agent,0.8571,outcome_based
+rl_similarity_agent,0.0,no_memory_events
 cost_risk_agent,0.0,no_memory_events
 red_team_agent,0.0,memory_exists_outcomes_pending
 decision_agent,0.0,no_memory_events

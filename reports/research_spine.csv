@@ -1,0 +1,6 @@
+step,status,detail
+project_objective,completed,project_objective_loaded=/Users/gregc/Documents/Codex/TheWiz-publish-20260625/project_objective.md
+ingest_pair_details,completed,"snapshots=66;reports=snapshots,fields,history_coverage,quality,capture_audit,capture_checklist"
+priority_readiness,completed,reports/priority_readiness.csv
+run_pair_detail_experiments,completed,"datasets=42;experiment_rows=13024;funding_path=data/processed/dydx_funding.csv;reports=ablation,all_results,acceptance,strategy_summary,regime_summary,regime_pair_strategy,coverage"
+priority_readiness_after_experiments,completed,reports/priority_readiness.csv

@@ -1,0 +1,5 @@
+pair_id,window,expected_files,existing_files,missing_files,ready,present_paths,missing_paths
+1,1,2,1,1,False,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_001/BTC-USD_5MINS_candles.json,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_001/LINK-USD_5MINS_candles.json
+1,2,2,1,1,False,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_002/BTC-USD_5MINS_candles.json,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_002/LINK-USD_5MINS_candles.json
+1,3,2,1,1,False,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_003/BTC-USD_5MINS_candles.json,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_003/LINK-USD_5MINS_candles.json
+1,4,2,1,1,False,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_004/BTC-USD_5MINS_candles.json,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/raw/dydx_long_history/1/window_004/LINK-USD_5MINS_candles.json

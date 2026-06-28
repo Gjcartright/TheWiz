@@ -14,6 +14,20 @@ import pandas as pd
 from quant_platform.funding import normalize_funding_rows
 
 DYDX_INDEXER_BASE = os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip()
+MAX_DYDX_REQUEST_LIMIT = 1000
+MIN_DYDX_REQUEST_LIMIT = 1
+
+
+def _clamp_request_limit(limit: int) -> int:
+    try:
+        sanitized = int(float(limit)) if isinstance(limit, str) else int(limit)
+    except (TypeError, ValueError):
+        return MAX_DYDX_REQUEST_LIMIT
+    if sanitized < MIN_DYDX_REQUEST_LIMIT:
+        return MIN_DYDX_REQUEST_LIMIT
+    if sanitized > MAX_DYDX_REQUEST_LIMIT:
+        return MAX_DYDX_REQUEST_LIMIT
+    return sanitized
 
 
 def dydx_two_leg_request_rows(
@@ -47,7 +61,7 @@ def dydx_two_leg_request_rows(
                         "resolution": resolution,
                         "fromISO": from_iso,
                         "toISO": to_iso,
-                        "limit": limit,
+                        "limit": _clamp_request_limit(limit),
                     },
                 ),
                 save_as=candle_path,
@@ -65,7 +79,7 @@ def dydx_two_leg_request_rows(
                 url=_dydx_indexer_url(
                     indexer_base,
                     f"/v4/historicalFunding/{market}",
-                    {"limit": limit},
+                    {"limit": _clamp_request_limit(limit)},
                 ),
                 save_as=funding_path,
                 import_command=(

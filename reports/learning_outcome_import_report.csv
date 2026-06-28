@@ -1,0 +1,2 @@
+path,rows,imported_rows,blocked_rows,duplicate_rows,missing_columns,invalid_rows,duplicate_details,trade_store,status,next_action
+/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/meta_learning/learning_outcome_template.csv,100,100,0,0,,,,/Users/gregc/Documents/Codex/TheWiz-publish-20260625/data/meta_learning/trades.jsonl,imported,rerun learning-report

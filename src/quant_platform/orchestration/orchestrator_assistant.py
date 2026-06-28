@@ -30,6 +30,7 @@ def build_orchestrator_assistant(root: Path = ROOT) -> CommandResult:
     tasks = _assistant_tasks(queue, registry)
     task_cards = _task_cards(tasks, registry)
     memory_events = _memory_events(tasks)
+    outcome_events = _outcome_memory_events(root, tasks)
 
     tasks_path = orchestration_dir / "orchestrator_assistant_tasks.csv"
     cards_path = orchestration_dir / "task_cards.jsonl"
@@ -40,6 +41,7 @@ def build_orchestrator_assistant(root: Path = ROOT) -> CommandResult:
     tasks.to_csv(tasks_path, index=False)
     _write_jsonl(cards_path, task_cards)
     _append_agent_memory(root, memory_events)
+    _append_agent_memory(root, outcome_events)
     learning = _learning_summary(root, registry)
     effectiveness = _effectiveness_summary(learning)
     learning.to_csv(learning_path, index=False)
@@ -163,6 +165,114 @@ def _memory_events(tasks: pd.DataFrame) -> list[dict[str, object]]:
             }
         )
     return rows
+
+
+def _outcome_memory_events(root: Path, tasks: pd.DataFrame) -> list[dict[str, object]]:
+    timestamp = datetime.now(timezone.utc).isoformat()
+    events: list[dict[str, object]] = []
+    for _, task in tasks.iterrows():
+        task_type = str(task.get("task_type", ""))
+        agent = str(task.get("assigned_agent", ""))
+        if "run_rl_idea_scout" in task_type:
+            outcome_known, outcome_label, note = _rl_idea_outcome(root)
+        elif "extract_rl_similarity_candidates" in task_type:
+            outcome_known, outcome_label, note = _rl_similarity_outcome(root)
+        else:
+            continue
+        events.append(
+            {
+                "timestamp": timestamp,
+                "agent": agent,
+                "task_id": task.get("task_id", ""),
+                "task_type": task_type,
+                "pair": task.get("pair", ""),
+                "input_evidence": task.get("evidence_path", ""),
+                "action_taken": "outcome_recorded",
+                "finding": note,
+                "confidence": _confidence(task.get("priority", "")),
+                "blocker": task.get("blocking_condition", ""),
+                "next_step": task.get("next_step", ""),
+                "outcome_known": bool(outcome_known),
+                "outcome_label": outcome_label,
+                "learning_note": "rl_outcome_observed_after_task",
+                "promotion_allowed": False,
+            }
+        )
+    return events
+
+
+def _rl_idea_outcome(root: Path) -> tuple[bool, str, str]:
+    summary = _read_csv(root / "reports" / "agents" / "rl_idea_summary.csv")
+    if summary.empty:
+        return False, "", "no_rl_idea_summary_yet"
+    row = summary.iloc[0]
+    blocker = row.get("blocker", "")
+    if pd.isna(blocker):
+        blocker = ""
+    blocker = str(blocker)
+    ideas = int(row.get("generated_ideas", 0) or 0)
+    signal = _paper_learning_signal(root)
+    if blocker:
+        return True, "failed", f"rl_idea_task_blocked:{blocker}"
+    if ideas <= 0:
+        return True, "failed", "rl_idea_task_produced_no_hypotheses"
+    if signal is None:
+        return True, "passed", f"rl_idea_task_generated:{ideas}"
+    profitable_ratio, outcome_events = signal
+    if profitable_ratio >= 0.45 and outcome_events >= 5:
+        return True, "passed", f"rl_idea_task_generated:{ideas};paper_profit_ratio={round(profitable_ratio, 4)}"
+    if profitable_ratio >= 0.25 and outcome_events >= 5:
+        return True, "validated", f"rl_idea_task_generated:{ideas};paper_profit_ratio={round(profitable_ratio, 4)}"
+    return True, "failed", f"rl_idea_task_generated:{ideas};paper_profit_ratio={round(profitable_ratio, 4)}_too_low"
+
+
+def _rl_similarity_outcome(root: Path) -> tuple[bool, str, str]:
+    summary = _read_csv(root / "reports" / "agents" / "rl_idea_summary.csv")
+    if summary.empty:
+        return False, "", "no_rl_idea_summary_yet"
+    row = summary.iloc[0]
+    blocker = row.get("blocker", "")
+    if pd.isna(blocker):
+        blocker = ""
+    blocker = str(blocker)
+    signal = _paper_learning_signal(root)
+    if blocker:
+        return True, "failed", f"rl_similarity_task_blocked:{blocker}"
+    sim_path = root / "reports" / "agents" / "rl_pair_similarity.csv"
+    if not sim_path.exists():
+        return False, "", "similarity_output_missing"
+    sim = _read_csv(sim_path)
+    pairs = int(len(sim))
+    if pairs <= 0:
+        return True, "failed", "rl_similarity_task_produced_no_pairs"
+    if signal is None:
+        return True, "validated", f"rl_similarity_task_generated:{pairs}"
+    profitable_ratio, outcome_events = signal
+    if profitable_ratio >= 0.45 and outcome_events >= 5:
+        return True, "validated", f"rl_similarity_task_generated:{pairs};paper_profit_ratio={round(profitable_ratio, 4)}"
+    if profitable_ratio >= 0.25 and outcome_events >= 5:
+        return True, "passed", f"rl_similarity_task_generated:{pairs};paper_profit_ratio={round(profitable_ratio, 4)}"
+    return True, "failed", f"rl_similarity_task_generated:{pairs};paper_profit_ratio={round(profitable_ratio, 4)}_too_low"
+
+
+def _paper_learning_signal(root: Path) -> tuple[float, int] | None:
+    trade_store = root / "data" / "meta_learning" / "trades.jsonl"
+    if not trade_store.exists():
+        return None
+    rows = _read_jsonl(trade_store)
+    if not rows:
+        return None
+    realized: list[float] = []
+    for row in rows:
+        outcome = row.get("outcome", {}) if isinstance(row, dict) else {}
+        value = outcome.get("realized_return") if isinstance(outcome, dict) else None
+        if isinstance(value, (int, float)):
+            realized.append(float(value))
+    if not realized:
+        return None
+    outcomes = len(realized)
+    profitable = sum(1 for value in realized if value > 0)
+    return profitable / outcomes, outcomes
 
 
 def _append_agent_memory(root: Path, events: list[dict[str, object]]) -> None:

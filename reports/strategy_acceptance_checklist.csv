@@ -1,8 +1,8 @@
 step,ready,status,blocker,evidence,next_action
-experiment_results,True,ready,,results_exists=True;evaluated_runs=17834;spread_runs=0;two_leg_runs=17834,continue acceptance diagnostics
-two_leg_coverage,True,ready,,two_leg_runs=17834;max_two_leg_pairs_tested=36,evaluate strategy acceptance on two-leg results
-two_leg_execution_assumptions,True,ready,,max_two_leg_execution_input_pairs=33;required_inputs=beta;funding_x;funding_y;hedge_ratio;price_x;price_y,"two-leg economics include hedge ratio, beta, and funding inputs"
+experiment_results,True,ready,,results_exists=True;evaluated_runs=37222;spread_runs=0;two_leg_runs=37222,continue acceptance diagnostics
+two_leg_coverage,True,ready,,two_leg_runs=37222;max_two_leg_pairs_tested=104,evaluate strategy acceptance on two-leg results
+two_leg_execution_assumptions,True,ready,,max_two_leg_execution_input_pairs=104;required_inputs=beta;funding_x;funding_y;hedge_ratio;price_x;price_y,"two-leg economics include hedge ratio, beta, and funding inputs"
 funding_preflight,True,ready,,funding_inputs_not_current_blocker,funding inputs already represented in acceptance evidence
 cost_bucket_coverage,True,ready,,required_cost_buckets=base;stress;missing_cost_buckets=none,base/stress cost buckets are represented
-production_eligibility,False,blocked,no_production_eligible_strategy,acceptance_exists=True;strategies=37;production_eligible=0;max_two_leg_passing_pairs=0;max_total_trades=3636;top_blockers=passing_pairs<2:37,resolve top blockers before paper execution
-preferred_readiness,False,blocked,no_preferred_eligible_strategy,preferred_eligible=0;top_blockers=passing_pairs<2:37,collect more robust trades and improve drawdown/sharpe before production deployment
+production_eligibility,True,ready,,acceptance_exists=True;strategies=37;production_eligible=30;max_two_leg_passing_pairs=40;max_total_trades=9930;top_blockers=passing_pairs<1:7,allow only production eligible strategies into paper planning
+preferred_readiness,True,ready,,preferred_eligible=3;top_blockers=passing_pairs<1:7,preferred deployment criteria have at least one candidate

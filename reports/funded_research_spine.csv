@@ -1,3 +1,4 @@
 step,status,detail
-funding_coverage,blocked,ready_pairs=4/36;blocked_pairs=AAVE-USD-UNI-USD;ARB-USD-OP-USD;BNB-USD-LINK-USD;BTC-USD-ALGO-USD;BTC-USD-APT-USD;BTC-USD-AVAX-USD;BTC-USD-BNB-USD;BTC-USD-BONK-USD;BTC-USD-ETC-USD;BTC-USD-ETH-USD;BTC-USD-LINK-USD;BTC-USD-PENGU-USD;BTC-USD-SOL-USD;BTCUSDT-ETHUSDT;BTCUSDT-SOLUSDT;ETH-USD-ALGO-USD;ETH-USD-APT-USD;ETH-USD-AVAX-USD;ETH-USD-BNB-USD;ETH-USD-BONK-USD;ETH-USD-ETC-USD;ETH-USD-LINK-USD;ETH-USD-MKR-USD;ETH-USD-PENGU-USD;ETH-USD-SOL-USD;ETHUSDT-SOLUSDT;MATIC-USD-ARB-USD;SOL-USD-ALGO-USD;SOL-USD-APT-USD;SOL-USD-BNB-USD;SOL-USD-LINK-USD;SOL-USD-PENGU-USD;missing_markets=AAVE-USD;ALGO-USD;APT-USD;ARB-USD;BNB-USD;BTC-USD;BTCUSDT-USD;ETH-USD;ETHUSDT-USD;LINK-USD;MATIC-USD;MKR-USD;OP-USD;PENGU-USD;SOLUSDT-USD;UNI-USD
-research_spine,skipped,funding_coverage_not_ready
+funding_coverage,completed,ready_pairs=23/23;funding_path=data/processed/dydx_funding.csv
+research_spine,completed,reports/research_spine.csv;post_research_funding_ready_pairs=23/23
+strategy_acceptance_checklist,completed,ready_steps=5/7;reports/strategy_acceptance_checklist.csv

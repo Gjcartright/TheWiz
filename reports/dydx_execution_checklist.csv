@@ -4,5 +4,5 @@ testnet_credentials,True,ready,,wallet_address_present=True;private_key_present=
 dydx_sdk,True,ready,,dydx_v4_client_installed=True,continue adapter wiring
 submit_flag,False,blocked,submit_orders_false,submit_orders=False,leave DYDX_TESTNET_SUBMIT_ORDERS=false until research and adapter gates pass
 order_client_adapter,True,ready,,order_adapter=True;contract_valid=True;signature_accepts_intent_config=True;exchange_submission_capable=True;record_only=False;adapter_error=none,authenticated testnet order client is injected
-research_acceptance,False,blocked,no_research_accepted_two_leg_strategy,acceptance_report_exists=True;production_eligible=0;two_leg_passing_pairs=0,run real two-leg experiments until acceptance gates pass
-paper_submission_gate,False,blocked,submit_orders_false;no_research_accepted_two_leg_strategy,dydx_ready=False;strategy_ready=False,do not submit paper orders
+research_acceptance,True,ready,,acceptance_report_exists=True;production_eligible=30;two_leg_passing_pairs=40,allow only production-eligible two-leg strategies
+paper_submission_gate,False,blocked,submit_orders_false,dydx_ready=False;strategy_ready=True,do not submit paper orders

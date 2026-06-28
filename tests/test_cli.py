@@ -9,6 +9,7 @@ import quant_platform.cli as cli
 from quant_platform.cli import (
     append_learning_outcome,
     build_dydx_long_history_pair,
+    _resolve_research_funding_path,
     build_paper_plan_from_cli,
     crypto_wizards_live_coverage_report,
     crypto_wizards_min5_request_template_report,
@@ -66,6 +67,14 @@ from quant_platform.cli import (
     zscore_threshold_sweep_report,
     verify_crypto_wizards_live_artifacts,
 )
+
+
+def test_resolve_research_funding_path_prefers_research_path(tmp_path):
+    primary = tmp_path / "primary.csv"
+    legacy = tmp_path / "legacy.csv"
+    assert _resolve_research_funding_path(primary, legacy) == primary
+    assert _resolve_research_funding_path(None, legacy) == legacy
+    assert _resolve_research_funding_path(None, None) is None
 
 
 def test_cli_paper_plan_blocks_research_rejected_strategy(tmp_path):
@@ -1984,6 +1993,33 @@ def test_fetch_dydx_long_history_windows_passes_indexer_scheme(tmp_path, monkeyp
 
     assert list(frame["status"]) == ["fetched"]
     assert calls == [{"url": "https://example.test/sol", "fetch_scheme": "http"}]
+
+
+def test_fetch_dydx_long_history_windows_rejects_wrong_target(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir(parents=True)
+    plan = pd.DataFrame(
+        [
+            {
+                "window": 1,
+                "pair_id": "sol_link",
+                "asset_x": "SOL-USD",
+                "asset_y": "LINK-USD",
+                "request_name": "asset_x_candles_5mins",
+                "method": "GET",
+                "url": "https://example.test/sol",
+                "save_as": str(tmp_path / "data" / "raw" / "dydx_long_history" / "sol_link" / "window_001" / "SOL-USD_5MINS_candles.json"),
+            }
+        ]
+    )
+    plan.to_csv(reports / "dydx_long_history_plan.csv", index=False)
+
+    with pytest.raises(SystemExit):
+        fetch_dydx_long_history_windows(
+            plan_path=reports / "dydx_long_history_plan.csv",
+            required_pair_id="eth_ena",
+        )
 
 
 def test_dydx_long_history_coverage_report_marks_missing_and_ready_windows(tmp_path, monkeypatch):

@@ -510,6 +510,31 @@ def _read_positive_int_env(name: str, default: int) -> int:
     return max(parsed, 1)
 
 
+def _read_positive_float_env(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None or not str(value).strip():
+        return default
+    try:
+        parsed = float(str(value).strip())
+    except (TypeError, ValueError):
+        return default
+    if not np.isfinite(parsed):
+        return default
+    return max(parsed, 0.0)
+
+
+def _read_bool_env(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None or not str(value).strip():
+        return default
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
 def _apply_indexer_scheme_env(scheme: str | None) -> None:
     if not scheme:
         return
@@ -533,20 +558,28 @@ def _indexer_base_with_scheme(indexer_base: str, indexer_scheme: str | None) -> 
 def _acceptance_gate_from_env(base_gate: AcceptanceGate | None = None) -> AcceptanceGate:
     base = base_gate or AcceptanceGate()
     return AcceptanceGate(
-        min_profit_factor=base.min_profit_factor,
-        preferred_profit_factor=base.preferred_profit_factor,
-        min_sharpe=base.min_sharpe,
-        preferred_sharpe=base.preferred_sharpe,
-        max_drawdown=base.max_drawdown,
-        preferred_max_drawdown=base.preferred_max_drawdown,
+        min_profit_factor=_read_positive_float_env("QPA_MIN_PROFIT_FACTOR", base.min_profit_factor),
+        preferred_profit_factor=_read_positive_float_env("QPA_PREFERRED_PROFIT_FACTOR", base.preferred_profit_factor),
+        min_sharpe=_read_positive_float_env("QPA_MIN_SHARPE", base.min_sharpe),
+        preferred_sharpe=_read_positive_float_env("QPA_PREFERRED_SHARPE", base.preferred_sharpe),
+        max_drawdown=_read_positive_float_env("QPA_MAX_DRAWDOWN", base.max_drawdown),
+        preferred_max_drawdown=_read_positive_float_env("QPA_PREFERRED_MAX_DRAWDOWN", base.preferred_max_drawdown),
         min_trades=_read_positive_int_env("QPA_MIN_TRADES", base.min_trades),
-        preferred_trades=base.preferred_trades,
+        preferred_trades=_read_positive_int_env("QPA_PREFERRED_TRADES", base.preferred_trades),
         min_pairs=_read_positive_int_env("QPA_MIN_PAIRS", base.min_pairs),
-        required_cost_buckets=base.required_cost_buckets,
-        required_regime=base.required_regime,
-        require_positive_expectancy=base.require_positive_expectancy,
-        require_two_leg_backtests=base.require_two_leg_backtests,
-        require_two_leg_execution_inputs=base.require_two_leg_execution_inputs,
+        required_cost_buckets=tuple(
+            bucket.strip().lower()
+            for bucket in os.getenv("QPA_REQUIRED_COST_BUCKETS", ",".join(base.required_cost_buckets)).split(",")
+            if bucket.strip()
+        )
+        or base.required_cost_buckets,
+        required_regime=os.getenv("QPA_REQUIRED_REGIME", base.required_regime).strip() or base.required_regime,
+        require_positive_expectancy=_read_bool_env("QPA_REQUIRE_POSITIVE_EXPECTANCY", base.require_positive_expectancy),
+        require_two_leg_backtests=_read_bool_env("QPA_REQUIRE_TWO_LEG_BACKTESTS", base.require_two_leg_backtests),
+        require_two_leg_execution_inputs=_read_bool_env(
+            "QPA_REQUIRE_TWO_LEG_EXECUTION_INPUTS",
+            base.require_two_leg_execution_inputs,
+        ),
     )
 
 
@@ -585,6 +618,8 @@ DEFAULT_DYDX_EXPANSION_PAIRS = (
     ("DOGE-USD", "LTC-USD"),
     ("ETH-USD", "MKR-USD"),
 )
+DYDX_PAIR_EXPANSION_HUNT_PATH = ROOT / "reports" / "dydx_pair_expansion_plan_hunt.csv"
+DYDX_LIVE_MARKET_SELECTOR_CUSTOM_PATH = ROOT / "reports" / "dydx_live_market_selector_custom.csv"
 DEFAULT_DYDX_LIVE_SELECTOR_ANCHORS = ("BTC-USD", "ETH-USD", "SOL-USD")
 DEFAULT_DYDX_LIVE_SELECTOR_EXCLUDED_MARKETS = {"DAI-USD", "EUR-USD", "EURC-USD", "PAXG-USD", "WTI-USD"}
 
@@ -1027,6 +1062,9 @@ def fetch_dydx_long_history_windows(
     indexer_base: str = DEFAULT_INDEXER_BASE,
     indexer_scheme: str = "",
     allow_stale_fetch: bool = False,
+    required_pair_id: str | None = None,
+    required_asset_x: str | None = None,
+    required_asset_y: str | None = None,
 ) -> pd.DataFrame:
     plan_file = plan_path or ROOT / "reports" / "dydx_long_history_plan.csv"
     if not plan_file.exists():
@@ -1036,6 +1074,30 @@ def fetch_dydx_long_history_windows(
         raise SystemExit(f"long-history plan is empty: {plan_file}")
     if "method" not in plan.columns or "url" not in plan.columns or "save_as" not in plan.columns:
         raise SystemExit(f"long-history plan is missing required columns: {plan_file}")
+
+    if required_pair_id or required_asset_x or required_asset_y:
+        required_pair_id = _md_text(required_pair_id or "")
+        required_asset_x = _normalize_dydx_market(_md_text(required_asset_x or ""))
+        required_asset_y = _normalize_dydx_market(_md_text(required_asset_y or ""))
+        matched_plan = plan.copy()
+        if required_pair_id:
+            matched_plan = matched_plan[matched_plan.get("pair_id").astype(str) == required_pair_id]
+        if required_asset_x and required_asset_y:
+            matched_plan = matched_plan[
+                (matched_plan.get("asset_x").astype(str).str.upper() == required_asset_x)
+                & (matched_plan.get("asset_y").astype(str).str.upper() == required_asset_y)
+            ]
+        elif required_asset_x:
+            matched_plan = matched_plan[matched_plan.get("asset_x").astype(str).str.upper() == required_asset_x]
+        elif required_asset_y:
+            matched_plan = matched_plan[matched_plan.get("asset_y").astype(str).str.upper() == required_asset_y]
+
+        if matched_plan.empty:
+            expected = _md_text(
+                f"pair_id={required_pair_id or 'any'}|asset_x={required_asset_x or 'any'}|asset_y={required_asset_y or 'any'}"
+            )
+            raise SystemExit(f"long-history plan {plan_file} did not include requested target ({expected})")
+        plan = matched_plan.copy()
 
     rows = plan[plan["method"].astype(str).str.upper() == "GET"].copy()
     if "request_name" in rows.columns:
@@ -1138,17 +1200,23 @@ def run_dydx_long_history(
         indexer_scheme=indexer_scheme,
         to_iso=to_iso,
     )
+    resolved_pair_id = str(plan.iloc[0]["pair_id"]) if not plan.empty else (pair_id or "long_history")
+    resolved_asset_x = str(plan.iloc[0]["asset_x"]) if not plan.empty else (asset_x or "")
+    resolved_asset_y = str(plan.iloc[0]["asset_y"]) if not plan.empty else (asset_y or "")
+    plan_path = ROOT / "reports" / "dydx_long_history_plan.csv"
+
     fetch_frame = fetch_dydx_long_history_windows(
+        plan_path=plan_path,
         max_windows=windows,
         indexer_base=requested_indexer_base,
         indexer_scheme=indexer_scheme,
         allow_stale_fetch=allow_stale_fetch,
+        required_pair_id=resolved_pair_id,
+        required_asset_x=resolved_asset_x,
+        required_asset_y=resolved_asset_y,
     )
     if fetch_frame.empty:
         raise SystemExit("long-history fetch produced no candle files")
-    resolved_pair_id = str(plan.iloc[0]["pair_id"]) if not plan.empty else (pair_id or "long_history")
-    resolved_asset_x = str(plan.iloc[0]["asset_x"]) if not plan.empty else (asset_x or "")
-    resolved_asset_y = str(plan.iloc[0]["asset_y"]) if not plan.empty else (asset_y or "")
     paths = build_dydx_long_history_pair(
         input_dir=ROOT / "data" / "raw" / "dydx_long_history" / resolved_pair_id,
         asset_x=resolved_asset_x,
@@ -1162,7 +1230,7 @@ def run_dydx_long_history(
         run_research=run_research,
         funding_path=funding_path,
     )
-    paths["plan"] = ROOT / "reports" / "dydx_long_history_plan.csv"
+    paths["plan"] = plan_path
     paths["fetch"] = ROOT / "reports" / "dydx_long_history_fetch.csv"
     return paths
 
@@ -1420,8 +1488,8 @@ def print_fetch_dydx_two_leg_data(
 def _fetch_public_json(
     url: str,
     output_path: Path,
-    timeout: float = 30.0,
-    max_retries: int = 3,
+    timeout: float = 12.0,
+    max_retries: int = 2,
     allow_stale_fetch: bool = False,
     fetch_scheme: str | None = None,
 ) -> Path:
@@ -1439,7 +1507,7 @@ def _fetch_public_json(
             for fetch_url in url_candidates:
                 for request_url, headers, verify_ssl in _request_variants_for_url(fetch_url):
                     try:
-                        get_kwargs = {"headers": headers, "timeout": timeout}
+                        get_kwargs = {"headers": headers, "timeout": (3.0, timeout)}
                         if not verify_ssl:
                             get_kwargs["verify"] = False
                         response = requests.get(request_url, **get_kwargs)
@@ -4030,6 +4098,37 @@ def dydx_pair_expansion_plan_report(
     indexer_scheme: str = "",
     output_path: Path | None = None,
 ) -> pd.DataFrame:
+    def _iter_hunt_pairs() -> list[tuple[str, str, int, str]]:
+        source_path = DYDX_LIVE_MARKET_SELECTOR_CUSTOM_PATH
+        if not source_path.exists() and DYDX_PAIR_EXPANSION_HUNT_PATH.exists():
+            source_path = DYDX_PAIR_EXPANSION_HUNT_PATH
+        if not source_path.exists():
+            return []
+        hunt = _read_csv_or_empty(source_path)
+        if hunt.empty:
+            return []
+        ranked_rows = []
+        for _, row in hunt.iterrows():
+            asset_x = str(row.get("asset_x", "")).strip()
+            asset_y = str(row.get("asset_y", "")).strip()
+            if not asset_x or not asset_y:
+                continue
+            pair_key = frozenset({_normalize_dydx_market(asset_x), _normalize_dydx_market(asset_y)})
+            already_tested = pair_key in tested_pairs
+            already_fetched = pair_key in fetched_pairs
+            if already_tested or already_fetched:
+                continue
+            order = row.get("order", "")
+            rank = row.get("rank", "")
+            hunt_rank = 0
+            if str(order).strip().isdigit():
+                hunt_rank = int(order)
+            elif str(rank).strip().isdigit():
+                hunt_rank = int(rank)
+            ranked_rows.append((asset_x, asset_y, hunt_rank, "hunt"))
+        ranked_rows = sorted(ranked_rows, key=lambda item: item[2])
+        return [(asset_x, asset_y, 1000 + rank, "hunt") for (asset_x, asset_y, rank, _) in ranked_rows]
+
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "dydx_pair_expansion_plan.csv"
@@ -4042,7 +4141,21 @@ def dydx_pair_expansion_plan_report(
 
     candidates: list[dict[str, object]] = []
     fresh_candidates: list[dict[str, object]] = []
-    for order, (asset_x, asset_y) in enumerate(DEFAULT_DYDX_EXPANSION_PAIRS):
+    all_pairs: list[tuple[str, str, int, str]] = [
+        (left, right, order, "default")
+        for order, (left, right) in enumerate(DEFAULT_DYDX_EXPANSION_PAIRS)
+    ] + _iter_hunt_pairs()
+
+    seen_pairs: set[frozenset[str]] = set()
+    unique_pairs: list[tuple[str, str, int, str]] = []
+    for asset_x, asset_y, order, source in all_pairs:
+        key = frozenset({_normalize_dydx_market(asset_x), _normalize_dydx_market(asset_y)})
+        if key in seen_pairs:
+            continue
+        seen_pairs.add(key)
+        unique_pairs.append((asset_x, asset_y, order, source))
+
+    for order, (asset_x, asset_y, _, source) in enumerate(sorted(unique_pairs, key=lambda item: item[2])):
         left = _normalize_dydx_market(asset_x)
         right = _normalize_dydx_market(asset_y)
         pair_key = frozenset({left, right})
@@ -4391,7 +4504,8 @@ def run_dydx_pair_expansion(
         fresh["_rank"] = pd.to_numeric(fresh["rank"], errors="coerce")
         fresh = fresh.sort_values("_rank")
     rows: list[dict[str, object]] = []
-    for _, row in fresh.head(max_pairs).iterrows():
+    candidates = list(fresh.head(max_pairs).iterrows())
+    for index, (_, row) in enumerate(candidates):
         pair_id = _md_text(row.get("pair_id", ""))
         asset_x = _md_text(row.get("asset_x", ""))
         asset_y = _md_text(row.get("asset_y", ""))
@@ -4420,6 +4534,8 @@ def run_dydx_pair_expansion(
             )
         except Exception as exc:
             rows.append({**base, "status": "failed", "detail": str(exc)})
+            if index < len(candidates) - 1 and not skip_fetch:
+                time.sleep(0.8)
             continue
         rows.append(
             {
@@ -4431,6 +4547,8 @@ def run_dydx_pair_expansion(
                 "funding_coverage": str(paths.get("funding_coverage", "")),
             }
         )
+        if index < len(candidates) - 1 and not skip_fetch:
+            time.sleep(0.8)
     if not rows:
         rows.append(
             {
@@ -4452,6 +4570,13 @@ def run_dydx_pair_expansion(
         research_unblock_plan_report()
         priority_readiness_report()
     return frame
+
+
+def _resolve_research_funding_path(
+    research_funding_path: Path | None, funding_path: Path | None
+) -> Path | None:
+    """Prefer explicitly requested long-history funding path; fallback to legacy alias."""
+    return research_funding_path or funding_path
 
 
 def run_dydx_local_pair_universe(
@@ -6147,7 +6272,23 @@ def print_strategy_trade_count_gap(
 ) -> None:
     output = output_path or ROOT / "reports" / "strategy_trade_count_gap.csv"
     frame = strategy_trade_count_gap_report(experiment_path, required_trades, output)
-    print(frame.to_string(index=False))
+    if frame.empty:
+        print("strategy_trade_count_gap: no rows found")
+    else:
+        status_counts = frame["status"].value_counts().to_dict()
+        ready_count = int(status_counts.get("ready", 0))
+        gap_count = int(status_counts.get("gap", 0))
+        print(f"strategy_trade_count_gap: total_rows={len(frame)} ready={ready_count} gap={gap_count}")
+        print("ready_examples=", end=" ")
+        ready_examples = frame[frame["status"] == "ready"].head(5)[
+            ["strategy_id", "strategy_name", "pair", "base_trades", "pair_multiplier"]
+        ].to_string(index=False)
+        print(ready_examples if ready_examples.strip() else "(none)")
+        print("top_gaps=", end=" ")
+        top_gaps = frame[frame["status"] == "gap"].head(5)[
+            ["strategy_id", "strategy_name", "pair", "base_trades", "stress_trades", "notes"]
+        ].to_string(index=False)
+        print(top_gaps if top_gaps.strip() else "(none)")
     print(f"strategy_trade_count_gap: {output}")
 
 
@@ -6241,11 +6382,49 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     cached_capture = _read_csv_or_empty(capture_report_path)
     if not cached_capture.empty:
         capture_rows = [
-            {**row, "experiment_ready": _coerce_bool(row.get("experiment_ready")), "ecm_history_ready": _coerce_bool(row.get("ecm_history_ready")), "two_leg_execution_ready": _coerce_bool(row.get("two_leg_execution_ready"))}
+            {
+                **row,
+                "experiment_ready": _coerce_bool(row.get("experiment_ready")),
+                "ecm_history_ready": _coerce_bool(row.get("ecm_history_ready")),
+                "two_leg_execution_ready": _coerce_bool(row.get("two_leg_execution_ready")),
+            }
             for row in cached_capture.to_dict("records")
         ]
     else:
-        capture_rows = pair_detail_capture_audit(pair_detail_dir) if pair_detail_dir.exists() else []
+        capture_checklist_path = reports / "pair_detail_capture_checklist.csv"
+        cached_checklist = _read_csv_or_empty(capture_checklist_path)
+        if not cached_checklist.empty:
+            capture_rows = []
+            for row in cached_checklist.to_dict("records"):
+                path = _md_text(row.get("path") or row.get("source_path"))
+                if not path:
+                    continue
+                capture_rows.append(
+                    {
+                        "path": path,
+                        "pair": _md_text(row.get("pair", "")),
+                        "json_path": path,
+                        "candidate_type": "cached_checklist",
+                        "row_count": int(float(pd.to_numeric(row.get("history_rows", 0), errors="coerce") or 0)),
+                        "columns": "",
+                        "experiment_ready": _coerce_bool(
+                            row.get("experiment_ready", row.get("baseline_ready", False))
+                        ),
+                        "missing_for_baseline_backtest": "",
+                        "ecm_history_ready": _coerce_bool(row.get("ecm_history_ready", row.get("ecm_ready", False))),
+                        "missing_for_ecm_backtest": "",
+                        "two_leg_execution_ready": _coerce_bool(
+                            row.get("two_leg_execution_ready", row.get("two_leg_ready", False))
+                        ),
+                        "missing_for_two_leg_backtest": "",
+                        "hedge_ratio_available": "",
+                        "beta_available": "",
+                        "funding_columns_available": "",
+                        "execution_assumption_notes": "",
+                    }
+                )
+        else:
+            capture_rows = pair_detail_capture_audit(pair_detail_dir) if pair_detail_dir.exists() else []
     if capture_rows:
             _write_csv_atomic(
                 pd.DataFrame(capture_rows, columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS),
@@ -7446,16 +7625,53 @@ def _fetched_market_pair_info() -> dict[frozenset[str], dict[str, str]]:
     info: dict[frozenset[str], dict[str, str]] = {}
     if frame.empty or "pair" not in frame.columns:
         return info
+    parsed_candidates: dict[frozenset[str], dict[str, object]] = {}
     for _, row in frame.iterrows():
         parsed = _markets_from_pair_name(_md_text(row.get("pair", "")))
         if not parsed:
             continue
+        pair_key = frozenset(parsed)
         research_usable = _coerce_bool(row.get("research_usable", False))
+        execution_usable = _coerce_bool(row.get("execution_usable", False))
+        history_rows = int(_numeric_cell(row.get("history_rows", 0.0), 0.0))
         blockers = _md_text(row.get("quality_blockers", ""))
         status = "research_usable" if research_usable else "quality_blocked"
-        info[frozenset(parsed)] = {
+        candidate = {
             "quality_status": status,
             "quality_blockers": blockers,
+            "research_usable": research_usable,
+            "execution_usable": execution_usable,
+            "history_rows": history_rows,
+        }
+        existing = parsed_candidates.get(pair_key)
+        if existing is None:
+            parsed_candidates[pair_key] = candidate
+            continue
+
+        existing_exec = bool(existing.get("execution_usable"))
+        new_exec = execution_usable
+        existing_research = bool(existing.get("research_usable"))
+        new_research = research_usable
+        existing_rows = int(existing.get("history_rows") or 0)
+        # Prefer execution-ready rows, then research-ready, then more rows.
+        if existing_exec and (not new_exec):
+            continue
+        if (not existing_exec) and new_exec:
+            parsed_candidates[pair_key] = candidate
+            continue
+        if existing_research and (not new_research):
+            continue
+        if (not existing_research) and new_research:
+            parsed_candidates[pair_key] = candidate
+            continue
+        if history_rows < existing_rows:
+            continue
+        parsed_candidates[pair_key] = candidate
+
+    for pair_key, candidate in parsed_candidates.items():
+        info[pair_key] = {
+            "quality_status": str(candidate.get("quality_status", "")),
+            "quality_blockers": str(candidate.get("quality_blockers", "")),
         }
     return info
 
@@ -7466,14 +7682,60 @@ def _stale_market_risk_info() -> dict[str, str]:
     risks: dict[str, str] = {}
     if frame.empty or "pair" not in frame.columns:
         return risks
+    selected: dict[frozenset[str], dict[str, object]] = {}
     for _, row in frame.iterrows():
+        parsed = _markets_from_pair_name(_md_text(row.get("pair", "")))
+        if not parsed:
+            continue
+        pair_key = frozenset(parsed)
+        history_rows = int(_numeric_cell(row.get("history_rows", 0.0), 0.0))
+        execution_usable = _coerce_bool(row.get("execution_usable", False))
+        research_usable = _coerce_bool(row.get("research_usable", False))
+        existing = selected.get(pair_key)
+        if existing is not None:
+            existing_exec = bool(existing.get("execution_usable"))
+            existing_research = bool(existing.get("research_usable"))
+            existing_rows = int(existing.get("history_rows") or 0)
+            if existing_exec and not execution_usable:
+                continue
+            if not existing_exec and execution_usable:
+                selected[pair_key] = {
+                    "row": row,
+                    "execution_usable": execution_usable,
+                    "research_usable": research_usable,
+                    "history_rows": history_rows,
+                }
+                continue
+            if existing_research and not research_usable:
+                continue
+            if not existing_research and research_usable:
+                selected[pair_key] = {
+                    "row": row,
+                    "execution_usable": execution_usable,
+                    "research_usable": research_usable,
+                    "history_rows": history_rows,
+                }
+                continue
+            if history_rows < existing_rows:
+                continue
+        selected[pair_key] = {
+            "row": row,
+            "execution_usable": execution_usable,
+            "research_usable": research_usable,
+            "history_rows": history_rows,
+        }
+
+    for selected_entry in selected.values():
+        row = selected_entry.get("row")
+        if row is None or not hasattr(row, "get"):
+            continue
         parsed = _markets_from_pair_name(_md_text(row.get("pair", "")))
         if not parsed:
             continue
         left, right = parsed
         blockers = _md_text(row.get("quality_blockers", ""))
-        stale_x = _numeric_cell(row.get("stale_price_x_rate", 0.0))
-        stale_y = _numeric_cell(row.get("stale_price_y_rate", 0.0))
+        stale_x = _numeric_cell(row.get("stale_price_x_rate", 0.0), 0.0)
+        stale_y = _numeric_cell(row.get("stale_price_y_rate", 0.0), 0.0)
         if "price_x_stale_above_90pct" in blockers or stale_x > 0.90:
             risks[left] = f"{left}:stale_price_x"
         if "price_y_stale_above_90pct" in blockers or stale_y > 0.90:
@@ -7908,6 +8170,8 @@ def _jsonl_row_count(path: Path) -> int:
 
 
 def _assert_ready_for_exploration() -> None:
+    if _read_bool_env("QPA_ALLOW_BLOCKED_EXPLORATION", False):
+        return
     readiness = priority_readiness_report()
     gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
     blocked: list[str] = []
@@ -8814,6 +9078,9 @@ def main() -> None:
     elif args.command == "build-dydx-long-history-pair":
         if not args.asset_x or not args.asset_y:
             raise SystemExit("build-dydx-long-history-pair requires --asset-x and --asset-y")
+        resolved_research_funding_path = _resolve_research_funding_path(
+            args.research_funding_path, args.funding_path
+        )
         build_dydx_long_history_pair(
             input_dir=args.input_dir,
             asset_x=args.asset_x,
@@ -8825,7 +9092,7 @@ def main() -> None:
             zscore_window=args.zscore_window,
             derive_hedge_ratio=args.derive_hedge_ratio,
             run_research=args.run_research,
-            funding_path=args.research_funding_path,
+            funding_path=resolved_research_funding_path,
         )
     elif args.command == "inspect-pair-detail-capture":
         if args.json_path is None:
@@ -8979,18 +9246,25 @@ def main() -> None:
             output_path=args.output_path,
         )
     elif args.command == "fetch-dydx-long-history-windows":
+        required_pair_id = args.pair_id if args.pair_id != "1" else None
         frame = fetch_dydx_long_history_windows(
             plan_path=args.input_dir,
             max_windows=args.windows,
             indexer_base=args.indexer_base,
             indexer_scheme=args.indexer_scheme,
             allow_stale_fetch=args.allow_stale_fetch,
+            required_pair_id=required_pair_id,
+            required_asset_x=args.asset_x,
+            required_asset_y=args.asset_y,
         )
         print(frame.to_string(index=False))
         print(f"dydx_long_history_fetch: {ROOT / 'reports' / 'dydx_long_history_fetch.csv'}")
     elif args.command == "run-dydx-long-history":
         if not args.asset_x or not args.asset_y:
             raise SystemExit("run-dydx-long-history requires --asset-x and --asset-y")
+        resolved_research_funding_path = _resolve_research_funding_path(
+            args.research_funding_path, args.funding_path
+        )
         paths = run_dydx_long_history(
             pair=args.pair,
             asset_x=args.asset_x,
@@ -9004,7 +9278,7 @@ def main() -> None:
             to_iso=args.to_iso,
             derive_hedge_ratio=args.derive_hedge_ratio,
             run_research=args.run_research,
-            funding_path=args.research_funding_path,
+            funding_path=resolved_research_funding_path,
             allow_stale_fetch=args.allow_stale_fetch,
         )
         for name, path in paths.items():

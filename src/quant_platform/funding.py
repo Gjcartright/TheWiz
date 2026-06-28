@@ -315,4 +315,8 @@ def _split_pair(pair: str) -> tuple[str, str]:
 
 def _dydx_market(asset: str) -> str:
     normalized = str(asset).upper()
-    return normalized if normalized.endswith("-USD") else f"{normalized}-USD"
+    if normalized.endswith("USDT"):
+        normalized = normalized[:-4]
+    if normalized.endswith("-USD"):
+        return normalized
+    return f"{normalized}-USD"

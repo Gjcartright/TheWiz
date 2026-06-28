@@ -3,4 +3,4 @@ research_agent,0.0,0,0,False,find and rank hypotheses
 memory_agent,0.2,7,0,False,record what each specialist learned
 test_agent,0.0,0,0,False,verify ideas with local replay
 reference_agent,1.0,7,0,False,keep formulas and field definitions explicit
-rl_agent,0.2,7,73,False,suggest ideas and similar-pair fingerprints
+rl_agent,0.2,7,118,False,suggest ideas and similar-pair fingerprints

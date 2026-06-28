@@ -74,41 +74,27 @@ The objective IS spread mean reversion.
 
 | Priority | Area | Status | Blocker | Next Action |
 |---|---|---|---|---|
-| P1 | crypto_wizards_capture | blocked | no_nested_execution_ready_history_candidate_detected | run updated browser capture helper on authenticated pair page |
-| P2 | strategy_acceptance | blocked | no_strategy_passes_production_gates | review /Users/gregc/Documents/Codex/TheWiz-publish-20260625/reports/research_unblock_plan.csv and collect the highest-impact missing history/features |
+| P1 | crypto_wizards_capture | ready |  |  |
+| P2 | strategy_acceptance | ready |  | allow research-gated paper plans |
 | P3 | dydx_testnet_readiness | blocked | submit_orders_false | keep order submission disabled until research passes and order adapter is injected |
-| P4 | paper_execution_gate | blocked | strategy_or_dydx_gate_not_ready | resolve top blockers before paper execution |
+| P4 | paper_execution_gate | blocked | strategy_or_dydx_gate_not_ready | leave DYDX_TESTNET_SUBMIT_ORDERS=false until research and adapter gates pass |
 | P5 | learning_event_store | blocked | missing_learning_events | append realized trade outcomes once research-gated paper signals exist |
 
 ## Gap Proof Required
 
-### P1: crypto_wizards_capture
-- Severity: `critical`
-- Current evidence: `captures=35;research_spine_ready=35;best_completeness=100.00;next_focus=ready_for_research_spine;missing=none;quality_rows=35;research_usable=30;execution_usable=15;first_quality_blocker=history_rows_below_80;missing_execution_assumptions:funding_x_bps;funding_y_bps`
-- Required proof: pair-detail capture with spread,zscore,ecm_x,ecm_y,ecm_strength,price_x,price_y history
-- Source report: `reports/pair_detail_capture_checklist.csv;reports/pair_detail_quality_report.csv`
-- Next action: run updated browser capture helper on authenticated pair page
-
-### P2: strategy_acceptance
-- Severity: `critical`
-- Current evidence: `steps_ready=5/7;first_blocker=no_production_eligible_strategy`
-- Required proof: production-eligible strategy with required two-leg base/stress results across multiple pairs
-- Source report: `reports/strategy_acceptance_checklist.csv;reports/research_unblock_plan.csv`
-- Next action: review /Users/gregc/Documents/Codex/TheWiz-publish-20260625/reports/research_unblock_plan.csv and collect the highest-impact missing history/features
-
 ### P3: dydx_testnet_readiness
 - Severity: `high`
-- Current evidence: `steps_ready=4/7;first_blocker=submit_orders_false`
+- Current evidence: `steps_ready=5/7;first_blocker=submit_orders_false`
 - Required proof: submit flag, credentials, SDK, indexer, and authenticated order adapter all ready
 - Source report: `reports/dydx_execution_checklist.csv`
 - Next action: keep order submission disabled until research passes and order adapter is injected
 
 ### P4: paper_execution_gate
 - Severity: `high`
-- Current evidence: `steps_ready=0/4;first_blocker=no_strategy_passes_production_gates`
+- Current evidence: `steps_ready=1/4;first_blocker=submit_orders_false`
 - Required proof: strategy_acceptance ready and dydx_testnet_readiness ready
 - Source report: `reports/paper_execution_preflight.csv`
-- Next action: resolve top blockers before paper execution
+- Next action: leave DYDX_TESTNET_SUBMIT_ORDERS=false until research and adapter gates pass
 
 ### P5: learning_event_store
 - Severity: `medium`
@@ -121,11 +107,9 @@ The objective IS spread mean reversion.
 
 | Rank | Gate | Depends On | Blocker | Command/Action |
 |---:|---|---|---|---|
-| 1 | pair_detail_capture_audit | crypto_wizards_live_artifacts | no_nested_execution_ready_history_candidate_detected | run updated browser capture helper on authenticated pair page |
-| 2 | strategy_acceptance | pair_detail_two_leg_execution_history | no_strategy_passes_production_gates | review /Users/gregc/Documents/Codex/TheWiz-publish-20260625/reports/research_unblock_plan.csv and collect the highest-impact missing history/features |
-| 3 | dydx_testnet_readiness | strategy_acceptance | submit_orders_false | keep order submission disabled until research passes and order adapter is injected |
-| 4 | paper_execution_gate | strategy_acceptance;dydx_testnet_readiness | strategy_or_dydx_gate_not_ready | do not submit paper orders yet |
-| 5 | learning_event_store | paper_execution_gate | missing_learning_events | append realized trade outcomes once research-gated paper signals exist |
+| 1 | dydx_testnet_readiness | strategy_acceptance | submit_orders_false | keep order submission disabled until research passes and order adapter is injected |
+| 2 | paper_execution_gate | strategy_acceptance;dydx_testnet_readiness | strategy_or_dydx_gate_not_ready | do not submit paper orders yet |
+| 3 | learning_event_store | paper_execution_gate | missing_learning_events | append realized trade outcomes once research-gated paper signals exist |
 
 ## Operator Commands
 
@@ -140,7 +124,7 @@ The objective IS spread mean reversion.
 - P2 funding CSV template: `PYTHONPATH=src python3 -m quant_platform.cli funding-template --output-path data/processed/dydx_funding_template.csv`
 - P2 funding template check: `PYTHONPATH=src python3 -m quant_platform.cli funding-template-check --input-dir data/processed/dydx_funding_template.csv`
 - P2 import funding template: `PYTHONPATH=src python3 -m quant_platform.cli import-funding-template --input-dir data/processed/dydx_funding_template.csv --output-path data/processed/dydx_funding.csv`
-- P2 fetch dYdX funding: `PYTHONPATH=src python3 -m quant_platform.cli fetch-dydx-funding --market AAVE-USD,ARB-USD,AVAX-USD,BNB-USD,BTC-USD,BTCUSDT-USD,DOGE-USD,ETH-USD,ETHUSDT-USD,LINK-USD,LTC-USD,MATIC-USD,MKR-USD,OP-USD,SOL-USD,SOLUSDT-USD,UNI-USD,XRP-USD`
+- P2 fetch dYdX funding: `PYTHONPATH=src python3 -m quant_platform.cli fetch-dydx-funding --market AAVE-USD,ALGO-USD,APT-USD,ARB-USD,AVAX-USD,BNB-USD,BONK-USD,BTC-USD,DOGE-USD,ETC-USD,ETH-USD,LINK-USD,LTC-USD,MATIC-USD,MKR-USD,OP-USD,PENGU-USD,SOL-USD,UNI-USD,XRP-USD`
 - P2 funding coverage: `PYTHONPATH=src python3 -m quant_platform.cli funding-coverage --funding-path data/processed/dydx_funding.csv`
 - P2 funded research spine: `PYTHONPATH=src python3 -m quant_platform.cli funded-research-spine --funding-path data/processed/dydx_funding.csv`
 - P2 strategy acceptance: `PYTHONPATH=src python3 -m quant_platform.cli strategy-acceptance-checklist`

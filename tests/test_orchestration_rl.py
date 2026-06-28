@@ -98,6 +98,172 @@ def test_orchestrator_assistant_writes_task_cards_and_agent_memory(tmp_path):
     assert "promotion_allowed" in cards_text
 
 
+def test_orchestrator_assistant_records_rl_task_outcomes(tmp_path):
+    agents = tmp_path / "reports" / "agents"
+    agents.mkdir(parents=True, exist_ok=True)
+    rl_reports = tmp_path / "reports" / "rl"
+    rl_reports.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([{"status": "research_only", "blocker": "rl_live_use_blocked", "live_enabled": False, "rows": 2, "features": 6, "policy": "safe_quantile_baseline"}]).to_csv(
+        rl_reports / "rl_training_report.csv",
+        index=False,
+    )
+    pd.DataFrame([{"accepted": True, "blocker": "", "acceptance_reason": "passed", "raw_profit_factor": 1.1, "rl_profit_factor": 1.6, "raw_drawdown": 0.09, "rl_drawdown": 0.08, "rl_trades": 40, "rl_take_rate": 0.2, "pair_concentration": 0.5, "timeframe_concentration": 0.5}]).to_csv(
+        rl_reports / "rl_acceptance_report.csv",
+        index=False,
+    )
+    pd.DataFrame(
+        [
+            {
+                "generated_ideas": 2,
+                "generated_similar_pairs": 1,
+                "policy_type": "safe_quantile_baseline",
+                "blocker": "",
+                "evidence_source": "data/ml/trade_training_dataset.csv",
+                "generated_at": "2026-01-01T00:00:00Z",
+            }
+        ]
+    ).to_csv(agents / "rl_idea_summary.csv", index=False)
+    pd.DataFrame([{"pair": "BTC-USD/ETH-USD", "similar_pair": "SOL-USD/LINK-USD", "similarity_rank": 1}]).to_csv(
+        agents / "rl_pair_similarity.csv",
+        index=False,
+    )
+
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETHUSD-TRUMPUSD",
+                "wizard_exchange": "binance",
+                "readiness_status": "ready_to_fetch",
+                "next_step": "fetch_candles",
+            }
+        ]
+    ).to_csv(active / "multi_venue_history_readiness_2026-06-25.csv", index=False)
+
+    result = build_orchestrator_assistant(root=tmp_path)
+    lines_idea = (tmp_path / "data" / "agent_memory" / "rl_idea_agent.jsonl").read_text(encoding="utf-8").splitlines()
+    lines_sim = (tmp_path / "data" / "agent_memory" / "rl_similarity_agent.jsonl").read_text(encoding="utf-8").splitlines()
+
+    assert any('"outcome_known": true' in line.lower() for line in lines_idea)
+    assert any('"outcome_label": "passed"' in line for line in lines_idea)
+    assert any('"outcome_known": true' in line.lower() for line in lines_sim)
+    assert any('"outcome_label": "validated"' in line for line in lines_sim)
+
+
+def test_mini_agent_queue_uses_agent_effectiveness_to_prioritize(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    agent_reports = tmp_path / "reports" / "agents"
+    agent_reports.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETHUSD-USDLTCUSD",
+                "wizard_exchange": "binance",
+                "readiness_status": "ready_for_replay",
+                "next_step": "fetch replayed venue history",
+            }
+        ]
+    ).to_csv(active / "multi_venue_history_readiness_2026-06-25.csv", index=False)
+    rl_reports = tmp_path / "reports" / "rl"
+    rl_reports.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "status": "research_only",
+                "blocker": "",
+                "live_enabled": False,
+                "rows": 2,
+                "features": 4,
+                "policy": "safe_quantile_baseline",
+            }
+        ]
+    ).to_csv(rl_reports / "rl_training_report.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "accepted": True,
+                "blocker": "",
+                "acceptance_reason": "passed",
+                "raw_profit_factor": 1.1,
+                "rl_profit_factor": 1.4,
+                "raw_drawdown": 0.09,
+                "rl_drawdown": 0.08,
+                "rl_trades": 35,
+                "rl_take_rate": 0.22,
+                "pair_concentration": 0.5,
+                "timeframe_concentration": 0.5,
+            }
+        ]
+    ).to_csv(rl_reports / "rl_acceptance_report.csv", index=False)
+    pd.DataFrame({"agent": ["rl_idea_agent", "venue_evidence_agent"], "effectiveness_score": [0.95, 0.0], "reason": ["good", "low"]}).to_csv(
+        agent_reports / "agent_effectiveness.csv",
+        index=False,
+    )
+
+    result = build_mini_agent_orchestration(root=tmp_path)
+    queue = pd.read_csv(result.paths["next_action_queue"])
+
+    first_task = queue.iloc[0]
+    assert first_task["assigned_agent"] == "rl_idea_agent"
+    assert str(first_task["task_type"]) in {"run_rl_idea_scout", "extract_rl_similarity_candidates"}
+    assert float(first_task["agent_effectiveness"]) > float(queue.iloc[-1]["agent_effectiveness"])
+
+
+def test_orchestrator_assistant_uses_paper_learning_signal_for_rl_outcomes(tmp_path):
+    agents = tmp_path / "reports" / "agents"
+    agents.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "reports" / "agents" / "rl_idea_summary.csv").write_text(
+        "generated_ideas,generated_similar_pairs,policy_type,blocker,evidence_source,generated_at\n2,1,safe_quantile_baseline,,data/ml/trade_training_dataset.csv,2026-01-01T00:00:00Z\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "reports" / "agents" / "rl_pair_similarity.csv").write_text(
+        "idea_seed,pair,timeframe,similar_pair,similar_timeframe,similarity_rank,distance,shared_features,generated_at\n",
+        encoding="utf-8",
+    )
+    rl_reports = tmp_path / "reports" / "rl"
+    rl_reports.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([{"status": "research_only", "blocker": "", "live_enabled": False, "rows": 2, "features": 6, "policy": "safe_quantile_baseline"}]).to_csv(
+        rl_reports / "rl_training_report.csv",
+        index=False,
+    )
+    pd.DataFrame([{"accepted": True, "blocker": "", "acceptance_reason": "passed", "raw_profit_factor": 1.1, "rl_profit_factor": 1.6, "raw_drawdown": 0.09, "rl_drawdown": 0.08, "rl_trades": 40, "rl_take_rate": 0.2, "pair_concentration": 0.5, "timeframe_concentration": 0.5}]).to_csv(
+        rl_reports / "rl_acceptance_report.csv",
+        index=False,
+    )
+
+    trade_store = tmp_path / "data" / "meta_learning" / "trades.jsonl"
+    trade_store.parent.mkdir(parents=True)
+    trade_store.write_text(
+        "\n".join(
+            [
+                "{\"trade_id\":\"1\",\"timestamp\":\"2026-01-01T00:00:00Z\",\"pair\":\"BTC\",\"strategy\":\"rl\",\"regime\":\"\",\"features\":{},\"signal\":{},\"execution\":{},\"outcome\":{\"realized_return\": 0.5}}",
+                "{\"trade_id\":\"2\",\"timestamp\":\"2026-01-01T00:00:00Z\",\"pair\":\"BTC\",\"strategy\":\"rl\",\"regime\":\"\",\"features\":{},\"signal\":{},\"execution\":{},\"outcome\":{\"realized_return\": 0.4}}",
+                "{\"trade_id\":\"3\",\"timestamp\":\"2026-01-01T00:00:00Z\",\"pair\":\"BTC\",\"strategy\":\"rl\",\"regime\":\"\",\"features\":{},\"signal\":{},\"execution\":{},\"outcome\":{\"realized_return\": -0.1}}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETHUSD-TRUMPUSD",
+                "wizard_exchange": "binance",
+                "readiness_status": "ready_for_replay",
+                "next_step": "fetch replay history",
+            }
+        ]
+    ).to_csv(active / "multi_venue_history_readiness_2026-06-25.csv", index=False)
+
+    build_orchestrator_assistant(root=tmp_path)
+    lines = (tmp_path / "data" / "agent_memory" / "rl_idea_agent.jsonl").read_text(encoding="utf-8").splitlines()
+    assert any("rl_idea_task_generated:2;paper_profit_ratio=0.6667" in line for line in lines)
+
+
 def test_specialist_scoreboard_covers_exact_mode_families_without_promotion(tmp_path):
     processed = tmp_path / "data" / "processed"
     active = tmp_path / "reports" / "active"

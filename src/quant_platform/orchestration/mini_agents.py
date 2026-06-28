@@ -63,6 +63,14 @@ MINI_AGENTS: tuple[MiniAgentSpec, ...] = (
         next_action_type="run_rl_idea_scout_or_similarity_search",
     ),
     MiniAgentSpec(
+        agent="rl_similarity_agent",
+        purpose="Refine RL candidate space by generating and validating similar-pair candidate sets for review.",
+        input_reports="reports/agents/rl_ideas.csv;reports/agents/rl_idea_summary.csv;data/ml/trade_training_dataset.csv",
+        output_reports="reports/agents/rl_pair_similarity.csv",
+        promotion_authority="none_rl_hint_only",
+        next_action_type="extract_rl_similarity_candidates",
+    ),
+    MiniAgentSpec(
         agent="cost_risk_agent",
         purpose="Evaluate fees, slippage, funding, execution-risk cost, drawdown, trade count, net return, and break-even cost headroom.",
         input_reports="reports/active/*after_cost.csv;reports/active/*cost_comparison.csv;reports/active/binance_exact_mode_strategy_sweep_2026-06-25.csv",
@@ -93,7 +101,8 @@ def build_mini_agent_orchestration(root: Path = ROOT) -> CommandResult:
     output_dir = root / AGENT_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
     registry = _agent_registry_frame(root)
-    queue = _next_action_queue(root)
+    effectiveness = _agent_effectiveness(root)
+    queue = _next_action_queue(root, effectiveness=effectiveness)
     registry_path = output_dir / "mini_agent_registry.csv"
     queue_path = output_dir / "next_action_queue.csv"
     summary_path = output_dir / "mini_agent_orchestration.md"
@@ -134,7 +143,8 @@ def _agent_registry_frame(root: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _next_action_queue(root: Path) -> pd.DataFrame:
+def _next_action_queue(root: Path, *, effectiveness: dict[str, float] | None = None) -> pd.DataFrame:
+    effectiveness = effectiveness or {}
     rows: list[dict[str, object]] = []
     rows.extend(_wizard_capture_tasks(root))
     rows.extend(_venue_history_tasks(root))
@@ -155,10 +165,18 @@ def _next_action_queue(root: Path) -> pd.DataFrame:
             }
         )
     frame = pd.DataFrame(rows)
-    priority_order = {"high": 0, "medium": 1, "low": 2}
-    frame["_priority_rank"] = frame["priority"].map(priority_order).fillna(9)
-    frame = frame.sort_values(["_priority_rank", "assigned_agent", "pair"]).drop(columns=["_priority_rank"]).reset_index(drop=True)
+    priority_order = {"high": 0.0, "medium": 1.0, "low": 2.0}
+    frame["_base_priority"] = frame["priority"].map(priority_order).fillna(9.0)
+    frame["_effectiveness"] = frame["assigned_agent"].map(effectiveness).fillna(0.0)
+    frame["_effective_rank"] = _effective_rank(frame["_base_priority"], frame["_effectiveness"]).round(4)
+    frame = (
+        frame.sort_values(["_effective_rank", "assigned_agent", "pair"])
+        .drop(columns=["_base_priority", "_effectiveness"])
+        .reset_index(drop=True)
+    )
     frame.insert(0, "rank", range(1, len(frame) + 1))
+    frame["agent_effectiveness"] = frame["assigned_agent"].map(effectiveness).fillna(0.0)
+    frame = frame.drop(columns=["_effective_rank"])
     return frame
 
 
@@ -227,13 +245,22 @@ def _rl_tasks(root: Path) -> list[dict[str, object]]:
     return [
         _task(
             assigned_agent="rl_idea_agent",
+            task_type="run_rl_idea_scout",
+            pair="",
+            reason="refresh_rl_ideas_from_recent_research",
+            priority="medium",
+            evidence_path=training_path,
+            next_step="run RL idea scout to update candidate hypotheses and evidence",
+        ),
+        _task(
+            assigned_agent="rl_similarity_agent",
             task_type="extract_rl_similarity_candidates",
             pair="",
             reason="rl_research_reports_available",
             priority="medium",
             evidence_path=training_path,
             next_step="extract RL fingerprints and search for similar pairs",
-        )
+        ),
     ]
 
 
@@ -308,6 +335,26 @@ def _rel(path: Path) -> str:
         return path.relative_to(ROOT).as_posix()
     except ValueError:
         return str(path)
+
+
+def _agent_effectiveness(root: Path) -> dict[str, float]:
+    path = root / "reports" / "agents" / "agent_effectiveness.csv"
+    if not path.exists():
+        return {}
+    frame = _read_csv(path)
+    if frame.empty or "agent" not in frame.columns or "effectiveness_score" not in frame.columns:
+        return {}
+    scores = pd.to_numeric(frame["effectiveness_score"], errors="coerce").fillna(0.0)
+    return {
+        str(agent): float(max(0.0, min(1.0, score)))
+        for agent, score in zip(frame["agent"].astype(str), scores, strict=False)
+        if agent
+    }
+
+
+def _effective_rank(base_priority: pd.Series, effectiveness: pd.Series) -> pd.Series:
+    bounded = effectiveness.clip(lower=0.0, upper=1.0)
+    return base_priority - 0.65 * bounded
 
 
 def _summary_markdown(registry: pd.DataFrame, queue: pd.DataFrame) -> str:
