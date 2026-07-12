@@ -1,0 +1,331 @@
+{
+  "agents": {
+    "brand_strategist": {
+      "audience": [
+        "sneaker collectors",
+        "streetwear shoppers",
+        "hip hop nostalgia fans",
+        "drop hunters",
+        "artist-collab buyers"
+      ],
+      "insights": [
+        "Do not frame the store as a catalog; make product discovery feel like pressing play on a cultural artifact.",
+        "Use neighborhoods as collection gateways so sneakers, apparel, collaborations, media, and events each have a memorable place.",
+        "Treat every collection as a mixtape with track-style sequencing, drops, hidden bonuses, and story-led product copy."
+      ],
+      "mission": "Turn The Ave into a shoppable hip hop culture world.",
+      "positioning": "A culture-first Shopify storefront led by a 35-year hip hop clothing and footwear executive: part sneaker boutique, part mixtape archive, part interactive drop room.",
+      "success_metric": "Visitors understand the culture-first concept before seeing a normal product grid.",
+      "tagline": "Press Play. Discover the Culture."
+    },
+    "commerce_architect": {
+      "merchitecture": [
+        {
+          "lane": "Lead Singles",
+          "role": "new sneaker and apparel drops with countdown energy"
+        },
+        {
+          "lane": "Deep Cuts",
+          "role": "evergreen essentials that keep conversion steady"
+        },
+        {
+          "lane": "Features",
+          "role": "artist, designer, DJ, and local-culture collaborations"
+        },
+        {
+          "lane": "Hidden Tracks",
+          "role": "limited products revealed by codes, murals, and email/SMS clues"
+        }
+      ],
+      "purchase_flow": [
+        "hotspot click opens quick-look track card",
+        "track card shows lore, sizes, scarcity, and add-to-cart",
+        "full product page gives record-player animation and deeper story",
+        "cart keeps the mixtape theme while preserving standard checkout trust"
+      ],
+      "retention_loops": [
+        "weekly hidden track",
+        "artist collab mural unlock",
+        "drop countdown in Block Party",
+        "collector badges for customers who complete a mixtape bundle"
+      ],
+      "shopify_structure": {
+        "collections": "Mixtapes",
+        "metafields": [
+          "lore",
+          "sound_cue",
+          "scene_object",
+          "unlock_condition",
+          "era_reference"
+        ],
+        "products": "Tracks",
+        "tags": [
+          "zone",
+          "era",
+          "drop",
+          "artist",
+          "rarity",
+          "sound"
+        ]
+      }
+    },
+    "content_lore_designer": {
+      "launch_campaign": [
+        "Side A: tease the cassette and first five zone names across social and email.",
+        "Side B: reveal the Sneaker District lead single with a playable product card.",
+        "Bonus Track: release a password-protected hidden product through mural clues."
+      ],
+      "media": [
+        "short loop per zone",
+        "ambient city sound bed",
+        "artist interview snippets",
+        "drop teaser clips"
+      ],
+      "product_lore_template": {
+        "detail": "One real material or construction fact woven into the story",
+        "era": "The music, sneaker, or streetwear memory it nods to",
+        "origin": "Where in the city this piece was born",
+        "use_case": "When the customer wears it"
+      },
+      "sample_track": {
+        "copy": "Built for the ride home after midnight battles: clean leather, city miles, and a sole that keeps moving.",
+        "title": "Track 01: Late Train Low"
+      },
+      "voice": "cinematic, street-level, specific, never generic product-spec filler"
+    },
+    "experience_architect": {
+      "accessibility_note": "Every animated hotspot also appears in keyboard-accessible navigation and search.",
+      "entry_scene": "Cassette lands, PLAY button pulses, tape spins, CRT texture flickers, then the city opens.",
+      "interaction_rules": [
+        "Pressing PLAY starts the visual journey, not audio autoplay.",
+        "Hover, tap, keyboard focus, and search all reveal the same products.",
+        "Each zone has one hero drop, one evergreen collection, and one hidden track."
+      ],
+      "navigation_model": "Explorable city first, conventional collection/product fallbacks always available.",
+      "world_map": [
+        {
+          "commerce": "shoe drops",
+          "objects": [
+            "basketball court",
+            "sneaker shop",
+            "subway stop"
+          ],
+          "zone": "Sneaker District"
+        },
+        {
+          "commerce": "apparel",
+          "objects": [
+            "vintage racks",
+            "hoodie wall",
+            "hat kiosk"
+          ],
+          "zone": "Fashion Avenue"
+        },
+        {
+          "commerce": "accessories and bundles",
+          "objects": [
+            "MPC",
+            "turntables",
+            "vinyl bins"
+          ],
+          "zone": "Producer Alley"
+        },
+        {
+          "commerce": "collabs and hidden drops",
+          "objects": [
+            "murals",
+            "spray cans",
+            "artist tags"
+          ],
+          "zone": "Graffiti Tunnel"
+        },
+        {
+          "commerce": "new releases and events",
+          "objects": [
+            "stage",
+            "video wall",
+            "crowd circle"
+          ],
+          "zone": "Block Party"
+        }
+      ]
+    },
+    "qa_critic": {
+      "guardrails": [
+        "Persistent search, cart, and zone menu on every screen.",
+        "No autoplay audio; use explicit PLAY and visible mute.",
+        "Every hotspot has a normal link equivalent.",
+        "Measure add-to-cart rate by zone, product, and hotspot."
+      ],
+      "risks": [
+        "Animation can slow shopping if product access is buried.",
+        "Audio can feel intrusive unless it starts muted with clear controls.",
+        "Hidden drops can frustrate shoppers if core inventory is hard to find.",
+        "Shopify content operations can get messy without strict metafield templates."
+      ]
+    },
+    "synthesizer": {
+      "decision": "Ship an immersive Shopify storefront with conventional commerce fallbacks and measured drop mechanics.",
+      "role": "Merge brand, experience, commerce, content, technical, and QA recommendations into the launch-ready answer."
+    },
+    "technical_planner": {
+      "analytics_events": [
+        "play_pressed",
+        "zone_entered",
+        "hotspot_opened",
+        "track_quick_add",
+        "hidden_track_unlocked",
+        "mixtape_bundle_started",
+        "checkout_started"
+      ],
+      "data_model": [
+        "Zone metaobject: name, art, ambient sound, collection handle",
+        "Hotspot metaobject: coordinates, object type, linked product or mixtape, unlock condition",
+        "Mixtape collection: title, era, cover art, track order",
+        "Track product: lore, sound cue, scene object, rarity, Shopify product reference"
+      ],
+      "implementation_phases": [
+        "Define the brand bible, zone map, mixtape taxonomy, and Shopify metafield schema.",
+        "Prototype the city map with 5 zones, sample products, and keyboard-accessible hotspots.",
+        "Connect Storefront API carts, product variants, collection filters, and checkout.",
+        "Add the lore/metafield publishing workflow for drops, collaborations, and hidden tracks.",
+        "Layer animation, explicit sound controls, reduced-motion mode, and unlockable Easter eggs.",
+        "Run conversion QA, mobile QA, accessibility QA, analytics tagging, and launch rehearsal."
+      ],
+      "recommended_stack": [
+        "Shopify Hydrogen for the immersive storefront",
+        "Shopify Storefront API for products, carts, and collections",
+        "Metaobjects/metafields for lore, hotspots, zones, and unlock rules",
+        "Canvas or lightweight WebGL for the city map",
+        "CSS motion with reduced-motion fallbacks for product moments"
+      ]
+    }
+  },
+  "brand_name": "The Ave",
+  "brief": "The Ave is a hip hop virtual retail world where stores inside the world can connect their own Shopify storefronts for products, carts, and checkout.",
+  "markdown": "# The Ave LangGraph Agent Workflow\n\nGenerated: 2026-07-11T16:27:13.492586+00:00\nPlatform target: Virtual retail world with Shopify-connected stores\n\n## Workflow\n\nbrief -> brand strategist -> experience architect -> commerce architect -> content/lore designer -> technical planner -> QA critic -> synthesizer\n\n## Solution\n\nThe Ave is a shoppable hip hop city where every collection is a mixtape and every product is a track.\n\n## Positioning\n\nA culture-first Shopify storefront led by a 35-year hip hop clothing and footwear executive: part sneaker boutique, part mixtape archive, part interactive drop room.\n\n## First Screen\n\nCassette lands, PLAY button pulses, tape spins, CRT texture flickers, then the city opens.\n\n## Interactive City Zones\n\n- Sneaker District: shoe drops through basketball court, sneaker shop, subway stop.\n- Fashion Avenue: apparel through vintage racks, hoodie wall, hat kiosk.\n- Producer Alley: accessories and bundles through MPC, turntables, vinyl bins.\n- Graffiti Tunnel: collabs and hidden drops through murals, spray cans, artist tags.\n- Block Party: new releases and events through stage, video wall, crowd circle.\n\n## Shopify Build Model\n\n- collections: Mixtapes\n- products: Tracks\n- tags: ['zone', 'era', 'drop', 'artist', 'rarity', 'sound']\n- metafields: ['lore', 'sound_cue', 'scene_object', 'unlock_condition', 'era_reference']\n\n## Merchitecture\n\n- Lead Singles: new sneaker and apparel drops with countdown energy.\n- Deep Cuts: evergreen essentials that keep conversion steady.\n- Features: artist, designer, DJ, and local-culture collaborations.\n- Hidden Tracks: limited products revealed by codes, murals, and email/SMS clues.\n\n## Launch Campaign\n\n- Side A: tease the cassette and first five zone names across social and email.\n- Side B: reveal the Sneaker District lead single with a playable product card.\n- Bonus Track: release a password-protected hidden product through mural clues.\n\n## Analytics Events\n\n- play_pressed\n- zone_entered\n- hotspot_opened\n- track_quick_add\n- hidden_track_unlocked\n- mixtape_bundle_started\n- checkout_started\n\n## Implementation Phases\n\n1. Define the brand bible, zone map, mixtape taxonomy, and Shopify metafield schema.\n2. Prototype the city map with 5 zones, sample products, and keyboard-accessible hotspots.\n3. Connect Storefront API carts, product variants, collection filters, and checkout.\n4. Add the lore/metafield publishing workflow for drops, collaborations, and hidden tracks.\n5. Layer animation, explicit sound controls, reduced-motion mode, and unlockable Easter eggs.\n6. Run conversion QA, mobile QA, accessibility QA, analytics tagging, and launch rehearsal.\n\n## Guardrails\n\n- Persistent search, cart, and zone menu on every screen.\n- No autoplay audio; use explicit PLAY and visible mute.\n- Every hotspot has a normal link equivalent.\n- Measure add-to-cart rate by zone, product, and hotspot.\n\n## Sample Product Lore\n\n**Track 01: Late Train Low**\n\nBuilt for the ride home after midnight battles: clean leather, city miles, and a sole that keeps moving.\n",
+  "risks": [
+    "Animation can slow shopping if product access is buried.",
+    "Audio can feel intrusive unless it starts muted with clear controls.",
+    "Hidden drops can frustrate shoppers if core inventory is hard to find.",
+    "Shopify content operations can get messy without strict metafield templates."
+  ],
+  "solution": {
+    "analytics_events": [
+      "play_pressed",
+      "zone_entered",
+      "hotspot_opened",
+      "track_quick_add",
+      "hidden_track_unlocked",
+      "mixtape_bundle_started",
+      "checkout_started"
+    ],
+    "commerce_model": {
+      "collections": "Mixtapes",
+      "metafields": [
+        "lore",
+        "sound_cue",
+        "scene_object",
+        "unlock_condition",
+        "era_reference"
+      ],
+      "products": "Tracks",
+      "tags": [
+        "zone",
+        "era",
+        "drop",
+        "artist",
+        "rarity",
+        "sound"
+      ]
+    },
+    "concept": "The Ave is a shoppable hip hop city where every collection is a mixtape and every product is a track.",
+    "core_zones": [
+      {
+        "commerce": "shoe drops",
+        "objects": [
+          "basketball court",
+          "sneaker shop",
+          "subway stop"
+        ],
+        "zone": "Sneaker District"
+      },
+      {
+        "commerce": "apparel",
+        "objects": [
+          "vintage racks",
+          "hoodie wall",
+          "hat kiosk"
+        ],
+        "zone": "Fashion Avenue"
+      },
+      {
+        "commerce": "accessories and bundles",
+        "objects": [
+          "MPC",
+          "turntables",
+          "vinyl bins"
+        ],
+        "zone": "Producer Alley"
+      },
+      {
+        "commerce": "collabs and hidden drops",
+        "objects": [
+          "murals",
+          "spray cans",
+          "artist tags"
+        ],
+        "zone": "Graffiti Tunnel"
+      },
+      {
+        "commerce": "new releases and events",
+        "objects": [
+          "stage",
+          "video wall",
+          "crowd circle"
+        ],
+        "zone": "Block Party"
+      }
+    ],
+    "implementation_phases": [
+      "Define the brand bible, zone map, mixtape taxonomy, and Shopify metafield schema.",
+      "Prototype the city map with 5 zones, sample products, and keyboard-accessible hotspots.",
+      "Connect Storefront API carts, product variants, collection filters, and checkout.",
+      "Add the lore/metafield publishing workflow for drops, collaborations, and hidden tracks.",
+      "Layer animation, explicit sound controls, reduced-motion mode, and unlockable Easter eggs.",
+      "Run conversion QA, mobile QA, accessibility QA, analytics tagging, and launch rehearsal."
+    ],
+    "launch_campaign": [
+      "Side A: tease the cassette and first five zone names across social and email.",
+      "Side B: reveal the Sneaker District lead single with a playable product card.",
+      "Bonus Track: release a password-protected hidden product through mural clues."
+    ],
+    "merchitecture": [
+      {
+        "lane": "Lead Singles",
+        "role": "new sneaker and apparel drops with countdown energy"
+      },
+      {
+        "lane": "Deep Cuts",
+        "role": "evergreen essentials that keep conversion steady"
+      },
+      {
+        "lane": "Features",
+        "role": "artist, designer, DJ, and local-culture collaborations"
+      },
+      {
+        "lane": "Hidden Tracks",
+        "role": "limited products revealed by codes, murals, and email/SMS clues"
+      }
+    ],
+    "must_have_controls": [
+      "Persistent search, cart, and zone menu on every screen.",
+      "No autoplay audio; use explicit PLAY and visible mute.",
+      "Every hotspot has a normal link equivalent.",
+      "Measure add-to-cart rate by zone, product, and hotspot."
+    ],
+    "positioning": "A culture-first Shopify storefront led by a 35-year hip hop clothing and footwear executive: part sneaker boutique, part mixtape archive, part interactive drop room.",
+    "primary_experience": "Cassette lands, PLAY button pulses, tape spins, CRT texture flickers, then the city opens."
+  },
+  "target_platform": "Virtual retail world with Shopify-connected stores"
+}

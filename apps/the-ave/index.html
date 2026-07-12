@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="The Ave is a hip hop virtual retail world where stores can connect their own Shopify storefronts."
+    />
+    <title>The Ave | Virtual Retail World</title>
+    <link rel="stylesheet" href="./styles.css?v=1" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="The Ave virtual retail world">
+      <section class="world-stage" aria-label="The Ave world scene">
+        <canvas id="worldCanvas" class="world-canvas" aria-hidden="true"></canvas>
+
+        <div class="atmosphere" aria-hidden="true">
+          <span class="particle particle-a"></span>
+          <span class="particle particle-b"></span>
+          <span class="particle particle-c"></span>
+          <span class="particle particle-d"></span>
+          <span class="particle particle-e"></span>
+        </div>
+
+        <header class="topbar" aria-label="World controls">
+          <button class="icon-button" id="mapButton" type="button" aria-label="Open zone map" disabled>
+            Map
+          </button>
+          <button
+            class="icon-button"
+            id="directoryButton"
+            type="button"
+            aria-label="Open store directory"
+            disabled
+          >
+            Stores
+          </button>
+          <button class="icon-button" id="muteButton" type="button" aria-label="Toggle sound" disabled>
+            Sound Off
+          </button>
+        </header>
+
+        <section class="intro-panel" id="introPanel" aria-labelledby="heroTitle">
+          <p class="kicker">Virtual retail world</p>
+          <h1 id="heroTitle">THE AVE</h1>
+          <p class="intro-copy">
+            A culture city where sneaker stores, apparel rooms, collab walls, and hidden drops
+            connect to each merchant's own Shopify storefront.
+          </p>
+          <button class="play-button" id="playButton" type="button">Press Play</button>
+        </section>
+
+        <section class="zone-layer" id="zoneLayer" aria-label="The Ave zones" hidden>
+          <button class="zone-hotspot sneaker" type="button" data-zone="sneaker">
+            <span>Sneaker District</span>
+          </button>
+          <button class="zone-hotspot fashion" type="button" data-zone="fashion">
+            <span>Fashion Avenue</span>
+          </button>
+          <button class="zone-hotspot producer" type="button" data-zone="producer">
+            <span>Producer Alley</span>
+          </button>
+          <button class="zone-hotspot graffiti" type="button" data-zone="graffiti">
+            <span>Graffiti Tunnel</span>
+          </button>
+          <button class="zone-hotspot block" type="button" data-zone="block">
+            <span>Block Party</span>
+          </button>
+        </section>
+
+        <aside
+          class="panel zone-panel"
+          id="zonePanel"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="zoneTitle"
+          aria-live="polite"
+          tabindex="-1"
+          hidden
+        >
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow" id="zoneEyebrow">Zone</p>
+              <h2 id="zoneTitle">Sneaker District</h2>
+            </div>
+            <button class="close-button" id="closeZoneButton" type="button" aria-label="Close zone">
+              Close
+            </button>
+          </div>
+          <p id="zoneDescription"></p>
+          <div class="store-list" id="storeList"></div>
+        </aside>
+
+        <aside
+          class="panel store-panel"
+          id="storePanel"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="storeTitle"
+          aria-live="polite"
+          tabindex="-1"
+          hidden
+        >
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow" id="storeEyebrow">Connected store</p>
+              <h2 id="storeTitle">Shoe Store #1</h2>
+            </div>
+            <button class="close-button" id="closeStoreButton" type="button" aria-label="Close store">
+              Close
+            </button>
+          </div>
+          <p id="storeDescription"></p>
+          <div class="shopify-status" id="shopifyStatus">Shopify connection mocked for Version 1</div>
+          <div class="commerce-meta" id="commerceMeta"></div>
+          <div class="product-grid" id="productGrid"></div>
+        </aside>
+
+        <aside
+          class="panel product-panel"
+          id="productPanel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="productTitle"
+          aria-live="polite"
+          tabindex="-1"
+          hidden
+        >
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow" id="productStore">Shoe Store #1</p>
+              <h2 id="productTitle">Product</h2>
+            </div>
+            <button class="close-button" id="closeProductButton" type="button" aria-label="Close product">
+              Close
+            </button>
+          </div>
+          <div class="product-detail">
+            <div class="product-art" id="productArt" aria-hidden="true"></div>
+            <div>
+              <p class="product-price" id="productPrice"></p>
+              <p id="productLore"></p>
+              <fieldset class="size-picker">
+                <legend>Size</legend>
+                <div id="sizeOptions"></div>
+              </fieldset>
+              <button class="cart-button" id="mockCartButton" type="button">
+                Mock Add To Cart
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <nav class="fallback-nav" aria-label="Accessible zone navigation">
+          <a href="#sneaker" data-zone-link="sneaker">Sneaker District</a>
+          <a href="#fashion" data-zone-link="fashion">Fashion Avenue</a>
+          <a href="#producer" data-zone-link="producer">Producer Alley</a>
+          <a href="#graffiti" data-zone-link="graffiti">Graffiti Tunnel</a>
+          <a href="#block" data-zone-link="block">Block Party</a>
+        </nav>
+      </section>
+    </main>
+    <script src="./data.js?v=6"></script>
+    <script src="./script.js?v=6"></script>
+  </body>
+</html>
