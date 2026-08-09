@@ -42,15 +42,27 @@ class StrategySpec:
 
 def zscore_signal(frame: pd.DataFrame, entry: float = 2.0, exit_: float = 0.25) -> pd.Series:
     z = _coalesced_zscore(frame)
-    signal = pd.Series(0.0, index=frame.index, dtype="float64")
-    signal = signal.mask(z > entry, -1.0)
-    signal = signal.mask(z < -entry, 1.0)
-    signal = signal.mask(z.abs() < exit_, 0.0)
-    return signal.replace(0.0, np.nan).ffill().fillna(0.0)
+    return _stateful(_base_zscore_direction(frame, entry=entry), z.abs() < exit_)
 
 
-def _stateful(signal: pd.Series) -> pd.Series:
-    return signal.replace(0.0, np.nan).ffill().fillna(0.0)
+def _stateful(entry_signal: pd.Series, exit_mask: pd.Series) -> pd.Series:
+    """Hold entries until an explicit exit while keeping reversals non-overlapping."""
+
+    entries = pd.to_numeric(entry_signal, errors="coerce").fillna(0.0)
+    exits = exit_mask.reindex(entries.index).fillna(False).astype(bool)
+    result = pd.Series(0.0, index=entries.index, dtype="float64")
+    state = 0.0
+    for position, (entry, should_exit) in enumerate(zip(entries.to_numpy(), exits.to_numpy())):
+        proposed = float(np.sign(entry)) if entry else 0.0
+        if state == 0.0:
+            if proposed != 0.0 and not should_exit:
+                state = proposed
+        elif should_exit or (proposed != 0.0 and proposed != state):
+            # A reversal first closes the existing trade. If the opposite entry
+            # persists, it opens on the next bar, avoiding overlapping costs.
+            state = 0.0
+        result.iloc[position] = state
+    return result
 
 
 def _numeric(frame: pd.DataFrame, column: str, default: float = 0.0) -> pd.Series:
@@ -68,48 +80,65 @@ def _base_zscore_direction(frame: pd.DataFrame, entry: float = 2.0, exit_: float
     return signal
 
 
-def copula_signal(frame: pd.DataFrame, threshold: float = 0.20) -> pd.Series:
-    distortion = frame["conditional_probability_distortion"].astype(float)
-    signal = pd.Series(0.0, index=frame.index)
+def _stateful_zscore_entry(
+    frame: pd.DataFrame,
+    entry_signal: pd.Series,
+    *,
+    exit_: float = 0.25,
+) -> pd.Series:
+    return _stateful(entry_signal, _strategy_zscore(frame).abs() < exit_)
+
+
+def _copula_entry_direction(distortion: pd.Series, threshold: float) -> pd.Series:
+    signal = pd.Series(0.0, index=distortion.index, dtype="float64")
     signal[distortion > threshold] = -1.0
     signal[distortion < -threshold] = 1.0
-    return signal.replace(0.0, np.nan).ffill().fillna(0.0)
+    return signal
+
+
+def copula_signal(frame: pd.DataFrame, threshold: float = 0.20) -> pd.Series:
+    distortion = _numeric(frame, "conditional_probability_distortion")
+    return _stateful(
+        _copula_entry_direction(distortion, threshold),
+        distortion.abs() <= threshold * 0.25,
+    )
 
 
 def zscore_ecm_signal(frame: pd.DataFrame) -> pd.Series:
     ecm_strength = _numeric(frame, "ecm_strength")
-    return _stateful(_base_zscore_direction(frame).where(ecm_strength >= 0.5, 0.0))
+    entry_signal = _base_zscore_direction(frame).where(ecm_strength >= 0.5, 0.0)
+    return _stateful_zscore_entry(frame, entry_signal)
 
 
 def zscore_copula_signal(frame: pd.DataFrame) -> pd.Series:
     z_signal = _base_zscore_direction(frame)
     copula = _numeric(frame, "conditional_probability_distortion")
-    copula_signal_raw = pd.Series(0.0, index=frame.index)
-    copula_signal_raw[copula > 0.20] = -1.0
-    copula_signal_raw[copula < -0.20] = 1.0
-    return _stateful(z_signal.where(z_signal == copula_signal_raw, 0.0))
+    copula_signal_raw = _copula_entry_direction(copula, 0.20)
+    entry_signal = z_signal.where(z_signal == copula_signal_raw, 0.0)
+    exit_mask = (_strategy_zscore(frame).abs() < 0.25) | (copula.abs() <= 0.05)
+    return _stateful(entry_signal, exit_mask)
 
 
 def ecm_copula_zscore_signal(frame: pd.DataFrame) -> pd.Series:
     ecm_strength = _numeric(frame, "ecm_strength")
-    return _stateful(zscore_copula_signal(frame).where(ecm_strength >= 0.5, 0.0))
+    entry_signal = _base_zscore_direction(frame).where(ecm_strength >= 0.5, 0.0)
+    copula = _numeric(frame, "conditional_probability_distortion")
+    copula_entry = _copula_entry_direction(copula, 0.20)
+    entry_signal = entry_signal.where(entry_signal == copula_entry, 0.0)
+    exit_mask = (_strategy_zscore(frame).abs() < 0.25) | (copula.abs() <= 0.05)
+    return _stateful(entry_signal, exit_mask)
 
 
 def dual_conditional_copula_signal(frame: pd.DataFrame) -> pd.Series:
     spread = _numeric(frame, "u1_given_u2") - _numeric(frame, "u2_given_u1")
-    signal = pd.Series(0.0, index=frame.index)
-    signal[spread > 0.25] = -1.0
-    signal[spread < -0.25] = 1.0
-    return _stateful(signal)
+    return _stateful(_copula_entry_direction(spread, 0.25), spread.abs() <= 0.05)
 
 
 def tail_event_reversion_signal(frame: pd.DataFrame) -> pd.Series:
     distortion = _numeric(frame, "conditional_probability_distortion")
     tail = _numeric(frame, "tail_dependence", 0.5)
-    signal = pd.Series(0.0, index=frame.index)
-    signal[(distortion > 0.30) & (tail < 0.65)] = -1.0
-    signal[(distortion < -0.30) & (tail < 0.65)] = 1.0
-    return _stateful(signal)
+    signal = _copula_entry_direction(distortion, 0.30).where(tail < 0.65, 0.0)
+    return _stateful(signal, distortion.abs() <= 0.075)
 
 
 def pure_ecm_signal(frame: pd.DataFrame) -> pd.Series:
@@ -118,7 +147,7 @@ def pure_ecm_signal(frame: pd.DataFrame) -> pd.Series:
     signal = pd.Series(0.0, index=frame.index)
     signal[(adjustment_gap > 0.10) & (strength >= 0.5)] = 1.0
     signal[(adjustment_gap < -0.10) & (strength >= 0.5)] = -1.0
-    return _stateful(signal)
+    return _stateful(signal, adjustment_gap.abs() <= 0.025)
 
 
 def ecm_leadership_signal(frame: pd.DataFrame) -> pd.Series:
@@ -128,7 +157,10 @@ def ecm_leadership_signal(frame: pd.DataFrame) -> pd.Series:
     signal = pd.Series(0.0, index=frame.index)
     signal[(x.abs() > y.abs() * 1.5) & (strength >= 0.45)] = 1.0
     signal[(y.abs() > x.abs() * 1.5) & (strength >= 0.45)] = -1.0
-    return _stateful(signal)
+    balanced = ~(
+        (x.abs() > y.abs() * 1.10) | (y.abs() > x.abs() * 1.10)
+    )
+    return _stateful(signal, balanced | (strength < 0.25))
 
 
 def half_life_optimized_signal(frame: pd.DataFrame) -> pd.Series:
@@ -139,34 +171,46 @@ def half_life_optimized_signal(frame: pd.DataFrame) -> pd.Series:
     signal[z > dynamic_entry] = -1.0
     signal[z < -dynamic_entry] = 1.0
     signal[z.abs() < 0.25] = 0.0
-    return _stateful(signal)
+    return _stateful(signal, z.abs() < 0.25)
 
 
 def hurst_filter_signal(frame: pd.DataFrame) -> pd.Series:
     hurst = _numeric(frame, "hurst", 0.5)
-    return _stateful(_base_zscore_direction(frame).where(hurst < 0.45, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame).where(hurst < 0.45, 0.0)
+    )
 
 
 def hurst_half_life_signal(frame: pd.DataFrame) -> pd.Series:
     hurst = _numeric(frame, "hurst", 0.5)
     half_life = _numeric(frame, "half_life", 999.0)
     tradable_decay = half_life.between(2, 48)
-    return _stateful(_base_zscore_direction(frame).where((hurst < 0.45) & tradable_decay, 0.0))
+    return _stateful_zscore_entry(
+        frame,
+        _base_zscore_direction(frame).where((hurst < 0.45) & tradable_decay, 0.0),
+    )
 
 
 def ou_optimal_signal(frame: pd.DataFrame) -> pd.Series:
     ou = _numeric(frame, "ou_optimal", 0.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(ou >= 0.55, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(ou >= 0.55, 0.0)
+    )
 
 
 def ml_confidence_signal(frame: pd.DataFrame) -> pd.Series:
     confidence = _numeric(frame, "ml_confidence", 0.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(confidence >= 0.60, 0.0))
+    return _stateful_zscore_entry(
+        frame,
+        _base_zscore_direction(frame, entry=1.5).where(confidence >= 0.60, 0.0),
+    )
 
 
 def profile_match_signal(frame: pd.DataFrame) -> pd.Series:
     profile = _numeric(frame, "profile_match", 0.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(profile >= 0.60, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(profile >= 0.60, 0.0)
+    )
 
 
 def proprietary_stack_signal(frame: pd.DataFrame) -> pd.Series:
@@ -175,12 +219,16 @@ def proprietary_stack_signal(frame: pd.DataFrame) -> pd.Series:
         + _numeric(frame, "profile_match", 0.0)
         + _numeric(frame, "ou_optimal", 0.0)
     ) / 3.0
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(score >= 0.60, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(score >= 0.60, 0.0)
+    )
 
 
 def composite_quant_score_signal(frame: pd.DataFrame) -> pd.Series:
     score = _numeric(frame, "composite_score", 0.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(score >= 70.0, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(score >= 70.0, 0.0)
+    )
 
 
 def weighted_voting_signal(frame: pd.DataFrame) -> pd.Series:
@@ -189,7 +237,9 @@ def weighted_voting_signal(frame: pd.DataFrame) -> pd.Series:
         + (_numeric(frame, "ecm_score", 0.0) >= 60).astype(int)
         + (_numeric(frame, "copula_dislocation_score", 0.0) >= 60).astype(int)
     )
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(votes >= 2, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(votes >= 2, 0.0)
+    )
 
 
 def dynamic_threshold_signal(frame: pd.DataFrame) -> pd.Series:
@@ -204,24 +254,30 @@ def dynamic_threshold_signal(frame: pd.DataFrame) -> pd.Series:
     signal[z > entry] = -1.0
     signal[z < -entry] = 1.0
     signal[z.abs() < 0.25] = 0.0
-    return _stateful(signal)
+    return _stateful(signal, z.abs() < 0.25)
 
 
 def regime_filtered_signal(frame: pd.DataFrame) -> pd.Series:
     if "regime" not in frame.columns:
-        return _stateful(_base_zscore_direction(frame))
+        return _stateful_zscore_entry(frame, _base_zscore_direction(frame))
     favorable = frame["regime"].astype(str).str.lower().isin({"range", "bull"})
-    return _stateful(_base_zscore_direction(frame).where(favorable, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame).where(favorable, 0.0)
+    )
 
 
 def copula_tail_risk_sizing_signal(frame: pd.DataFrame) -> pd.Series:
     tail = _numeric(frame, "tail_dependence", 0.5)
-    return _stateful(copula_signal(frame).where(tail < 0.65, 0.0))
+    distortion = _numeric(frame, "conditional_probability_distortion")
+    entry_signal = _copula_entry_direction(distortion, 0.20).where(tail < 0.65, 0.0)
+    return _stateful(entry_signal, distortion.abs() <= 0.05)
 
 
 def copula_risk_filter_signal(frame: pd.DataFrame) -> pd.Series:
     tail = _numeric(frame, "tail_dependence", 0.5)
-    return _stateful(copula_signal(frame).where(tail < 0.50, 0.0))
+    distortion = _numeric(frame, "conditional_probability_distortion")
+    entry_signal = _copula_entry_direction(distortion, 0.20).where(tail < 0.50, 0.0)
+    return _stateful(entry_signal, distortion.abs() <= 0.05)
 
 
 def copula_dislocation_ranking_signal(frame: pd.DataFrame) -> pd.Series:
@@ -232,7 +288,9 @@ def copula_regime_signal(frame: pd.DataFrame) -> pd.Series:
     if "regime" not in frame.columns:
         return copula_signal(frame)
     favorable = frame["regime"].astype(str).str.lower().isin({"range", "bull"})
-    return _stateful(copula_signal(frame).where(favorable, 0.0))
+    distortion = _numeric(frame, "conditional_probability_distortion")
+    entry_signal = _copula_entry_direction(distortion, 0.20).where(favorable, 0.0)
+    return _stateful(entry_signal, distortion.abs() <= 0.05)
 
 
 def copula_persistence_signal(frame: pd.DataFrame) -> pd.Series:
@@ -241,12 +299,14 @@ def copula_persistence_signal(frame: pd.DataFrame) -> pd.Series:
     signal = pd.Series(0.0, index=frame.index)
     signal[persistent > 0.18] = -1.0
     signal[persistent < -0.18] = 1.0
-    return _stateful(signal)
+    return _stateful(signal, persistent.abs() <= 0.045)
 
 
 def copula_ecm_signal(frame: pd.DataFrame) -> pd.Series:
     ecm = _numeric(frame, "ecm_strength", 0.0)
-    return _stateful(copula_signal(frame).where(ecm >= 0.50, 0.0))
+    distortion = _numeric(frame, "conditional_probability_distortion")
+    entry_signal = _copula_entry_direction(distortion, 0.20).where(ecm >= 0.50, 0.0)
+    return _stateful(entry_signal, distortion.abs() <= 0.05)
 
 
 def _return_proxy(frame: pd.DataFrame) -> pd.Series:
@@ -262,14 +322,18 @@ def hmm_regime_signal(frame: pd.DataFrame) -> pd.Series:
     returns = _return_proxy(frame)
     vol = returns.rolling(10, min_periods=2).std().fillna(0.0)
     calm = vol <= vol.rolling(50, min_periods=2).quantile(0.60).fillna(vol.median())
-    return _stateful(_base_zscore_direction(frame).where(calm, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame).where(calm, 0.0)
+    )
 
 
 def gmm_regime_signal(frame: pd.DataFrame) -> pd.Series:
     returns = _return_proxy(frame)
     trend = returns.rolling(10, min_periods=2).sum().fillna(0.0)
     favorable = trend.abs() < trend.abs().rolling(50, min_periods=2).quantile(0.70).fillna(trend.abs().median())
-    return _stateful(_base_zscore_direction(frame).where(favorable, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame).where(favorable, 0.0)
+    )
 
 
 def kmeans_regime_signal(frame: pd.DataFrame) -> pd.Series:
@@ -277,18 +341,27 @@ def kmeans_regime_signal(frame: pd.DataFrame) -> pd.Series:
     vol = returns.rolling(10, min_periods=2).std().fillna(0.0)
     trend = returns.rolling(10, min_periods=2).sum().fillna(0.0)
     favorable = (vol.rank(pct=True) < 0.75) & (trend.abs().rank(pct=True) < 0.75)
-    return _stateful(_base_zscore_direction(frame).where(favorable, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame).where(favorable, 0.0)
+    )
 
 
 def pair_ranking_signal(frame: pd.DataFrame) -> pd.Series:
     score = _numeric(frame, "composite_score", 75.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(score >= 70.0, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(score >= 70.0, 0.0)
+    )
 
 
 def portfolio_rotation_signal(frame: pd.DataFrame) -> pd.Series:
     score = _numeric(frame, "composite_score", 75.0)
     drawdown = _numeric(frame, "drawdown", 0.0)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where((score >= 70.0) & (drawdown <= 0.15), 0.0))
+    return _stateful_zscore_entry(
+        frame,
+        _base_zscore_direction(frame, entry=1.5).where(
+            (score >= 70.0) & (drawdown <= 0.15), 0.0
+        ),
+    )
 
 
 def risk_adjusted_ranking_signal(frame: pd.DataFrame) -> pd.Series:
@@ -296,7 +369,9 @@ def risk_adjusted_ranking_signal(frame: pd.DataFrame) -> pd.Series:
     cvar = _numeric(frame, "cvar", 0.05)
     drawdown = _numeric(frame, "drawdown", 0.05)
     favorable = (sharpe >= 1.2) & (cvar <= 0.10) & (drawdown <= 0.15)
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(favorable, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(favorable, 0.0)
+    )
 
 
 def meta_model_proxy_signal(frame: pd.DataFrame) -> pd.Series:
@@ -305,7 +380,10 @@ def meta_model_proxy_signal(frame: pd.DataFrame) -> pd.Series:
         + _numeric(frame, "profile_match", 0.55)
         + _numeric(frame, "ou_optimal", 0.55)
     ) / 3.0
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(confidence >= 0.58, 0.0))
+    return _stateful_zscore_entry(
+        frame,
+        _base_zscore_direction(frame, entry=1.5).where(confidence >= 0.58, 0.0),
+    )
 
 
 def feature_importance_proxy_signal(frame: pd.DataFrame) -> pd.Series:
@@ -315,7 +393,9 @@ def feature_importance_proxy_signal(frame: pd.DataFrame) -> pd.Series:
         + _numeric(frame, "hurst", 0.5).rsub(0.5).clip(lower=0.0) * 0.80
         + _numeric(frame, "ml_confidence", 0.55) * 0.20
     )
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(weighted >= 0.45, 0.0))
+    return _stateful_zscore_entry(
+        frame, _base_zscore_direction(frame, entry=1.5).where(weighted >= 0.45, 0.0)
+    )
 
 
 def trade_outcome_predictor_proxy_signal(frame: pd.DataFrame) -> pd.Series:
@@ -326,7 +406,10 @@ def trade_outcome_predictor_proxy_signal(frame: pd.DataFrame) -> pd.Series:
             + _numeric(frame, "profile_match", 0.55)
             + _numeric(frame, "ecm_strength", 0.55)
         ) / 3.0
-    return _stateful(_base_zscore_direction(frame, entry=1.5).where(probability >= 0.58, 0.0))
+    return _stateful_zscore_entry(
+        frame,
+        _base_zscore_direction(frame, entry=1.5).where(probability >= 0.58, 0.0),
+    )
 
 
 ALL_STRATEGIES: tuple[StrategySpec, ...] = (

@@ -597,7 +597,13 @@ def _candidate_rows_for_signal(
 
     for ordinal, entry_pos in enumerate(entry_positions, start=1):
         future_exits = exit_positions[exit_positions >= entry_pos]
-        exit_pos = int(future_exits[0]) if len(future_exits) else int(len(detailed) - 1)
+        # Open positions at the end of a history are right-censored. They have
+        # no valid realized label and must not enter supervised training.
+        if not len(future_exits):
+            continue
+        exit_pos = int(future_exits[0])
+        if exit_pos <= entry_pos:
+            continue
         segment = detailed.iloc[entry_pos : exit_pos + 1]
         entry_row = detailed.iloc[entry_pos]
         trade_id = f"{pair}|{strategy.id}|{pd.Timestamp(entry_row['timestamp']).isoformat()}|{ordinal}"

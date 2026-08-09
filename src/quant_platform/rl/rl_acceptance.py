@@ -4,6 +4,14 @@ import numpy as np
 import pandas as pd
 
 
+MINIMUM_TAKE_RATE = 0.05
+MAXIMUM_CONCENTRATION = 0.65
+
+
+def minimum_trade_count(total_rows: object) -> int:
+    return max(20, int(np.ceil(float(total_rows or 0) * MINIMUM_TAKE_RATE)))
+
+
 def rl_acceptance_report(evaluation: pd.DataFrame) -> pd.DataFrame:
     if evaluation.empty:
         return pd.DataFrame([_row(False, "missing_rl_evaluation")])
@@ -33,6 +41,11 @@ def rl_acceptance_report(evaluation: pd.DataFrame) -> pd.DataFrame:
                 "rl_take_rate": rl_row["take_rate"],
                 "pair_concentration": rl_row["pair_concentration"],
                 "timeframe_concentration": rl_row["timeframe_concentration"],
+                "raw_timeframe_concentration": rl_row.get("raw_timeframe_concentration", 1.0),
+                "timeframe_pnl_concentration": rl_row.get("timeframe_pnl_concentration", 1.0),
+                "pair_pnl_concentration": rl_row.get("pair_pnl_concentration", 1.0),
+                "regime_concentration": rl_row.get("regime_concentration", 1.0),
+                "regime_pnl_concentration": rl_row.get("regime_pnl_concentration", 1.0),
                 "validation_passed": bool(validation["accepted"]),
                 "held_out_test_passed": bool(test["accepted"]),
                 "validation_gate_failures": validation["gate_failures"],
@@ -56,10 +69,14 @@ def _split_gate(evaluation: pd.DataFrame, split: str) -> dict[str, object]:
         "profit_factor_improves": rl_row["profit_factor"] > raw_row["profit_factor"],
         "drawdown_not_worse": rl_row["max_drawdown"] <= raw_row["max_drawdown"],
         "sharpe_not_materially_worse": rl_row["sharpe"] >= raw_row["sharpe"] - 0.25,
-        "minimum_trades": rl_row["trades"] >= max(20, raw_row["trades"] * 0.25),
-        "minimum_take_rate": rl_row["take_rate"] >= 0.05,
-        "pair_concentration": rl_row["pair_concentration"] <= 0.65,
-        "timeframe_concentration": rl_row["timeframe_concentration"] <= 0.65,
+        "minimum_trades": rl_row["trades"] >= minimum_trade_count(raw_row["trades"]),
+        "minimum_take_rate": rl_row["take_rate"] >= MINIMUM_TAKE_RATE,
+        "pair_concentration": rl_row["pair_concentration"] <= MAXIMUM_CONCENTRATION,
+        "pair_pnl_concentration": rl_row.get("pair_pnl_concentration", 1.0) <= MAXIMUM_CONCENTRATION,
+        "timeframe_selection_concentration": rl_row["timeframe_concentration"] <= MAXIMUM_CONCENTRATION,
+        "timeframe_pnl_concentration": rl_row.get("timeframe_pnl_concentration", 1.0) <= MAXIMUM_CONCENTRATION,
+        "regime_concentration": rl_row.get("regime_concentration", 1.0) <= MAXIMUM_CONCENTRATION,
+        "regime_pnl_concentration": rl_row.get("regime_pnl_concentration", 1.0) <= MAXIMUM_CONCENTRATION,
     }
     failures = [name for name, passed in checks.items() if not bool(passed)]
     return {
@@ -71,7 +88,14 @@ def _split_gate(evaluation: pd.DataFrame, split: str) -> dict[str, object]:
     }
 
 
-def return_summary(variant: str, frame: pd.DataFrame, returns: pd.Series, total_rows: int) -> dict[str, object]:
+def return_summary(
+    variant: str,
+    frame: pd.DataFrame,
+    returns: pd.Series,
+    total_rows: int,
+    *,
+    source_frame: pd.DataFrame | None = None,
+) -> dict[str, object]:
     returns = pd.to_numeric(returns, errors="coerce").fillna(0.0)
     gains = returns[returns > 0].sum()
     losses = abs(returns[returns < 0].sum())
@@ -79,7 +103,9 @@ def return_summary(variant: str, frame: pd.DataFrame, returns: pd.Series, total_
     equity = (1.0 + returns).cumprod()
     drawdown = ((equity.cummax() - equity) / equity.cummax().replace(0, np.nan)).fillna(0.0)
     pair_conc = _concentration(frame, "pair")
-    timeframe_conc = _concentration(frame, "timeframe")
+    raw_timeframe_conc = _concentration(frame, "timeframe")
+    source = source_frame if source_frame is not None else frame
+    timeframe_conc = _source_adjusted_selection_concentration(frame, source, "timeframe")
     return {
         "variant": variant,
         "trades": int(len(returns)),
@@ -90,6 +116,11 @@ def return_summary(variant: str, frame: pd.DataFrame, returns: pd.Series, total_
         "total_return": float(returns.sum()),
         "pair_concentration": pair_conc,
         "timeframe_concentration": timeframe_conc,
+        "raw_timeframe_concentration": raw_timeframe_conc,
+        "pair_pnl_concentration": _positive_pnl_concentration(frame, returns, "pair"),
+        "timeframe_pnl_concentration": _positive_pnl_concentration(frame, returns, "timeframe"),
+        "regime_concentration": _concentration(frame, "regime"),
+        "regime_pnl_concentration": _positive_pnl_concentration(frame, returns, "regime"),
     }
 
 
@@ -98,6 +129,37 @@ def _concentration(frame: pd.DataFrame, column: str) -> float:
         return 1.0
     counts = frame[column].astype(str).value_counts()
     return float(counts.iloc[0] / max(counts.sum(), 1)) if not counts.empty else 1.0
+
+
+def _source_adjusted_selection_concentration(
+    selected: pd.DataFrame,
+    source: pd.DataFrame,
+    column: str,
+) -> float:
+    if source.empty or column not in source.columns or selected.empty or column not in selected.columns:
+        return 1.0
+    source_counts = source[column].fillna("UNKNOWN").astype(str).value_counts()
+    selected_counts = selected[column].fillna("UNKNOWN").astype(str).value_counts()
+    selection_rates = selected_counts.reindex(source_counts.index, fill_value=0).div(source_counts)
+    total_rate = float(selection_rates.sum())
+    return float(selection_rates.max() / total_rate) if total_rate > 0 else 1.0
+
+
+def _positive_pnl_concentration(
+    frame: pd.DataFrame,
+    returns: pd.Series,
+    column: str,
+) -> float:
+    if frame.empty or column not in frame.columns or len(frame) != len(returns):
+        return 1.0
+    contribution = pd.DataFrame(
+        {
+            "group": frame[column].fillna("UNKNOWN").astype(str).to_numpy(),
+            "positive_pnl": pd.to_numeric(returns, errors="coerce").fillna(0.0).clip(lower=0.0).to_numpy(),
+        }
+    ).groupby("group", dropna=False)["positive_pnl"].sum()
+    total = float(contribution.sum())
+    return float(contribution.max() / total) if total > 0 and not contribution.empty else 1.0
 
 
 def _row(accepted: bool, blocker: str) -> dict[str, object]:

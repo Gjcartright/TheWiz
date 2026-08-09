@@ -8,7 +8,41 @@ from quant_platform.backtest import (
     backtest_two_leg_spread,
     backtest_two_leg_spread_with_ledger,
 )
-from quant_platform.strategies import zscore_signal
+from quant_platform.strategies import copula_signal, zscore_signal
+
+
+def test_zscore_signal_holds_until_mean_exit_and_flattens_before_reversal():
+    frame = pd.DataFrame(
+        {
+            "spread": [0.0, 2.2, 1.0, 0.1, 0.0, -2.2, -1.0, -0.1, 2.3, -2.3, -2.4, 0.0],
+            "zscore": [0.0, 2.2, 1.0, 0.1, 0.0, -2.2, -1.0, -0.1, 2.3, -2.3, -2.4, 0.0],
+        }
+    )
+
+    signal = zscore_signal(frame)
+
+    assert signal.tolist() == [0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0]
+
+
+def test_copula_signal_uses_distinct_entry_and_neutral_exit_bands():
+    frame = pd.DataFrame(
+        {
+            "conditional_probability_distortion": [
+                0.0,
+                0.25,
+                0.10,
+                0.04,
+                0.0,
+                -0.25,
+                -0.10,
+                -0.04,
+            ]
+        }
+    )
+
+    signal = copula_signal(frame)
+
+    assert signal.tolist() == [0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, 0.0]
 
 
 def test_backtest_includes_costs_and_returns_metrics():

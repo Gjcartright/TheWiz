@@ -22,7 +22,7 @@ from quant_platform.rl.rl_learning_agent import (
     run_sequential_thinking_magicka,
 )
 from quant_platform.rl.brain_cycle import build_brain_readiness_report, run_brain_cycle
-from quant_platform.rl.rl_acceptance import rl_acceptance_report
+from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
 from quant_platform.rl.rl_backtest import run_rl_research, simulate_strategy_returns
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
@@ -232,6 +232,10 @@ def test_mini_agent_queue_uses_agent_effectiveness_to_prioritize(tmp_path):
                 "rl_take_rate": 0.22,
                 "pair_concentration": 0.5,
                 "timeframe_concentration": 0.5,
+                "pair_pnl_concentration": 0.5,
+                "timeframe_pnl_concentration": 0.5,
+                "regime_concentration": 0.5,
+                "regime_pnl_concentration": 0.5,
             }
         ]
     ).to_csv(rl_reports / "rl_acceptance_report.csv", index=False)
@@ -621,6 +625,47 @@ def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign
     assert "no_second_cost_charge" in result["frame"].iloc[0]["cost_treatment"]
 
 
+def test_rl_session_loss_cap_blocks_only_later_trades_and_resets_next_day():
+    frame = pd.DataFrame(
+        {
+            "trade_id": ["T1", "T2", "T3"],
+            "pair": ["BTC-USD/ETH-USD"] * 3,
+            "profit_after_cost": [-0.20, 0.10, 0.10],
+            "entry_abs_zscore": [2.0] * 3,
+            "trade_bars": [1] * 3,
+            "hold_bars": [1] * 3,
+            "signal_side": ["long_spread"] * 3,
+            "max_adverse_excursion": [0.0] * 3,
+            "max_favorable_excursion": [0.0] * 3,
+            "timeframe": ["1h"] * 3,
+            "entry_timestamp": [
+                "2026-08-01T01:00:00Z",
+                "2026-08-01T02:00:00Z",
+                "2026-08-02T01:00:00Z",
+            ],
+        }
+    )
+    policy = {
+        "entry_threshold": 1.0,
+        "hold_cap_pct": 1.0,
+        "volatility_penalty_weight": 0.0,
+        "stop_loss_pct": 0.50,
+        "take_profit_pct": 0.50,
+        "max_trade_drawdown_pct": 0.50,
+        "session_loss_cap_pct": 0.10,
+    }
+
+    result = simulate_strategy_returns(frame, policy)
+
+    assert result["frame"]["simulation_reason"].tolist() == [
+        "entered",
+        "session_loss_cap",
+        "entered",
+    ]
+    assert result["returns"].tolist() == pytest.approx([-0.20, 0.10])
+    assert result["frame"]["session_scope"].eq("pair_utc_day_proxy").all()
+
+
 def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
     full_sample_only = pd.DataFrame(
         [
@@ -633,6 +678,10 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
                 "max_drawdown": 0.20,
                 "pair_concentration": 0.5,
                 "timeframe_concentration": 0.5,
+                "pair_pnl_concentration": 0.5,
+                "timeframe_pnl_concentration": 0.5,
+                "regime_concentration": 0.5,
+                "regime_pnl_concentration": 0.5,
             },
             {
                 "variant": "safe_rl_policy",
@@ -643,6 +692,10 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
                 "max_drawdown": 0.10,
                 "pair_concentration": 0.5,
                 "timeframe_concentration": 0.5,
+                "pair_pnl_concentration": 0.5,
+                "timeframe_pnl_concentration": 0.5,
+                "regime_concentration": 0.5,
+                "regime_pnl_concentration": 0.5,
             },
         ]
     )
@@ -663,6 +716,30 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
     assert bool(accepted.iloc[0]["accepted"])
     assert bool(accepted.iloc[0]["validation_passed"])
     assert bool(accepted.iloc[0]["held_out_test_passed"])
+
+
+def test_rl_concentration_separates_opportunity_mix_from_pnl_dependency():
+    source = pd.DataFrame(
+        {
+            "timeframe": ["5m"] * 90 + ["1h"] * 10,
+            "pair": ["A-B"] * 100,
+            "regime": ["range"] * 100,
+        }
+    )
+    selected = pd.concat([source.iloc[:9], source.iloc[90:91]], ignore_index=True)
+    returns = pd.Series([0.01] * 10)
+
+    summary = return_summary(
+        "policy",
+        selected,
+        returns,
+        len(source),
+        source_frame=source,
+    )
+
+    assert summary["raw_timeframe_concentration"] == pytest.approx(0.9)
+    assert summary["timeframe_concentration"] == pytest.approx(0.5)
+    assert summary["timeframe_pnl_concentration"] == pytest.approx(0.9)
 
 
 def test_rl_chronological_split_globally_purges_overlapping_labels():
@@ -721,7 +798,8 @@ def test_magicka_oos_selection_rejects_single_pair_and_timeframe_concentration(t
     assert best["status"] == "blocked"
     assert best["live_enabled"] is False
     assert "pair_concentration" in best["validation_gate_failures"]
-    assert "timeframe_concentration" in best["validation_gate_failures"]
+    assert "timeframe_selection_concentration" in best["validation_gate_failures"]
+    assert "timeframe_pnl_concentration" in best["validation_gate_failures"]
 
 
 def test_rl_learning_cycle_marks_stop_loss_when_risk_limit_hit(tmp_path):

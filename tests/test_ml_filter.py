@@ -154,6 +154,36 @@ def test_build_trade_filter_dataset_creates_candidate_entry_rows():
     assert frame["return_unit"].eq("fraction_of_equity").all()
 
 
+def test_trade_dataset_records_multiple_completed_zscore_lifecycles():
+    history = _pair_history_frame().iloc[:24].copy()
+    lifecycle = [0.0, 2.2, 1.0, 0.1, 0.0, -2.3, -1.0, -0.1, 0.0, 2.4, 1.0, 0.0]
+    history["zscore"] = lifecycle * 2
+    history["zscore_reconstructed"] = lifecycle * 2
+    history["spread"] = history["zscore"]
+
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],)
+    )
+
+    assert len(frame) == 6
+    assert frame["entry_timestamp"].lt(frame["exit_timestamp"]).all()
+    assert frame["trade_bars"].max() < len(history)
+
+
+def test_trade_dataset_excludes_right_censored_open_positions():
+    history = _pair_history_frame().iloc[:24].copy()
+    history["zscore"] = 0.0
+    history["zscore_reconstructed"] = 0.0
+    history.loc[history.index[-2]:, "zscore_reconstructed"] = 2.5
+    history["spread"] = history["zscore_reconstructed"]
+
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],)
+    )
+
+    assert frame.empty
+
+
 def test_trade_return_path_compounds_fractional_bar_returns_and_floors_bankruptcy():
     path = _compounded_return_path(pd.Series([0.10, -0.10]))
     bankrupt = _compounded_return_path(pd.Series([0.05, -1.20, 0.50]))

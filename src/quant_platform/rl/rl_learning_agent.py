@@ -11,7 +11,12 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.rl.features import attach_copula_dashboard_features
-from quant_platform.rl.rl_acceptance import return_summary
+from quant_platform.rl.rl_acceptance import (
+    MAXIMUM_CONCENTRATION,
+    MINIMUM_TAKE_RATE,
+    minimum_trade_count,
+    return_summary,
+)
 from quant_platform.rl.rl_backtest import simulate_strategy_returns
 
 
@@ -108,6 +113,7 @@ def run_rl_learning_cycle(
         validation,
         _return_series(validation),
         len(validation),
+        source_frame=validation,
     )
 
     for policy in policy_grid:
@@ -117,7 +123,13 @@ def run_rl_learning_cycle(
         per_policy_log["evaluation_split"] = evaluation_split
         per_policy_logs.append(per_policy_log)
         entered_mask = per_policy_log.get("simulation_reason", pd.Series([""] * len(per_policy_log))).eq("entered")
-        summary = return_summary(policy["policy_name"], per_policy_log.loc[entered_mask], simulated["returns"], len(validation))
+        summary = return_summary(
+            policy["policy_name"],
+            per_policy_log.loc[entered_mask],
+            simulated["returns"],
+            len(validation),
+            source_frame=validation,
+        )
         summary["pair_id"] = pair_id
         summary["cycle_id"] = cycle_id
         summary["policy_name"] = policy["policy_name"]
@@ -166,8 +178,15 @@ def run_rl_learning_cycle(
                 test_log.loc[entered_test],
                 simulated_test["returns"],
                 len(test),
+                source_frame=test,
             )
-            baseline_test = return_summary("test_baseline", test, _return_series(test), len(test))
+            baseline_test = return_summary(
+                "test_baseline",
+                test,
+                _return_series(test),
+                len(test),
+                source_frame=test,
+            )
             test_gates = _policy_gate_outcomes(test_summary, baseline_test, len(test), prefix="test")
             test_gate_passed = bool(test_gates["test_eligible"])
             for key, value in test_summary.items():
@@ -403,15 +422,19 @@ def _policy_gate_outcomes(
     *,
     prefix: str,
 ) -> dict[str, object]:
-    minimum_trades = max(20, int(np.ceil(max(total_rows, 1) * 0.25)))
+    minimum_trades = minimum_trade_count(total_rows)
     checks = {
         "profit_factor_improves": float(summary.get("profit_factor", 0.0) or 0.0) > float(baseline.get("profit_factor", 0.0) or 0.0),
         "drawdown_not_worse": float(summary.get("max_drawdown", 1.0) or 1.0) <= float(baseline.get("max_drawdown", 1.0) or 1.0),
         "sharpe_not_materially_worse": float(summary.get("sharpe", 0.0) or 0.0) >= float(baseline.get("sharpe", 0.0) or 0.0) - 0.25,
         "minimum_trades": int(summary.get("trades", 0) or 0) >= minimum_trades,
-        "minimum_take_rate": float(summary.get("take_rate", 0.0) or 0.0) >= 0.05,
-        "pair_concentration": float(summary.get("pair_concentration", 1.0) or 1.0) <= 0.65,
-        "timeframe_concentration": float(summary.get("timeframe_concentration", 1.0) or 1.0) <= 0.65,
+        "minimum_take_rate": float(summary.get("take_rate", 0.0) or 0.0) >= MINIMUM_TAKE_RATE,
+        "pair_concentration": float(summary.get("pair_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "pair_pnl_concentration": float(summary.get("pair_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "timeframe_selection_concentration": float(summary.get("timeframe_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "timeframe_pnl_concentration": float(summary.get("timeframe_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "regime_concentration": float(summary.get("regime_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "regime_pnl_concentration": float(summary.get("regime_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
     }
     failed = [name for name, passed in checks.items() if not passed]
     output: dict[str, object] = {

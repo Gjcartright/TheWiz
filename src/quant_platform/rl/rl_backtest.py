@@ -103,8 +103,20 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
             rl_mask = split_simulated.get("active_mask", pd.Series(dtype=bool))
             if not isinstance(rl_mask, pd.Series) or rl_mask.empty:
                 rl_mask = pd.Series([False] * len(rl_rows), index=rl_rows.index) if not rl_rows.empty else pd.Series(dtype=bool)
-            baseline = return_summary("non_rl_baseline", source, _return_column(source), len(source))
-            policy_summary = return_summary("safe_rl_policy", rl_rows.loc[rl_mask], split_simulated["returns"], len(source))
+            baseline = return_summary(
+                "non_rl_baseline",
+                source,
+                _return_column(source),
+                len(source),
+                source_frame=source,
+            )
+            policy_summary = return_summary(
+                "safe_rl_policy",
+                rl_rows.loc[rl_mask],
+                split_simulated["returns"],
+                len(source),
+                source_frame=source,
+            )
             baseline["evaluation_split"] = evaluation_split
             policy_summary["evaluation_split"] = evaluation_split
             evaluation_rows.extend([baseline, policy_summary])
@@ -247,9 +259,26 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
     )
     simulated[stop_triggered] = -stop_loss_pct * position_fraction
     simulated[profit_triggered] = take_profit_pct * position_fraction
-    session_equity = (1.0 + simulated.where(threshold_active, 0.0)).cumprod()
-    session_drawdown = ((session_equity.cummax() - session_equity) / session_equity.cummax().replace(0, np.nan)).fillna(0.0)
-    session_blocked = session_drawdown > session_loss_cap_pct
+    session_time = pd.to_datetime(
+        data.get(
+            "entry_timestamp",
+            data.get("feature_timestamp", pd.Series(pd.NaT, index=data.index)),
+        ),
+        utc=True,
+        errors="coerce",
+    )
+    session_date = session_time.dt.strftime("%Y-%m-%d").fillna("unknown_date")
+    session_pair = data.get("pair", pd.Series("unknown_pair", index=data.index)).astype(str)
+    session_key = session_pair + "|" + session_date
+    candidate_factor = 1.0 + simulated.where(threshold_active, 0.0)
+    session_equity = candidate_factor.groupby(session_key, sort=False).cumprod()
+    session_peak = session_equity.groupby(session_key, sort=False).cummax().clip(lower=1.0)
+    session_drawdown = ((session_peak - session_equity) / session_peak.replace(0, np.nan)).fillna(0.0)
+    session_breach = session_drawdown > session_loss_cap_pct
+    # The trade that breaches a loss cap is realized; only later trades in the
+    # same pair/day proxy session are blocked.
+    session_blocked = session_breach.groupby(session_key, sort=False).shift(fill_value=False)
+    session_blocked = session_blocked.groupby(session_key, sort=False).cummax().astype(bool)
     active = threshold_active & ~session_blocked
     simulated[session_blocked] = 0.0
     active_mask = pd.Series(active, index=data.index)
@@ -290,6 +319,7 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
             "position_fraction": position_fraction,
             "hold_cap_pct": hold_cap_pct,
             "volatility_penalty_weight": volatility_penalty_weight,
+            "session_scope": "pair_utc_day_proxy",
         }
     )
     return {
