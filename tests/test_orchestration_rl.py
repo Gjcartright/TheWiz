@@ -4,7 +4,8 @@ import pandas as pd
 import pytest
 
 from quant_platform.active_pipeline import build_command_dashboard
-from quant_platform.orchestration import run_orchestrator
+from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration import run_langgraph_agent_workflow, run_orchestrator
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
@@ -12,6 +13,8 @@ from quant_platform.rl.features import build_rl_feature_frame
 from quant_platform.rl.pair_trading_env import PairTradingEnv
 from quant_platform.rl.quantization import export_rl_policy
 from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
+from quant_platform.rl.rl_learning_agent import run_magicka_learning_cycle, run_sequential_thinking_magicka
+from quant_platform.rl.brain_cycle import build_brain_readiness_report, run_brain_cycle
 from quant_platform.rl.rl_backtest import run_rl_research
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
@@ -25,6 +28,27 @@ def test_orchestrator_dry_run_records_stage_contracts():
     assert {"run_id", "pair_id", "stage", "status", "blocker", "evidence_path", "next_step"}.issubset(frame.columns)
     assert set(frame["status"]) == {"dry_run"}
     assert (frame["pair_id"] == "BNB-USD-STX-USD").all()
+
+
+def test_langgraph_agent_workflow_dry_run_writes_graph_manifests(tmp_path):
+    result = run_langgraph_agent_workflow(
+        stage="discovery",
+        dry_run=True,
+        pair_id="BNB-USD-STX-USD",
+        root=tmp_path,
+    )
+
+    frame = pd.read_csv(result.paths["orchestrator_status"])
+    lanes = pd.read_csv(result.paths["langgraph_agent_lanes"])
+    edges = pd.read_csv(result.paths["langgraph_agent_edges"])
+    markdown = result.paths["langgraph_agent_workflow_md"].read_text(encoding="utf-8")
+
+    assert not frame.empty
+    assert set(frame["status"]) == {"dry_run"}
+    assert {"wizard_capture_agent", "execution_guard_agent", "base_rl_agent"}.issubset(set(lanes["agent"]))
+    assert {"from", "to", "condition"}.issubset(edges.columns)
+    assert "LangGraph Agent Workflow" in markdown
+    assert result.summary["graph"] == "langgraph_agent_workflow"
 
 
 def test_orchestrator_report_only_writes_spine_audit():
@@ -65,8 +89,11 @@ def test_mini_agent_orchestration_writes_registry_and_queue(tmp_path):
     registry = pd.read_csv(result.paths["mini_agent_registry"])
     queue = pd.read_csv(result.paths["next_action_queue"])
 
-    assert {"discovery_agent", "rl_idea_agent", "red_team_agent"}.issubset(set(registry["agent"]))
+    assert {"youtube_research_brain", "discovery_agent", "rl_idea_agent", "red_team_agent"}.issubset(
+        set(registry["agent"])
+    )
     assert {"capture_exact_mode", "fetch_or_replay_venue_history", "run_rl_idea_scout"}.issubset(set(queue["task_type"]))
+    assert "run_sequential_thinking_magicka" in set(queue["task_type"])
     assert not queue["promotion_allowed"].astype(bool).any()
 
 
@@ -149,6 +176,9 @@ def test_orchestrator_assistant_records_rl_task_outcomes(tmp_path):
     assert any('"outcome_label": "passed"' in line for line in lines_idea)
     assert any('"outcome_known": true' in line.lower() for line in lines_sim)
     assert any('"outcome_label": "validated"' in line for line in lines_sim)
+    # sequential-thinking magicka memory appears once it is evaluated from the queue
+    lines_seq = (tmp_path / "data" / "agent_memory" / "sequential_thinking_magicka_agent.jsonl").read_text(encoding="utf-8").splitlines()
+    assert any("run_sequential_thinking_magicka" in line for line in lines_seq)
 
 
 def test_mini_agent_queue_uses_agent_effectiveness_to_prioritize(tmp_path):
@@ -326,9 +356,11 @@ def test_orchestrator_agents_stage_runs_mini_agent_reports():
     frame = pd.read_csv(result.paths["orchestrator_status"])
 
     assert "mini_agents" in set(frame["stage"])
+    assert "youtube_research_brain" in set(frame["stage"])
     assert "orchestrator_assistant" in set(frame["stage"])
     assert "specialist_scoreboard" in set(frame["stage"])
     assert frame.loc[frame["stage"] == "mini_agents", "status"].iloc[0] == "passed"
+    assert frame.loc[frame["stage"] == "youtube_research_brain", "status"].iloc[0] == "passed"
 
 
 def test_orchestrator_supreme_team_stage_runs_and_records_checkpoint(tmp_path):
@@ -386,6 +418,9 @@ def test_dashboard_includes_orchestrator_and_rl_views():
     assert "rl_research_status" in result.paths
     assert "rl_acceptance" in result.paths
     assert "quantization_readiness" in result.paths
+    assert "brain_readiness_report" in result.paths
+    assert "brain_candidate_rollup" in result.paths
+    assert "brain_readiness_trend" in result.paths
 
 
 def test_orchestrator_all_runs_checkpoint_before_dashboard():
@@ -459,9 +494,12 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
     assert int(summary.loc[0, "generated_ideas"]) == 1
     assert int(summary.loc[0, "generated_similar_pairs"]) == len(sim)
     assert "pair" in ideas.columns
+    assert {"stop_loss_hint", "take_profit_hint", "session_loss_cap_hint", "risk_control_style"}.issubset(set(ideas.columns))
     assert "similar_pair" in sim.columns
     assert {"generated_ideas", "generated_similar_pairs", "policy_type", "evidence_source"}.issubset(summary.columns)
     assert not ideas.empty
+    assert ideas.iloc[0]["strategy"] == "Static Spread"
+    assert ideas.iloc[0]["timeframe"] == "1d"
 
 
 def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
@@ -485,3 +523,826 @@ def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
 
     assert "run_rl_idea_scout" in set(frame["stage"])
     assert frame.loc[frame["stage"] == "run_rl_idea_scout", "status"].iloc[0] == "passed"
+
+
+def test_magicka_learning_cycle_runs_and_writes_artifacts(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "trade_id": "T1",
+                "profit_after_cost": 0.12,
+                "entry_abs_zscore": 1.8,
+                "trade_bars": 10,
+                "hold_bars": 8,
+                "realized_return": 0.12,
+                "strategy_name": "Static Spread",
+                "timeframe": "1h",
+                "strategy_id": "S1",
+                "entry_bar_index": 1,
+                "exit_bar_index": 11,
+                "signal_side": "long",
+                "max_adverse_excursion": 0.02,
+                "max_favorable_excursion": 0.15,
+            }
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_magicka_learning_cycle(root=tmp_path, policy_candidates=4)
+    summary = pd.read_csv(result.paths["summary"])
+    backtests = pd.read_csv(result.paths["backtests"])
+    ideas = pd.read_csv(result.paths["learning_ideas"])
+    agent_frame = pd.read_csv(result.paths["agent_experiments"])
+
+    assert not summary.empty
+    assert len(summary) > 0
+    assert not backtests.empty
+    assert {"policy_name", "winner"}.issubset(set(summary.columns))
+    assert {"policy_name", "pair", "idea_type", "generated_at", "exit_reason", "stop_triggered"}.issubset(set(ideas.columns))
+    assert {"stop_loss_pct", "session_loss_cap_pct"}.issubset(set(summary.columns))
+    assert not agent_frame.empty
+
+
+def test_rl_learning_cycle_marks_stop_loss_when_risk_limit_hit(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "trade_id": "T1",
+                "profit_after_cost": -0.20,
+                "entry_abs_zscore": 2.1,
+                "trade_bars": 12,
+                "hold_bars": 10,
+                "realized_return": -0.20,
+                "strategy_name": "Static Spread",
+                "timeframe": "1h",
+                "strategy_id": "S1",
+                "entry_bar_index": 1,
+                "exit_bar_index": 13,
+                "signal_side": "long",
+                "max_adverse_excursion": 0.20,
+                "max_favorable_excursion": 0.01,
+            }
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_magicka_learning_cycle(root=tmp_path, policy_candidates=2)
+    backtests = pd.read_csv(result.paths["backtests"])
+
+    assert "exit_reason" in backtests.columns
+    assert "stop_triggered" in backtests.columns
+    assert backtests["exit_reason"].astype(str).str.contains("stop_loss").any()
+    assert backtests["stop_triggered"].astype(bool).any()
+
+
+def test_run_sequential_thinking_magicka_cycle_writes_recommendations(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "trade_id": "T1",
+                "profit_after_cost": 0.12,
+                "entry_abs_zscore": 1.8,
+                "trade_bars": 10,
+                "hold_bars": 8,
+                "realized_return": 0.12,
+                "strategy_name": "Static Spread",
+                "timeframe": "1h",
+                "strategy_id": "S1",
+                "entry_bar_index": 1,
+                "exit_bar_index": 11,
+                "signal_side": "long",
+            }
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+    reports_rl = tmp_path / "reports" / "rl"
+    reports_rl.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "status": "research_only",
+                "blocker": "",
+                "live_enabled": False,
+                "rows": 2,
+                "features": 6,
+                "policy": "safe_quantile_baseline",
+            }
+        ]
+    ).to_csv(reports_rl / "rl_training_report.csv", index=False)
+
+    # Provide minimal upstream artifacts expected by the coaching logic.
+    pd.DataFrame(
+        [
+            {
+                "accepted": True,
+                "blocker": "",
+                "acceptance_reason": "passed",
+                "raw_profit_factor": 1.1,
+                "rl_profit_factor": 1.4,
+                "raw_drawdown": 0.09,
+                "rl_drawdown": 0.07,
+                "rl_trades": 35,
+                "rl_take_rate": 0.22,
+                "pair_concentration": 0.5,
+                "timeframe_concentration": 0.5,
+            }
+        ]
+    ).to_csv(reports_rl / "rl_acceptance_report.csv", index=False)
+    (tmp_path / "reports" / "ml").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "reports" / "dashboard").mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [{"gated_profit_factor": 1.3, "gated_trades": 30, "gated_drawdown": 0.1, "accepted": True, "blocker": ""}]
+    ).to_csv(tmp_path / "reports" / "ml" / "model_gated_acceptance.csv", index=False)
+    pd.DataFrame([]).to_csv(tmp_path / "reports" / "dashboard" / "blocked_trades_dashboard.csv", index=False)
+
+    result = run_sequential_thinking_magicka(root=tmp_path, policy_candidates=0, max_recommendations=4)
+    recommendations = pd.read_csv(result.paths["recommendations"])
+    memory = pd.read_csv(result.paths["sequential_magicka_memory"])
+
+    assert "pair_id" in set(recommendations.columns)
+    assert not recommendations.empty
+    assert set(recommendations["focus_area"].astype(str)).intersection({"risk_controls", "learning_bootstrap"})
+    assert {"cycle_id", "pair_filter", "status", "recommendation_count"}.issubset(set(memory.columns))
+    assert int(memory["recommendation_count"].iloc[0]) >= 0
+
+
+def test_run_brain_cycle_writes_candidates_and_rollup(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "trade_id": "T1",
+                "profit_after_cost": 0.12,
+                "entry_abs_zscore": 1.8,
+                "trade_bars": 10,
+                "hold_bars": 8,
+                "realized_return": 0.12,
+                "strategy_name": "Static Spread",
+                "timeframe": "1h",
+                "strategy_id": "S1",
+                "entry_bar_index": 1,
+                "exit_bar_index": 11,
+                "signal_side": "long",
+            }
+        ]
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_brain_cycle(root=tmp_path, pair_id="BTC-USD/ETH-USD", policy_candidates=4, max_recommendations=3)
+    candidates = pd.read_csv(result.paths["candidate_csv"])
+    rollup = pd.read_csv(result.paths["candidate_rollup"])
+    summary_text = result.paths["cycle_summary"].read_text(encoding="utf-8")
+
+    assert "cycle_id" in result.summary
+    assert not candidates.empty
+    assert "candidate_count" in result.summary
+    assert int(result.summary["candidate_count"]) >= 1
+    assert {"pair", "variant", "entry_logic", "status", "schema_version"}.issubset(set(candidates.columns))
+    assert not rollup.empty
+    assert "\"status\"" in summary_text
+    assert "ready" in summary_text or "blocked" in summary_text
+
+
+def test_run_brain_cycle_blocks_when_readiness_below_threshold(tmp_path, monkeypatch):
+    candidate_summary = pd.DataFrame([{"cycle_id": "2026", "pair": "BTC-USD/ETH-USD", "profit_factor": 1.0, "status": "ready", "entry_threshold": 1.0, "policy_name": "low_edge", "hold_cap_pct": 0.0, "total_return": 0.0, "max_drawdown": 0.0}])
+    recommendations = pd.DataFrame(
+        [
+            {"pair_id": "BTC-USD/ETH-USD", "proposed_change": "lower confidence", "focus_area": "entry", "priority": "low", "cycle_id": "2026"},
+            {"pair_id": "BTC-USD/ETH-USD", "proposed_change": "hold more", "focus_area": "exit", "priority": "low", "cycle_id": "2026"},
+        ]
+    )
+    candidate_summary_path = tmp_path / "reports" / "rl" / "rl_learning_cycle_summary.csv"
+    recommendations_path = tmp_path / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    candidate_summary_path.parent.mkdir(parents=True, exist_ok=True)
+    candidate_summary_path.write_text(candidate_summary.to_csv(index=False), encoding="utf-8")
+    recommendations_path.write_text(recommendations.to_csv(index=False), encoding="utf-8")
+
+    def fake_magicka(*, root, pair_id, policy_candidates):
+        assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+        assert policy_candidates == 4
+        return CommandResult(
+            summary={"status": "ready"},
+            paths={"summary": candidate_summary_path},
+        )
+
+    def fake_seq(*, root, pair_id, max_recommendations):
+        assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+        assert max_recommendations == 3
+        return CommandResult(
+            summary={"status": "ready"},
+            paths={"recommendations": recommendations_path},
+        )
+
+    monkeypatch.setattr("quant_platform.rl.brain_cycle.run_magicka_learning_cycle", fake_magicka)
+    monkeypatch.setattr("quant_platform.rl.brain_cycle.run_sequential_thinking_magicka", fake_seq)
+
+    result = run_brain_cycle(
+        root=tmp_path,
+        pair_id="BTC-USD/ETH-USD",
+        policy_candidates=4,
+        max_recommendations=3,
+        readiness_threshold=0.99,
+    )
+
+    assert result.summary["readiness_gate"] == "hold"
+    assert result.summary["status"] == "blocked"
+    assert result.summary["readiness_score"] < 0.99
+
+
+def test_run_brain_cycle_readiness_matrix_and_trend_capture(tmp_path, monkeypatch):
+    trend_path = tmp_path / "reports" / "brain" / "paper_readiness_trend.csv"
+
+    def make_learning_summary(pf: float) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "cycle_id": "2026",
+                    "pair": "BTC-USD/ETH-USD",
+                    "profit_factor": pf,
+                    "status": "ready",
+                    "entry_threshold": 1.0,
+                    "policy_name": "edge_probe",
+                    "hold_cap_pct": 0.0,
+                    "total_return": 0.0,
+                    "max_drawdown": 0.0,
+                    "provider": "dydx",
+                    "provider_source": "dydx-indexer",
+                    "provider_rows": 1200,
+                    "provider_quality_score": 0.91,
+                }
+            ]
+        )
+
+    def make_recommendations(high_priority: bool = True, count: int = 2) -> pd.DataFrame:
+        priority = "high" if high_priority else "low"
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "BTC-USD/ETH-USD",
+                    "proposed_change": f"rec_{idx + 1}",
+                    "focus_area": "entry",
+                    "priority": priority,
+                    "cycle_id": "2026",
+                }
+                for idx in range(count)
+            ]
+        )
+
+    candidate_summary_path = tmp_path / "reports" / "rl" / "rl_learning_cycle_summary.csv"
+    recommendations_path = tmp_path / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    candidate_summary_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def run_cycle_with_inputs(*, summary: pd.DataFrame, recommendations: pd.DataFrame, readiness_threshold: float) -> dict:
+        candidate_summary_path.write_text(summary.to_csv(index=False), encoding="utf-8")
+        recommendations_path.write_text(recommendations.to_csv(index=False), encoding="utf-8")
+
+        def fake_magicka(*, root, pair_id, policy_candidates):
+            assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+            assert policy_candidates == 4
+            return CommandResult(summary={"status": "ready"}, paths={"summary": candidate_summary_path})
+
+        def fake_seq(*, root, pair_id, max_recommendations):
+            assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+            assert max_recommendations == 3
+            return CommandResult(summary={"status": "ready"}, paths={"recommendations": recommendations_path})
+
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_magicka_learning_cycle", fake_magicka)
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_sequential_thinking_magicka", fake_seq)
+
+        return run_brain_cycle(
+            root=tmp_path,
+            pair_id="BTC-USD/ETH-USD",
+            policy_candidates=4,
+            max_recommendations=3,
+            readiness_threshold=readiness_threshold,
+        ).summary
+
+    scenarios = [
+        ("low_quality_blocked", 0.75, make_learning_summary(1.0), make_recommendations(high_priority=True, count=2), "blocked", "hold"),
+        ("high_quality_pass", 0.75, make_learning_summary(4.0), make_recommendations(high_priority=True, count=2), "ready", "pass"),
+        ("high_quality_hold_strict", 0.95, make_learning_summary(4.0), make_recommendations(high_priority=True, count=2), "blocked", "hold"),
+    ]
+
+    rows: list[dict[str, object]] = []
+    for pair_name, threshold, summary, recommendations, expected_status, expected_gate in scenarios:
+        run_summary = run_cycle_with_inputs(
+            summary=summary,
+            recommendations=recommendations,
+            readiness_threshold=threshold,
+        )
+        row = {
+            "scenario": pair_name,
+            "readiness_threshold": threshold,
+            "status": run_summary["status"],
+            "readiness_gate": run_summary["readiness_gate"],
+            "ready_count": run_summary["ready_count"],
+            "blocked_count": run_summary["blocked_count"],
+            "readiness_score": run_summary["readiness_score"],
+            "candidate_count": run_summary["candidate_count"],
+        }
+        assert run_summary["status"] == expected_status
+        assert run_summary["readiness_gate"] == expected_gate
+        rows.append(row)
+
+    trend_frame = pd.DataFrame(rows)
+    trend_path.parent.mkdir(parents=True, exist_ok=True)
+    trend_frame.to_csv(trend_path, index=False)
+
+    saved = pd.read_csv(trend_path)
+    assert len(saved) == len(scenarios)
+    assert list(saved["scenario"]) == ["low_quality_blocked", "high_quality_pass", "high_quality_hold_strict"]
+    assert set(saved["status"]) == {"ready", "blocked"}
+    assert list(saved["readiness_gate"]) == ["hold", "pass", "hold"]
+    assert saved["readiness_score"].iloc[1] > saved["readiness_score"].iloc[0]
+    assert saved["readiness_score"].iloc[2] < 1.0
+
+
+def test_run_brain_cycle_appends_readiness_trend(tmp_path, monkeypatch):
+    candidate_summary_path = tmp_path / "reports" / "rl" / "rl_learning_cycle_summary.csv"
+    recommendations_path = tmp_path / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    candidate_summary_path.parent.mkdir(parents=True, exist_ok=True)
+    candidate_summary_path.write_text(
+        pd.DataFrame(
+            [
+                {
+                    "cycle_id": "20260628T001",
+                    "pair": "BTC-USD/ETH-USD",
+                    "profit_factor": 4.0,
+                    "status": "ready",
+                    "entry_threshold": 1.0,
+                    "policy_name": "edge_probe",
+                    "hold_cap_pct": 0.0,
+                    "total_return": 0.0,
+                    "max_drawdown": 0.0,
+                    "provider": "dydx",
+                    "provider_source": "history_dydx",
+                    "provider_rows": 1500,
+                    "provider_quality_score": 0.91,
+                }
+            ]
+        ).to_csv(index=False),
+        encoding="utf-8",
+    )
+    recommendations_path.write_text(
+        pd.DataFrame(
+            [
+                {
+                    "pair_id": "BTC-USD/ETH-USD",
+                    "proposed_change": "increase_window",
+                    "focus_area": "entry",
+                    "priority": "high",
+                    "cycle_id": "20260628T001",
+                }
+            ]
+        ).to_csv(index=False),
+        encoding="utf-8",
+    )
+
+    def fake_magicka(*, root, pair_id, policy_candidates):
+        return CommandResult(summary={"status": "ready"}, paths={"summary": candidate_summary_path})
+
+    def fake_seq(*, root, pair_id, max_recommendations):
+        return CommandResult(summary={"status": "ready"}, paths={"recommendations": recommendations_path})
+
+    monkeypatch.setattr("quant_platform.rl.brain_cycle.run_magicka_learning_cycle", fake_magicka)
+    monkeypatch.setattr("quant_platform.rl.brain_cycle.run_sequential_thinking_magicka", fake_seq)
+
+    run_brain_cycle(root=tmp_path, pair_id="BTC-USD/ETH-USD", policy_candidates=2, max_recommendations=1)
+    run_brain_cycle(root=tmp_path, pair_id="BTC-USD/ETH-USD", policy_candidates=2, max_recommendations=1)
+
+    trend = pd.read_csv(tmp_path / "reports" / "brain" / "paper_readiness_trend.csv")
+    assert len(trend) == 2
+    assert set(trend["status"]).issubset({"ready", "blocked"})
+def test_brain_readiness_report_appends_readiness_scorecard(tmp_path, monkeypatch):
+    scorecard_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard.csv"
+    scorecard_source_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard_rollup.csv"
+
+    def make_learning_summary(pf: float, status: str = "ready") -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "cycle_id": "2026",
+                    "pair": "BTC-USD/ETH-USD",
+                    "profit_factor": pf,
+                    "status": status,
+                    "entry_threshold": 1.0,
+                    "policy_name": "edge_probe",
+                    "hold_cap_pct": 0.0,
+                    "total_return": 0.0,
+                    "max_drawdown": 0.0,
+                    "provider": "dydx",
+                    "provider_source": "dydx-indexer",
+                    "provider_rows": 1200,
+                    "provider_quality_score": 0.91,
+                }
+            ]
+        )
+
+    def make_recommendations(priority: str = "low", count: int = 2) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "BTC-USD/ETH-USD",
+                    "proposed_change": f"rec_{idx + 1}",
+                    "focus_area": "entry",
+                    "priority": priority,
+                    "cycle_id": "2026",
+                }
+                for idx in range(count)
+            ]
+        )
+
+    candidate_summary_path = tmp_path / "reports" / "rl" / "rl_learning_cycle_summary.csv"
+    recommendations_path = tmp_path / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    candidate_summary_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def run_cycle_and_capture(summary: pd.DataFrame, recommendations: pd.DataFrame, readiness_threshold: float) -> dict:
+        candidate_summary_path.write_text(summary.to_csv(index=False), encoding="utf-8")
+        recommendations_path.write_text(recommendations.to_csv(index=False), encoding="utf-8")
+
+        def fake_magicka(*, root, pair_id, policy_candidates):
+            assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+            assert policy_candidates == 4
+            return CommandResult(summary={"status": "ready"}, paths={"summary": candidate_summary_path})
+
+        def fake_seq(*, root, pair_id, max_recommendations):
+            assert pair_id == "BTC-USD/ETH-USD".replace("/", "-")
+            assert max_recommendations == 3
+            return CommandResult(summary={"status": "ready"}, paths={"recommendations": recommendations_path})
+
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_magicka_learning_cycle", fake_magicka)
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_sequential_thinking_magicka", fake_seq)
+
+        run_result = run_brain_cycle(
+            root=tmp_path,
+            pair_id="BTC-USD/ETH-USD",
+            policy_candidates=4,
+            max_recommendations=3,
+            readiness_threshold=readiness_threshold,
+        )
+        scorecard_source_path.parent.mkdir(parents=True, exist_ok=True)
+        source = pd.read_csv(run_result.paths["candidate_csv"]).copy()
+        source["cycle_id"] = str(run_result.summary["cycle_id"])
+        source.to_csv(scorecard_source_path, index=False)
+        report = build_brain_readiness_report(
+            root=tmp_path,
+            candidate_rollup_path=scorecard_source_path,
+            score_threshold=readiness_threshold,
+        ).summary
+        return {"run": run_result.summary, "report": report}
+
+    scenarios = [
+        {
+            "name": "low_quality_strict_gate",
+            "threshold": 0.8,
+            "learning": make_learning_summary(1.0, status="blocked"),
+            "recommendations": make_recommendations("low", count=2),
+            "expected_run_status": "blocked",
+            "expected_gate": "hold",
+        },
+        {
+            "name": "high_quality_mid_gate",
+            "threshold": 0.8,
+            "learning": make_learning_summary(4.0, status="ready"),
+            "recommendations": make_recommendations("low", count=2),
+            "expected_run_status": "ready",
+            "expected_gate": "pass",
+        },
+        {
+            "name": "high_quality_strict_gate",
+            "threshold": 0.95,
+            "learning": make_learning_summary(4.0, status="ready"),
+            "recommendations": make_recommendations("low", count=2),
+            "expected_run_status": "blocked",
+            "expected_gate": "hold",
+        },
+    ]
+
+    score_rows: list[dict[str, object]] = []
+    for scenario in scenarios:
+        captured = run_cycle_and_capture(
+            summary=scenario["learning"],
+            recommendations=scenario["recommendations"],
+            readiness_threshold=scenario["threshold"],
+        )
+        run_summary = captured["run"]
+        report_summary = captured["report"]
+        assert run_summary["status"] == scenario["expected_run_status"]
+        assert run_summary["readiness_gate"] == scenario["expected_gate"]
+        assert report_summary["score_gate"] == scenario["expected_gate"]
+        score_rows.append(
+            {
+                "scenario": scenario["name"],
+                "pair": "BTC-USD/ETH-USD",
+                "threshold": scenario["threshold"],
+                "status": run_summary["status"],
+                "ready_count": run_summary["ready_count"],
+                "blocked_count": run_summary["blocked_count"],
+                "readiness_score": run_summary["readiness_score"],
+                "readiness_gate": run_summary["readiness_gate"],
+                "provider": "dydx",
+                "provider_source": "dydx-indexer",
+                "provider_rows": 1200,
+                "provider_quality_score": 0.91,
+            }
+        )
+
+    scorecard = pd.DataFrame(score_rows)
+    scorecard["run_pass"] = scorecard["readiness_gate"].eq("pass").astype(int)
+    scorecard["pass_rate"] = scorecard["run_pass"].mean()
+    scorecard_path.parent.mkdir(parents=True, exist_ok=True)
+    scorecard.to_csv(scorecard_path, index=False)
+
+    saved = pd.read_csv(scorecard_path)
+    assert len(saved) == len(scenarios)
+    assert set(saved["readiness_gate"]) == {"hold", "pass"}
+    assert saved["pass_rate"].iloc[-1] == pytest.approx(1 / 3)
+    assert saved["readiness_score"].iloc[1] > saved["readiness_score"].iloc[0]
+    assert saved["readiness_score"].iloc[2] >= saved["readiness_score"].iloc[1]
+
+
+def test_brain_readiness_scorecard_is_append_only_and_rolling_rate(tmp_path, monkeypatch):
+    scorecard_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard.csv"
+    scorecard_source_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard_rollup.csv"
+    candidate_summary_path = tmp_path / "reports" / "rl" / "rl_learning_cycle_summary.csv"
+    recommendations_path = tmp_path / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    candidate_summary_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def make_learning_summary(pf: float) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "cycle_id": "2026",
+                    "pair": "BTC-USD/ETH-USD",
+                    "profit_factor": pf,
+                    "status": "ready",
+                    "entry_threshold": 1.0,
+                    "policy_name": "edge_probe",
+                    "hold_cap_pct": 0.0,
+                    "total_return": 0.0,
+                    "max_drawdown": 0.0,
+                }
+            ]
+        )
+
+    def make_recommendations() -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "BTC-USD/ETH-USD",
+                    "proposed_change": "rec_1",
+                    "focus_area": "entry",
+                    "priority": "low",
+                    "cycle_id": "2026",
+                },
+                {
+                    "pair_id": "BTC-USD/ETH-USD",
+                    "proposed_change": "rec_2",
+                    "focus_area": "exit",
+                    "priority": "low",
+                    "cycle_id": "2026",
+                },
+            ]
+        )
+
+    def run_and_append(pf: float, threshold: float) -> dict:
+        candidate_summary_path.write_text(make_learning_summary(pf).to_csv(index=False), encoding="utf-8")
+        recommendations_path.write_text(make_recommendations().to_csv(index=False), encoding="utf-8")
+
+        def fake_magicka(*, root, pair_id, policy_candidates):
+            return CommandResult(summary={"status": "ready"}, paths={"summary": candidate_summary_path})
+
+        def fake_seq(*, root, pair_id, max_recommendations):
+            return CommandResult(summary={"status": "ready"}, paths={"recommendations": recommendations_path})
+
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_magicka_learning_cycle", fake_magicka)
+        monkeypatch.setattr("quant_platform.rl.brain_cycle.run_sequential_thinking_magicka", fake_seq)
+
+        run_result = run_brain_cycle(
+            root=tmp_path,
+            pair_id="BTC-USD/ETH-USD",
+            policy_candidates=4,
+            max_recommendations=3,
+            readiness_threshold=threshold,
+        )
+        source = pd.read_csv(run_result.paths["candidate_csv"]).copy()
+        source["cycle_id"] = str(run_result.summary["cycle_id"])
+        source.to_csv(scorecard_source_path, index=False)
+        report = build_brain_readiness_report(
+            root=tmp_path,
+            candidate_rollup_path=scorecard_source_path,
+            score_threshold=threshold,
+        ).summary
+        return {"run": run_result.summary, "report": report}
+
+    run_rows = [
+        run_and_append(1.2, 0.8),
+        run_and_append(4.0, 0.8),
+        run_and_append(4.0, 0.95),
+    ]
+
+    scorecard_path.parent.mkdir(parents=True, exist_ok=True)
+    # First write
+    first_frame = pd.DataFrame(
+        [
+            {
+                "scenario": "first_window",
+                "pair": "BTC-USD/ETH-USD",
+                "threshold": 0.8,
+                "status": r["run"]["status"],
+                "ready_count": r["run"]["ready_count"],
+                "blocked_count": r["run"]["blocked_count"],
+                "readiness_score": r["run"]["readiness_score"],
+                "readiness_gate": r["run"]["readiness_gate"],
+                "provider": "dydx",
+                "provider_source": "dydx-indexer",
+                "provider_rows": 1200,
+                "provider_quality_score": 0.91,
+            }
+            for r in run_rows[:2]
+        ]
+    )
+    first_frame["run_pass"] = first_frame["readiness_gate"].eq("pass").astype(int)
+    first_frame["pass_rate"] = first_frame["run_pass"].expanding().mean()
+    first_frame.to_csv(scorecard_path, index=False)
+
+    # Append a new run
+    appended = pd.DataFrame(
+        [
+            {
+                "scenario": "appended_window",
+                "pair": "BTC-USD/ETH-USD",
+                "threshold": 0.95,
+                "status": run_rows[2]["run"]["status"],
+                "ready_count": run_rows[2]["run"]["ready_count"],
+                "blocked_count": run_rows[2]["run"]["blocked_count"],
+                "readiness_score": run_rows[2]["run"]["readiness_score"],
+                "readiness_gate": run_rows[2]["run"]["readiness_gate"],
+                "provider": "dydx",
+                "provider_source": "dydx-indexer",
+                "provider_rows": 1200,
+                "provider_quality_score": 0.91,
+            }
+        ]
+    )
+    appended["run_pass"] = appended["readiness_gate"].eq("pass").astype(int)
+    appended["pass_rate"] = (first_frame["run_pass"].sum() + appended["run_pass"]) / 3
+    appended.to_csv(scorecard_path, mode="a", index=False, header=False)
+
+    combined = pd.read_csv(scorecard_path)
+    assert len(combined) == 3
+    assert combined.iloc[0]["status"] in {"ready", "blocked"}
+    assert combined["pass_rate"].notna().any()
+    assert combined["pass_rate"].iloc[-1] == pytest.approx(1 / 3)
+
+    assert all(combined["provider"] == "dydx")
+
+    # rolling check: last window computed only from available rows and stays within [0, 1]
+    assert all(0.0 <= float(v) <= 1.0 for v in combined["pass_rate"] if pd.notna(v))
+
+
+def test_build_brain_readiness_report_rolls_up_provider_context(tmp_path):
+    scorecard_source_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard_rollup.csv"
+    scorecard_source_path.parent.mkdir(parents=True, exist_ok=True)
+
+    pd.DataFrame(
+        [
+            {
+                "cycle_id": "20260628T001",
+                "pair": "ETH-USD/BTC-USD",
+                "status": "ready",
+                "confidence": 0.66,
+                "provider": "dydx",
+                "provider_source": "history_dydx",
+                "provider_rows": 800,
+                "provider_quality_score": 0.89,
+            },
+            {
+                "cycle_id": "20260628T001",
+                "pair": "ETH-USD/BTC-USD",
+                "status": "ready",
+                "confidence": 0.84,
+                "provider": "binance",
+                "provider_source": "spot_history",
+                "provider_rows": 240,
+                "provider_quality_score": 0.76,
+            },
+        ]
+    ).to_csv(scorecard_source_path, index=False)
+
+    result = build_brain_readiness_report(
+        root=tmp_path,
+        candidate_rollup_path=scorecard_source_path,
+        score_threshold=0.7,
+    )
+
+    assert result.summary["provider"] == "binance;dydx"
+    assert result.summary["provider_source"] == "history_dydx;spot_history"
+    assert result.summary["provider_rows"] == 1040
+    assert result.summary["provider_mix"] == "mixed"
+    assert result.summary["provider_quality_score"] == pytest.approx((0.89 + 0.76) / 2)
+
+
+def test_brain_readiness_provider_quality_trend(tmp_path):
+    scorecard_source_path = tmp_path / "reports" / "brain" / "paper_readiness_scorecard_rollup.csv"
+    trend_path = tmp_path / "reports" / "brain" / "provider_quality_trend.csv"
+    scorecard_source_path.parent.mkdir(parents=True, exist_ok=True)
+
+    source_a = pd.DataFrame(
+        [
+            {
+                "cycle_id": "20260628T0100Z",
+                "pair": "ETH-USD/BTC-USD",
+                "status": "ready",
+                "confidence": 0.75,
+                "provider": "dydx",
+                "provider_source": "history_dydx",
+                "provider_rows": 1100,
+                "provider_quality_score": 0.82,
+            },
+            {
+                "cycle_id": "20260628T0100Z",
+                "pair": "SOL-USD/AVAX-USD",
+                "status": "ready",
+                "confidence": 0.55,
+                "provider": "dydx",
+                "provider_source": "history_dydx",
+                "provider_rows": 900,
+                "provider_quality_score": 0.70,
+            },
+        ]
+    )
+
+    source_b = pd.DataFrame(
+        [
+            {
+                "cycle_id": "20260628T0200Z",
+                "pair": "ETH-USD/BTC-USD",
+                "status": "ready",
+                "confidence": 0.80,
+                "provider": "binance",
+                "provider_source": "spot_history",
+                "provider_rows": 950,
+                "provider_quality_score": 0.68,
+            },
+            {
+                "cycle_id": "20260628T0200Z",
+                "pair": "SOL-USD/AVAX-USD",
+                "status": "ready",
+                "confidence": 0.79,
+                "provider": "binance",
+                "provider_source": "spot_history",
+                "provider_rows": 1050,
+                "provider_quality_score": 0.74,
+            },
+        ]
+    )
+
+    scorecard_source_path.write_text(source_a.to_csv(index=False), encoding="utf-8")
+    report_a = build_brain_readiness_report(
+        root=tmp_path,
+        candidate_rollup_path=scorecard_source_path,
+        score_threshold=0.7,
+    ).summary
+
+    scorecard_source_path.write_text(source_b.to_csv(index=False), encoding="utf-8")
+    report_b = build_brain_readiness_report(
+        root=tmp_path,
+        candidate_rollup_path=scorecard_source_path,
+        score_threshold=0.7,
+    ).summary
+
+    trend = pd.DataFrame(
+        [
+            {
+                "cycle_id": report_a["cycle_id"],
+                "provider": "dydx",
+                "provider_quality_score": report_a["provider_quality_score"],
+                "provider_rows": report_a["provider_rows"],
+            },
+            {
+                "cycle_id": report_b["cycle_id"],
+                "provider": "binance",
+                "provider_quality_score": report_b["provider_quality_score"],
+                "provider_rows": report_b["provider_rows"],
+            },
+        ]
+    )
+    trend["quality_delta_vs_prev"] = trend["provider_quality_score"].diff()
+    trend.to_csv(trend_path, index=False)
+
+    saved = pd.read_csv(trend_path)
+    assert list(saved["provider"]) == ["dydx", "binance"]
+    assert saved.loc[0, "provider_quality_score"] == pytest.approx((0.82 + 0.70) / 2)
+    assert saved.loc[1, "provider_quality_score"] == pytest.approx((0.68 + 0.74) / 2)
+    assert saved.loc[1, "quality_delta_vs_prev"] == pytest.approx((0.68 + 0.74) / 2 - (0.82 + 0.70) / 2)
+    assert pd.isna(saved.loc[0, "quality_delta_vs_prev"])
+    assert report_a["provider"] == "dydx"
+    assert report_b["provider"] == "binance"

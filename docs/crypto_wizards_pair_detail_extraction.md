@@ -104,6 +104,40 @@ The local importer accepts these payload shapes:
 
 `reports/pair_detail_capture_checklist.csv` combines top-level history coverage and nested candidate audit data into one row per archived capture. It reports found required fields, missing required fields, grouped missing baseline/ECM/two-leg/execution-assumption fields, a 0-100 `capture_completeness_score`, capture source counts such as `capture_fetches`, `capture_xhrs`, `capture_worker_messages`, and `capture_payload_sources`, the best candidate JSON path, whether the capture is import-ready, whether it is research-spine-ready, and the next capture focus. It also includes `required_field_locations` and `execution_assumption_locations`, which map each discovered field to `history`, `snapshot`, or the nested JSON path where the field was found. The `capture_operator_hint` column distinguishes a true browser capture from a static dashboard snapshot; `not_a_browser_capture` means paste the helper into the authenticated pair page, click refresh/recalculate, run `await __CW_CAPTURE_STATUS__()`, then download with `await __CW_DOWNLOAD_CAPTURE__()`.
 
+## Exhaustive UI Bundle And Orientation Capture
+
+Use `scripts/capture_crypto_wizards_pair_detail_ui_bundle.js` for the exhaustive
+dashboard ledger. It cycles through every pair-page mode, optional conditional
+and dependency charts, and every backtest chart. It captures one declared asset
+orientation per bundle.
+
+Original orientation uses the pair opened directly from its current scanner
+cell. Reverse orientation uses a new Custom Analysis tab created with scanner
+asset Y entered as X and scanner asset X entered as Y. Do not relabel an original
+capture. Before capturing any mode, the helper requires all of these to agree:
+
+- scanner venue and timeframe;
+- expected orientation from the immutable scanner row;
+- current symbol input order;
+- rendered `(asset X)` and `(asset Y)` labels.
+
+The reverse capture may have a different session-local pair route. That route is
+evidence only. The ingester consolidates original and reverse route bundles by
+the unordered venue, timeframe, and normalized asset identity. It retains the
+selected evidence path, candidate count, and every superseded evidence path.
+Input-only swaps, stale rendered labels, and mislabeled orientation records are
+kept as `INVALID_ORIENTATION_CAPTURE` rather than counted as captured.
+
+After placing downloaded bundles under
+`data/raw/crypto_wizards/dashboard_pair_details/`, run:
+
+```bash
+PYTHONPATH=src python -m quant_platform.cli ingest-wizard-pair-detail-ui-bundles
+```
+
+The exhaustive UI ledger is discovery and diagnostic evidence. It is not a
+substitute for point-in-time Hyperliquid replay or Testnet lifecycle validation.
+
 ## Preferred Next Target
 
 In an authenticated browser session:

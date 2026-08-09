@@ -3,13 +3,80 @@ import json
 import requests
 
 from quant_platform.crypto_wizards_history import (
+    CryptoWizardsCustomSeriesBacktestRequest,
     CryptoWizardsHistoryRequest,
     crawl_prescanned_backtest_histories,
     crawl_prescanned_zscores_histories,
+    fetch_custom_series_backtest,
     official_min5_request_rows,
     payload_from_backtest_history,
     payload_from_zscores_history,
 )
+
+
+def test_custom_series_backtest_request_preserves_captured_mode_and_cost_settings():
+    request = CryptoWizardsCustomSeriesBacktestRequest(
+        series_1_opens=tuple(99.5 + index for index in range(50)),
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_opens=tuple(49.5 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+        strategy="ZScoreRoll",
+        spread_type="OU",
+        roll_w=42,
+        entry_level=2.0,
+        exit_level=0.0,
+        x_weighting=0.5,
+        slippage_rate=0.0005,
+        commission_rate=0.0005,
+        stop_loss_rate=0.1,
+    )
+
+    payload = request.payload()
+
+    assert payload["params"]["strategy"] == "ZScoreRoll"
+    assert payload["params"]["spread_type"] == "OU"
+    assert payload["bt_inputs"]["commission_rate"] == 0.0005
+    assert len(payload["params"]["series_1_opens"]) == 50
+    assert len(payload["params"]["series_2_opens"]) == 50
+    assert payload["bt_inputs"]["stop_loss_rate"] == 0.1
+
+
+def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch):
+    seen = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"data": {"sharpe_ratio": 1.8}}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        seen.update({"url": url, "json": json, "headers": headers, "timeout": timeout})
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    request = CryptoWizardsCustomSeriesBacktestRequest(
+        series_1_opens=tuple(99.5 + index for index in range(50)),
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_opens=tuple(49.5 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+        strategy="Spread",
+        spread_type="Static",
+        roll_w=42,
+        entry_level=2.0,
+        exit_level=0.0,
+        x_weighting=0.5,
+        slippage_rate=0.0005,
+        commission_rate=0.0005,
+    )
+
+    response = fetch_custom_series_backtest(request, api_key="test-key")
+
+    assert response["data"]["sharpe_ratio"] == 1.8
+    assert seen["url"].endswith("/v1beta/backtest")
+    assert seen["json"]["params"]["strategy"] == "Spread"
+    assert seen["headers"]["X-api-key"] == "test-key"
 
 
 def test_payload_from_zscores_history_normalizes_official_min5_response():
@@ -52,6 +119,8 @@ def test_payload_from_zscores_history_normalizes_official_min5_response():
     assert payload["sharpe"] == 1.9
     assert payload["drawdown"] == -0.04
     assert payload["prescanned"]["ml_confidence"] == 0.62
+    assert len(payload["config_hash"]) == 64
+    assert payload["wizard_configuration"]["exact_mode"] == "static_zscores_bundle"
     first_row = payload["history"][0]
     assert first_row["timestamp"] == 0
     assert first_row["spread"] == -0.2
@@ -64,6 +133,7 @@ def test_payload_from_zscores_history_normalizes_official_min5_response():
     assert first_row["conditional_probability_distortion"] == 0.55
     assert first_row["completed_trades"] == 12
     assert first_row["drawdown"] == -0.04
+    assert first_row["config_hash"] == payload["config_hash"]
 
 
 def test_official_min5_request_rows_builds_safe_curl_templates():
@@ -173,6 +243,8 @@ def test_payload_from_backtest_history_normalizes_metrics_and_history():
     assert payload["history"][0]["bt_return"] == 1.0
     assert payload["history"][0]["sharpe"] == 2.1
     assert payload["history"][1]["bt_return"] == 1.02
+    assert payload["wizard_configuration"]["exact_mode"] == "static_spread"
+    assert payload["history"][0]["config_hash"] == payload["config_hash"]
 
 
 def test_crawl_prescanned_backtest_histories_writes_pair_payloads(monkeypatch, tmp_path):

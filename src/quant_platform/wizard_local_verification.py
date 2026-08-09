@@ -4,12 +4,15 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from typing import Mapping
 
 import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.backtest import BacktestResult, CostModel, backtest_two_leg_spread
+from quant_platform.wizard_evidence import _ensure_wizard_evidence, _wizard_setup_identity
+from quant_platform.wizard_mode_replay import WizardModeReplayResult, build_local_mode_signal
 
 
 DEFAULT_HISTORY = ROOT / "data" / "raw" / "pair_details" / "pair_bnb_stx_daily_320_fresh_1day_dydx_long_history_derived_history.json"
@@ -62,6 +65,7 @@ def verify_wizard_local_mode(
     exit_threshold: float = 0.0,
     current_date: str = "2026-06-25",
     exact_mode: str | None = None,
+    mode_settings: Mapping[str, object] | None = None,
 ) -> CommandResult:
     history_file = history_path or DEFAULT_HISTORY
     wizard_file = wizard_capture_path or DEFAULT_WIZARD_CAPTURE
@@ -120,7 +124,37 @@ def verify_wizard_local_mode(
                 "max_drawdown": 0.0,
             },
         )
-    signal, trade_log = static_spread_signal(history["zscore"], entry_threshold=entry_threshold, exit_threshold=exit_threshold)
+    wizard_payload = _read_wizard_capture_payload(wizard_file, payload) if wizard_file.exists() else {}
+    mode = exact_mode or _mode_from_payload(wizard_payload, payload)
+    vendor_fidelity_status, vendor_fidelity_reason = _mode_fidelity(payload, wizard_payload, mode)
+    resolved_mode_settings = dict(mode_settings or {})
+    local_mode_result: WizardModeReplayResult | None = None
+    if vendor_fidelity_status == "vendor_exact":
+        signal, trade_log = static_spread_signal(history["zscore"], entry_threshold=entry_threshold, exit_threshold=exit_threshold)
+        mode_fidelity_status = vendor_fidelity_status
+        mode_fidelity_reason = vendor_fidelity_reason
+        signal_metadata = _generic_signal_metadata(
+            mode_replay_status="VENDOR_CUSTOM_SERIES_PROVENANCE",
+            signal_source="Crypto Wizards custom-series backtest provenance for the captured exact mode",
+            entry_threshold=entry_threshold,
+            exit_threshold=exit_threshold,
+        )
+    elif resolved_mode_settings:
+        local_mode_result = build_local_mode_signal(history, resolved_mode_settings, exact_mode=mode)
+        signal, trade_log = local_mode_result.signal, local_mode_result.trades
+        mode_fidelity_status = local_mode_result.mode_fidelity_status
+        mode_fidelity_reason = local_mode_result.mode_fidelity_reason
+        signal_metadata = _local_mode_signal_metadata(local_mode_result, resolved_mode_settings)
+    else:
+        signal, trade_log = static_spread_signal(history["zscore"], entry_threshold=entry_threshold, exit_threshold=exit_threshold)
+        mode_fidelity_status = vendor_fidelity_status
+        mode_fidelity_reason = vendor_fidelity_reason
+        signal_metadata = _generic_signal_metadata(
+            mode_replay_status="GENERIC_PROXY_ONLY",
+            signal_source=f"local zscore column used as a non-comparable {mode} proxy",
+            entry_threshold=entry_threshold,
+            exit_threshold=exit_threshold,
+        )
     cost_buckets = _cost_buckets()
     cost_rows = []
     for name, model in cost_buckets.items():
@@ -132,12 +166,13 @@ def verify_wizard_local_mode(
     if not trade_frame.empty:
         trade_frame = _attach_trade_returns(trade_frame, history, signal, cost_buckets["base_cost_used"])
 
-    wizard_payload = _read_json(wizard_file) if wizard_file.exists() else {}
-    mode = exact_mode or _mode_from_payload(wizard_payload, payload)
     local_last = pd.to_datetime(history["timestamp"].iloc[-1], utc=True)
     as_of = pd.Timestamp(current_date, tz="UTC")
     age_days = max(0, int((as_of.normalize() - local_last.normalize()).days))
     acceptance, reason = _acceptance(base_result, len(history), age_days, int((trade_frame.get("exit_reason", pd.Series(dtype=str)) != "open_at_end_of_history").sum()))
+    if mode_fidelity_status != "vendor_exact":
+        acceptance = "BLOCKED"
+        reason = _append_reason(reason, mode_fidelity_reason)
     summary = _summary_row(
         payload=payload,
         wizard_payload=wizard_payload,
@@ -154,6 +189,9 @@ def verify_wizard_local_mode(
         entry_threshold=entry_threshold,
         exit_threshold=exit_threshold,
         exact_mode=mode,
+        mode_fidelity_status=mode_fidelity_status,
+        mode_fidelity_reason=mode_fidelity_reason,
+        signal_metadata=signal_metadata,
     )
     reports = root / "reports" / "active"
     summary_path = reports / f"{output_name}_after_cost.csv"
@@ -187,10 +225,20 @@ def verify_wizard_local_mode(
 def _candidate_rows(*, root: Path, queue_file: Path, max_pairs: int) -> list[dict[str, object]]:
     candidates: list[dict[str, object]] = []
     seen: set[tuple[str, str]] = set()
+    wizard_evidence = _ensure_wizard_evidence(root)
+    evidence_index = _primary_wizard_evidence_index(wizard_evidence)
+    packet_index = _wizard_candidate_packet_index(root)
+    hourly_target_index = _wizard_hourly_target_index(root)
     if queue_file.exists():
         queue = pd.read_csv(queue_file).head(max_pairs)
         for _, row in queue.iterrows():
-            candidate = _candidate_from_queue_row(row, root=root)
+            candidate = _candidate_from_queue_row(
+                row,
+                root=root,
+                evidence_index=evidence_index,
+                packet_index=packet_index,
+                hourly_target_index=hourly_target_index,
+            )
             key = (str(candidate.get("pair", "")), str(candidate.get("history_path", "")))
             if key not in seen:
                 seen.add(key)
@@ -203,10 +251,13 @@ def _candidate_rows(*, root: Path, queue_file: Path, max_pairs: int) -> list[dic
             "asset_x": "BNB-USD",
             "asset_y": "STX-USD",
             "interval": "daily",
+            "period": 320,
             "wizard_sharpe": "",
             "wizard_returns_total": "",
             "wizard_returns_total_pct": "",
             "exact_mode": "Static (Spread)",
+            "setup_identity": _wizard_setup_identity("BNB-USD/STX-USD", "daily", 320, "Static (Spread)"),
+            "setup_role": "primary",
             "spread_id": 3,
             "strategy_id": 1,
             "history_path": bnb_history,
@@ -220,31 +271,87 @@ def _candidate_rows(*, root: Path, queue_file: Path, max_pairs: int) -> list[dic
     return candidates[:max_pairs]
 
 
-def _candidate_from_queue_row(row: pd.Series, *, root: Path) -> dict[str, object]:
-    asset_x = row.get("asset_x", "")
-    asset_y = row.get("asset_y", "")
-    interval = row.get("interval", "daily")
-    if pd.isna(interval) or str(interval).strip() == "":
-        interval = "daily"
-    source_path = _path_from_value(row.get("pair_history_path", row.get("source_path", "")), root=root)
-    if source_path is None or not source_path.exists():
-        source_path = _find_local_history_path(root=root, asset_x=str(asset_x), asset_y=str(asset_y), interval=str(interval))
-    source_payload = _read_json(source_path) if source_path and source_path.exists() else {}
-    exact_mode = source_payload.get("exact_mode", "") or _mode_from_strategy(row.get("strategy", row.get("strategy_family_note", source_payload.get("strategy_mode", ""))))
+def _candidate_from_queue_row(
+    row: pd.Series,
+    *,
+    root: Path,
+    evidence_index: dict[str, dict[str, object]] | None = None,
+    packet_index: dict[str, dict[str, object]] | None = None,
+    hourly_target_index: dict[str, dict[str, object]] | None = None,
+) -> dict[str, object]:
+    pair_text = _text_value(row.get("pair", ""))
+    evidence_row = _match_primary_wizard_evidence(pair_text, row.get("asset_x", ""), row.get("asset_y", ""), evidence_index or {})
+    packet_row = _match_indexed_pair_row(pair_text, row.get("asset_x", ""), row.get("asset_y", ""), packet_index or {})
+    hourly_target_row = _match_indexed_pair_row(pair_text, row.get("asset_x", ""), row.get("asset_y", ""), hourly_target_index or {})
+    asset_x = _text_value(row.get("asset_x", "")) or _text_value((evidence_row or {}).get("asset_x", ""))
+    asset_y = _text_value(row.get("asset_y", "")) or _text_value((evidence_row or {}).get("asset_y", ""))
+    interval = (
+        _text_value(row.get("interval", ""))
+        or _text_value((evidence_row or {}).get("interval", ""))
+        or _text_value((packet_row or {}).get("timeframe", ""))
+        or _text_value((hourly_target_row or {}).get("timeframe", ""))
+        or "daily"
+    )
+    explicit_history_path = _path_from_value(row.get("pair_history_path", ""), root=root)
+    fallback_history_path = _find_local_history_path(root=root, asset_x=str(asset_x), asset_y=str(asset_y), interval=str(interval))
+    history_path = explicit_history_path
+    if history_path is not None and history_path.exists() and _path_is_usable_local_history(history_path):
+        pass
+    elif fallback_history_path is not None and fallback_history_path.exists():
+        history_path = fallback_history_path
+    elif history_path is not None and history_path.exists():
+        pass
+    else:
+        history_path = None
+    source_hint = (
+        _text_value((evidence_row or {}).get("source_path", ""))
+        or _text_value((packet_row or {}).get("source_path", ""))
+        or _text_value(row.get("source_path", ""))
+    )
+    wizard_source_path = _path_from_value(source_hint, root=root)
+    source_payload = _read_json(history_path) if history_path and history_path.exists() else {}
+    exact_mode = (
+        _text_value(row.get("exact_mode"))
+        or _text_value((evidence_row or {}).get("exact_mode", ""))
+        or _text_value((packet_row or {}).get("strategy_mode", ""))
+        or _text_value((hourly_target_row or {}).get("matched_hourly_strategy", ""))
+        or _text_value(row.get("dashboard_recommended_strategy"))
+        or _text_value((evidence_row or {}).get("dashboard_recommended_strategy", ""))
+        or _text_value(source_payload.get("exact_mode"))
+        or _mode_from_strategy(row.get("strategy", row.get("strategy_family_note", source_payload.get("strategy_mode", ""))))
+    )
+    period = (
+        source_payload.get("period")
+        or (evidence_row or {}).get("period")
+        or (packet_row or {}).get("period")
+        or row.get("period", "")
+    )
+    wizard_capture_path = _find_wizard_capture_path(
+        root=root,
+        pair=pair_text,
+        asset_x=str(asset_x),
+        asset_y=str(asset_y),
+        interval=str(interval or source_payload.get("interval", "")),
+        exact_mode=str(exact_mode),
+        source_path=wizard_source_path,
+    )
     return {
-        "pair": row.get("pair", ""),
+        "pair": pair_text or _text_value((evidence_row or {}).get("pair", "")),
         "asset_x": asset_x or source_payload.get("asset_x", ""),
         "asset_y": asset_y or source_payload.get("asset_y", ""),
         "interval": interval or source_payload.get("interval", ""),
-        "wizard_sharpe": row.get("sharpe", source_payload.get("sharpe", "")),
-        "wizard_returns_total": row.get("returns_total", row.get("return_pct", source_payload.get("returns_total", ""))),
-        "wizard_returns_total_pct": row.get("returns_total_pct", row.get("return_pct", "")),
+        "period": period,
+        "wizard_sharpe": _first_nonblank(row.get("sharpe"), (evidence_row or {}).get("sharpe"), source_payload.get("sharpe", "")),
+        "wizard_returns_total": _first_nonblank(row.get("returns_total"), row.get("return_pct"), (evidence_row or {}).get("returns_total"), source_payload.get("returns_total", "")),
+        "wizard_returns_total_pct": _first_nonblank(row.get("returns_total_pct"), row.get("return_pct"), (evidence_row or {}).get("returns_total_pct"), ""),
         "exact_mode": exact_mode,
-        "spread_id": source_payload.get("spread_id", ""),
-        "strategy_id": source_payload.get("strategy_id", ""),
-        "history_path": source_path,
-        "wizard_capture_path": source_path,
-        "source_row_path": row.get("source_path", ""),
+        "setup_identity": _text_value((evidence_row or {}).get("setup_identity", "")) or _text_value((packet_row or {}).get("setup_identity", "")) or _wizard_setup_identity(str(pair_text or (evidence_row or {}).get("pair", "")), str(interval or source_payload.get("interval", "")), _maybe_int(period), str(exact_mode)),
+        "setup_role": _text_value((evidence_row or {}).get("setup_role", "")) or _text_value((packet_row or {}).get("setup_role", "")) or "primary",
+        "spread_id": _first_nonblank(row.get("spread_id"), (evidence_row or {}).get("spread_id"), (packet_row or {}).get("spread_id"), source_payload.get("spread_id", "")),
+        "strategy_id": _first_nonblank(row.get("strategy_id"), (evidence_row or {}).get("strategy_id"), (packet_row or {}).get("strategy_id"), source_payload.get("strategy_id", "")),
+        "history_path": history_path,
+        "wizard_capture_path": wizard_capture_path,
+        "source_row_path": _text_value(row.get("source_path", "")) or _text_value((evidence_row or {}).get("source_path", "")),
         "candidate_source": row.get("source_group", "wizard_queue"),
         "execution_bucket": row.get("execution_bucket", ""),
         "execution_blockers": row.get("execution_blockers", ""),
@@ -254,7 +361,8 @@ def _candidate_from_queue_row(row: pd.Series, *, root: Path) -> dict[str, object
 
 
 def _verify_candidate(*, root: Path, candidate: dict[str, object], current_date: str) -> dict[str, object]:
-    blockers = _candidate_blockers(candidate)
+    mode_settings = _validated_mode_settings_for_candidate(root, candidate)
+    blockers = _candidate_blockers(candidate, has_mode_settings=bool(mode_settings))
     base = _candidate_base_row(candidate)
     if blockers:
         return {
@@ -273,12 +381,20 @@ def _verify_candidate(*, root: Path, candidate: dict[str, object], current_date:
             output_name=output_name,
             current_date=current_date,
             exact_mode=str(candidate.get("exact_mode", "")),
+            mode_settings=mode_settings or None,
         )
         summary = pd.read_csv(result.paths["summary"]).iloc[0].to_dict()
+        mode_fidelity_status = _text_value(summary.get("mode_fidelity_status", ""))
+        exact_verified = mode_fidelity_status == "vendor_exact"
         return {
             **base,
-            "verification_status": "verified",
-            "verification_blocker": "",
+            "verification_status": "verified" if exact_verified else "proxy_only",
+            "verification_blocker": "" if exact_verified else _text_value(summary.get("mode_fidelity_reason", "mode_fidelity_not_exact")),
+            "mode_fidelity_status": mode_fidelity_status,
+            "mode_fidelity_reason": _text_value(summary.get("mode_fidelity_reason", "")),
+            "mode_replay_status": _text_value(summary.get("mode_replay_status", "")),
+            "mode_metric_name": _text_value(summary.get("mode_metric_name", "")),
+            "mode_missing_inputs": _text_value(summary.get("mode_missing_inputs", "")),
             "acceptance": summary.get("acceptance", ""),
             "acceptance_reason": summary.get("acceptance_reason", ""),
             "local_observations": summary.get("local_observations", ""),
@@ -309,6 +425,9 @@ def _candidate_base_row(candidate: dict[str, object]) -> dict[str, object]:
         "asset_x": candidate.get("asset_x", ""),
         "asset_y": candidate.get("asset_y", ""),
         "interval": candidate.get("interval", ""),
+        "period": candidate.get("period", ""),
+        "setup_identity": candidate.get("setup_identity", ""),
+        "setup_role": candidate.get("setup_role", "primary"),
         "exact_mode": candidate.get("exact_mode", ""),
         "spread_id": candidate.get("spread_id", ""),
         "strategy_id": candidate.get("strategy_id", ""),
@@ -326,14 +445,71 @@ def _candidate_base_row(candidate: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _candidate_blockers(candidate: dict[str, object]) -> list[str]:
+def _validated_mode_settings_for_candidate(root: Path, candidate: dict[str, object]) -> dict[str, object]:
+    """Return a validated dashboard capture for one exact setup, if present."""
+
+    path = root / "reports" / "active" / "crypto_wizards_pair_page_capture_settings.csv"
+    if not path.exists():
+        return {}
+    try:
+        captures = pd.read_csv(path, dtype=object).fillna("")
+    except (OSError, pd.errors.EmptyDataError):
+        return {}
+    if captures.empty:
+        return {}
+    setup_identity = _text_value(candidate.get("setup_identity", ""))
+    if setup_identity and "setup_identity" in captures.columns:
+        exact = captures[captures["setup_identity"].map(_text_value).eq(setup_identity)]
+        if len(exact) == 1:
+            return exact.iloc[0].to_dict()
+    pair = _normalize_pair(str(candidate.get("pair", "")), str(candidate.get("asset_x", "")), str(candidate.get("asset_y", "")))
+    interval = _normalize_interval(candidate.get("interval", ""))
+    mode = str(candidate.get("exact_mode", "")).strip().lower()
+    period = _maybe_int(candidate.get("period", ""))
+    matches: list[dict[str, object]] = []
+    for _, row in captures.iterrows():
+        row_pair = _normalize_pair(str(row.get("pair", "")), str(row.get("asset_x", "")), str(row.get("asset_y", "")))
+        row_interval = _normalize_interval(row.get("interval", ""))
+        row_mode = str(row.get("exact_mode", "")).strip().lower()
+        row_period = _maybe_int(row.get("period", ""))
+        if row_pair != pair or (interval and row_interval != interval) or (mode and row_mode != mode):
+            continue
+        if period is not None and row_period is not None and row_period != period:
+            continue
+        matches.append(row.to_dict())
+    return matches[0] if len(matches) == 1 else {}
+
+
+def _candidate_blockers(candidate: dict[str, object], *, has_mode_settings: bool = False) -> list[str]:
     blockers: list[str] = []
     history_path = candidate.get("history_path")
     wizard_path = candidate.get("wizard_capture_path")
     exact_mode = str(candidate.get("exact_mode", "")).strip().lower()
     if not exact_mode:
         blockers.append("missing_exact_mode_capture")
-    elif exact_mode not in {"static (spread)", "static spread", "ou (spread)", "ou spread"}:
+    elif exact_mode not in {
+        "static (spread)",
+        "static spread",
+        "ou (spread)",
+        "ou spread",
+        "copula",
+        "static (zscorer)",
+        "static zscorer",
+        "static (zscore)",
+        "static zscore",
+        "dyn (zscorer)",
+        "dyn zscorer",
+        "dynamic (zscorer)",
+        "dynamic zscorer",
+        "dyn (zscore)",
+        "dyn zscore",
+        "dynamic (zscore)",
+        "dynamic zscore",
+        "ou (zscorer)",
+        "ou zscorer",
+        "ou (zscore)",
+        "ou zscore",
+    }:
         blockers.append(f"unsupported_exact_mode:{candidate.get('exact_mode')}")
     if not history_path:
         blockers.append("missing_local_history_path")
@@ -342,8 +518,10 @@ def _candidate_blockers(candidate: dict[str, object]) -> list[str]:
     else:
         payload = _read_json(Path(history_path))
         history = pd.DataFrame(payload.get("history", []))
-        required = {"timestamp", "price_x", "price_y", "zscore"}
+        required = {"timestamp", "price_x", "price_y"}
         missing = sorted(required - set(history.columns))
+        if not missing and not has_mode_settings and not _has_zscore_like_columns(history):
+            missing.append("zscore_for_generic_proxy")
         if missing:
             blockers.append(f"local_history_missing_columns:{','.join(missing)}")
     if not wizard_path or not Path(wizard_path).exists():
@@ -355,6 +533,20 @@ def _candidate_output_name(candidate: dict[str, object]) -> str:
     pair = str(candidate.get("pair", "candidate")).replace("/", "_").replace("-", "").lower()
     mode = str(candidate.get("exact_mode", "mode")).replace("(", "").replace(")", "").replace(" ", "_").lower()
     return f"{pair}_{mode}_verification"
+
+
+def _maybe_int(value: object) -> int | None:
+    try:
+        text = str(value).strip()
+        if not text or text.lower() in {"nan", "none", "null"}:
+            return None
+        return int(float(text))
+    except (TypeError, ValueError):
+        return None
+
+
+def _has_zscore_like_columns(frame: pd.DataFrame) -> bool:
+    return bool({"zscore", "zscore_reconstructed", "rolling_zscore"}.intersection(frame.columns))
 
 
 def _path_from_value(value: object, *, root: Path) -> Path | None:
@@ -370,36 +562,81 @@ def _path_from_value(value: object, *, root: Path) -> Path | None:
 def _find_local_history_path(*, root: Path, asset_x: str, asset_y: str, interval: str) -> Path | None:
     if not asset_x or not asset_y:
         return None
-    left = asset_x.replace("-USD", "").replace("-", "_").lower()
-    right = asset_y.replace("-USD", "").replace("-", "_").lower()
-    candidates = sorted((root / "data" / "raw" / "pair_details").glob(f"*{left}*{right}*.json"))
-    candidates.extend(sorted((root / "data" / "raw" / "pair_details").glob(f"*{right}*{left}*.json")))
+    pair_dir = root / "data" / "raw" / "pair_details"
+    left_tokens = _asset_match_tokens(asset_x)
+    right_tokens = _asset_match_tokens(asset_y)
+    candidates = []
+    for path in sorted(pair_dir.glob("*.json")):
+        text = path.name.lower()
+        if any(token in text for token in left_tokens) and any(token in text for token in right_tokens):
+            candidates.append(path)
     daily = str(interval).strip().lower() in {"daily", "1day", "day"}
     matches: list[tuple[int, pd.Timestamp, Path]] = []
     for path in candidates:
         payload = _read_json(path)
         history = pd.DataFrame(payload.get("history", []))
-        if {"timestamp", "price_x", "price_y", "zscore"}.issubset(history.columns):
+        if {"timestamp", "price_x", "price_y"}.issubset(history.columns) and _has_zscore_like_columns(history):
             text = path.name.lower()
             if not daily or "1day" in text or "daily" in text:
                 last = pd.to_datetime(history["timestamp"], utc=True, errors="coerce").max()
                 matches.append((len(history), last if pd.notna(last) else pd.Timestamp.min.tz_localize("UTC"), path))
     if matches:
         return sorted(matches, key=lambda item: (item[0], item[1]), reverse=True)[0][2]
-    if daily:
-        return None
     fallback_matches: list[tuple[int, pd.Timestamp, Path]] = []
     for path in candidates:
         payload = _read_json(path)
         history = pd.DataFrame(payload.get("history", []))
-        if {"timestamp", "price_x", "price_y", "zscore"}.issubset(history.columns):
+        if {"timestamp", "price_x", "price_y"}.issubset(history.columns) and _has_zscore_like_columns(history):
             last = pd.to_datetime(history["timestamp"], utc=True, errors="coerce").max()
             fallback_matches.append((len(history), last if pd.notna(last) else pd.Timestamp.min.tz_localize("UTC"), path))
     return sorted(fallback_matches, key=lambda item: (item[0], item[1]), reverse=True)[0][2] if fallback_matches else None
 
 
+def _asset_match_tokens(asset: str) -> set[str]:
+    text = _text_value(asset).lower()
+    if not text:
+        return set()
+    compact = text.replace("-", "").replace("_", "")
+    underscore = text.replace("-", "_")
+    base = text.replace("-usd", "").replace("_usd", "").replace("usd", "").strip("-_")
+    return {token for token in {text, compact, underscore, base} if token}
+
+
+def _path_is_usable_local_history(path: Path) -> bool:
+    try:
+        payload = _read_json(path)
+    except Exception:
+        return False
+    history = pd.DataFrame(payload.get("history", []))
+    return {"timestamp", "price_x", "price_y"}.issubset(history.columns) and _has_zscore_like_columns(history)
+
+
+def _primary_wizard_evidence_index(frame: pd.DataFrame) -> dict[str, dict[str, object]]:
+    if frame.empty:
+        return {}
+    working = frame.copy()
+    primary = working.get("primary_wizard_setup", pd.Series(False, index=working.index)).map(_as_bool_like)
+    if primary.any():
+        working = working.loc[primary].copy()
+    index: dict[str, dict[str, object]] = {}
+    for _, row in working.iterrows():
+        key = _normalize_pair(str(row.get("pair", "")), str(row.get("asset_x", "")), str(row.get("asset_y", "")))
+        if key and key not in index:
+            index[key] = row.to_dict()
+    return index
+
+
+def _match_primary_wizard_evidence(pair: str, asset_x: object, asset_y: object, evidence_index: dict[str, dict[str, object]]) -> dict[str, object] | None:
+    key = _normalize_pair(pair, _text_value(asset_x), _text_value(asset_y))
+    return evidence_index.get(key)
+
+
 def _mode_from_strategy(value: object) -> str:
     text = str(value).strip().lower().replace("_", "").replace(" ", "")
+    if "copula" in text:
+        return "Copula"
+    if "kalman" in text or "dynamic" in text or text in {"dynspread", "dyn"}:
+        return "Dyn (Spread)"
     if text in {"ouspread", "ou"}:
         return "OU (Spread)"
     if text in {"ouzscorer", "ouzscore", "ouzscoreroll"}:
@@ -408,6 +645,8 @@ def _mode_from_strategy(value: object) -> str:
         return "Static (Spread)"
     if text in {"staticzscorer", "staticzscore", "staticzscoreroll"}:
         return "Static (ZScoreR)"
+    if "zscore" in text:
+        return "Static (ZScoreR)"
     return ""
 
 
@@ -415,7 +654,199 @@ def _mode_from_payload(wizard_payload: dict[str, object], local_payload: dict[st
     explicit = str(wizard_payload.get("exact_mode", "") or local_payload.get("exact_mode", "")).strip()
     if explicit:
         return explicit
-    return _mode_from_strategy(wizard_payload.get("strategy_mode", local_payload.get("strategy_mode", ""))) or "Static (Spread)"
+    strategy_hint = (
+        wizard_payload.get("dashboard_recommended_strategy")
+        or wizard_payload.get("selected_strategy_value")
+        or wizard_payload.get("strategy_name")
+        or wizard_payload.get("strategy_mode")
+        or local_payload.get("dashboard_recommended_strategy")
+        or local_payload.get("strategy_mode", "")
+    )
+    return _mode_from_strategy(strategy_hint) or "Static (Spread)"
+
+
+def _mode_fidelity(
+    local_payload: dict[str, object],
+    wizard_payload: dict[str, object],
+    exact_mode: str,
+) -> tuple[str, str]:
+    """Return whether the local calculation is a real vendor-mode replay or a proxy."""
+
+    source = _text_value(
+        local_payload.get("mode_computation_source")
+        or wizard_payload.get("mode_computation_source")
+        or local_payload.get("source_mode_provenance")
+        or wizard_payload.get("source_mode_provenance")
+    ).lower()
+    recorded_mode = _text_value(local_payload.get("exact_mode") or wizard_payload.get("exact_mode"))
+    if source == "crypto_wizards_custom_series_backtest" and _same_mode(recorded_mode, exact_mode):
+        return "vendor_exact", ""
+    if not recorded_mode:
+        return "generic_zscore_proxy", "exact_mode_not_recorded_in_local_mode_engine"
+    if not _same_mode(recorded_mode, exact_mode):
+        return "generic_zscore_proxy", "local_mode_does_not_match_wizard_exact_mode"
+    return "generic_zscore_proxy", "local_zscore_proxy_not_vendor_custom_series_replay"
+
+
+def _same_mode(left: str, right: str) -> bool:
+    normalize = lambda value: "".join(character for character in str(value).lower() if character.isalnum())
+    return bool(normalize(left) and normalize(left) == normalize(right))
+
+
+def _append_reason(reason: str, addition: str) -> str:
+    values = [value for value in [str(reason or "").strip(), str(addition or "").strip()] if value]
+    return ";".join(dict.fromkeys(values))
+
+
+def _find_wizard_capture_path(
+    *,
+    root: Path,
+    pair: str,
+    asset_x: str,
+    asset_y: str,
+    interval: str,
+    exact_mode: str,
+    source_path: Path | None,
+) -> Path | None:
+    if source_path and source_path.exists():
+        return source_path
+    for candidate_path in [
+        root / "reports" / "active" / "crypto_wizards_pair_page_capture.csv",
+        root / "reports" / "active" / "wizard_scanner_dependency_capture.csv",
+    ]:
+        matched = _capture_csv_matches(
+            candidate_path,
+            pair=pair,
+            asset_x=asset_x,
+            asset_y=asset_y,
+            interval=interval,
+            exact_mode=exact_mode,
+        )
+        if matched:
+            return candidate_path
+    return None
+
+
+def _capture_csv_matches(path: Path, *, pair: str, asset_x: str, asset_y: str, interval: str, exact_mode: str) -> bool:
+    if not path.exists():
+        return False
+    try:
+        capture = pd.read_csv(path)
+    except Exception:
+        return False
+    if capture.empty:
+        return False
+    pair_norm = _normalize_pair(pair, asset_x, asset_y)
+    interval_norm = str(interval).strip().lower()
+    exact_norm = str(exact_mode).strip().lower()
+    for _, row in capture.iterrows():
+        row_pair = _normalize_pair(str(row.get("pair", "")), str(row.get("asset_x", "")), str(row.get("asset_y", "")))
+        row_interval = str(row.get("interval", "") or row.get("timeframe", "")).strip().lower()
+        row_exact = str(
+            row.get("exact_mode", "")
+            or row.get("dashboard_recommended_strategy", "")
+            or row.get("strategy_mode", "")
+            or row.get("matched_hourly_strategy", "")
+        ).strip().lower()
+        if row_pair == pair_norm and (not interval_norm or not row_interval or row_interval == interval_norm) and (not exact_norm or row_exact == exact_norm):
+            return True
+    return False
+
+
+def _normalize_pair(pair: str, asset_x: str, asset_y: str) -> str:
+    text = str(pair).strip()
+    if text:
+        return text.replace("/", "-").upper()
+    if asset_x and asset_y:
+        return f"{asset_x}-{asset_y}".replace("/", "-").upper()
+    return ""
+
+
+def _read_wizard_capture_payload(path: Path, local_payload: dict[str, object]) -> dict[str, object]:
+    if path.suffix.lower() == ".csv":
+        try:
+            capture = pd.read_csv(path)
+        except Exception:
+            return {}
+        if capture.empty:
+            return {}
+        local_pair = _normalize_pair(
+            str(local_payload.get("pair", "")),
+            str(local_payload.get("asset_x", "")),
+            str(local_payload.get("asset_y", "")),
+        )
+        local_interval = str(local_payload.get("interval", "")).strip().lower()
+        pair_only_match: dict[str, object] | None = None
+        for _, row in capture.iterrows():
+            row_pair = _normalize_pair(str(row.get("pair", "")), str(row.get("asset_x", "")), str(row.get("asset_y", "")))
+            row_interval = str(row.get("interval", "") or row.get("timeframe", "")).strip().lower()
+            if row_pair == local_pair and (not local_interval or row_interval == local_interval):
+                return row.to_dict()
+            if row_pair == local_pair and pair_only_match is None:
+                pair_only_match = row.to_dict()
+        if pair_only_match is not None:
+            return pair_only_match
+        return capture.iloc[0].to_dict()
+    return _read_json(path)
+
+
+def _wizard_candidate_packet_index(root: Path) -> dict[str, dict[str, object]]:
+    path = root / "reports" / "brain" / "wizard_candidate_packets.csv"
+    if not path.exists():
+        return {}
+    try:
+        frame = pd.read_csv(path)
+    except Exception:
+        return {}
+    index: dict[str, dict[str, object]] = {}
+    for _, row in frame.iterrows():
+        key = _normalize_pair(str(row.get("pair", "")), "", "")
+        if key and key not in index:
+            index[key] = row.to_dict()
+    return index
+
+
+def _wizard_hourly_target_index(root: Path) -> dict[str, dict[str, object]]:
+    path = root / "reports" / "brain" / "wizard_hourly_repair_targets.csv"
+    if not path.exists():
+        return {}
+    try:
+        frame = pd.read_csv(path)
+    except Exception:
+        return {}
+    index: dict[str, dict[str, object]] = {}
+    for _, row in frame.iterrows():
+        key = _normalize_pair(str(row.get("pair", "")), "", "")
+        if key and key not in index:
+            index[key] = row.to_dict()
+    return index
+
+
+def _match_indexed_pair_row(pair: str, asset_x: object, asset_y: object, index: dict[str, dict[str, object]]) -> dict[str, object] | None:
+    key = _normalize_pair(pair, _text_value(asset_x), _text_value(asset_y))
+    return index.get(key)
+
+
+def _text_value(value: object) -> str:
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ""
+    text = str(value).strip()
+    return "" if text.lower() in {"nan", "none", "null"} else text
+
+
+def _as_bool_like(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    text = _text_value(value).lower()
+    return text in {"1", "true", "yes", "y"}
+
+
+def _first_nonblank(*values: object) -> object:
+    for value in values:
+        text = _text_value(value)
+        if text:
+            return value
+    return ""
 
 
 def _ids_from_mode(exact_mode: str) -> tuple[int | str, int | str]:
@@ -432,6 +863,8 @@ def _ids_from_mode(exact_mode: str) -> tuple[int | str, int | str]:
         return 3, 1
     if text in {"static (zscorer)", "static zscorer", "static zscore"}:
         return 3, 2
+    if text == "copula":
+        return 1, 3
     return "", ""
 
 
@@ -609,17 +1042,16 @@ def _attach_trade_returns(
     returns_x = price_x.pct_change().fillna(0.0)
     returns_y = price_y.pct_change().fillna(0.0)
     hedge_ratio = pd.to_numeric(data.get("hedge_ratio", 1.0), errors="coerce").fillna(1.0)
-    beta = pd.to_numeric(data.get("beta", 1.0), errors="coerce").fillna(1.0).replace(0, 1.0).abs()
     signal_position = data["signal"].shift(1).fillna(0.0)
-    gross_scale = 1.0 + hedge_ratio.abs() * beta
+    gross_scale = 1.0 + hedge_ratio.abs()
     weight_y = signal_position / gross_scale
-    weight_x = -signal_position * hedge_ratio * beta / gross_scale
+    weight_x = -signal_position * hedge_ratio / gross_scale
     gross_return = weight_x * returns_x + weight_y * returns_y
     target_weight_y = data["signal"] / gross_scale
-    target_weight_x = -data["signal"] * hedge_ratio * beta / gross_scale
+    target_weight_x = -data["signal"] * hedge_ratio / gross_scale
     turnover = target_weight_x.diff().abs().fillna(target_weight_x.abs()) + target_weight_y.diff().abs().fillna(target_weight_y.abs())
-    funding_x = pd.to_numeric(data.get("funding_x_bps", cost_model.funding_bps_per_day), errors="coerce").fillna(cost_model.funding_bps_per_day)
-    funding_y = pd.to_numeric(data.get("funding_y_bps", cost_model.funding_bps_per_day), errors="coerce").fillna(cost_model.funding_bps_per_day)
+    funding_x = _series_or_default(data, "funding_x_bps", cost_model.funding_bps_per_day)
+    funding_y = _series_or_default(data, "funding_y_bps", cost_model.funding_bps_per_day)
     costs = (
         turnover * cost_model.taker_fee_bps / 10_000.0
         + turnover * cost_model.slippage_bps / 10_000.0
@@ -641,19 +1073,28 @@ def _attach_trade_returns(
     return pd.DataFrame(rows).drop(columns=["start_i", "end_i"], errors="ignore")
 
 
+def _series_or_default(frame: pd.DataFrame, column: str, default: float) -> pd.Series:
+    if column not in frame.columns:
+        return pd.Series(default, index=frame.index, dtype="float64")
+    return pd.to_numeric(frame[column], errors="coerce").fillna(default)
+
+
 def _acceptance(base_result: dict[str, object], rows: int, age_days: int, closed_trades: int) -> tuple[str, str]:
     blockers = []
     if rows < 320:
         blockers.append("local_history_rows<320")
     if float(base_result.get("total_return", 0.0)) <= 0:
         blockers.append("total_return<=0")
-    if float(base_result.get("sharpe", 0.0)) < 1.2:
+    sharpe = float(base_result.get("sharpe", float("nan")))
+    if not np.isfinite(sharpe):
+        blockers.append("sharpe_invalid_or_unknown_interval")
+    elif sharpe < 1.2:
         blockers.append("sharpe<1.2")
     pf = float(base_result.get("profit_factor", 0.0))
-    if not np.isinf(pf) and pf < 1.8:
-        blockers.append("profit_factor<1.8")
-    if float(base_result.get("max_drawdown", 0.0)) > 0.15:
-        blockers.append("max_drawdown>15pct")
+    if not np.isinf(pf) and pf < 1.5:
+        blockers.append("profit_factor<1.5")
+    if float(base_result.get("max_drawdown", 0.0)) > 0.25:
+        blockers.append("max_drawdown>25pct")
     if age_days > 2:
         blockers.append("stale_data")
     if closed_trades < 3:
@@ -680,6 +1121,9 @@ def _summary_row(
     entry_threshold: float,
     exit_threshold: float,
     exact_mode: str,
+    mode_fidelity_status: str,
+    mode_fidelity_reason: str,
+    signal_metadata: dict[str, object],
 ) -> dict[str, object]:
     closed = int((trade_frame.get("exit_reason", pd.Series(dtype=str)) != "open_at_end_of_history").sum()) if not trade_frame.empty else 0
     spread_id, strategy_id = _ids_from_mode(exact_mode)
@@ -693,11 +1137,18 @@ def _summary_row(
         "exact_mode": exact_mode,
         "spread_id": spread_id,
         "strategy_id": strategy_id,
-        "signal_source": f"local zscore column used as {exact_mode} sigma proxy",
-        "entry_long_x": f">= {entry_threshold:.2f}",
-        "entry_short_x": f"<= {-entry_threshold:.2f}",
-        "exit_long_x": f"<= {exit_threshold:.2f}",
-        "exit_short_x": f">= {exit_threshold:.2f}",
+        "mode_fidelity_status": mode_fidelity_status,
+        "mode_fidelity_reason": mode_fidelity_reason,
+        "mode_replay_status": signal_metadata.get("mode_replay_status", ""),
+        "mode_metric_name": signal_metadata.get("mode_metric_name", ""),
+        "mode_missing_inputs": signal_metadata.get("mode_missing_inputs", ""),
+        "mode_computation_notes": signal_metadata.get("mode_computation_notes", ""),
+        "mode_settings_evidence_path": signal_metadata.get("mode_settings_evidence_path", ""),
+        "signal_source": signal_metadata.get("signal_source", ""),
+        "entry_long_x": signal_metadata.get("entry_long_x", f">= {entry_threshold:.2f}"),
+        "entry_short_x": signal_metadata.get("entry_short_x", f"<= {-entry_threshold:.2f}"),
+        "exit_long_x": signal_metadata.get("exit_long_x", f"<= {exit_threshold:.2f}"),
+        "exit_short_x": signal_metadata.get("exit_short_x", f">= {exit_threshold:.2f}"),
         "backtest_mode": "two_leg_daily",
         "trades": int(base_result.get("trades", 0)),
         "entries": int(len(trade_frame)),
@@ -717,6 +1168,7 @@ def _summary_row(
         "total_partial_fill_cost": base_result.get("total_partial_fill_cost", 0.0),
         "acceptance": acceptance,
         "acceptance_reason": reason,
+        "promotion_allowed": bool(mode_fidelity_status == "vendor_exact" and acceptance == "ACCEPT"),
         "wizard_evidence_path": _rel(wizard_path),
         "local_evidence_path": _rel(history_path),
         "local_last_timestamp": local_last.isoformat(),
@@ -726,6 +1178,53 @@ def _summary_row(
     }
 
 
+def _generic_signal_metadata(
+    *,
+    mode_replay_status: str,
+    signal_source: str,
+    entry_threshold: float,
+    exit_threshold: float,
+) -> dict[str, object]:
+    return {
+        "mode_replay_status": mode_replay_status,
+        "mode_metric_name": "zscore",
+        "mode_missing_inputs": "",
+        "mode_computation_notes": "",
+        "mode_settings_evidence_path": "",
+        "signal_source": signal_source,
+        "entry_long_x": f">= {entry_threshold:.2f}",
+        "entry_short_x": f"<= {-entry_threshold:.2f}",
+        "exit_long_x": f"<= {exit_threshold:.2f}",
+        "exit_short_x": f">= {exit_threshold:.2f}",
+    }
+
+
+def _local_mode_signal_metadata(
+    result: WizardModeReplayResult,
+    settings: Mapping[str, object],
+) -> dict[str, object]:
+    return {
+        "mode_replay_status": result.mode_replay_status,
+        "mode_metric_name": result.metric_name,
+        "mode_missing_inputs": ";".join(result.missing_inputs),
+        "mode_computation_notes": ";".join(result.computation_notes),
+        "mode_settings_evidence_path": _text_value(settings.get("capture_evidence_path", "")),
+        "signal_source": f"captured-settings local {result.exact_mode} formula approximation; never vendor-exact",
+        "entry_long_x": _captured_rule(settings, "entry_long", include_position=True),
+        "entry_short_x": _captured_rule(settings, "entry_short", include_position=True),
+        "exit_long_x": _captured_rule(settings, "exit_long"),
+        "exit_short_x": _captured_rule(settings, "exit_short"),
+    }
+
+
+def _captured_rule(settings: Mapping[str, object], prefix: str, *, include_position: bool = False) -> str:
+    operator = _text_value(settings.get(f"{prefix}_operator", ""))
+    value = _text_value(settings.get(f"{prefix}_value", ""))
+    position = _text_value(settings.get(f"{prefix}_position", "")) if include_position else ""
+    rule = " ".join(part for part in [operator, value] if part)
+    return f"{rule} -> {position}" if position else rule
+
+
 def _markdown(summary: dict[str, object], cost_frame: pd.DataFrame, trade_frame: pd.DataFrame) -> str:
     return "\n".join(
         [
@@ -733,6 +1232,8 @@ def _markdown(summary: dict[str, object], cost_frame: pd.DataFrame, trade_frame:
             "",
             f"- Pair: `{summary['pair']}`",
             f"- Exact mode: `{summary['exact_mode']}`",
+            f"- Mode fidelity: `{summary['mode_fidelity_status']}`",
+            f"- Mode fidelity reason: `{summary['mode_fidelity_reason'] or 'none'}`",
             f"- Local observations: `{summary['local_observations']}`",
             f"- Acceptance: `{summary['acceptance']}`",
             f"- Reason: `{summary['acceptance_reason']}`",

@@ -1,4 +1,17 @@
-# QUANTIZED DYDX STATISTICAL ARBITRAGE AGENT MEMORY
+# THE WIZ CURRENT PROJECT AUTHORITY
+
+The authoritative objective as of 2026-08-07 is:
+
+> Build a repeatable, exhaustive Crypto Wizards to Hyperliquid perpetual research pipeline. Account for every dashboard pair without Sharpe, return, liquidity, stationarity, or copula intake filters; test every applicable exact mode in both orientations; retain every Hyperliquid mapping blocker; validate canonical point-in-time replays at 1x before separate leverage and margin scenarios; use Hyperliquid Testnet for complete order-lifecycle proof; preserve dated learning outcomes without hindsight; and never infer live-trading authority from research results.
+
+The active implementation plan and checkpoints are in
+`docs/exhaustive_wizard_hyperliquid_goal_plan.md`. The older dYdX objective below
+is retained as historical project context only and is not current execution
+authority.
+
+---
+
+# HISTORICAL DYDX STATISTICAL ARBITRAGE OBJECTIVE
 
 ## PROJECT OBJECTIVE
 

@@ -6,8 +6,27 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
+from quant_platform.zscore_utils import coalesce_zscore
 
 SignalFunction = Callable[[pd.DataFrame], pd.Series]
+
+ZSCORE_WINDOW = 7
+ZSCORE_MIN_PERIODS = 7
+
+
+def _coalesced_zscore(frame: pd.DataFrame) -> pd.Series:
+    """Return preferred z-score series for signal generation.
+
+    Preference is:
+    1. reconstructed z-score from spread (when available),
+    2. provider or ingested z-score,
+    3. rolling z-score as final fallback.
+    """
+    return coalesce_zscore(frame, prefer_reconstructed=True, prefer_provider=True, prefer_rolling=True).reindex(frame.index)
+
+
+def _strategy_zscore(frame: pd.DataFrame) -> pd.Series:
+    return _coalesced_zscore(frame)
 
 
 @dataclass(frozen=True)
@@ -22,11 +41,11 @@ class StrategySpec:
 
 
 def zscore_signal(frame: pd.DataFrame, entry: float = 2.0, exit_: float = 0.25) -> pd.Series:
-    z = frame["zscore"].astype(float)
-    signal = pd.Series(0.0, index=frame.index)
-    signal[z > entry] = -1.0
-    signal[z < -entry] = 1.0
-    signal[z.abs() < exit_] = 0.0
+    z = _coalesced_zscore(frame)
+    signal = pd.Series(0.0, index=frame.index, dtype="float64")
+    signal = signal.mask(z > entry, -1.0)
+    signal = signal.mask(z < -entry, 1.0)
+    signal = signal.mask(z.abs() < exit_, 0.0)
     return signal.replace(0.0, np.nan).ffill().fillna(0.0)
 
 
@@ -41,11 +60,11 @@ def _numeric(frame: pd.DataFrame, column: str, default: float = 0.0) -> pd.Serie
 
 
 def _base_zscore_direction(frame: pd.DataFrame, entry: float = 2.0, exit_: float = 0.25) -> pd.Series:
-    z = _numeric(frame, "zscore")
-    signal = pd.Series(0.0, index=frame.index)
-    signal[z > entry] = -1.0
-    signal[z < -entry] = 1.0
-    signal[z.abs() < exit_] = 0.0
+    z = _coalesced_zscore(frame)
+    signal = pd.Series(0.0, index=frame.index, dtype="float64")
+    signal = signal.mask(z > entry, -1.0)
+    signal = signal.mask(z < -entry, 1.0)
+    signal = signal.mask(z.abs() < exit_, 0.0)
     return signal
 
 
@@ -114,7 +133,7 @@ def ecm_leadership_signal(frame: pd.DataFrame) -> pd.Series:
 
 def half_life_optimized_signal(frame: pd.DataFrame) -> pd.Series:
     half_life = _numeric(frame, "half_life", 999.0)
-    z = _numeric(frame, "zscore")
+    z = _strategy_zscore(frame)
     dynamic_entry = (1.5 + (half_life / 48.0)).clip(lower=1.5, upper=3.0)
     signal = pd.Series(0.0, index=frame.index)
     signal[z > dynamic_entry] = -1.0
@@ -177,7 +196,7 @@ def dynamic_threshold_signal(frame: pd.DataFrame) -> pd.Series:
     hurst = _numeric(frame, "hurst", 0.5)
     half_life = _numeric(frame, "half_life", 24.0)
     ecm = _numeric(frame, "ecm_strength", 0.5)
-    z = _numeric(frame, "zscore")
+    z = _strategy_zscore(frame)
     entry = (2.2 - ecm * 0.4 - (0.5 - hurst).clip(lower=0.0) - (24.0 - half_life).clip(lower=0.0) / 48.0).clip(
         lower=1.25, upper=3.0
     )
@@ -310,7 +329,7 @@ def trade_outcome_predictor_proxy_signal(frame: pd.DataFrame) -> pd.Series:
     return _stateful(_base_zscore_direction(frame, entry=1.5).where(probability >= 0.58, 0.0))
 
 
-STRATEGIES: tuple[StrategySpec, ...] = (
+ALL_STRATEGIES: tuple[StrategySpec, ...] = (
     StrategySpec(1, "Classic ZScore Mean Reversion", "zscore", "Spread extremes revert after costs.", ("zscore", "spread", "hedge_ratio"), ("threshold_sweep", "walk_forward"), zscore_signal),
     StrategySpec(2, "ZScore + ECM", "hybrid", "Z-score entries improve when ECM confirms correction.", ("zscore", "ecm_strength", "ecm_x", "ecm_y"), ("incremental_alpha", "ablation"), zscore_ecm_signal),
     StrategySpec(3, "ZScore + Copula", "hybrid", "Linear spread dislocation improves when joint probability is distorted.", ("zscore", "conditional_probabilities", "copula"), ("ablation", "calibration"), zscore_copula_signal),
@@ -349,6 +368,39 @@ STRATEGIES: tuple[StrategySpec, ...] = (
     StrategySpec(36, "Copula + ECM Strategy", "hybrid", "Copula dislocation plus correction force improves entries.", ("conditional_probabilities", "ecm_strength"), ("ablation",), copula_ecm_signal),
     StrategySpec(37, "Pure Copula Portfolio", "portfolio", "Portfolio built entirely from copula-ranked dislocations.", ("copula_dislocation_score",), ("portfolio_walk_forward",), copula_dislocation_ranking_signal),
 )
+
+
+OFFICIAL_CRYPTO_WIZARDS_STRATEGY_IDS: tuple[int, ...] = (
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    11,
+    12,
+    13,
+    14,
+    20,
+    28,
+    29,
+    33,
+    34,
+    35,
+    36,
+)
+
+OFFICIAL_CRYPTO_WIZARDS_STRATEGIES: tuple[StrategySpec, ...] = tuple(
+    strategy for strategy in ALL_STRATEGIES if strategy.id in OFFICIAL_CRYPTO_WIZARDS_STRATEGY_IDS
+)
+
+LEGACY_RESEARCH_STRATEGIES: tuple[StrategySpec, ...] = tuple(
+    strategy for strategy in ALL_STRATEGIES if strategy.id not in OFFICIAL_CRYPTO_WIZARDS_STRATEGY_IDS
+)
+
+# Active default registry: only the Crypto Wizards-aligned strategies drive current runs.
+STRATEGIES: tuple[StrategySpec, ...] = OFFICIAL_CRYPTO_WIZARDS_STRATEGIES
 
 
 STRATEGY_REQUIRED_COLUMNS: dict[int, set[str]] = {
@@ -404,4 +456,19 @@ def strategy_rows() -> list[dict[str, str]]:
             "executable_signal": str(s.signal_function is not None),
         }
         for s in STRATEGIES
+    ]
+
+
+def all_strategy_rows() -> list[dict[str, str]]:
+    return [
+        {
+            "id": str(s.id),
+            "name": s.name,
+            "family": s.family,
+            "hypothesis": s.hypothesis,
+            "primary_fields": ";".join(s.primary_fields),
+            "required_tests": ";".join(s.required_tests),
+            "executable_signal": str(s.signal_function is not None),
+        }
+        for s in ALL_STRATEGIES
     ]

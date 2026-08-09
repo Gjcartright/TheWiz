@@ -36,6 +36,7 @@ except Exception:  # pragma: no cover - optional dependency
 ML_DATASET_COLUMNS = [
     "trade_id",
     "pair",
+    "timeframe",
     "strategy_id",
     "strategy_name",
     "family",
@@ -98,7 +99,7 @@ ML_DATASET_COLUMNS = [
 TARGET_COLUMN = "label_profitable"
 RETURN_COLUMN = "realized_return"
 TIMESTAMP_COLUMN = "entry_timestamp"
-CATEGORICAL_FEATURES = ["pair", "strategy_name", "family", "regime", "backtest_mode", "signal_side"]
+CATEGORICAL_FEATURES = ["pair", "timeframe", "strategy_name", "family", "regime", "backtest_mode", "signal_side"]
 NON_FEATURE_COLUMNS = {
     "trade_id",
     "strategy_id",
@@ -122,6 +123,68 @@ class ModelSpec:
     unavailable_reason: str = ""
 
 
+def _purged_pair_aware_splits(
+    ordered: pd.DataFrame,
+    *,
+    n_splits: int,
+    embargo_periods: int,
+) -> list[tuple[np.ndarray, np.ndarray, dict[str, object]]]:
+    """Build chronological panel splits with per-pair label purging and embargo."""
+
+    if TIMESTAMP_COLUMN not in ordered.columns or "exit_timestamp" not in ordered.columns:
+        raise ValueError("purged evaluation requires entry_timestamp and exit_timestamp")
+    entries = pd.to_datetime(ordered[TIMESTAMP_COLUMN], utc=True, errors="coerce", format="mixed")
+    exits = pd.to_datetime(ordered["exit_timestamp"], utc=True, errors="coerce", format="mixed")
+    if entries.isna().any() or exits.isna().any():
+        raise ValueError("purged evaluation requires valid entry and exit timestamps")
+    unique_times = pd.Index(entries.drop_duplicates().sort_values())
+    if len(unique_times) <= n_splits:
+        raise ValueError("not enough unique entry timestamps for requested purged splits")
+    pairs = ordered.get("pair", pd.Series("__all__", index=ordered.index)).fillna("__missing_pair__").astype(str)
+    splitter = TimeSeriesSplit(n_splits=n_splits)
+    results: list[tuple[np.ndarray, np.ndarray, dict[str, object]]] = []
+    for train_time_idx, test_time_idx in splitter.split(unique_times):
+        train_times = unique_times.take(train_time_idx)
+        test_times = unique_times.take(test_time_idx)
+        train_mask = entries.isin(train_times)
+        test_mask = entries.isin(test_times)
+        initial_train_rows = int(train_mask.sum())
+        test_pairs = sorted(set(pairs.loc[test_mask]))
+        for pair in test_pairs:
+            pair_test = test_mask & pairs.eq(pair)
+            pair_train = train_mask & pairs.eq(pair)
+            pair_test_start = entries.loc[pair_test].min()
+            train_mask.loc[pair_train & exits.ge(pair_test_start)] = False
+            if embargo_periods > 0:
+                remaining_pair_times = entries.loc[train_mask & pairs.eq(pair)].drop_duplicates().sort_values()
+                embargo_times = set(remaining_pair_times.tail(embargo_periods))
+                if embargo_times:
+                    train_mask.loc[train_mask & pairs.eq(pair) & entries.isin(embargo_times)] = False
+        train_idx = np.flatnonzero(train_mask.to_numpy())
+        test_idx = np.flatnonzero(test_mask.to_numpy())
+        if not len(train_idx) or not len(test_idx):
+            continue
+        train_pairs = sorted(set(pairs.iloc[train_idx]))
+        pair_overlap = sorted(set(train_pairs).intersection(test_pairs))
+        audit = {
+            "split_scheme": "purged_embargoed_pair_aware_timestamp_groups",
+            "embargo_periods": embargo_periods,
+            "purged_or_embargoed_rows": initial_train_rows - len(train_idx),
+            "train_unique_timestamps": int(entries.iloc[train_idx].nunique()),
+            "test_unique_timestamps": int(entries.iloc[test_idx].nunique()),
+            "train_pairs": ";".join(train_pairs),
+            "test_pairs": ";".join(test_pairs),
+            "pair_overlap": ";".join(pair_overlap),
+            "test_start": entries.iloc[test_idx].min().isoformat(),
+            "test_end": entries.iloc[test_idx].max().isoformat(),
+            "train_label_end_max": exits.iloc[train_idx].max().isoformat(),
+        }
+        results.append((train_idx, test_idx, audit))
+    if not results:
+        raise ValueError("no valid purged pair-aware folds were produced")
+    return results
+
+
 def build_trade_filter_dataset(
     datasets: Iterable[PairDataset],
     *,
@@ -136,6 +199,12 @@ def build_trade_filter_dataset(
         if len(frame) < min_rows:
             continue
         if "timestamp" not in frame.columns:
+            continue
+        timestamps = pd.to_datetime(frame["timestamp"], utc=True, errors="coerce", format="mixed")
+        valid_timestamp = timestamps.notna() & timestamps.dt.year.between(2009, pd.Timestamp.now(tz="UTC").year + 1)
+        frame = frame.loc[valid_timestamp].copy()
+        frame["timestamp"] = timestamps.loc[valid_timestamp]
+        if len(frame) < min_rows:
             continue
         for strategy in strategies:
             if strategy.signal_function is None:
@@ -186,6 +255,7 @@ def train_trade_filter_walkforward(
     output_dir: str | Path,
     n_splits: int = 5,
     min_train_rows: int = 100,
+    embargo_periods: int = 1,
 ) -> dict[str, Path]:
     if dataset.empty:
         raise ValueError("dataset is empty")
@@ -195,24 +265,35 @@ def train_trade_filter_walkforward(
         raise ValueError("dataset requires both profitable and unprofitable labels")
 
     ordered = dataset.copy()
-    ordered[TIMESTAMP_COLUMN] = pd.to_datetime(ordered[TIMESTAMP_COLUMN], utc=True, errors="coerce")
-    ordered = ordered.dropna(subset=[TIMESTAMP_COLUMN]).sort_values(TIMESTAMP_COLUMN).reset_index(drop=True)
+    ordered[TIMESTAMP_COLUMN] = pd.to_datetime(ordered[TIMESTAMP_COLUMN], utc=True, errors="coerce", format="mixed")
+    if "exit_timestamp" not in ordered.columns:
+        raise ValueError("dataset missing exit_timestamp required for purged evaluation")
+    ordered["exit_timestamp"] = pd.to_datetime(ordered["exit_timestamp"], utc=True, errors="coerce", format="mixed")
+    ordered = ordered.dropna(subset=[TIMESTAMP_COLUMN, "exit_timestamp"]).sort_values(TIMESTAMP_COLUMN).reset_index(drop=True)
+    if ordered.empty or not ordered["exit_timestamp"].gt(ordered[TIMESTAMP_COLUMN]).all():
+        raise ValueError("dataset requires exit_timestamp after entry_timestamp for every row")
     feature_columns = [column for column in ordered.columns if column not in NON_FEATURE_COLUMNS]
     feature_columns = [column for column in feature_columns if column != TARGET_COLUMN]
-    numeric_features = [column for column in feature_columns if column not in CATEGORICAL_FEATURES]
-    categorical_features = [column for column in CATEGORICAL_FEATURES if column in feature_columns]
+    categorical_features = [
+        column
+        for column in feature_columns
+        if column in CATEGORICAL_FEATURES or not pd.api.types.is_numeric_dtype(ordered[column])
+    ]
+    numeric_features = [column for column in feature_columns if column not in categorical_features]
 
-    splitter = TimeSeriesSplit(n_splits=max(2, n_splits))
+    splits = _purged_pair_aware_splits(
+        ordered,
+        n_splits=max(2, n_splits),
+        embargo_periods=max(0, int(embargo_periods)),
+    )
     fold_rows: list[dict[str, Any]] = []
     prediction_rows: list[dict[str, Any]] = []
     aggregate_rows: list[dict[str, Any]] = []
-    chosen_artifact: dict[str, Any] | None = None
-    best_gain = float("-inf")
     model_artifacts: list[dict[str, Any]] = []
 
     for spec in available_model_specs():
         fold_results: list[dict[str, Any]] = []
-        for fold_number, (train_idx, test_idx) in enumerate(splitter.split(ordered), start=1):
+        for fold_number, (train_idx, test_idx, split_audit) in enumerate(splits, start=1):
             train = ordered.iloc[train_idx].copy()
             test = ordered.iloc[test_idx].copy()
             if len(train) < min_train_rows or test.empty:
@@ -235,6 +316,7 @@ def train_trade_filter_walkforward(
                 "model_name": spec.name,
                 "model_family": spec.family,
                 "fold": fold_number,
+                **split_audit,
                 "train_rows": int(len(train)),
                 "test_rows": int(len(test)),
                 "threshold": float(threshold),
@@ -282,6 +364,8 @@ def train_trade_filter_walkforward(
             prediction_frame["probability_profitable"] = test_probability
             prediction_frame["shadow_take"] = test_probability >= threshold
             prediction_frame["threshold"] = threshold
+            prediction_frame["split_scheme"] = split_audit["split_scheme"]
+            prediction_frame["embargo_periods"] = split_audit["embargo_periods"]
             prediction_rows.extend(prediction_frame.to_dict(orient="records"))
 
         if not fold_results:
@@ -313,7 +397,10 @@ def train_trade_filter_walkforward(
             "trade_count_delta": int(round(float(fold_frame["trade_count_delta"].median()))),
             "promising": _promising_fold_frame(fold_frame),
             "dependency_note": spec.unavailable_reason,
+            "evaluation_scheme": "purged_embargoed_pair_aware_timestamp_groups",
+            "embargo_periods": max(0, int(embargo_periods)),
         }
+        aggregate["selection_score"] = _model_selection_score(aggregate)
         aggregate_rows.append(aggregate)
 
         full_estimator = _build_model_pipeline(spec.name, numeric_features, categorical_features)
@@ -330,14 +417,11 @@ def train_trade_filter_walkforward(
             "trained_until": ordered[TIMESTAMP_COLUMN].max().isoformat(),
             "estimator": full_estimator,
             "dependency_note": spec.unavailable_reason,
+            "evaluation_scheme": "purged_embargoed_pair_aware_timestamp_groups",
+            "embargo_periods": max(0, int(embargo_periods)),
         }
         model_artifacts.append(artifact)
-        gain = aggregate["expectancy_delta"] + aggregate["profit_factor_delta"] * 0.01 + aggregate["sharpe_delta"] * 0.01
-        if gain > best_gain:
-            best_gain = gain
-            chosen_artifact = artifact
-
-    if not fold_rows or chosen_artifact is None:
+    if not fold_rows or not model_artifacts:
         raise ValueError("no valid walk-forward folds were produced")
 
     output = Path(output_dir)
@@ -353,9 +437,18 @@ def train_trade_filter_walkforward(
     pd.DataFrame(fold_rows).sort_values(["model_name", "fold"]).to_csv(fold_path, index=False)
     pd.DataFrame(prediction_rows).sort_values(["model_name", "entry_timestamp"]).to_csv(prediction_path, index=False)
     summary_frame = pd.DataFrame(aggregate_rows).sort_values(
-        ["promising", "expectancy_delta", "profit_factor_delta", "sharpe_delta"],
-        ascending=[False, False, False, False],
+        ["selection_score", "promising", "expectancy_delta", "profit_factor_delta", "sharpe_delta"],
+        ascending=[False, False, False, False, False],
     )
+    preferred_summary = summary_frame.sort_values(
+        ["promising", "profit_factor_delta", "sharpe_delta"],
+        ascending=[False, False, False],
+    ).iloc[0]
+    chosen_model_name = str(preferred_summary["model_name"])
+    artifact_index = {str(artifact["model_name"]): artifact for artifact in model_artifacts}
+    chosen_artifact = artifact_index.get(chosen_model_name)
+    if chosen_artifact is None:
+        raise ValueError(f"chosen model artifact missing for {chosen_model_name}")
     summary_frame.to_csv(summary_path, index=False)
 
     with best_model_path.open("wb") as handle:
@@ -366,6 +459,8 @@ def train_trade_filter_walkforward(
         "threshold": chosen_artifact["threshold"],
         "artifacts_written": [str(path) for path in (dataset_path, fold_path, prediction_path, summary_path, best_model_path)],
         "models_evaluated": [artifact["model_name"] for artifact in model_artifacts],
+        "evaluation_scheme": "purged_embargoed_pair_aware_timestamp_groups",
+        "embargo_periods": max(0, int(embargo_periods)),
     }
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
     return {
@@ -392,7 +487,7 @@ def shadow_trade_filter_predictions(
     threshold = float(artifact["threshold"])
 
     available = dataset.copy()
-    available[TIMESTAMP_COLUMN] = pd.to_datetime(available[TIMESTAMP_COLUMN], utc=True, errors="coerce")
+    available[TIMESTAMP_COLUMN] = pd.to_datetime(available[TIMESTAMP_COLUMN], utc=True, errors="coerce", format="mixed")
     available = available.dropna(subset=[TIMESTAMP_COLUMN]).sort_values(TIMESTAMP_COLUMN).reset_index(drop=True)
     for column in feature_columns:
         if column not in available.columns:
@@ -484,6 +579,13 @@ def _candidate_rows_for_signal(
     entry_positions = np.flatnonzero(entry_mask.to_numpy())
     exit_positions = np.flatnonzero(exit_mask.to_numpy())
     rows: list[dict[str, Any]] = []
+    timeframe = ""
+    for column in ("timeframe", "interval"):
+        if column in frame.columns:
+            values = frame[column].dropna().astype(str)
+            if not values.empty:
+                timeframe = _normalize_timeframe(values.iloc[0])
+                break
 
     for ordinal, entry_pos in enumerate(entry_positions, start=1):
         future_exits = exit_positions[exit_positions >= entry_pos]
@@ -496,6 +598,7 @@ def _candidate_rows_for_signal(
         row = {
             "trade_id": trade_id,
             "pair": pair,
+            "timeframe": timeframe,
             "strategy_id": strategy.id,
             "strategy_name": strategy.name,
             "family": strategy.family,
@@ -514,6 +617,23 @@ def _candidate_rows_for_signal(
         row.update(_entry_feature_row(detailed, entry_pos))
         rows.append(row)
     return rows
+
+
+def _normalize_timeframe(value: object) -> str:
+    text = str(value or "").strip().lower().replace("_", "").replace(" ", "")
+    aliases = {
+        "1day": "1d",
+        "daily": "1d",
+        "day": "1d",
+        "1hour": "1h",
+        "60min": "1h",
+        "60mins": "1h",
+        "15min": "15m",
+        "15mins": "15m",
+        "5min": "5m",
+        "5mins": "5m",
+    }
+    return aliases.get(text, text)
 
 
 def _entry_feature_row(frame: pd.DataFrame, entry_pos: int) -> dict[str, Any]:
@@ -807,13 +927,34 @@ def _select_probability_threshold(probability: np.ndarray, realized_returns: np.
     for threshold in np.arange(0.50, 0.81, 0.05):
         accepted = realized_returns[probability >= threshold]
         metrics = _trade_metric_summary(pd.Series(accepted, dtype="float64"))
-        score = metrics["expectancy"] + metrics["total_return"] * 0.1 + metrics["profit_factor"] * 0.001
-        if metrics["trade_count"] == 0:
-            score -= 1.0
+        score = _threshold_quality_score(metrics)
         if score > best_score:
             best_score = score
             best_threshold = float(threshold)
     return best_threshold
+
+
+def _threshold_quality_score(metrics: dict[str, float]) -> float:
+    trade_count = int(metrics.get("trade_count", 0) or 0)
+    if trade_count <= 0:
+        return float("-inf")
+
+    profit_factor = float(metrics.get("profit_factor", 0.0) or 0.0)
+    sharpe = float(metrics.get("sharpe", 0.0) or 0.0)
+    drawdown = float(metrics.get("drawdown", 0.0) or 0.0)
+    expectancy = float(metrics.get("expectancy", 0.0) or 0.0)
+    total_return = float(metrics.get("total_return", 0.0) or 0.0)
+
+    score = (
+        profit_factor
+        + sharpe * 0.5
+        - drawdown
+        + expectancy * 10.0
+        + total_return * 0.2
+    )
+    if trade_count < 10:
+        score -= (10 - trade_count) * 0.05
+    return float(score)
 
 
 def _safe_precision(y_true: pd.Series, y_pred: np.ndarray) -> float:
@@ -851,4 +992,20 @@ def _promising_fold_frame(frame: pd.DataFrame) -> bool:
         and median_dd_gain <= 0.0
         and median_expectancy_gain > 0.0
         and median_take_rate >= 0.10
+    )
+
+
+def _model_selection_score(aggregate: dict[str, Any]) -> float:
+    promising_bonus = 2.0 if bool(aggregate.get("promising", False)) else 0.0
+    profit_factor_delta = float(aggregate.get("profit_factor_delta", 0.0) or 0.0)
+    sharpe_delta = float(aggregate.get("sharpe_delta", 0.0) or 0.0)
+    expectancy_delta = float(aggregate.get("expectancy_delta", 0.0) or 0.0)
+    filtered_drawdown = float(aggregate.get("worst_filtered_drawdown", 1.0) or 1.0)
+    drawdown_penalty = max(filtered_drawdown - 0.30, 0.0) * 2.0
+    return float(
+        promising_bonus
+        + profit_factor_delta
+        + sharpe_delta * 0.5
+        + expectancy_delta * 20.0
+        - drawdown_penalty
     )

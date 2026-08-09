@@ -1,0 +1,10 @@
+{
+  "schema_version": "wizard_discovery_policy.v1",
+  "raw_leaderboard": {
+    "min_sharpe": 1.75,
+    "min_returns_total_pct": 10.0
+  },
+  "proof_spend": {
+    "min_closed_trades": 5
+  }
+}

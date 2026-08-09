@@ -21,6 +21,17 @@ This repository contains the production scaffold:
 
 Live API calls require credentials and exact endpoint details. Until then, research can run from archived JSON/CSV snapshots in `data/raw`.
 
+## V2 Run-Scoped Pipeline
+
+The clean active path is now the sealed V2 run pipeline. It snapshots declared evidence into one immutable `runs/<run_id>/` directory, validates candidate and policy identity, applies stage-specific gates, and publishes only a status row when blocked. Mutable global reports are never read again after the snapshot is sealed.
+
+```bash
+PYTHONPATH=src python -m quant_platform.cli build-v2-preflight-run
+PYTHONPATH=src python -m quant_platform.cli validate-v2-run --run-id <run_id>
+```
+
+See `docs/wizard_v2_run_pipeline.md` for the run layout, gate definitions, and publication rules. A V2 preflight never grants paper, live, or execution authority.
+
 ## Non-Negotiable Research Rules
 
 - No edge is assumed.
@@ -143,6 +154,25 @@ Fixture ingestion writes:
 - `live`: reserved for production execution and intentionally not enabled in the scaffold.
 
 Paper spread execution is research-gated: a strategy must be marked `production_eligible` in `reports/acceptance_report.csv` before a dYdX testnet paper order plan is created.
+
+## Binance Testnet Lanes
+
+Binance has two isolated non-production execution lanes. Both are disabled by default and never fall back to production endpoints.
+
+- `binance_spot_testnet`: spot/spot execution plumbing only. It does not model margin borrowing or spot/perpetual carry.
+- `binance_usdm_testnet`: the first execution lane for perpetual/perpetual pairs, funding handling, and two-leg hedge mechanics.
+
+Copy the Binance variables in `.env.example` into `.env.local` with dedicated testnet credentials. Keep both `*_SUBMIT_ORDERS=false` until the readiness report is clear and a controlled smoke order is approved. Run:
+
+```bash
+PYTHONPATH=src python -m quant_platform.cli binance-testnet-adapter-contract
+PYTHONPATH=src python -m quant_platform.cli binance-testnet-preflight
+PYTHONPATH=src python -m quant_platform.cli binance-testnet-pair-preflight --venue binance_usdm_testnet --asset-x BTC-USD --asset-y ETH-USD
+```
+
+The reports are written to `reports/active/binance_testnet_adapter_contract.csv`, `reports/active/binance_testnet_preflight.csv`, and `reports/active/binance_testnet_pair_preflight.csv`. Pair preflight resolves the actual Binance symbol and records its tick size, lot size, minimum quantity, and minimum notional without requiring credentials or submitting an order. Testnet validates API and order-lifecycle mechanics; production market data remains the authority for liquidity, slippage, and cost estimates.
+
+The two-leg testnet executor is deliberately library-only: there is no CLI order-submission command. If a permitted testnet second leg is rejected after the first leg is accepted, it attempts a reducing reverse order for the first leg and writes the event to `reports/paper_trading_journal_binance_testnet.csv`. This is a containment attempt, not a claim that either order has filled, so exchange order status must still be reconciled before any later live integration.
 
 Authenticated dYdX testnet submission remains blocked unless `submit_orders` is enabled, credentials are explicitly supplied, and an authenticated order-client adapter is injected. The dYdX indexer adapter can be wired earlier for market/funding reads; the scaffold does not fake exchange-side fills.
 
@@ -309,6 +339,25 @@ Use `python -m quant_platform.cli research-spine` to run the guarded research ba
 Live Crypto Wizards crawling is configured through environment variable names in `config/research.yaml`; fixture ingestion remains the verified default path until real endpoint URLs and credentials are supplied.
 
 Use `python -m quant_platform.cli check-live-config` to verify required Crypto Wizards environment variables before attempting a live crawl. Endpoints can be supplied as `--endpoint pairs=/v1/pairs` or through `CRYPTO_WIZARDS_ENDPOINTS`.
+
+Run the full Crypto Wizards discovery matrix in zero-credit planning mode first:
+
+```bash
+PYTHONPATH=src python3 -m quant_platform.cli crypto-wizards-full-sweep
+```
+
+The default matrix covers Binance, Binance US, ByBit, Coinbase, and DYDX across Daily and Hourly scanner intervals for Spread, ZScoreRoll, and Copula, sorted by Sharpe. That is 30 prescanned calls and 300 planned credits. The command writes `reports/active/wizard_sweep_manifest.csv`, `wizard_sweep_candidates.csv`, and a JSON/Markdown summary. Planning mode makes no paid API calls and cannot claim complete discovery.
+
+After reviewing the plan, execute it with:
+
+```bash
+PYTHONPATH=src python3 -m quant_platform.cli crypto-wizards-full-sweep --execute-wizard-sweep
+PYTHONPATH=src python3 -m quant_platform.cli wizard-control-plane
+```
+
+Execution first calls the zero-credit `credits-used` endpoint. It starts no prescanned request unless the entire matrix fits inside the remaining daily allowance after the protected reserve, which defaults to 100 credits. Override the configured allowance or reserve with `--wizard-daily-credit-limit` and `--wizard-reserved-credits`. A failed request changes the run to `blocked_partial_discovery`; only a 100% complete matrix receives `complete_discovery`. Every response is archived immutably under `data/raw/crypto_wizards/prescanned/<date>/` with request, response, evidence hash, and canonical configuration hash. API keys are never written.
+
+`wizard-control-plane` is the required handoff after every sweep. It fails closed unless the sweep is complete, the API artifact contract validates, at least one candidate has a fresh source timestamp, and required configuration hashes are intact. It writes the automatic exact-settings capture queue plus API-contract, freshness, lineage, and dashboard-health reports. Orchestration will not rebuild Wizard discovery from a partial or stale sweep, and Hyperliquid hypothesis rows remain blocked until this control plane is ready.
 
 For the official 5-minute Crypto Wizards research path, use the documented v1beta API instead of browser-copied candle workarounds:
 

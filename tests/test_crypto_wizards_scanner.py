@@ -111,6 +111,22 @@ def test_scanner_rows_normalize_non_dydx_wizard_symbols():
     assert row.wizard_promotion_allowed is False
 
 
+def test_scanner_rows_preserve_colored_stationarity_badges():
+    row = scanner_rows_from_payload(
+        {
+            "scanner_rows": [
+                {
+                    "pair": "ARB-USD/DOGE-USD",
+                    "stationarity_badges": {"jn": "gray", "eg": "orange"},
+                }
+            ]
+        }
+    )[0]
+
+    assert row.johansen_badge_state == "not_confirmed"
+    assert row.engle_granger_badge_state == "trending"
+
+
 def test_write_scanner_reports_writes_rows_and_field_dictionary(tmp_path):
     input_dir = tmp_path / "scanner"
     output_dir = tmp_path / "reports"

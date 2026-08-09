@@ -34,6 +34,13 @@ def two_leg_experiment_frame(n: int = 160) -> pd.DataFrame:
     return frame
 
 
+def reconstructed_zscore_experiment_frame(n: int = 220) -> pd.DataFrame:
+    frame = experiment_frame(n).copy()
+    # emulate reconstructed z-score availability when raw zscore is missing
+    frame["zscore"] = pd.NA
+    frame["zscore_reconstructed"] = frame["spread"] * 2.5
+    return frame
+
 def test_harness_runs_executable_strategies_and_marks_missing_ones_skipped():
     config = ExperimentConfig(
         cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
@@ -74,6 +81,21 @@ def test_harness_marks_two_leg_backtest_mode_when_leg_prices_exist():
     assert evaluated["has_beta"].all()
     assert evaluated["has_funding_x"].all()
     assert evaluated["has_funding_y"].all()
+
+
+def test_harness_accepts_reconstructed_zscore_when_provider_zscore_is_missing():
+    config = ExperimentConfig(
+        cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
+        gate=AcceptanceGate(min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=1),
+        min_rows=20,
+    )
+    harness = ExperimentHarness(strategies=(STRATEGIES[0],), config=config)
+
+    results = harness.run([PairDataset("BTC-ETH", reconstructed_zscore_experiment_frame())])
+    evaluated = results[(results["status"] == "evaluated") & (results["strategy_id"] == 1)]
+
+    assert not evaluated.empty
+    assert not evaluated["reason"].str.contains("missing_columns", regex=False).any()
 
 
 def test_harness_writes_all_report_files(tmp_path):
@@ -192,6 +214,7 @@ def test_strategy_acceptance_requires_multi_pair_and_required_cost_buckets():
 
     assert bool(accepted["production_eligible"].iloc[0]) is True
     assert bool(accepted["preferred_eligible"].iloc[0]) is True
+    assert bool(accepted["research_eligible"].iloc[0]) is True
     assert accepted["two_leg_pairs_tested"].iloc[0] == 2
     assert accepted["two_leg_passing_pairs"].iloc[0] == 2
     assert accepted["acceptance_reason"].iloc[0] == "passed"
@@ -238,15 +261,29 @@ def test_write_reports_includes_acceptance_report(tmp_path):
         "family",
         "production_eligible",
         "preferred_eligible",
+        "research_eligible",
+        "research_tier",
         "acceptance_reason",
         "preferred_reason",
+        "research_reason",
         "evaluated_runs",
         "passing_runs",
         "pairs_tested",
         "passing_pairs",
+        "research_pairs_tested",
+        "research_passing_pairs",
         "two_leg_pairs_tested",
         "two_leg_execution_input_pairs",
         "two_leg_passing_pairs",
+        "research_score",
+        "research_conviction_score",
+        "research_stability_score",
+        "research_breadth_score",
+        "research_strengths",
+        "research_concerns",
+        "research_setup_mix",
+        "research_top_pairs",
+        "research_next_step",
         "required_cost_buckets",
         "required_backtest_mode",
         "required_two_leg_inputs",
@@ -256,3 +293,30 @@ def test_write_reports_includes_acceptance_report(tmp_path):
         "worst_drawdown",
     ]
     assert bool(report["production_eligible"].iloc[0])
+
+
+def test_strategy_acceptance_reports_elastic_research_tier_for_promising_small_sample():
+    frame = accepted_strategy_rows().copy()
+    frame["eligible"] = False
+    frame["reason"] = "trades<100"
+    frame["trades"] = 28
+    frame["profit_factor"] = 1.35
+    frame["expectancy"] = 0.03
+    frame["sharpe"] = 1.05
+    frame["max_drawdown"] = 0.45
+
+    report = strategy_acceptance_report(frame, AcceptanceGate())
+
+    row = report.iloc[0]
+    assert bool(row["production_eligible"]) is False
+    assert bool(row["research_eligible"]) is True
+    assert row["research_tier"] in {"research_watch", "research_explore", "research_candidate"}
+    assert row["research_pairs_tested"] == 2
+    assert row["research_conviction_score"] >= row["research_score"]
+    assert row["research_next_step"] in {
+        "promote_to_focused_paper_validation",
+        "expand_history_and_retest",
+        "tighten_risk_controls_then_retest",
+        "refine_filters_and_compare_variants",
+        "monitor_in_research_queue",
+    }

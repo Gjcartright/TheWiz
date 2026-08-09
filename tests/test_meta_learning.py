@@ -133,3 +133,94 @@ def test_write_learning_event_summary_report_handles_missing_inputs(tmp_path):
     assert int(report.loc[report["source"] == "combined", "events"].iloc[0]) == 0
     assert int(report.loc[report["source"] == "combined", "outcome_events_remaining"].iloc[0]) == 100
     assert path == output
+
+
+def test_learning_event_summary_counts_realized_outcomes_from_paper_journal(tmp_path):
+    paper_journal = tmp_path / "paper_trading_journal.csv"
+    trade_store = tmp_path / "trades.jsonl"
+    pd.DataFrame(
+        [
+            {
+                "timestamp_utc": "2026-01-01T00:00:00+00:00",
+                "pair": "ETH-BTC",
+                "strategy_id": 1,
+                "plan_status": "paper_submitted",
+                "plan_reason": "accepted",
+                "blockers": "",
+                "intents_json": "[]",
+                "fills_json": json.dumps([{"status": "paper_submitted"}]),
+                "trade_id": "t-1",
+                "venue": "dydx",
+                "lifecycle_status": "open",
+                "opened_timestamp_utc": "2026-01-01T00:00:00+00:00",
+                "closed_timestamp_utc": "",
+                "entry_snapshot_json": "{}",
+                "exit_snapshot_json": "{}",
+                "realized_return": "",
+                "outcome_label": "",
+            },
+            {
+                "timestamp_utc": "2026-01-01T01:00:00+00:00",
+                "pair": "ETH-BTC",
+                "strategy_id": 1,
+                "plan_status": "paper_completed",
+                "plan_reason": "realized_outcome_recorded",
+                "blockers": "",
+                "intents_json": "[]",
+                "fills_json": json.dumps([{"status": "paper_submitted"}]),
+                "trade_id": "t-1",
+                "venue": "dydx",
+                "lifecycle_status": "closed",
+                "opened_timestamp_utc": "2026-01-01T00:00:00+00:00",
+                "closed_timestamp_utc": "2026-01-01T01:00:00+00:00",
+                "entry_snapshot_json": "{}",
+                "exit_snapshot_json": json.dumps({"venue_exit_price_x": 101.0}),
+                "realized_return": "0.02",
+                "outcome_label": "win",
+            },
+        ]
+    ).to_csv(paper_journal, index=False)
+
+    rows = learning_event_summary(paper_journal, trade_store, min_modeling_events=1)
+    summary = {row["source"]: row for row in rows}
+
+    assert summary["paper_journal"]["outcome_events"] == 1
+    assert summary["paper_journal"]["profitable_outcomes"] == 1
+    assert summary["paper_journal"]["ready_for_modeling"] is True
+    assert summary["paper_journal"]["notes"] == "modeling_ready"
+
+
+def test_learning_event_summary_does_not_count_unverified_closed_journal_rows(tmp_path):
+    paper_journal = tmp_path / "paper_trading_journal.csv"
+    trade_store = tmp_path / "trades.jsonl"
+    pd.DataFrame(
+        [
+            {
+                "timestamp_utc": "2026-01-01T01:00:00+00:00",
+                "pair": "ETH-BTC",
+                "strategy_id": 1,
+                "plan_status": "paper_completed",
+                "plan_reason": "realized_outcome_recorded",
+                "blockers": "",
+                "intents_json": "[]",
+                "fills_json": json.dumps([{"status": "paper_submitted"}]),
+                "trade_id": "t-1",
+                "venue": "dydx",
+                "lifecycle_status": "closed",
+                "opened_timestamp_utc": "2026-01-01T00:00:00+00:00",
+                "closed_timestamp_utc": "2026-01-01T01:00:00+00:00",
+                "entry_snapshot_json": "{}",
+                "exit_snapshot_json": "{}",
+                "realized_return": "0.02",
+                "outcome_label": "win",
+            },
+        ]
+    ).to_csv(paper_journal, index=False)
+
+    rows = learning_event_summary(paper_journal, trade_store, min_modeling_events=1)
+    summary = {row["source"]: row for row in rows}
+
+    assert summary["paper_journal"]["outcome_events"] == 0
+    assert summary["paper_journal"]["profitable_outcomes"] == 0
+    assert summary["paper_journal"]["ready_for_modeling"] is False
+    assert summary["paper_journal"]["notes"] == "handoff_audit_only"

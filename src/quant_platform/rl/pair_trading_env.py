@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.rl.actions import action_name
-from quant_platform.rl.features import build_rl_feature_frame
+from quant_platform.rl.features import attach_copula_dashboard_features, build_rl_feature_frame
 from quant_platform.rl.rewards import rl_reward
 
 
@@ -41,8 +41,17 @@ class PairTradingEnv:
         fee_bps: float = 5.0,
         slippage_bps: float = 4.0,
         stale: bool = False,
+        copula_journal: pd.DataFrame | None = None,
+        copula_max_snapshot_age_hours: float = 2.5,
     ) -> None:
         self.source = frame.reset_index(drop=True).copy()
+        self.copula_join_audit = pd.DataFrame()
+        if copula_journal is not None:
+            self.source, self.copula_join_audit = attach_copula_dashboard_features(
+                self.source,
+                copula_journal,
+                max_snapshot_age_hours=copula_max_snapshot_age_hours,
+            )
         self.features = build_rl_feature_frame(self.source)
         self.max_position = float(max_position)
         self.fee_bps = float(fee_bps)
@@ -84,6 +93,7 @@ class PairTradingEnv:
             stale_data=self.stale,
             invalid_action=invalid,
         )
+        reward += self._outcome_context_reward(action=action, invalid=invalid)
         if invalid:
             self.blocked_actions.append(
                 {"step": self.index, "action": action_name(action), "reason": reason, "position": self.position}
@@ -112,6 +122,23 @@ class PairTradingEnv:
             return 0.0
         spread = pd.to_numeric(self.source.get("spread", pd.Series(0.0, index=self.source.index)), errors="coerce").fillna(0.0)
         return float(self.position * spread.diff().fillna(0.0).iloc[self.index] * 0.01)
+
+    def _outcome_context_reward(self, *, action: int, invalid: bool) -> float:
+        if invalid or self.index >= len(self.source):
+            return 0.0
+        row = self.source.iloc[self.index]
+        prior_return = pd.to_numeric(pd.Series([row.get("wizard_same_regime_strategy_venue_mean_return", 0.0)]), errors="coerce").fillna(0.0).iloc[0]
+        prior_drawdown = pd.to_numeric(pd.Series([row.get("wizard_same_regime_strategy_venue_mean_drawdown", 0.0)]), errors="coerce").fillna(0.0).iloc[0]
+        prior_win_rate = pd.to_numeric(pd.Series([row.get("wizard_same_regime_strategy_venue_win_rate", 0.0)]), errors="coerce").fillna(0.0).iloc[0]
+        shared_count = pd.to_numeric(pd.Series([row.get("shared_verified_outcome_count", 0.0)]), errors="coerce").fillna(0.0).iloc[0]
+        if shared_count <= 0:
+            return 0.0
+        context_bonus = max(min(float(prior_return) * 0.05, 0.01), -0.01)
+        context_bonus += max(min((float(prior_win_rate) - 0.5) * 0.02, 0.01), -0.01)
+        context_bonus -= min(abs(float(prior_drawdown)) * 0.02, 0.01)
+        if action in {1, 2, 5}:
+            return float(context_bonus)
+        return 0.0
 
     def _action_cost(self, action: int, invalid: bool) -> float:
         if invalid or action == 0:

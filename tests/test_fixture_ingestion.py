@@ -139,3 +139,28 @@ def test_fixture_ingestion_derives_beta_from_leg_prices_when_missing():
     assert "beta" in normalized.columns
     assert "beta_source" in normalized.columns
     assert set(normalized["beta_source"]) == {"derived_from_price_returns"}
+
+
+def test_fixture_ingestion_reconstructs_spread_and_zscore_with_provenance():
+    records = []
+    for idx in range(30):
+        records.append(
+            {
+                "pair": "BTC/ETH",
+                "timestamp": f"2026-06-15T{idx:02d}:00:00Z",
+                "price_x": 20000.0 + (idx * 3.0),
+                "price_y": 1000.0 + (idx * 1.0),
+            }
+        )
+
+    normalized = normalize_crypto_wizards_records(records)
+
+    assert "spread_source" in normalized.columns
+    assert "zscore_reconstructed" in normalized.columns
+    assert "zscore_source" in normalized.columns
+    assert set(normalized["spread_source"]) == {"derived_from_prices"}
+    assert set(normalized["zscore_source"]) == {"derived_from_spread_rolling"}
+    # first 6 rows are not computable with min_periods=7
+    assert normalized.loc[:5, "zscore"].isna().all()
+    assert normalized.loc[6:, "zscore"].notna().all()
+    assert pd.Series(normalized["zscore"], index=normalized.index).equals(normalized["zscore_reconstructed"])

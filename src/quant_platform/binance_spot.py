@@ -8,13 +8,16 @@ from typing import Any
 import pandas as pd
 import requests
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import CommandResult, ROOT, current_multi_venue_history_readiness_path
 from quant_platform.dydx_candles import build_pair_history_from_candles
 
 
 BINANCE_API_URL = "https://api.binance.com"
 BINANCE_FALLBACK_API_URLS = ("https://data-api.binance.vision",)
 SUPPORTED_INTERVALS = {"1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"}
+ZSCORE_WINDOW = 7
+ZSCORE_MIN_WINDOW = 7
+DAILY_HISTORY_FRESHNESS_MAX_AGE_HOURS = 48.0
 
 
 def fetch_binance_spot_candles(
@@ -114,7 +117,7 @@ def build_binance_spot_pair_history(
     pair_id: str | None = None,
     hedge_ratio: float | None = None,
     beta: float | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = ZSCORE_WINDOW,
     candle_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
 ) -> Path:
@@ -140,52 +143,179 @@ def build_binance_spot_pair_history(
         beta=beta,
         interval=interval,
         zscore_window=zscore_window,
-        min_zscore_window=min(20, max(2, zscore_window // 4)),
+        min_zscore_window=ZSCORE_MIN_WINDOW if zscore_window == ZSCORE_WINDOW else min(20, max(2, zscore_window // 4)),
     )
     _rewrite_pair_history_as_binance(path)
     return path
 
 
 def build_binance_spot_lane_report(root: Path = ROOT) -> CommandResult:
-    readiness = _read_csv(root / "reports" / "active" / "multi_venue_history_readiness_2026-06-25.csv")
-    if readiness.empty:
-        frame = pd.DataFrame(columns=["symbol", "status", "daily_candle_rows", "candle_path", "next_action"])
-    else:
-        symbols = sorted(
-            {
-                _clean_symbol(value)
-                for col in ["asset_x", "asset_y"]
-                for value in readiness[readiness["wizard_exchange"].astype(str) == "binance"].get(col, [])
-                if str(value or "").strip()
-            }
-        )
-        rows = [_binance_symbol_status(root, symbol) for symbol in symbols]
-        frame = pd.DataFrame(rows)
+    candidates = _current_binance_candidates(root)
+    symbol_rows: list[dict[str, object]] = []
+    pair_rows: list[dict[str, object]] = []
+    for _, candidate in candidates.iterrows():
+        pair = str(candidate.get("pair", "") or "")
+        required_rows = _required_history_rows(candidate.get("period"))
+        left = _binance_symbol_status(root, _clean_symbol(candidate.get("asset_x")), required_rows=required_rows)
+        right = _binance_symbol_status(root, _clean_symbol(candidate.get("asset_y")), required_rows=required_rows)
+        for leg, status in [("asset_x", left), ("asset_y", right)]:
+            symbol_rows.append(
+                {
+                    **status,
+                    "pair": pair,
+                    "leg": leg,
+                    "exact_mode": candidate.get("exact_mode", ""),
+                    "source_timestamp": candidate.get("source_timestamp", ""),
+                    "source_fresh": candidate.get("source_fresh", False),
+                    "evidence_path": candidate.get("evidence_path", ""),
+                }
+            )
+        pair_rows.append(_binance_pair_readiness_row(candidate, left, right))
+    frame = pd.DataFrame(
+        symbol_rows,
+        columns=[
+            "symbol",
+            "status",
+            "daily_candle_rows",
+            "required_history_rows",
+            "history_last_timestamp",
+            "history_age_hours",
+            "history_fresh",
+            "candle_path",
+            "next_action",
+            "pair",
+            "leg",
+            "exact_mode",
+            "source_timestamp",
+            "source_fresh",
+            "evidence_path",
+        ],
+    )
+    pair_frame = pd.DataFrame(
+        pair_rows,
+        columns=[
+            "pair",
+            "asset_x",
+            "asset_y",
+            "exact_mode",
+            "period",
+            "source_timestamp",
+            "source_fresh",
+            "left_history_status",
+            "right_history_status",
+            "left_candle_path",
+            "right_candle_path",
+            "history_status",
+            "wizard_settings_status",
+            "wizard_settings_missing",
+            "cost_model_status",
+            "funding_borrow_status",
+            "slippage_status",
+            "research_execution_status",
+            "next_action",
+            "evidence_path",
+        ],
+    )
     active = root / "reports" / "active"
     csv_path = active / "binance_spot_history_readiness.csv"
+    pair_path = active / "binance_spot_pair_readiness.csv"
     md_path = active / "binance_spot_history_readiness.md"
     _write_csv(frame, csv_path)
-    _write_text(md_path, _binance_lane_markdown(frame))
+    _write_csv(pair_frame, pair_path)
+    _write_text(md_path, _binance_lane_markdown(frame, pair_frame))
     return CommandResult(
-        paths={"binance_spot_history_readiness": csv_path, "binance_spot_history_readiness_md": md_path},
+        paths={
+            "binance_spot_history_readiness": csv_path,
+            "binance_spot_pair_readiness": pair_path,
+            "binance_spot_history_readiness_md": md_path,
+        },
         summary={
             "symbols": len(frame),
             "ready_symbols": int(frame["status"].astype(str).eq("history_ready").sum()) if not frame.empty else 0,
             "blocked_symbols": int(frame["status"].astype(str).ne("history_ready").sum()) if not frame.empty else 0,
+            "pairs": len(pair_frame),
+            "pairs_with_current_history": int(pair_frame["history_status"].astype(str).eq("history_ready_needs_settings_and_cost_model").sum()) if not pair_frame.empty else 0,
         },
     )
 
 
-def _binance_symbol_status(root: Path, symbol: str) -> dict[str, object]:
+def _current_binance_candidates(root: Path) -> pd.DataFrame:
+    current = _read_csv(root / "reports" / "active" / "wizard_discovery_shortlist.csv")
+    if not current.empty:
+        exchange = current.get("exchange", pd.Series("", index=current.index)).astype(str).str.lower().str.strip()
+        current = current[exchange.eq("binance")].copy()
+        if not current.empty:
+            return current
+    legacy = _read_csv(current_multi_venue_history_readiness_path(root))
+    if legacy.empty:
+        return pd.DataFrame(columns=["pair", "asset_x", "asset_y", "exact_mode", "period", "source_timestamp", "source_fresh", "evidence_path"])
+    exchange = legacy.get("wizard_exchange", pd.Series("", index=legacy.index)).astype(str).str.lower().str.strip()
+    return legacy.loc[exchange.eq("binance")].copy()
+
+
+def _required_history_rows(value: object) -> int:
+    try:
+        period = int(float(value))
+    except (TypeError, ValueError):
+        period = 120
+    return max(120, period)
+
+
+def _binance_symbol_status(root: Path, symbol: str, *, required_rows: int = 120) -> dict[str, object]:
     path = root / "data" / "raw" / "binance_spot_candles" / f"{symbol}_1d_candles.json"
-    rows = _candle_count(path)
-    status = "history_ready" if rows >= 120 else "missing_binance_daily_history"
+    metadata = _candle_metadata(path)
+    rows = metadata["daily_candle_rows"]
+    status = "history_ready" if rows >= required_rows and metadata["history_fresh"] else "missing_or_stale_binance_daily_history"
     return {
         "symbol": symbol,
         "status": status,
         "daily_candle_rows": rows,
+        "required_history_rows": required_rows,
+        "history_last_timestamp": metadata["history_last_timestamp"],
+        "history_age_hours": metadata["history_age_hours"],
+        "history_fresh": metadata["history_fresh"],
         "candle_path": _rel(path, root) if path.exists() else "",
         "next_action": "build_binance_pair_history" if status == "history_ready" else "fetch_binance_spot_candles_1d",
+    }
+
+
+def _binance_pair_readiness_row(
+    candidate: pd.Series,
+    left: dict[str, object],
+    right: dict[str, object],
+) -> dict[str, object]:
+    left_ready = str(left.get("status", "")) == "history_ready"
+    right_ready = str(right.get("status", "")) == "history_ready"
+    settings_complete = _as_bool(candidate.get("backtest_settings_complete"))
+    settings_missing = str(candidate.get("backtest_settings_missing", "") or "")
+    if left_ready and right_ready:
+        history_status = "history_ready_needs_settings_and_cost_model"
+        next_action = "capture_wizard_pair_detail_and_build_binance_cost_funding_borrow_slippage_sensitivity"
+    else:
+        history_status = "history_missing_or_stale"
+        missing_symbols = [status.get("symbol", "") for status in [left, right] if status.get("status") != "history_ready"]
+        next_action = f"fetch_or_refresh_binance_daily_history_for_{';'.join(str(value) for value in missing_symbols if value)}"
+    return {
+        "pair": candidate.get("pair", ""),
+        "asset_x": candidate.get("asset_x", ""),
+        "asset_y": candidate.get("asset_y", ""),
+        "exact_mode": candidate.get("exact_mode", ""),
+        "period": candidate.get("period", ""),
+        "source_timestamp": candidate.get("source_timestamp", ""),
+        "source_fresh": candidate.get("source_fresh", False),
+        "left_history_status": left.get("status", ""),
+        "right_history_status": right.get("status", ""),
+        "left_candle_path": left.get("candle_path", ""),
+        "right_candle_path": right.get("candle_path", ""),
+        "history_status": history_status,
+        "wizard_settings_status": "complete" if settings_complete else "missing_pair_detail_settings",
+        "wizard_settings_missing": settings_missing,
+        "cost_model_status": "placeholder_only_not_validated",
+        "funding_borrow_status": "spot_borrow_short_cost_not_modelled",
+        "slippage_status": "venue_specific_slippage_not_calibrated",
+        "research_execution_status": "research_only_execution_blocked",
+        "next_action": next_action,
+        "evidence_path": candidate.get("evidence_path", ""),
     }
 
 
@@ -193,17 +323,29 @@ def _rewrite_pair_history_as_binance(path: Path) -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     payload["exchange"] = "binance_spot"
     payload["source_note"] = (
-        "Derived from Binance public spot klines. This is research evidence only; do not promote until "
-        "Binance-specific fees, slippage, and borrow or shortability assumptions are merged and tested."
+        "Derived from Binance public spot klines. Funding fields are zero placeholders and execution assumptions are placeholders. "
+        "This is research evidence only; do not promote until Binance-specific fees, slippage, and borrow or shortability "
+        "assumptions are merged and tested."
     )
     path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def _binance_lane_markdown(frame: pd.DataFrame) -> str:
-    if frame.empty:
+def _binance_lane_markdown(frame: pd.DataFrame, pair_frame: pd.DataFrame) -> str:
+    if frame.empty and pair_frame.empty:
         return "# Binance Spot History Readiness\n\nNo Binance symbols were found.\n"
-    counts = frame["status"].value_counts().reset_index()
-    counts.columns = ["status", "rows"]
+    counts = frame["status"].value_counts().reset_index() if not frame.empty else pd.DataFrame(columns=["status", "count"])
+    if not counts.empty:
+        counts.columns = ["status", "rows"]
+    pair_columns = [
+        "pair",
+        "exact_mode",
+        "history_status",
+        "wizard_settings_status",
+        "cost_model_status",
+        "funding_borrow_status",
+        "slippage_status",
+        "next_action",
+    ]
     return "\n".join(
         [
             "# Binance Spot History Readiness",
@@ -218,19 +360,54 @@ def _binance_lane_markdown(frame: pd.DataFrame) -> str:
             "",
             frame.to_markdown(index=False),
             "",
+            "## Pair Readiness",
+            "",
+            pair_frame[pair_columns].to_markdown(index=False) if not pair_frame.empty else "No current Binance pair candidates were available.",
+            "",
+            "## Rules",
+            "",
+            "- Binance public spot candles are research history only. They do not establish a short/borrow route or trading permission.",
+            "- A pair with complete history remains blocked until exact Wizard settings plus venue-specific fee, slippage, and borrow assumptions are captured and tested.",
+            "",
         ]
     )
 
 
-def _candle_count(path: Path) -> int:
+def _candle_metadata(path: Path) -> dict[str, object]:
     if not path.exists():
-        return 0
+        return {"daily_candle_rows": 0, "history_last_timestamp": "", "history_age_hours": "", "history_fresh": False}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return 0
+        return {"daily_candle_rows": 0, "history_last_timestamp": "", "history_age_hours": "", "history_fresh": False}
     candles = payload.get("candles", []) if isinstance(payload, dict) else []
-    return len(candles) if isinstance(candles, list) else 0
+    if not isinstance(candles, list) or not candles:
+        return {"daily_candle_rows": 0, "history_last_timestamp": "", "history_age_hours": "", "history_fresh": False}
+    last_timestamp = str(candles[-1].get("startedAt", "") or "") if isinstance(candles[-1], dict) else ""
+    try:
+        parsed = pd.Timestamp(last_timestamp)
+        if pd.isna(parsed):
+            raise ValueError("invalid timestamp")
+        last = parsed.to_pydatetime()
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        age_hours = max((datetime.now(timezone.utc) - last.astimezone(timezone.utc)).total_seconds() / 3600.0, 0.0)
+        fresh = age_hours <= DAILY_HISTORY_FRESHNESS_MAX_AGE_HOURS
+    except (TypeError, ValueError, OverflowError):
+        age_hours = None
+        fresh = False
+    return {
+        "daily_candle_rows": len(candles),
+        "history_last_timestamp": last_timestamp,
+        "history_age_hours": round(age_hours, 6) if age_hours is not None else "",
+        "history_fresh": fresh,
+    }
+
+
+def _as_bool(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"true", "1", "yes", "y"}
 
 
 def _clean_symbol(value: object) -> str:

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from quant_platform.apify_sources import parse_apify_sources_from_mcp_url, refresh_apify_sources
+from quant_platform.apify_sources import _extract_usage_details, parse_apify_sources_from_mcp_url, refresh_apify_sources
 from quant_platform.active_pipeline import _planned_source_rows
 
 
@@ -77,3 +77,26 @@ def test_planned_source_rows_includes_all_sources_and_marks_context_only_not_pro
     assert byrow["dydx"]["execution_authority"] is True
     assert byrow["gmx"]["promotion_allowed"] is False
     assert byrow["bybit"]["promotion_allowed"] is False
+
+
+def test_extract_usage_details_reads_common_apify_fields():
+    payload = {
+        "id": "run_123",
+        "startedAt": "2026-06-27T00:00:00.000Z",
+        "finishedAt": "2026-06-27T00:00:05.123Z",
+        "stats": {"runTimeMillis": 5120},
+        "meta": {"datasetId": "ds_1"},
+        "billing": {"cost": 1.42, "currency": "USD", "credits": 142},
+        "status": "SUCCEEDED",
+    }
+
+    usage = _extract_usage_details(payload, "run_123")
+
+    assert usage["run_id"] == "run_123"
+    assert usage["started_at_utc"] == "2026-06-27T00:00:00.000Z"
+    assert usage["finished_at_utc"] == "2026-06-27T00:00:05.123Z"
+    assert usage["duration_ms"] == 5120
+    assert usage["usage_currency"] == "USD"
+    assert usage["usage_amount"] == 1.42
+    assert usage["usage_credits"] == 142
+    assert "datasetId" in str(usage["usage_meta"])

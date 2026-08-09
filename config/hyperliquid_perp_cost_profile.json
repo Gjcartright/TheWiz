@@ -1,0 +1,14 @@
+{
+  "profile_id": "hyperliquid_perp_base_tier_taker_v1",
+  "venue": "hyperliquid",
+  "instrument": "perpetual",
+  "fee_tier_assumption": "base_tier_0_conservative",
+  "execution_style": "taker",
+  "taker_fee_bps": 4.5,
+  "maker_fee_bps": 1.5,
+  "execution_risk_bps": 2.0,
+  "fee_source_url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+  "fee_source_checked_at": "2026-08-05",
+  "account_specific_fee_status": "not_captured_use_conservative_base_tier",
+  "slippage_method": "public_l2_book_depth"
+}

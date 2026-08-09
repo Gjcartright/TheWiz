@@ -12,10 +12,15 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.funding import normalize_funding_rows
+from quant_platform.performance_math import MATH_VERSION
+from quant_platform.statistics.math_v2 import attach_math_v2_statistics
+from quant_platform.zscore_utils import attach_row_level_zscores
 
 DYDX_INDEXER_BASE = os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip()
 MAX_DYDX_REQUEST_LIMIT = 1000
 MIN_DYDX_REQUEST_LIMIT = 1
+ZSCORE_WINDOW = 7
+ZSCORE_MIN_WINDOW = 7
 
 
 def _clamp_request_limit(limit: int) -> int:
@@ -43,7 +48,7 @@ def dydx_two_leg_request_rows(
     from_iso: str | None = None,
     indexer_base: str = DYDX_INDEXER_BASE,
     output_dir: str | Path = "data/raw/dydx_manual",
-    zscore_window: int = 320,
+        zscore_window: int = ZSCORE_WINDOW,
 ) -> list[dict[str, str]]:
     left = _dydx_market(asset_x)
     right = _dydx_market(asset_y)
@@ -163,11 +168,19 @@ def merge_dydx_candle_windows(
 
     by_timestamp: dict[str, dict[str, Any]] = {}
     for candidate in candidates:
-        for candle in load_loose_candle_payload(candidate):
+        try:
+            candles = load_loose_candle_payload(candidate)
+        except ValueError:
+            # Some windows are sparsely populated or stale and return an empty payload.
+            # We treat them as non-fatal and continue with other windows.
+            continue
+
+        for candle in candles:
             timestamp = _timestamp(candle)
             if not timestamp:
                 continue
             by_timestamp[timestamp] = candle
+
     if not by_timestamp:
         raise ValueError(f"no timestamped candles found for {market_name} {resolution} in {input_dir}")
 
@@ -190,7 +203,7 @@ def build_pair_history_from_windowed_candles(
     beta: float | None = None,
     resolution: str = "5MINS",
     interval: str | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = ZSCORE_WINDOW,
     derive_hedge_ratio: bool = False,
     funding_path: str | Path | None = None,
 ) -> dict[str, Path]:
@@ -239,8 +252,8 @@ def build_pair_history_from_candles(
     hedge_ratio: float | None,
     beta: float | None = None,
     interval: str | None = None,
-    zscore_window: int = 320,
-    min_zscore_window: int = 20,
+        zscore_window: int = ZSCORE_WINDOW,
+        min_zscore_window: int = ZSCORE_MIN_WINDOW,
     derive_ecm: bool = True,
     funding_path: str | Path | None = None,
     funding_rows: pd.DataFrame | None = None,
@@ -267,6 +280,8 @@ def build_pair_history_from_candles(
         rows.append(
             {
                 "timestamp": timestamp,
+                "open_x": _candle_open(x),
+                "open_y": _candle_open(y),
                 "price_x": price_x,
                 "price_y": price_y,
                 "spread": spread,
@@ -281,7 +296,12 @@ def build_pair_history_from_candles(
     ecm_derivation: dict[str, Any] | None = None
     if derive_ecm:
         ecm_derivation = _attach_provisional_ecm(rows)
-    _attach_provisional_research_features(rows)
+    _attach_provisional_research_features(rows, namespace=True)
+    statistical_validity = attach_math_v2_statistics(
+        rows,
+        zscore_window=zscore_window,
+        min_zscore_window=min_zscore_window,
+    )
     if funding_path is not None or funding_rows is not None:
         _attach_funding_to_rows(
             rows,
@@ -301,6 +321,8 @@ def build_pair_history_from_candles(
         "interval": resolution.lower(),
         "period": len(rows),
         "strategy_mode": "static",
+        "math_version": MATH_VERSION,
+        "math_v2_signal_use_status": "blocked_until_walk_forward_and_wizard_mode_parity",
         "hedge_ratio": final_hedge_ratio,
         "hedge_ratio_source": "operator" if hedge_ratio is not None else "derived_price_ols",
         "beta": final_beta,
@@ -314,13 +336,17 @@ def build_pair_history_from_candles(
             "with --funding-path before production acceptance."
         ),
         "history": rows,
+        "statistical_validity": statistical_validity,
     }
     if ecm_derivation:
         payload["ecm_derivation"] = ecm_derivation
-        payload["source_note"] += " ECM fields are provisional derived estimates, not native Crypto Wizards ECM payload values."
+        payload["source_note"] += (
+            " ECM proxy fields are namespaced research_proxy_* estimates, not native Crypto Wizards ECM values."
+        )
     payload["source_note"] += (
-        " Additional research columns such as conditional_probability_distortion, half_life, hurst, tail_dependence,"
-        " and model confidence inputs are provisional derived features used to exercise the strategy research harness."
+        " Heuristic research columns are namespaced research_proxy_* and cannot authorize acceptance, learning, or"
+        " execution. Math V2 estimates are namespaced math_v2_*; this batch fit remains blocked from signal use until"
+        " it is reproduced inside a point-in-time walk-forward fold."
     )
 
     output = Path(output_path)
@@ -446,7 +472,7 @@ def import_dydx_candle_bundle(
     pair_output_dir: str | Path,
     hedge_ratio_by_pair: dict[str, float] | None = None,
     default_hedge_ratio: float = 1.0,
-    zscore_window: int = 320,
+    zscore_window: int = ZSCORE_WINDOW,
 ) -> list[Path]:
     payload = json.loads(Path(input_path).read_text(encoding="utf-8"))
     pairs = payload.get("pairs") if isinstance(payload, dict) else None
@@ -600,7 +626,14 @@ def _timestamp(row: dict[str, Any]) -> str:
 
 
 def _candle_price(row: dict[str, Any]) -> float:
-    return _safe_float(row.get("close") or row.get("orderbookMidPriceClose") or row.get("midClose"))
+    # For thin dYdX markets, trade close often stays frozen across many bars even
+    # while the quoted mid moves. Prefer the order-book mid when present so
+    # execution-oriented pair histories reflect the live quoted market first.
+    return _safe_float(row.get("orderbookMidPriceClose") or row.get("close") or row.get("midClose"))
+
+
+def _candle_open(row: dict[str, Any]) -> float:
+    return _safe_float(row.get("orderbookMidPriceOpen") or row.get("open") or row.get("midOpen"))
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -611,18 +644,11 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 
 
 def _attach_zscores(rows: list[dict[str, Any]], *, zscore_window: int, min_window: int) -> None:
-    spreads = [_safe_float(row["spread"]) for row in rows]
-    full_mean = mean(spreads)
-    full_std = pstdev(spreads) or 1.0
-    for idx, row in enumerate(rows):
-        window = spreads[max(0, idx - zscore_window + 1) : idx + 1]
-        if len(window) >= min_window:
-            window_mean = mean(window)
-            window_std = pstdev(window) or full_std
-        else:
-            window_mean = full_mean
-            window_std = full_std
-        row["zscore"] = (_safe_float(row["spread"]) - window_mean) / window_std
+    if not rows:
+        return
+    if not all("spread" in row for row in rows):
+        return
+    attach_row_level_zscores(rows, spread_key="spread", zscore_key="zscore", window=zscore_window, min_periods=min_window)
 
 
 def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -636,9 +662,9 @@ def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
     gamma_y = _slope(lagged_spread_z[1:], returns_y[1:])
     strength = min(1.0, abs(gamma_x - gamma_y) * 100.0)
     for idx, row in enumerate(rows):
-        row["ecm_x"] = gamma_x * lagged_spread_z[idx]
-        row["ecm_y"] = gamma_y * lagged_spread_z[idx]
-        row["ecm_strength"] = strength
+        row["research_proxy_ecm_x"] = gamma_x * lagged_spread_z[idx]
+        row["research_proxy_ecm_y"] = gamma_y * lagged_spread_z[idx]
+        row["research_proxy_ecm_strength"] = strength
     return {
         "method": "provisional_ols_lagged_spread_z_to_next_log_returns",
         "native_crypto_wizards_ecm": False,
@@ -648,7 +674,12 @@ def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _attach_provisional_research_features(rows: list[dict[str, Any]], *, overwrite: bool = False) -> None:
+def _attach_provisional_research_features(
+    rows: list[dict[str, Any]],
+    *,
+    overwrite: bool = False,
+    namespace: bool = False,
+) -> None:
     if not rows:
         return
 
@@ -812,7 +843,9 @@ def _attach_provisional_research_features(rows: list[dict[str, Any]], *, overwri
             "copula_calibration_score": float(np.clip(0.5 + abs(cpd.iloc[idx]) / 2.0, 0.0, 1.0)),
             "composite_score": composite_score,
         }
-        if overwrite:
+        if namespace:
+            row.update({f"research_proxy_{key}": value for key, value in updates.items()})
+        elif overwrite:
             row.update(updates)
         else:
             for key, value in updates.items():

@@ -49,13 +49,13 @@
 - Failure mode: Sensitive to sample length, microstructure noise, and jumps.
 
 ## zscore
-- Formula: (spread_t - mean(spread)) / std(spread).
+- Formula: (spread_t - sample_mean) / sample_std. The observed Crypto Wizards custom-series `zscore` uses sample standard deviation (`ddof=1`) over the supplied sample.
 - Market interpretation: Distance from estimated equilibrium.
 - Use case: Classic entry/exit trigger.
-- Failure mode: Large z-score may indicate structural break rather than opportunity.
+- Failure mode: A full-sample mean and standard deviation use hindsight. Live/local signals must estimate calibration statistics inside each walk-forward training fold or use a causal expanding calculation.
 
 ## rolling_zscore
-- Formula: (spread_t - rolling_mean) / rolling_std.
+- Formula: (spread_t - rolling_mean_w) / rolling_sample_std_w. Observed Crypto Wizards `zscore_roll` uses `ddof=1`, the configured `roll_w`, and zero during warmup.
 - Market interpretation: Adaptive deviation measure.
 - Use case: Threshold model with recent volatility adaptation.
 - Failure mode: Window choice can chase noise or lag breaks.
@@ -65,6 +65,12 @@
 - Market interpretation: Tradable disequilibrium between hedged legs.
 - Use case: Base series for stationarity, z-score, OU, and ECM.
 - Failure mode: Bad hedge ratio converts spread into directional bet.
+
+## crypto_wizards_static_spread_observed
+- Formula: OLS fits `y = alpha + beta*x`, then `spread = y - (alpha + beta*x)`. When the vendor response reports `log_used=true`, it instead fits `log(y) = alpha + beta*log(x)` and uses the log residual.
+- Evidence: Reconstructed to numerical precision from the 2026-08-07 BTC/EIGEN and DOGE/EIGEN Hyperliquid custom-series proofs.
+- Use case: Vendor formula parity and exact-mode diagnosis.
+- Failure mode: The custom-series response fits the complete supplied sample. It is historical/hindsight evidence and cannot be copied directly into a live signal; fit alpha, beta, transform choice, and scale inside each walk-forward training fold.
 
 ## pearson
 - Formula: cov(x,y)/(std(x)*std(y)).
@@ -145,7 +151,8 @@
 - Failure mode: Historical clusters may not survive new regimes.
 
 ## ou_optimal
-- Formula: OU process dX_t = theta(mu-X_t)dt + sigma dW_t with optimal stopping thresholds.
-- Market interpretation: Model-based mean-reversion entry/exit attractiveness.
-- Use case: Threshold optimization and expected holding period.
-- Failure mode: OU assumptions fail under jumps, trends, or changing volatility.
+- Vendor formula: not exposed by the captured API/dashboard evidence.
+- Observed type: scanner boolean annotation attached to an ordinary Static, Dynamic, OU, or Copula source row.
+- Market interpretation: vendor screening hint that may identify a cohort for OU-threshold research.
+- Use case: true/false stratification within the row's actual mode; never an independent pair-page signal.
+- Failure mode: inferring thresholds, spread math, or acceptance authority from the boolean.

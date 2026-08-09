@@ -10,6 +10,7 @@ import pandas as pd
 from quant_platform.ablations import write_ablation_report
 from quant_platform.backtest import BacktestResult, CostModel, backtest_pair, backtest_two_leg_spread
 from quant_platform.feature_engine import FeatureEngine
+from quant_platform.zscore_utils import coalesce_zscore
 from quant_platform.regimes import regime_pair_strategy_report
 from quant_platform.strategies import STRATEGIES, STRATEGY_REQUIRED_COLUMNS, StrategySpec
 
@@ -45,7 +46,9 @@ class AcceptanceGate:
             failures.append("profit_factor_invalid")
         elif result.profit_factor < self.min_profit_factor:
             failures.append(f"profit_factor<{self.min_profit_factor}")
-        if result.sharpe < self.min_sharpe:
+        if not isfinite(result.sharpe):
+            failures.append("sharpe_invalid_or_unknown_interval")
+        elif result.sharpe < self.min_sharpe:
             failures.append(f"sharpe<{self.min_sharpe}")
         if result.max_drawdown > self.max_drawdown:
             failures.append(f"max_drawdown>{self.max_drawdown}")
@@ -155,6 +158,258 @@ class AcceptanceGate:
 
 
 @dataclass(frozen=True)
+class ElasticResearchGate:
+    min_pairs: int = 1
+    min_trades_floor: int = 20
+    strong_trades_target: int = 100
+    min_profit_factor: float = 1.15
+    min_sharpe: float = 0.8
+    max_drawdown: float = 1.5
+    require_positive_expectancy: bool = True
+    required_cost_buckets: tuple[str, ...] = ("base", "stress")
+    required_regime: str = "ALL"
+    require_two_leg_backtests: bool = True
+    require_two_leg_execution_inputs: bool = True
+
+    def evaluate_strategy(self, rows: pd.DataFrame) -> dict[str, object]:
+        evaluated = rows[rows["status"] == "evaluated"].copy()
+        deployable_scope = evaluated[
+            (evaluated["regime"] == self.required_regime)
+            & (evaluated["cost_bucket"].isin(self.required_cost_buckets))
+        ].copy()
+        if "backtest_mode" not in deployable_scope.columns:
+            deployable_scope = deployable_scope.assign(backtest_mode="unknown")
+        if self.require_two_leg_backtests:
+            deployable_scope = deployable_scope[deployable_scope["backtest_mode"] == "two_leg"]
+        if self.require_two_leg_execution_inputs:
+            deployable_scope = _complete_two_leg_execution_input_scope(deployable_scope)
+
+        pair_rows: list[dict[str, object]] = []
+        required_costs = set(self.required_cost_buckets)
+        for pair, pair_frame in deployable_scope.groupby("pair"):
+            pair_costs = set(pair_frame["cost_bucket"])
+            if not required_costs.issubset(pair_costs):
+                continue
+            trades = int(pd.to_numeric(pair_frame["trades"], errors="coerce").fillna(0).sum())
+            median_profit_factor = float(pd.to_numeric(pair_frame["profit_factor"], errors="coerce").median())
+            median_sharpe = float(pd.to_numeric(pair_frame["sharpe"], errors="coerce").median())
+            worst_drawdown = float(pd.to_numeric(pair_frame["max_drawdown"], errors="coerce").max())
+            median_expectancy = float(pd.to_numeric(pair_frame["expectancy"], errors="coerce").median())
+            cost_bucket_count = int(pair_frame["cost_bucket"].nunique())
+            pair_score = _elastic_pair_score(
+                trades=trades,
+                strong_trades_target=self.strong_trades_target,
+                profit_factor=median_profit_factor,
+                min_profit_factor=self.min_profit_factor,
+                sharpe=median_sharpe,
+                min_sharpe=self.min_sharpe,
+                max_drawdown=worst_drawdown,
+                drawdown_ceiling=self.max_drawdown,
+                expectancy=median_expectancy,
+                require_positive_expectancy=self.require_positive_expectancy,
+            )
+            pair_pass = (
+                trades >= self.min_trades_floor
+                and median_profit_factor >= self.min_profit_factor
+                and median_sharpe >= self.min_sharpe
+                and worst_drawdown <= self.max_drawdown
+                and (median_expectancy > 0 if self.require_positive_expectancy else True)
+            )
+            pair_rows.append(
+                {
+                    "pair": pair,
+                    "pair_pass": pair_pass,
+                    "pair_score": pair_score,
+                    "trades": trades,
+                    "profit_factor": median_profit_factor,
+                    "sharpe": median_sharpe,
+                    "max_drawdown": worst_drawdown,
+                    "expectancy": median_expectancy,
+                    "cost_bucket_count": cost_bucket_count,
+                    "exploration_tag": _classify_research_setup(
+                        trades=trades,
+                        strong_trades_target=self.strong_trades_target,
+                        profit_factor=median_profit_factor,
+                        min_profit_factor=self.min_profit_factor,
+                        sharpe=median_sharpe,
+                        min_sharpe=self.min_sharpe,
+                        max_drawdown=worst_drawdown,
+                        drawdown_ceiling=self.max_drawdown,
+                        expectancy=median_expectancy,
+                    ),
+                }
+            )
+
+        pair_frame = pd.DataFrame(pair_rows)
+        pairs_tested = int(pair_frame["pair"].nunique()) if not pair_frame.empty else 0
+        passing_pairs = int(pair_frame["pair_pass"].sum()) if not pair_frame.empty else 0
+        research_score = float(pair_frame["pair_score"].mean()) if not pair_frame.empty else 0.0
+        stability_score = float(min(pairs_tested / max(self.min_pairs + 1, 2), 1.0) * 100.0) if pairs_tested else 0.0
+        breadth_score = (
+            float(min(pair_frame["cost_bucket_count"].min() / max(len(self.required_cost_buckets), 1), 1.0) * 100.0)
+            if not pair_frame.empty
+            else 0.0
+        )
+        conviction_score = float(
+            0.65 * research_score
+            + 0.20 * stability_score
+            + 0.15 * breadth_score
+        )
+        if passing_pairs >= max(2, self.min_pairs) and conviction_score >= 72:
+            tier = "research_candidate"
+        elif passing_pairs >= self.min_pairs and conviction_score >= 58:
+            tier = "research_watch"
+        elif conviction_score >= 45:
+            tier = "research_explore"
+        else:
+            tier = "research_reject"
+
+        reasons: list[str] = []
+        if pairs_tested < self.min_pairs:
+            reasons.append(f"research_pairs_tested<{self.min_pairs}")
+        if passing_pairs < self.min_pairs:
+            reasons.append(f"research_passing_pairs<{self.min_pairs}")
+        if conviction_score < 45:
+            reasons.append("research_conviction<45")
+
+        strengths = _research_strengths(pair_frame)
+        concerns = _research_concerns(pair_frame, self)
+        top_pairs = (
+            pair_frame.sort_values(["pair_score", "trades"], ascending=[False, False])["pair"].head(3).tolist()
+            if not pair_frame.empty
+            else []
+        )
+        setup_mix = (
+            ",".join(
+                pair_frame["exploration_tag"]
+                .value_counts()
+                .sort_values(ascending=False)
+                .index[:3]
+                .tolist()
+            )
+            if not pair_frame.empty
+            else "none"
+        )
+
+        return {
+            "research_eligible": tier in {"research_candidate", "research_watch", "research_explore"},
+            "research_tier": tier,
+            "research_reason": "passed" if not reasons else ";".join(reasons),
+            "research_pairs_tested": pairs_tested,
+            "research_passing_pairs": passing_pairs,
+            "research_score": round(research_score, 2),
+            "research_conviction_score": round(conviction_score, 2),
+            "research_stability_score": round(stability_score, 2),
+            "research_breadth_score": round(breadth_score, 2),
+            "research_strengths": strengths,
+            "research_concerns": concerns,
+            "research_setup_mix": setup_mix,
+            "research_top_pairs": ",".join(top_pairs) if top_pairs else "",
+            "research_next_step": _research_next_step(tier, strengths, concerns),
+        }
+
+
+def _elastic_pair_score(
+    *,
+    trades: int,
+    strong_trades_target: int,
+    profit_factor: float,
+    min_profit_factor: float,
+    sharpe: float,
+    min_sharpe: float,
+    max_drawdown: float,
+    drawdown_ceiling: float,
+    expectancy: float,
+    require_positive_expectancy: bool,
+) -> float:
+    trade_term = min(max(trades, 0) / max(strong_trades_target, 1), 1.0)
+    pf_term = min(max(profit_factor / max(min_profit_factor, 1.0e-6), 0.0), 2.0) / 2.0
+    sharpe_term = min(max(sharpe / max(min_sharpe, 1.0e-6), 0.0), 2.0) / 2.0
+    drawdown_term = 0.0 if drawdown_ceiling <= 0 else min(max(1.0 - (max_drawdown / drawdown_ceiling), 0.0), 1.0)
+    expectancy_term = 1.0 if (expectancy > 0 or not require_positive_expectancy) else 0.0
+    return 100.0 * (
+        0.22 * trade_term
+        + 0.24 * pf_term
+        + 0.24 * sharpe_term
+        + 0.20 * drawdown_term
+        + 0.10 * expectancy_term
+    )
+
+
+def _classify_research_setup(
+    *,
+    trades: int,
+    strong_trades_target: int,
+    profit_factor: float,
+    min_profit_factor: float,
+    sharpe: float,
+    min_sharpe: float,
+    max_drawdown: float,
+    drawdown_ceiling: float,
+    expectancy: float,
+) -> str:
+    if trades < max(10, strong_trades_target // 3):
+        return "thin_sample"
+    if profit_factor >= (min_profit_factor + 0.25) and sharpe >= (min_sharpe + 0.2) and max_drawdown <= drawdown_ceiling * 0.5:
+        return "high_quality"
+    if expectancy > 0 and max_drawdown > drawdown_ceiling * 0.75:
+        return "high_risk_positive"
+    if sharpe >= min_sharpe and profit_factor < min_profit_factor:
+        return "stable_but_weak_edge"
+    if profit_factor >= min_profit_factor and sharpe < min_sharpe:
+        return "edge_but_noisy"
+    return "mixed"
+
+
+def _research_strengths(pair_frame: pd.DataFrame) -> str:
+    if pair_frame.empty:
+        return "none"
+    strengths: list[str] = []
+    if float(pair_frame["pair_score"].mean()) >= 70:
+        strengths.append("strong_average_score")
+    if int((pair_frame["trades"] >= 100).sum()) >= 1:
+        strengths.append("repeatable_trade_count")
+    if float(pair_frame["profit_factor"].median()) >= 1.3:
+        strengths.append("positive_edge")
+    if float(pair_frame["sharpe"].median()) >= 1.0:
+        strengths.append("risk_adjusted_strength")
+    if float(pair_frame["expectancy"].median()) > 0:
+        strengths.append("positive_expectancy")
+    return ",".join(strengths) if strengths else "emerging_signal"
+
+
+def _research_concerns(pair_frame: pd.DataFrame, gate: ElasticResearchGate) -> str:
+    if pair_frame.empty:
+        return "no_valid_pairs"
+    concerns: list[str] = []
+    if int(pair_frame["pair"].nunique()) < max(2, gate.min_pairs):
+        concerns.append("limited_pair_diversity")
+    if int((pair_frame["trades"] < gate.strong_trades_target).sum()) > 0:
+        concerns.append("light_trade_count")
+    if float(pair_frame["max_drawdown"].max()) > min(0.75, gate.max_drawdown * 0.5):
+        concerns.append("elevated_drawdown")
+    if float(pair_frame["sharpe"].median()) < 1.0:
+        concerns.append("fragile_sharpe")
+    if float(pair_frame["profit_factor"].median()) < 1.3:
+        concerns.append("modest_edge")
+    return ",".join(concerns) if concerns else "contained_risk"
+
+
+def _research_next_step(tier: str, strengths: str, concerns: str) -> str:
+    if tier == "research_candidate":
+        return "promote_to_focused_paper_validation"
+    if "light_trade_count" in concerns:
+        return "expand_history_and_retest"
+    if "elevated_drawdown" in concerns:
+        return "tighten_risk_controls_then_retest"
+    if "fragile_sharpe" in concerns or "modest_edge" in concerns:
+        return "refine_filters_and_compare_variants"
+    if strengths == "none":
+        return "collect_more_usable_pairs"
+    return "monitor_in_research_queue"
+
+
+@dataclass(frozen=True)
 class CostBucket:
     name: str
     cost_model: CostModel
@@ -226,8 +481,23 @@ def _required_columns(strategy: StrategySpec) -> set[str]:
     return STRATEGY_REQUIRED_COLUMNS.get(strategy.id, {"spread"})
 
 
+def _effective_required_columns(frame: pd.DataFrame, strategy: StrategySpec) -> set[str]:
+    required = set(_required_columns(strategy))
+    columns = set(frame.columns)
+    if ("zscore" in required) and ("zscore_reconstructed" in columns or "rolling_zscore" in columns):
+        required.discard("zscore")
+    return required
+
+
 def _missing_columns(frame: pd.DataFrame, strategy: StrategySpec) -> list[str]:
-    return sorted(_required_columns(strategy).difference(frame.columns))
+    required = _effective_required_columns(frame, strategy)
+    return sorted(required.difference(frame.columns))
+
+
+def _coalesce_signal_zscore(frame: pd.DataFrame) -> pd.DataFrame:
+    normalized = frame.copy()
+    normalized["zscore"] = coalesce_zscore(normalized)
+    return normalized
 
 
 def _input_coverage_flags(frame: pd.DataFrame) -> dict[str, bool]:
@@ -316,7 +586,7 @@ class ExperimentHarness:
 
     def _run_dataset(self, dataset: PairDataset) -> list[ExperimentResult]:
         results: list[ExperimentResult] = []
-        frame = self.feature_engine.score_frame(dataset.frame)
+        frame = self.feature_engine.score_frame(_coalesce_signal_zscore(dataset.frame))
         for strategy in self.strategies:
             for regime, regime_frame in _regime_slices(frame, self.config):
                 for bucket in self.config.cost_buckets:
@@ -345,6 +615,7 @@ class ExperimentHarness:
         }
         if observations < self.config.min_rows:
             return ExperimentResult(**base, status="skipped", eligible=False, reason=f"rows<{self.config.min_rows}")
+        frame = _coalesce_signal_zscore(frame)
         if strategy.signal_function is None:
             return ExperimentResult(**base, status="skipped", eligible=False, reason="no_signal_function")
         missing = _missing_columns(frame, strategy)
@@ -488,45 +759,61 @@ def _ensure_cost_columns(frame: pd.DataFrame) -> None:
 
 def strategy_acceptance_report(results: pd.DataFrame, gate: AcceptanceGate | None = None) -> pd.DataFrame:
     gate = gate or AcceptanceGate()
+    research_gate = ElasticResearchGate()
+    columns = [
+        "strategy_id",
+        "strategy_name",
+        "family",
+        "production_eligible",
+        "preferred_eligible",
+        "research_eligible",
+        "research_tier",
+        "acceptance_reason",
+        "preferred_reason",
+        "research_reason",
+        "evaluated_runs",
+        "passing_runs",
+        "pairs_tested",
+        "passing_pairs",
+        "research_pairs_tested",
+        "research_passing_pairs",
+        "two_leg_pairs_tested",
+        "two_leg_execution_input_pairs",
+        "two_leg_passing_pairs",
+        "research_score",
+        "research_conviction_score",
+        "research_stability_score",
+        "research_breadth_score",
+        "research_strengths",
+        "research_concerns",
+        "research_setup_mix",
+        "research_top_pairs",
+        "research_next_step",
+        "required_cost_buckets",
+        "required_backtest_mode",
+        "required_two_leg_inputs",
+        "total_trades",
+        "median_profit_factor",
+        "median_sharpe",
+        "worst_drawdown",
+    ]
     if results.empty:
-        return pd.DataFrame(
-            columns=[
-                "strategy_id",
-                "strategy_name",
-                "family",
-                "production_eligible",
-                "preferred_eligible",
-                "acceptance_reason",
-                "preferred_reason",
-                "evaluated_runs",
-                "passing_runs",
-                "pairs_tested",
-                "passing_pairs",
-                "two_leg_pairs_tested",
-                "two_leg_execution_input_pairs",
-                "two_leg_passing_pairs",
-                "required_cost_buckets",
-                "required_backtest_mode",
-                "required_two_leg_inputs",
-                "total_trades",
-                "median_profit_factor",
-                "median_sharpe",
-                "worst_drawdown",
-            ]
-        )
+        return pd.DataFrame(columns=columns)
 
     rows: list[dict[str, object]] = []
     for (strategy_id, strategy_name, family), group in results.groupby(["strategy_id", "strategy_name", "family"], sort=True):
         decision = gate.evaluate_strategy(group)
+        research_decision = research_gate.evaluate_strategy(group)
         rows.append(
             {
                 "strategy_id": strategy_id,
                 "strategy_name": strategy_name,
                 "family": family,
                 **decision,
+                **research_decision,
             }
         )
-    return pd.DataFrame(rows).sort_values(
+    return pd.DataFrame(rows)[columns].sort_values(
         ["production_eligible", "preferred_eligible", "passing_pairs", "median_profit_factor"],
         ascending=[False, False, False, False],
     )

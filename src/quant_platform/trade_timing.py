@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from quant_platform.zscore_utils import coalesce_zscore
+
 from quant_platform.pair_detail_ingestion import extract_history_rows, load_pair_detail_payload, snapshot_from_payload
+
+
+def _preferred_zscore(frame: pd.DataFrame) -> pd.Series:
+    return coalesce_zscore(frame, prefer_reconstructed=True, prefer_provider=True, prefer_rolling=True)
 
 
 TRADE_TIMING_TEMPLATE_COLUMNS = [
@@ -43,11 +49,11 @@ def load_trade_timing_history(path: str | Path) -> pd.DataFrame:
     if timestamp_column != "timestamp":
         frame = frame.rename(columns={timestamp_column: "timestamp"})
     frame["timestamp"] = pd.to_datetime(frame["timestamp"], utc=True, errors="coerce")
-    frame["zscore"] = pd.to_numeric(frame.get("zscore"), errors="coerce")
     if "pair" in frame.columns:
         frame["pair"] = frame["pair"].fillna("").astype(str).str.strip()
     else:
         frame["pair"] = ""
+    frame["zscore"] = _preferred_zscore(frame)
     if "spread" in frame.columns:
         frame["spread"] = pd.to_numeric(frame["spread"], errors="coerce")
     return frame.dropna(subset=["timestamp", "zscore"]).sort_values(["pair", "timestamp"]).reset_index(drop=True)

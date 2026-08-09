@@ -7,6 +7,10 @@ import pandas as pd
 
 from quant_platform.experiments import PairDataset
 from quant_platform.ml_filter import (
+    _model_selection_score,
+    _purged_pair_aware_splits,
+    _select_probability_threshold,
+    _threshold_quality_score,
     available_model_specs,
     build_trade_filter_dataset,
     shadow_trade_filter_predictions,
@@ -144,8 +148,27 @@ def test_build_trade_filter_dataset_creates_candidate_entry_rows():
     assert set(frame["signal_side"]).issubset({"long_spread", "short_spread"})
 
 
+def test_build_trade_filter_dataset_rejects_integer_bar_indexes_as_timestamps():
+    history = _pair_history_frame()
+    history["timestamp"] = np.arange(len(history))
+
+    frame = build_trade_filter_dataset([PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],))
+
+    assert frame.empty
+
+
+def test_build_trade_filter_dataset_normalizes_timeframe_aliases():
+    history = _pair_history_frame()
+    history["interval"] = "daily"
+
+    frame = build_trade_filter_dataset([PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],))
+
+    assert set(frame["timeframe"]) == {"1d"}
+
+
 def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     dataset = _candidate_dataset()
+    dataset["wizard_learning_feature_state"] = "cold_start"
 
     paths = train_trade_filter_walkforward(dataset, output_dir=tmp_path, n_splits=3, min_train_rows=60)
 
@@ -155,10 +178,42 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     assert not summary.empty
     assert not folds.empty
     assert {"model_name", "median_filtered_profit_factor", "profit_factor_delta", "promising"}.issubset(summary.columns)
+    assert folds["split_scheme"].eq("purged_embargoed_pair_aware_timestamp_groups").all()
+    assert folds["embargo_periods"].eq(1).all()
     with open(paths["best_model"], "rb") as handle:
         artifact = pickle.load(handle)
+    assert artifact["model_name"] == summary.iloc[0]["model_name"]
     assert "estimator" in artifact
     assert "threshold" in artifact
+    assert artifact["evaluation_scheme"] == "purged_embargoed_pair_aware_timestamp_groups"
+
+
+def test_pair_aware_splits_group_timestamps_and_purge_overlapping_labels():
+    timestamps = pd.date_range("2026-01-01", periods=18, freq="h", tz="UTC")
+    frame = pd.DataFrame(
+        [
+            {
+                "pair": pair,
+                "entry_timestamp": timestamp,
+                "exit_timestamp": timestamp + pd.Timedelta(hours=2),
+            }
+            for timestamp in timestamps
+            for pair in ("BTC-USD/ETH-USD", "SOL-USD/HYPE-USD")
+        ]
+    )
+
+    splits = _purged_pair_aware_splits(frame, n_splits=3, embargo_periods=1)
+
+    assert len(splits) == 3
+    for train_idx, test_idx, audit in splits:
+        train = frame.iloc[train_idx]
+        test = frame.iloc[test_idx]
+        assert set(train["entry_timestamp"]).isdisjoint(set(test["entry_timestamp"]))
+        for pair in set(test["pair"]):
+            pair_train = train.loc[train["pair"] == pair]
+            pair_test = test.loc[test["pair"] == pair]
+            assert pair_train["exit_timestamp"].max() < pair_test["entry_timestamp"].min()
+        assert audit["purged_or_embargoed_rows"] > 0
 
 
 def test_shadow_trade_filter_predictions_scores_existing_dataset(tmp_path):
@@ -216,6 +271,55 @@ def test_shadow_model_branch_comparison_summarizes_model_and_pair_slices():
     ].iloc[0]
     assert btc_fallback["take_rows"] == 1
     assert btc_fallback["taken_mean_return"] == 0.03
+
+
+def test_threshold_quality_score_penalizes_sparse_weak_thresholds():
+    weak_sparse = {
+        "profit_factor": 1.1,
+        "sharpe": 0.8,
+        "drawdown": 0.7,
+        "expectancy": 0.003,
+        "total_return": 0.08,
+        "trade_count": 4,
+    }
+    stronger_balanced = {
+        "profit_factor": 1.05,
+        "sharpe": 0.75,
+        "drawdown": 0.15,
+        "expectancy": 0.0025,
+        "total_return": 0.06,
+        "trade_count": 20,
+    }
+
+    assert _threshold_quality_score(stronger_balanced) > _threshold_quality_score(weak_sparse)
+
+
+def test_select_probability_threshold_prefers_better_risk_adjusted_cutoff():
+    probability = np.array([0.52, 0.58, 0.63, 0.68, 0.73, 0.78, 0.83, 0.88])
+    realized_returns = np.array([-0.08, -0.07, -0.05, -0.03, 0.03, 0.04, 0.05, 0.06])
+
+    threshold = _select_probability_threshold(probability, realized_returns)
+
+    assert threshold >= 0.75
+
+
+def test_model_selection_score_prefers_promising_lower_drawdown_model():
+    stronger = {
+        "promising": True,
+        "profit_factor_delta": 0.30,
+        "sharpe_delta": 2.0,
+        "expectancy_delta": 0.02,
+        "worst_filtered_drawdown": 0.25,
+    }
+    weaker = {
+        "promising": False,
+        "profit_factor_delta": 0.10,
+        "sharpe_delta": 2.5,
+        "expectancy_delta": 0.01,
+        "worst_filtered_drawdown": 0.95,
+    }
+
+    assert _model_selection_score(stronger) > _model_selection_score(weaker)
 
 
 def test_available_model_specs_contains_linear_and_boosted_family():

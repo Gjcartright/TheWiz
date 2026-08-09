@@ -1,0 +1,40 @@
+{
+  "profile_id": "generic_two_leg_research_sensitivity",
+  "profile_version": "v1",
+  "cost_assumption_authority": "provisional_research_sensitivity_only",
+  "acceptance_eligible": false,
+  "paper_or_execution_eligible": false,
+  "notes": "These are deliberately generic bounds for exploratory replay. They are not venue fee schedules, account-specific fee tiers, calibrated slippage estimates, or validated funding/borrow costs.",
+  "scenarios": [
+    {
+      "cost_case": "gross_only_upper_bound",
+      "taker_fee_bps": 0.0,
+      "slippage_bps": 0.0,
+      "execution_risk_bps": 0.0,
+      "funding_or_borrow_bps_per_day": 0.0,
+      "partial_fill_probability": 0.0,
+      "partial_fill_fraction": 0.0,
+      "partial_fill_penalty_bps": 0.0
+    },
+    {
+      "cost_case": "provisional_base_sensitivity",
+      "taker_fee_bps": 5.0,
+      "slippage_bps": 4.0,
+      "execution_risk_bps": 2.0,
+      "funding_or_borrow_bps_per_day": 1.0,
+      "partial_fill_probability": 0.1,
+      "partial_fill_fraction": 0.5,
+      "partial_fill_penalty_bps": 2.0
+    },
+    {
+      "cost_case": "provisional_stress_sensitivity",
+      "taker_fee_bps": 7.5,
+      "slippage_bps": 8.0,
+      "execution_risk_bps": 4.0,
+      "funding_or_borrow_bps_per_day": 3.0,
+      "partial_fill_probability": 0.1,
+      "partial_fill_fraction": 0.5,
+      "partial_fill_penalty_bps": 2.0
+    }
+  ]
+}

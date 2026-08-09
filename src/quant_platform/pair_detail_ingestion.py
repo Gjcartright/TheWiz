@@ -6,6 +6,7 @@ from typing import Any, Iterable
 import json
 import re
 
+import numpy as np
 import pandas as pd
 
 from quant_platform.derived_features import add_derived_beta_from_prices
@@ -196,7 +197,10 @@ PAIR_DETAIL_QUALITY_COLUMNS = [
     "zero_volume_y_rate",
     "nonfinite_spread_rate",
     "nonfinite_zscore_rate",
+    "leading_zscore_warmup_rows",
+    "post_warmup_nonfinite_zscore_rate",
     "research_usable",
+    "research_execution_usable",
     "execution_usable",
     "quality_blockers",
     "source_note",
@@ -218,6 +222,12 @@ class PairDetailSnapshot:
     interval: str | None = None
     period: int | None = None
     strategy_mode: str | None = None
+    exact_mode: str | None = None
+    spread_id: int | None = None
+    strategy_id: int | None = None
+    dashboard_recommended_strategy: str | None = None
+    dashboard_pair_rank: int | None = None
+    dashboard_selector_score: float | None = None
     hedge_ratio: float | None = None
     hurst: float | None = None
     half_life: float | None = None
@@ -274,6 +284,12 @@ def parse_pair_detail_text(text: str, source_url: str | None = None) -> PairDeta
         interval=interval,
         period=period,
         strategy_mode=strategy_mode,
+        exact_mode=None,
+        spread_id=None,
+        strategy_id=None,
+        dashboard_recommended_strategy=None,
+        dashboard_pair_rank=None,
+        dashboard_selector_score=None,
         hedge_ratio=_value_before_label(lines, "hedge r"),
         hurst=_value_before_label(lines, "hurst"),
         half_life=_value_before_label(lines, "half life"),
@@ -305,7 +321,7 @@ def parse_pair_detail_text(text: str, source_url: str | None = None) -> PairDeta
     )
 
 
-def load_pair_detail_payload(path: str | Path) -> dict[str, Any]:
+def load_pair_detail_payload(path: str | Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
@@ -315,7 +331,12 @@ def _capture_paths(input_dir: str | Path) -> list[Path]:
     return sorted(set(paths))
 
 
-def snapshot_from_payload(payload: dict[str, Any]) -> PairDetailSnapshot:
+def snapshot_from_payload(payload: Any) -> PairDetailSnapshot:
+    if isinstance(payload, list):
+        # Some archived Wizard artifacts store a full pair matrix as a list of
+        # per-strategy rows. Use the first record so downstream evidence refreshes
+        # can still recover pair-level metadata instead of crashing.
+        payload = next((item for item in payload if isinstance(item, dict)), {})
     if "text" in payload:
         return parse_pair_detail_text(str(payload["text"]), source_url=payload.get("url"))
     normalized = {snake_case(key): value for key, value in payload.items()}
@@ -328,6 +349,19 @@ def snapshot_from_payload(payload: dict[str, Any]) -> PairDetailSnapshot:
         interval=normalized.get("interval"),
         period=_safe_int(normalized.get("period")),
         strategy_mode=normalized.get("strategy_mode"),
+        exact_mode=normalized.get("exact_mode"),
+        spread_id=_safe_int(normalized.get("spread_id")),
+        strategy_id=_safe_int(normalized.get("strategy_id")),
+        dashboard_recommended_strategy=normalized.get("dashboard_recommended_strategy")
+        or normalized.get("recommended_strategy")
+        or normalized.get("selected_strategy_value")
+        or normalized.get("best_wizard_strategy")
+        or normalized.get("strategy")
+        or normalized.get("strategy_name"),
+        dashboard_pair_rank=_safe_int(normalized.get("dashboard_pair_rank") or normalized.get("pair_rank") or normalized.get("rank")),
+        dashboard_selector_score=_safe_float(
+            normalized.get("dashboard_selector_score") or normalized.get("selector_score") or normalized.get("score")
+        ),
         hedge_ratio=_safe_float(normalized.get("hedge_ratio")),
         hurst=_safe_float(normalized.get("hurst")),
         half_life=_safe_float(normalized.get("half_life")),
@@ -422,6 +456,7 @@ def write_pair_detail_reports(input_dir: str | Path, output_dir: str | Path) -> 
 
 def datasets_from_pair_detail_snapshots(input_dir: str | Path, *, require_research_usable: bool = False) -> list[PairDataset]:
     datasets: list[PairDataset] = []
+    seen_histories: set[tuple[object, ...]] = set()
     root = Path(input_dir)
     usable_paths: set[Path] | None = None
     if require_research_usable:
@@ -439,6 +474,10 @@ def datasets_from_pair_detail_snapshots(input_dir: str | Path, *, require_resear
         history = extract_history_rows(payload)
         if not history:
             continue
+        history_identity = _history_identity(snapshot, history)
+        if history_identity in seen_histories:
+            continue
+        seen_histories.add(history_identity)
         frame = pd.DataFrame(history)
         for column, value in snapshot.to_row().items():
             if column not in frame.columns and value is not None:
@@ -448,6 +487,27 @@ def datasets_from_pair_detail_snapshots(input_dir: str | Path, *, require_resear
             frame["regime"] = "unknown"
         datasets.append(PairDataset(pair=snapshot.pair, frame=frame))
     return datasets
+
+
+def _history_identity(snapshot: PairDetailSnapshot, history: list[dict[str, Any]]) -> tuple[object, ...]:
+    """Identify duplicate captures without conflating different venues or intervals."""
+
+    sample_positions = sorted({0, len(history) // 4, len(history) // 2, (3 * len(history)) // 4, len(history) - 1})
+    sampled: list[object] = []
+    for position in sample_positions:
+        record = history[position]
+        for field in ("timestamp", "price_x", "price_y", "spread", "zscore"):
+            value = record.get(field, "")
+            if isinstance(value, (dict, list)):
+                value = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+            sampled.append(str(value))
+    return (
+        snapshot.pair,
+        snapshot.exchange,
+        snapshot.interval,
+        len(history),
+        *sampled,
+    )
 
 
 def extract_history_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -605,11 +665,18 @@ def pair_detail_payload_quality(payload: dict[str, Any], path: str | Path) -> di
         "zero_volume_y_rate": _zero_rate(frame, "volume_y_usd"),
         "nonfinite_spread_rate": _nonfinite_rate(frame, "spread"),
         "nonfinite_zscore_rate": _nonfinite_rate(frame, "zscore"),
+        "leading_zscore_warmup_rows": _leading_nonfinite_count(frame, "zscore"),
+        "post_warmup_nonfinite_zscore_rate": _post_warmup_nonfinite_rate(frame, "zscore"),
     }
     blockers = _pair_detail_quality_blockers(history_rows, missing_research_required, metrics)
     snapshot_fields = {column for column, value in snapshot.to_row().items() if value is not None}
     execution_missing = sorted(EXECUTION_ASSUMPTION_FIELDS.difference(set(frame.columns) | snapshot_fields))
     placeholder_execution = _has_placeholder_execution_assumptions(payload)
+    source_note = str(payload.get("source_note", "") or "")
+    research_cost_ready = _research_execution_assumptions_ready(frame, source_note)
+    research_execution_usable = not blockers and not missing_execution_required and not execution_missing and not placeholder_execution
+    if research_cost_ready:
+        research_execution_usable = not blockers and not missing_execution_required and not placeholder_execution
     execution_usable = not blockers and not missing_execution_required and not execution_missing and not placeholder_execution
     if execution_missing:
         blockers_for_output = blockers + [f"missing_execution_assumptions:{';'.join(execution_missing)}"]
@@ -635,9 +702,10 @@ def pair_detail_payload_quality(payload: dict[str, Any], path: str | Path) -> di
         "missing_required_fields": ";".join(missing_required),
         **metrics,
         "research_usable": not blockers,
+        "research_execution_usable": research_execution_usable,
         "execution_usable": execution_usable,
         "quality_blockers": ";".join(blockers_for_output),
-        "source_note": payload.get("source_note", ""),
+        "source_note": source_note,
     }
 
 
@@ -653,8 +721,8 @@ def _pair_detail_quality_blockers(
         blockers.append(f"missing_required:{';'.join(missing_required)}")
     if metrics["nonfinite_spread_rate"] > 0.01:
         blockers.append("spread_nonfinite_above_1pct")
-    if metrics["nonfinite_zscore_rate"] > 0.01:
-        blockers.append("zscore_nonfinite_above_1pct")
+    if metrics["post_warmup_nonfinite_zscore_rate"] > 0.01:
+        blockers.append("zscore_nonfinite_after_warmup_above_1pct")
     if metrics["missing_price_x_rate"] <= 0.05 and metrics["stale_price_x_rate"] > 0.90:
         blockers.append("price_x_stale_above_90pct")
     if metrics["missing_price_y_rate"] <= 0.05 and metrics["stale_price_y_rate"] > 0.90:
@@ -689,6 +757,31 @@ def _nonfinite_rate(frame: pd.DataFrame, column: str) -> float:
     if series.empty:
         return 1.0
     return round(float(series.isna().mean()), 6)
+
+
+def _leading_nonfinite_count(frame: pd.DataFrame, column: str) -> int:
+    series = _numeric_series(frame, column)
+    if series.empty:
+        return 0
+    valid_positions = np.flatnonzero(series.notna().to_numpy())
+    return int(valid_positions[0]) if len(valid_positions) else int(len(series))
+
+
+def _post_warmup_nonfinite_rate(frame: pd.DataFrame, column: str) -> float:
+    """Measure missing values after the first finite observation.
+
+    Rolling statistics legitimately start with a contiguous warmup block. Missing
+    values after that block indicate broken history and remain a quality blocker.
+    """
+
+    series = _numeric_series(frame, column)
+    if series.empty:
+        return 1.0
+    valid_positions = np.flatnonzero(series.notna().to_numpy())
+    if not len(valid_positions):
+        return 1.0
+    post_warmup = series.iloc[int(valid_positions[0]) :]
+    return round(float(post_warmup.isna().mean()), 6)
 
 
 def _zero_rate(frame: pd.DataFrame, column: str) -> float:
@@ -1124,6 +1217,20 @@ def _execution_assumption_notes(
     if not funding_columns_available:
         notes.append("funding_cost_model_default")
     return notes
+
+
+def _research_execution_assumptions_ready(frame: pd.DataFrame, source_note: str) -> bool:
+    note = str(source_note or "").lower()
+    if "yahoo finance public crypto history" not in note:
+        return False
+    required = {"price_x", "price_y", "hedge_ratio", "beta", "funding_x_bps", "funding_y_bps", "slippage_bps", "bid_ask_spread_bps"}
+    if not required.issubset(frame.columns):
+        return False
+    for column in required:
+        series = pd.to_numeric(frame[column], errors="coerce")
+        if series.isna().all():
+            return False
+    return True
 
 
 def _har_entries(payload: dict[str, Any]) -> list[dict[str, Any]]:

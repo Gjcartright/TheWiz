@@ -11,6 +11,7 @@ import pandas as pd
 
 from quant_platform.derived_features import add_derived_beta_from_prices
 from quant_platform.experiments import PairDataset
+from quant_platform.zscore_utils import rolling_zscore
 
 
 CANONICAL_ALIASES: dict[str, tuple[str, ...]] = {
@@ -55,6 +56,10 @@ CANONICAL_ALIASES: dict[str, tuple[str, ...]] = {
     "ou_optimal": ("ou_optimal", "ou_score"),
     "regime": ("regime", "market_regime", "state"),
 }
+
+
+ZSCORE_WINDOW = 7
+ZSCORE_MIN_PERIODS = 7
 
 
 IMPORTANT_FIELDS = {
@@ -168,6 +173,18 @@ def normalize_crypto_wizards_records(records: list[dict[str, Any]]) -> pd.DataFr
     if not records:
         return pd.DataFrame()
     raw = pd.DataFrame(records)
+    has_zscore_input = any(
+        snake_case(column) in {snake_case(alias) for alias in CANONICAL_ALIASES["zscore"]}
+        for column in raw.columns
+    )
+    has_rolling_zscore_input = any(
+        snake_case(column) in {snake_case(alias) for alias in CANONICAL_ALIASES["rolling_zscore"]}
+        for column in raw.columns
+    )
+    has_spread_input = any(
+        snake_case(column) in {snake_case(alias) for alias in CANONICAL_ALIASES["spread"]}
+        for column in raw.columns
+    )
     lookup = _alias_lookup(raw.columns)
     normalized = pd.DataFrame(index=raw.index)
     for canonical, sources in lookup.items():
@@ -182,14 +199,41 @@ def normalize_crypto_wizards_records(records: list[dict[str, Any]]) -> pd.DataFr
     for column in numeric_columns:
         normalized[column] = pd.to_numeric(normalized[column], errors="coerce")
 
+    if "spread" not in normalized and {"price_x", "price_y"}.issubset(normalized.columns):
+        hedge_coeff = normalized.get("hedge_ratio")
+        if hedge_coeff is None or hedge_coeff.isna().all():
+            hedge_coeff = normalized.get("beta")
+        if hedge_coeff is None:
+            hedge_coeff = pd.Series([1.0] * len(normalized), index=normalized.index)
+        else:
+            hedge_coeff = hedge_coeff.fillna(1.0)
+        if not hedge_coeff.isna().all():
+            normalized["spread"] = normalized["price_x"] - hedge_coeff * normalized["price_y"]
+            normalized["spread_source"] = "derived_from_prices"
+        else:
+            normalized["spread_source"] = None
+    elif "spread" in normalized:
+        normalized["spread_source"] = "provider" if has_spread_input else "derived"
+
     if "conditional_probability_distortion" not in normalized and {"u1_given_u2", "u2_given_u1"}.issubset(normalized.columns):
         normalized["conditional_probability_distortion"] = normalized["u1_given_u2"] - normalized["u2_given_u1"]
+    if "zscore" in normalized:
+        normalized["zscore_source"] = "provider" if (has_zscore_input or has_rolling_zscore_input) else "passed_through"
     if "zscore" not in normalized and "rolling_zscore" in normalized:
         normalized["zscore"] = normalized["rolling_zscore"]
+        normalized["zscore_source"] = "provider"
     if "zscore" not in normalized and "spread" in normalized:
-        rolling_mean = normalized["spread"].rolling(80, min_periods=20).mean()
-        rolling_std = normalized["spread"].rolling(80, min_periods=20).std()
-        normalized["zscore"] = (normalized["spread"] - rolling_mean) / rolling_std
+        normalized["zscore"] = rolling_zscore(normalized["spread"], window=ZSCORE_WINDOW, min_periods=ZSCORE_MIN_PERIODS)
+        normalized["zscore_source"] = "derived_from_spread_rolling"
+        normalized["zscore_reconstructed"] = normalized["zscore"]
+    elif "zscore" in normalized:
+        if "zscore_reconstructed" not in normalized:
+            if "spread" in normalized:
+                normalized["zscore_reconstructed"] = rolling_zscore(
+                    normalized["spread"], window=ZSCORE_WINDOW, min_periods=ZSCORE_MIN_PERIODS
+                )
+            else:
+                normalized["zscore_reconstructed"] = pd.NA
     if "regime" not in normalized:
         normalized["regime"] = "unknown"
     if "timestamp" in normalized:

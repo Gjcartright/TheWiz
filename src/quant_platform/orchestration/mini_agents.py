@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import CommandResult, ROOT, current_multi_venue_history_readiness_path
 
 
 AGENT_DIR = "reports/orchestration"
@@ -23,9 +23,17 @@ class MiniAgentSpec:
 
 MINI_AGENTS: tuple[MiniAgentSpec, ...] = (
     MiniAgentSpec(
+        agent="youtube_research_brain",
+        purpose="Collect reviewed video research, map claims to exact Wizard modes, generate pair hypotheses, and learn from local replication outcomes.",
+        input_reports="data/external/youtube/brain/video_registry.csv;data/processed/youtube_brain/claims.csv;reports/active/crypto_wizards_live_scanner_capture.csv;reports/active/youtube_hypothesis_validation_queue.csv;reports/active/workflow_walk_forward_ranked.csv",
+        output_reports="reports/agents/youtube_brain_hypotheses.csv;reports/agents/youtube_brain_replication_scorecard.csv;reports/dashboard/youtube_brain_status.csv;reports/dashboard/youtube_hypothesis_validation.csv",
+        promotion_authority="none_research_only",
+        next_action_type="refresh_youtube_brain_or_test_hypothesis",
+    ),
+    MiniAgentSpec(
         agent="discovery_agent",
         purpose="Find venue-aware candidate pairs from Wizard, Apify, dYdX, Binance, Coinbase, ByBit, and other source lanes.",
-        input_reports="data/processed/wizard_evidence.csv;reports/active/wizard_evidence_summary.md;reports/active/multi_venue_history_readiness_2026-06-25.csv",
+        input_reports="data/processed/wizard_evidence.csv;reports/active/wizard_evidence_summary.md;reports/active/multi_venue_history_readiness.csv",
         output_reports="reports/agents/discovery_candidates.csv",
         promotion_authority="none_discovery_only",
         next_action_type="capture_exact_mode_or_fetch_history",
@@ -33,7 +41,7 @@ MINI_AGENTS: tuple[MiniAgentSpec, ...] = (
     MiniAgentSpec(
         agent="venue_evidence_agent",
         purpose="Check symbol mapping, venue lane, candle source, liquidity context, cost model, slippage model, and funding/borrow assumptions.",
-        input_reports="reports/active/multi_venue_history_readiness_2026-06-25.csv;reports/active/venue_lane_test_plan.csv",
+        input_reports="reports/active/multi_venue_history_readiness.csv;reports/active/venue_lane_test_plan.csv",
         output_reports="reports/agents/venue_evidence.csv",
         promotion_authority="none_evidence_only",
         next_action_type="repair_mapping_or_fetch_venue_history",
@@ -49,7 +57,7 @@ MINI_AGENTS: tuple[MiniAgentSpec, ...] = (
     MiniAgentSpec(
         agent="strategy_test_agent",
         purpose="Run exact-mode local replay and strategy-family tests across static, dynamic, OU, copula, ECM, regime, entry, and exit styles.",
-        input_reports="reports/active/wizard_exact_mode_capture_queue.csv;reports/active/*strategy*;data/raw/pair_details",
+        input_reports="reports/active/wizard_replay_handoff.csv;reports/active/wizard_exact_mode_capture_queue.csv;reports/active/*strategy*;data/raw/pair_details",
         output_reports="reports/agents/strategy_test_results.csv",
         promotion_authority="local_replay_evidence_only",
         next_action_type="run_exact_mode_or_strategy_family_sweep",
@@ -61,6 +69,22 @@ MINI_AGENTS: tuple[MiniAgentSpec, ...] = (
         output_reports="reports/agents/rl_ideas.csv;reports/agents/rl_pair_similarity.csv",
         promotion_authority="none_rl_hint_only",
         next_action_type="run_rl_idea_scout_or_similarity_search",
+    ),
+    MiniAgentSpec(
+        agent="magicka_agent",
+        purpose="Run the parallel magicka shadow learner over synthetic policy variants and return best-performing policy proposals.",
+        input_reports="data/ml/trade_training_dataset.csv;reports/rl/rl_training_report.csv;reports/rl/rl_evaluation_report.csv",
+        output_reports="reports/rl/rl_learning_cycle_summary.csv;reports/rl/rl_learning_cycle_backtests.csv;reports/agents/rl_learning_agent_experiments.csv",
+        promotion_authority="none_research_only",
+        next_action_type="run_magicka_learning_cycle",
+    ),
+    MiniAgentSpec(
+        agent="sequential_thinking_magicka_agent",
+        purpose="Run sequential-thinking reviews of magicka and model gates to propose the next learning experiments.",
+        input_reports="reports/rl/rl_acceptance_report.csv;reports/ml/model_gated_acceptance.csv;reports/dashboard/blocked_trades_dashboard.csv;reports/rl/rl_learning_cycle_summary.csv",
+        output_reports="reports/rl/sequential_thinking_magicka_recommendations.csv;reports/agents/sequential_thinking_magicka_experiments.csv",
+        promotion_authority="none_research_only",
+        next_action_type="run_sequential_thinking_magicka",
     ),
     MiniAgentSpec(
         agent="rl_similarity_agent",
@@ -146,6 +170,7 @@ def _agent_registry_frame(root: Path) -> pd.DataFrame:
 def _next_action_queue(root: Path, *, effectiveness: dict[str, float] | None = None) -> pd.DataFrame:
     effectiveness = effectiveness or {}
     rows: list[dict[str, object]] = []
+    rows.extend(_youtube_tasks(root))
     rows.extend(_wizard_capture_tasks(root))
     rows.extend(_venue_history_tasks(root))
     rows.extend(_rl_tasks(root))
@@ -180,10 +205,120 @@ def _next_action_queue(root: Path, *, effectiveness: dict[str, float] | None = N
     return frame
 
 
+def _youtube_tasks(root: Path) -> list[dict[str, object]]:
+    collection_path = root / "reports" / "agents" / "youtube_brain_collection_status.csv"
+    hypothesis_path = root / "reports" / "agents" / "youtube_brain_hypotheses.csv"
+    collection = _read_csv(collection_path)
+    hypotheses = _read_csv(hypothesis_path)
+    validation_path = root / "reports" / "active" / "youtube_hypothesis_validation_queue.csv"
+    validation = _read_csv(validation_path)
+    rows: list[dict[str, object]] = []
+    if collection.empty:
+        rows.append(
+            _task(
+                assigned_agent="youtube_research_brain",
+                task_type="refresh_youtube_brain",
+                pair="",
+                reason="youtube_collection_status_missing",
+                priority="medium",
+                evidence_path=collection_path,
+                next_step="run run-youtube-brain to refresh research memory and pair hypotheses",
+            )
+        )
+    for _, row in hypotheses.head(20).iterrows():
+        if not _boolish(row.get("wizard_discovery_pass")):
+            continue
+        pair = str(row.get("pair", ""))
+        mode = str(row.get("exact_mode", ""))
+        match = _youtube_validation_match(validation, pair=pair, exact_mode=mode)
+        validation_status = str(match.get("validation_status", ""))
+        if not match.empty and not _boolish(match.get("slippage_model_ready", False)):
+            rows.append(
+                _task(
+                    assigned_agent="venue_evidence_agent",
+                    task_type="calibrate_hyperliquid_l2_slippage",
+                    pair=pair,
+                    reason=f"{mode}:hyperliquid_l2_slippage_not_calibrated",
+                    priority="high",
+                    evidence_path=validation_path,
+                    next_step="continue scheduled Hyperliquid L2 snapshots until both legs have 12 independent samples",
+                )
+            )
+        if validation_status == "BLOCKED_MISSING_EXACT_SETTINGS":
+            rows.append(
+                _task(
+                    assigned_agent="discovery_agent",
+                    task_type="capture_youtube_hypothesis_exact_mode",
+                    pair=pair,
+                    reason=f"{mode}:wizard_exact_settings_not_live_confirmed",
+                    priority="high",
+                    evidence_path=validation_path,
+                    next_step="complete and import the prefilled Wizard settings capture for this exact mode",
+                )
+            )
+            continue
+        if validation_status in {"BLOCKED_VENUE_ECONOMICS", "BLOCKED_POINT_IN_TIME_EVIDENCE"}:
+            rows.append(
+                _task(
+                    assigned_agent="venue_evidence_agent",
+                    task_type="complete_youtube_hypothesis_venue_evidence",
+                    pair=pair,
+                    reason=f"{mode}:{match.get('blocker', validation_status)}",
+                    priority="high",
+                    evidence_path=validation_path,
+                    next_step=str(match.get("next_step", "continue Hyperliquid evidence cadence")),
+                )
+            )
+            continue
+        rows.append(
+            _task(
+                assigned_agent="strategy_test_agent",
+                task_type="test_youtube_brain_hypothesis",
+                pair=pair,
+                reason=f"{mode}:youtube_research_hypothesis_requires_replication",
+                priority="high",
+                evidence_path=hypothesis_path,
+                next_step=row.get("next_step", "run exact-mode costed walk-forward and regime tests"),
+            )
+        )
+    return rows
+
+
+def _youtube_validation_match(frame: pd.DataFrame, *, pair: str, exact_mode: str) -> pd.Series:
+    if frame.empty:
+        return pd.Series(dtype=object)
+    pair_key = pair.upper().replace("-USD", "").replace("/", "|")
+    mode_key = "".join(character for character in exact_mode.lower() if character.isalnum())
+    pair_match = frame.get("pair", pd.Series("", index=frame.index)).astype(str).map(
+        lambda value: value.upper().replace("-USD", "").replace("/", "|")
+    )
+    mode_match = frame.get("exact_mode", pd.Series("", index=frame.index)).astype(str).map(
+        lambda value: "".join(character for character in value.lower() if character.isalnum())
+    )
+    matches = frame.loc[pair_match.eq(pair_key) & mode_match.eq(mode_key)]
+    return matches.iloc[0] if not matches.empty else pd.Series(dtype=object)
+
+
 def _wizard_capture_tasks(root: Path) -> list[dict[str, object]]:
-    path = root / "reports" / "active" / "wizard_exact_mode_capture_queue.csv"
+    active = root / "reports" / "active"
+    detail_path = active / "wizard_pair_detail_capture_queue.csv"
+    detail = _read_csv(detail_path)
+    path = active / "wizard_exact_mode_capture_queue.csv"
     frame = _read_csv(path)
     rows = []
+    for _, row in detail.head(20).iterrows():
+        priority = "high" if str(row.get("priority", "")) == "P1" else "medium"
+        rows.append(
+            _task(
+                assigned_agent="discovery_agent",
+                task_type="capture_pair_detail_settings",
+                pair=row.get("pair", ""),
+                reason=f"{row.get('exact_mode', '')}:screen_pass_missing_dashboard_settings",
+                priority=priority,
+                evidence_path=detail_path,
+                next_step="capture current Wizard exact-mode settings, then route the pair to Hyperliquid validation",
+            )
+        )
     for _, row in frame.head(20).iterrows():
         rows.append(
             _task(
@@ -200,7 +335,11 @@ def _wizard_capture_tasks(root: Path) -> list[dict[str, object]]:
 
 
 def _venue_history_tasks(root: Path) -> list[dict[str, object]]:
-    path = root / "reports" / "active" / "multi_venue_history_readiness_2026-06-25.csv"
+    # The current production research lane is Wizard discovery to Hyperliquid.
+    # Once its validation queue exists, legacy dYdX replay tasks are superseded.
+    if (root / "reports" / "active" / "youtube_hypothesis_validation_queue.csv").exists():
+        return []
+    path = current_multi_venue_history_readiness_path(root)
     frame = _read_csv(path)
     rows = []
     for _, row in frame.head(20).iterrows():
@@ -223,6 +362,7 @@ def _venue_history_tasks(root: Path) -> list[dict[str, object]]:
 def _rl_tasks(root: Path) -> list[dict[str, object]]:
     training_path = root / "reports" / "rl" / "rl_training_report.csv"
     acceptance_path = root / "reports" / "rl" / "rl_acceptance_report.csv"
+    learning_summary_path = root / "reports" / "rl" / "rl_learning_cycle_summary.csv"
     training = _read_csv(training_path)
     acceptance = _read_csv(acceptance_path)
     blocker = ""
@@ -230,8 +370,27 @@ def _rl_tasks(root: Path) -> list[dict[str, object]]:
         blocker = "missing_rl_acceptance_report"
     elif "accepted" in acceptance and not acceptance["accepted"].astype(bool).any():
         blocker = str(acceptance.get("blocker", pd.Series(["rl_acceptance_not_passed"])).iloc[0])
+    magicka_ready = learning_summary_path.exists()
     if training.empty or blocker:
         return [
+            _task(
+                assigned_agent="magicka_agent",
+                task_type="run_magicka_learning_cycle",
+                pair="",
+                reason=blocker or "missing_rl_training_report",
+                priority="medium",
+                evidence_path=training_path if training_path.exists() else learning_summary_path,
+                next_step="run magicka learner in shadow mode to discover better policy variants",
+            ),
+            _task(
+                assigned_agent="sequential_thinking_magicka_agent",
+                task_type="run_sequential_thinking_magicka",
+                pair="",
+                reason=blocker or "missing_rl_training_report",
+                priority="medium",
+                evidence_path=learning_summary_path if learning_summary_path.exists() else training_path,
+                next_step="run sequential-thinking magicka to propose the next candidate policy adjustments",
+            ),
             _task(
                 assigned_agent="rl_idea_agent",
                 task_type="run_rl_idea_scout",
@@ -243,6 +402,24 @@ def _rl_tasks(root: Path) -> list[dict[str, object]]:
             )
         ]
     return [
+        _task(
+            assigned_agent="magicka_agent",
+            task_type="run_magicka_learning_cycle",
+            pair="",
+            reason="refresh_rl_learning_candidates",
+            priority="medium",
+            evidence_path=learning_summary_path if magicka_ready else training_path,
+            next_step="run magicka learner and refresh shadow policy candidates and holding-time experiments",
+        ),
+        _task(
+            assigned_agent="sequential_thinking_magicka_agent",
+            task_type="run_sequential_thinking_magicka",
+            pair="",
+            reason="refresh_magicka_recommendations",
+            priority="medium",
+            evidence_path=learning_summary_path,
+            next_step="run sequential-thinking magicka and convert best recommendations into coaching tasks",
+        ),
         _task(
             assigned_agent="rl_idea_agent",
             task_type="run_rl_idea_scout",
@@ -335,6 +512,12 @@ def _rel(path: Path) -> str:
         return path.relative_to(ROOT).as_posix()
     except ValueError:
         return str(path)
+
+
+def _boolish(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "pass", "accepted"}
 
 
 def _agent_effectiveness(root: Path) -> dict[str, float]:

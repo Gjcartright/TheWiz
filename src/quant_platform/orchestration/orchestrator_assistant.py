@@ -177,6 +177,10 @@ def _outcome_memory_events(root: Path, tasks: pd.DataFrame) -> list[dict[str, ob
             outcome_known, outcome_label, note = _rl_idea_outcome(root)
         elif "extract_rl_similarity_candidates" in task_type:
             outcome_known, outcome_label, note = _rl_similarity_outcome(root)
+        elif "run_magicka_learning_cycle" in task_type:
+            outcome_known, outcome_label, note = _magicka_learning_outcome(root)
+        elif "run_sequential_thinking_magicka" in task_type:
+            outcome_known, outcome_label, note = _sequential_thinking_magicka_outcome(root)
         else:
             continue
         events.append(
@@ -253,6 +257,35 @@ def _rl_similarity_outcome(root: Path) -> tuple[bool, str, str]:
     if profitable_ratio >= 0.25 and outcome_events >= 5:
         return True, "passed", f"rl_similarity_task_generated:{pairs};paper_profit_ratio={round(profitable_ratio, 4)}"
     return True, "failed", f"rl_similarity_task_generated:{pairs};paper_profit_ratio={round(profitable_ratio, 4)}_too_low"
+
+
+def _magicka_learning_outcome(root: Path) -> tuple[bool, str, str]:
+    summary = _read_csv(root / "reports" / "rl" / "rl_learning_cycle_summary.csv")
+    if summary.empty:
+        return False, "", "no_magicka_learning_summary"
+    row = summary.iloc[0]
+    status = str(row.get("status", "blocked"))
+    if status == "ready":
+        return True, "passed", f"magicka_ready:{row.get('winner_policy', '')}"
+    blocker = str(row.get("blocker", "")) or "magicka_blocked_no_summary"
+    if blocker and blocker != "nan":
+        return True, "failed", f"magicka_blocked:{blocker}"
+    return True, "failed", "magicka_not_ready"
+
+
+def _sequential_thinking_magicka_outcome(root: Path) -> tuple[bool, str, str]:
+    path = root / "reports" / "rl" / "sequential_thinking_magicka_recommendations.csv"
+    if not path.exists():
+        return False, "", "no_sequential_thinking_magicka_recommendations"
+    frame = _read_csv(path)
+    if frame.empty:
+        return False, "", "sequential_thinking_magicka_recommendations_empty"
+    recommendation_count = int(len(frame))
+    if recommendation_count <= 0:
+        return True, "failed", "sequential_thinking_magicka_generated_no_hypotheses"
+    if recommendation_count >= 6:
+        return True, "validated", f"sequential_thinking_magicka_recommendations:{recommendation_count}"
+    return True, "passed", f"sequential_thinking_magicka_recommendations:{recommendation_count}"
 
 
 def _paper_learning_signal(root: Path) -> tuple[float, int] | None:

@@ -162,26 +162,73 @@ def _paper_journal_summary(frame: pd.DataFrame, min_modeling_events: int) -> dic
     statuses = frame.get("plan_status", pd.Series(dtype=str)).fillna("").astype(str)
     reasons = frame.get("plan_reason", pd.Series([""] * len(frame))).fillna("").astype(str)
     fills = frame.get("fills_json", pd.Series([""] * len(frame))).fillna("").astype(str)
+    realized = pd.to_numeric(frame.get("realized_return", pd.Series([""] * len(frame))), errors="coerce")
+    verified_outcome = frame.apply(_paper_journal_row_has_verified_outcome, axis=1)
+    verified_realized = realized.where(verified_outcome)
     fill_statuses = _fill_statuses(fills)
     events = int(len(frame))
+    outcome_events = int(verified_realized.notna().sum())
+    ready = outcome_events >= min_modeling_events
+    profitable_outcomes = int((verified_realized.dropna() > 0).sum())
+    avg_realized_return = float(verified_realized.dropna().mean()) if not verified_realized.dropna().empty else ""
     return {
         "source": "paper_journal",
         "events": events,
-        "ready_for_modeling": False,
+        "ready_for_modeling": ready,
         "blocked_events": int((statuses == "blocked").sum()),
         "research_rejected_events": int(reasons.str.startswith("research_rejected", na=False).sum()),
         "dydx_config_blocked_events": int(reasons.str.startswith("dydx_not_ready", na=False).sum()),
         "paper_ready_events": int((statuses == "paper_ready").sum()),
         "blocked_fill_events": sum(1 for status in fill_statuses if str(status).startswith("paper_blocked")),
-        "submitted_fill_events": sum(1 for status in fill_statuses if status == "paper_submitted"),
-        "outcome_events": 0,
-        "profitable_outcomes": 0,
-        "avg_realized_return": "",
-        "audit_only_events": events,
+        "submitted_fill_events": sum(1 for status in fill_statuses if status in {"paper_submitted", "confirmed_on_exchange"}),
+        "outcome_events": outcome_events,
+        "profitable_outcomes": profitable_outcomes,
+        "avg_realized_return": avg_realized_return,
+        "audit_only_events": max(events - outcome_events, 0),
         "modeling_event_threshold": min_modeling_events,
-        "outcome_events_remaining": min_modeling_events,
-        "notes": "handoff_audit_only" if events < min_modeling_events else "needs_realized_outcomes",
+        "outcome_events_remaining": max(min_modeling_events - outcome_events, 0),
+        "notes": (
+            "modeling_ready"
+            if ready
+            else "handoff_audit_only" if outcome_events == 0
+            else "needs_more_realized_outcomes"
+        ),
     }
+
+
+def _paper_journal_row_has_verified_outcome(row: pd.Series) -> bool:
+    status = str(row.get("plan_status", "") or "").strip().lower()
+    if status not in {"paper_completed", "completed", "closed"}:
+        return False
+    try:
+        float(row.get("realized_return", ""))
+    except (TypeError, ValueError):
+        return False
+    snapshot = _json_dict(row.get("exit_snapshot_json", ""))
+    if not snapshot:
+        return False
+    return _snapshot_has_exit_price(snapshot)
+
+
+def _json_dict(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    text = str(value or "").strip()
+    if not text:
+        return {}
+    try:
+        payload = json.loads(text)
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _snapshot_has_exit_price(snapshot: dict[str, Any]) -> bool:
+    for key, value in snapshot.items():
+        key_text = str(key).lower()
+        if "exit" in key_text and "price" in key_text and str(value or "").strip():
+            return True
+    return False
 
 
 def _trade_store_summary(records: list[dict[str, Any]], malformed_rows: int, min_modeling_events: int) -> dict[str, object]:

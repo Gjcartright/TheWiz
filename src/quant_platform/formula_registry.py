@@ -50,7 +50,7 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Sensitive to sample length, microstructure noise, and jumps.",
     },
     "zscore": {
-        "formula": "(spread_t - mean(spread)) / std(spread).",
+        "formula": "(spread_t - rolling_mean) / rolling_std with z-score window and min_periods set in config.",
         "interpretation": "Distance from estimated equilibrium.",
         "use_case": "Classic entry/exit trigger.",
         "failure_mode": "Large z-score may indicate structural break rather than opportunity.",
@@ -152,4 +152,3 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "OU assumptions fail under jumps, trends, or changing volatility.",
     },
 }
-

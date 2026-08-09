@@ -938,6 +938,35 @@ def test_datasets_from_pair_detail_snapshots_can_filter_quality_blocked_historie
     assert [dataset.pair for dataset in filtered] == ["AAA-USD-BBB-USD"]
 
 
+def test_datasets_from_pair_detail_snapshots_deduplicates_identical_history_captures(tmp_path):
+    history = [
+        {
+            "timestamp": f"2026-01-{(idx % 28) + 1:02d}T00:00:00Z",
+            "spread": idx / 100,
+            "zscore": idx / 10,
+            "price_x": 100 + idx,
+            "price_y": 50 + idx,
+        }
+        for idx in range(90)
+    ]
+    payload = {
+        "pair": "AAA-USD-BBB-USD",
+        "asset_x": "AAA-USD",
+        "asset_y": "BBB-USD",
+        "exchange": "hyperliquid",
+        "interval": "1d",
+        "history": history,
+    }
+    (tmp_path / "capture_a.json").write_text(json.dumps(payload), encoding="utf-8")
+    duplicate = {**payload, "source_note": "same history, duplicate artifact name"}
+    (tmp_path / "capture_b.json").write_text(json.dumps(duplicate), encoding="utf-8")
+
+    datasets = datasets_from_pair_detail_snapshots(tmp_path)
+
+    assert len(datasets) == 1
+    assert datasets[0].pair == "AAA-USD-BBB-USD"
+
+
 def test_pair_detail_quality_report_blocks_short_or_placeholder_execution_history(tmp_path):
     history = []
     for idx in range(90):
@@ -1018,6 +1047,40 @@ def test_pair_detail_quality_report_allows_spread_only_research_history(tmp_path
         "missing_execution_assumptions:beta;funding_x_bps;funding_y_bps;hedge_ratio;"
         "missing_execution_history:price_x;price_y"
     )
+
+
+def test_pair_detail_quality_allows_leading_zscore_warmup_but_blocks_interior_gaps(tmp_path):
+    history = [
+        {
+            "timestamp": f"2026-01-{(idx % 28) + 1:02d}T00:00:00Z",
+            "spread": idx / 100,
+            "zscore": None if idx < 9 else idx / 10,
+            "price_x": 100 + idx,
+            "price_y": 50 + idx,
+        }
+        for idx in range(100)
+    ]
+    good = {
+        "pair": "AAA-USD-BBB-USD",
+        "asset_x": "AAA-USD",
+        "asset_y": "BBB-USD",
+        "history": history,
+    }
+    bad = dict(good)
+    bad["pair"] = "CCC-USD-DDD-USD"
+    bad["history"] = [dict(row) for row in history]
+    for index in (20, 40, 60):
+        bad["history"][index]["zscore"] = None
+    (tmp_path / "good.json").write_text(json.dumps(good), encoding="utf-8")
+    (tmp_path / "bad.json").write_text(json.dumps(bad), encoding="utf-8")
+
+    rows = {row["pair"]: row for row in pair_detail_quality_report(tmp_path)}
+
+    assert rows["AAA-USD-BBB-USD"]["research_usable"]
+    assert rows["AAA-USD-BBB-USD"]["leading_zscore_warmup_rows"] == 9
+    assert rows["AAA-USD-BBB-USD"]["post_warmup_nonfinite_zscore_rate"] == 0.0
+    assert not rows["CCC-USD-DDD-USD"]["research_usable"]
+    assert "zscore_nonfinite_after_warmup_above_1pct" in rows["CCC-USD-DDD-USD"]["quality_blockers"]
 
 
 def test_write_pair_detail_reports(tmp_path):

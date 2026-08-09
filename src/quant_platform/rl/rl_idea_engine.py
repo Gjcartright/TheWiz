@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.rl.features import attach_copula_dashboard_features
 
 
 RL_IDEAS_COLUMNS = [
@@ -21,11 +22,22 @@ RL_IDEAS_COLUMNS = [
     "expected_return",
     "risk_proxy",
     "expected_trade_count",
+    "stop_loss_hint",
+    "take_profit_hint",
+    "session_loss_cap_hint",
+    "risk_control_style",
     "zscore",
     "spread",
     "spread_slope",
     "beta_stability",
     "copula_calibration_score",
+    "wizard_copula_available",
+    "wizard_copula_probability_gap",
+    "wizard_copula_signal_strength",
+    "wizard_copula_engle_granger_trending",
+    "wizard_copula_execution_blocked",
+    "wizard_copula_join_status",
+    "wizard_copula_snapshot_timestamp",
     "liquidity_score",
     "source",
     "reasoning",
@@ -72,6 +84,8 @@ def run_rl_idea_scout(
     training_path = reports / "rl_training_report.csv"
     dataset_path = root / "data" / "ml" / "trade_training_dataset.csv"
     dataset = _read_csv(dataset_path)
+    copula_journal_path = root / "reports" / "active" / "wizard_research_journal.csv"
+    dataset, _ = attach_copula_dashboard_features(dataset, _read_csv(copula_journal_path))
     eval_report = _read_csv(reports / "rl_evaluation_report.csv")
     training = _read_csv(training_path)
     policy_type = _extract_policy(training)
@@ -157,6 +171,11 @@ def _build_rl_idea_rows(
         "spread_slope",
         "beta_stability",
         "copula_calibration_score",
+        "wizard_copula_available",
+        "wizard_copula_probability_gap",
+        "wizard_copula_signal_strength",
+        "wizard_copula_engle_granger_trending",
+        "wizard_copula_execution_blocked",
         "liquidity_score",
     ]:
         if column in candidates.columns:
@@ -168,6 +187,10 @@ def _build_rl_idea_rows(
         max_abs = 1.0
     candidates["confidence_score"] = (0.1 + 0.8 * (return_abs / max_abs)).clip(0.0, 1.0)
     candidates["expected_trade_count"] = _safe_int(candidates.get("closed_trades", 1), default=1)
+    candidates["stop_loss_hint"] = _broadcast_hint(_stop_loss_hint(training, eval_report), len(candidates))
+    candidates["take_profit_hint"] = _broadcast_hint(_take_profit_hint(training), len(candidates))
+    candidates["session_loss_cap_hint"] = _broadcast_hint(_session_loss_cap_hint(training), len(candidates))
+    candidates["risk_control_style"] = _risk_control_style(training, eval_report)
     candidates["source"] = "rl_research_backtest"
     candidates["reasoning"] = candidates.apply(_reasoning_row, axis=1)
     candidates["source_policy"] = (
@@ -183,6 +206,13 @@ def _build_rl_idea_rows(
     if "zscore" in candidates.columns:
         sort_keys.append("zscore")
     candidates = candidates.sort_values(sort_keys, ascending=[False] * len(sort_keys), na_position="last")
+    idea_identity = [
+        column
+        for column in ("pair", "timeframe", "strategy", "strategy_name", "exact_mode", "regime")
+        if column in candidates.columns
+    ]
+    if idea_identity:
+        candidates = candidates.drop_duplicates(subset=idea_identity, keep="first")
 
     ranked = candidates.head(max(1, min(top_ideas, len(candidates)))).copy().reset_index(drop=True)
     if ranked.empty:
@@ -193,13 +223,21 @@ def _build_rl_idea_rows(
     ranked["exit_style"] = _resolve_col(ranked, "exit_style", default="quantile_boundary")
     ranked["pair"] = _resolve_col(ranked, "pair")
     ranked["timeframe"] = _resolve_col(ranked, "timeframe", default="")
-    ranked["strategy"] = _resolve_col(ranked, "strategy", default=_resolve_col(ranked, "exact_mode", default="unspecified"))
+    strategy_source = next(
+        (column for column in ("strategy", "strategy_name", "exact_mode", "source_strategy") if column in ranked.columns),
+        None,
+    )
+    ranked["strategy"] = _resolve_col(ranked, strategy_source, default="unspecified") if strategy_source else "unspecified"
     ranked["regime"] = _resolve_col(ranked, "regime", default="unknown")
 
     ranked["expected_return"] = _to_numeric_series(ranked["expected_return"]).replace([np.inf, -np.inf], 0.0)
     ranked["confidence_score"] = _to_numeric_series(ranked["confidence_score"]).clip(0.0, 1.0)
     ranked["risk_proxy"] = _to_numeric_series(ranked["risk_proxy"]).clip(lower=0.0)
     ranked["expected_trade_count"] = _safe_int(ranked["expected_trade_count"], default=1)
+    ranked["stop_loss_hint"] = _to_numeric_series(ranked.get("stop_loss_hint", pd.Series(0.0, index=ranked.index)))
+    ranked["take_profit_hint"] = _to_numeric_series(ranked.get("take_profit_hint", pd.Series(0.0, index=ranked.index)))
+    ranked["session_loss_cap_hint"] = _to_numeric_series(ranked.get("session_loss_cap_hint", pd.Series(0.0, index=ranked.index)))
+    ranked["risk_control_style"] = _resolve_col(ranked, "risk_control_style", default="drawdown_gated")
     ranked["zscore"] = _to_numeric_series(ranked.get("zscore", pd.Series(0.0, index=ranked.index)))
     ranked["spread"] = _to_numeric_series(ranked.get("spread", pd.Series(0.0, index=ranked.index)))
     ranked["spread_slope"] = _to_numeric_series(ranked.get("spread_slope", pd.Series(0.0, index=ranked.index)))
@@ -207,6 +245,16 @@ def _build_rl_idea_rows(
     ranked["copula_calibration_score"] = _to_numeric_series(
         ranked.get("copula_calibration_score", pd.Series(0.0, index=ranked.index))
     )
+    for column in [
+        "wizard_copula_available",
+        "wizard_copula_probability_gap",
+        "wizard_copula_signal_strength",
+        "wizard_copula_engle_granger_trending",
+        "wizard_copula_execution_blocked",
+    ]:
+        ranked[column] = _to_numeric_series(ranked.get(column, pd.Series(0.0, index=ranked.index)))
+    ranked["wizard_copula_join_status"] = _resolve_col(ranked, "wizard_copula_join_status", default="missing_journal_snapshot")
+    ranked["wizard_copula_snapshot_timestamp"] = _resolve_col(ranked, "wizard_copula_snapshot_timestamp", default="")
     ranked["liquidity_score"] = _to_numeric_series(ranked.get("liquidity_score", pd.Series(0.0, index=ranked.index)))
 
     result = ranked[[c for c in RL_IDEAS_COLUMNS if c in ranked.columns]].copy()
@@ -296,6 +344,10 @@ def _pair_feature_aggregates(dataset: pd.DataFrame) -> pd.DataFrame:
         "spread_slope",
         "beta_stability",
         "copula_calibration_score",
+        "wizard_copula_probability_gap",
+        "wizard_copula_signal_strength",
+        "wizard_copula_engle_granger_trending",
+        "wizard_copula_execution_blocked",
         "liquidity_score",
     ]
     available = [column for column in candidate_columns if column in frame.columns]
@@ -327,6 +379,10 @@ def _select_similarity_features(feature_frame: pd.DataFrame) -> list[str]:
         "spread_slope",
         "beta_stability",
         "copula_calibration_score",
+        "wizard_copula_probability_gap",
+        "wizard_copula_signal_strength",
+        "wizard_copula_engle_granger_trending",
+        "wizard_copula_execution_blocked",
         "liquidity_score",
     }
     candidates = [column for column in requested if column in feature_frame.columns]
@@ -356,6 +412,13 @@ def _to_numeric_series(value) -> pd.Series:
         return pd.Series(0.0, index=getattr(value, "index", pd.RangeIndex(0)))
 
 
+def _broadcast_hint(series: pd.Series, size: int) -> pd.Series:
+    if series.empty:
+        return pd.Series([0.0] * size)
+    value = float(pd.to_numeric(series, errors="coerce").fillna(0.0).iloc[0])
+    return pd.Series([value] * size)
+
+
 def _safe_int(series, default: int = 0) -> pd.Series:
     if not hasattr(series, "fillna"):
         converted = pd.to_numeric(pd.Series([series]), errors="coerce")
@@ -382,7 +445,13 @@ def _reasoning_row(row: pd.Series) -> str:
     return (
         f"rl-policy={_coalesce(row, ['source_policy', 'strategy', 'exact_mode', 'mode', 'source_strategy'], 'unknown')}; "
         f"return={row.get('expected_return', 0.0)}; "
-        f"confidence={row.get('confidence_score', 0.0)}"
+        f"confidence={row.get('confidence_score', 0.0)}; "
+        f"stop={row.get('stop_loss_hint', 0.0)}; "
+        f"session_cap={row.get('session_loss_cap_hint', 0.0)}; "
+        f"copula_join={row.get('wizard_copula_join_status', 'missing')}; "
+        f"copula_gap={row.get('wizard_copula_probability_gap', 0.0)}; "
+        f"copula_eg_trending={row.get('wizard_copula_engle_granger_trending', 0.0)}; "
+        f"copula_execution_blocked={row.get('wizard_copula_execution_blocked', 0.0)}"
     )
 
 
@@ -402,6 +471,45 @@ def _extract_policy(training: pd.DataFrame) -> str:
             if value:
                 return value
     return "safe_quantile_baseline"
+
+
+def _stop_loss_hint(training: pd.DataFrame, eval_report: pd.DataFrame) -> pd.Series:
+    value = 0.05
+    if not training.empty and "policy" in training.columns:
+        policy = str(training.iloc[0].get("policy", ""))
+        if "quantile_hold" in policy:
+            value = 0.05
+    if not eval_report.empty and "max_drawdown" in eval_report.columns:
+        max_dd = float(pd.to_numeric(eval_report["max_drawdown"], errors="coerce").fillna(0.0).max())
+        if max_dd > 0.5:
+            value = 0.03
+        elif max_dd < 0.15:
+            value = 0.06
+    return pd.Series([value])
+
+
+def _take_profit_hint(training: pd.DataFrame) -> pd.Series:
+    value = 0.10
+    if not training.empty and "policy" in training.columns:
+        policy = str(training.iloc[0].get("policy", ""))
+        if "quantile_hold" in policy:
+            value = 0.12
+    return pd.Series([value])
+
+
+def _session_loss_cap_hint(training: pd.DataFrame) -> pd.Series:
+    value = 0.10
+    if not training.empty and "live_enabled" in training.columns and bool(training.iloc[0].get("live_enabled", False)):
+        value = 0.08
+    return pd.Series([value])
+
+
+def _risk_control_style(training: pd.DataFrame, eval_report: pd.DataFrame) -> str:
+    if not eval_report.empty and "max_drawdown" in eval_report.columns:
+        max_dd = float(pd.to_numeric(eval_report["max_drawdown"], errors="coerce").fillna(0.0).max())
+        if max_dd > 0.3:
+            return "tight_stop_and_session_cap"
+    return "stop_loss_take_profit_session_cap"
 
 
 def _filter_pairs(dataset: pd.DataFrame, pair_filter: str) -> pd.DataFrame:

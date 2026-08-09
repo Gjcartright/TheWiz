@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from itertools import combinations
 from datetime import datetime, timedelta, timezone
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 import os
 from pathlib import Path
@@ -18,21 +19,30 @@ import pandas as pd
 import requests
 
 from quant_platform.active_pipeline import (
+    CommandResult,
+    apify_cost_audit_rows,
     archive_from_index,
     build_artifact_index,
     build_command_dashboard,
     build_market_venue_context,
     build_multi_venue_history_readiness,
     build_pair_universe,
+    focused_paper_validation_rows,
+    paper_candidate_shortlist_rows,
     build_trade_dataset,
     build_venue_lane_test_plan,
+    build_venue_route_scorecard,
     current_state,
     export_trade_gate_model,
     run_model_gated_backtest,
     system_check,
     train_trade_gate,
 )
-from quant_platform.apify_sources import infer_apify_venue, parse_apify_sources_from_mcp_url, refresh_apify_sources
+from quant_platform.apify_sources import (
+    infer_apify_venue,
+    parse_apify_sources_from_mcp_url,
+    refresh_apify_sources,
+)
 from quant_platform.api_extraction import (
     CryptoWizardsExtractor,
     CryptoWizardsFetchError,
@@ -45,6 +55,11 @@ from quant_platform.binance_spot import (
     build_binance_spot_pair_history,
     fetch_binance_spot_candles,
 )
+from quant_platform.binance_testnet import (
+    BinanceTestnetConfig,
+    binance_testnet_pair_preflight,
+    binance_testnet_preflight,
+)
 from quant_platform.crypto_wizards_catalog import endpoint_rows
 from quant_platform.crypto_wizards_history import (
     CryptoWizardsHistoryRequest,
@@ -54,6 +69,125 @@ from quant_platform.crypto_wizards_history import (
     write_backtest_pair_payload,
     write_zscores_pair_payload,
 )
+from quant_platform.crypto_wizards_sweep import (
+    restore_complete_wizard_sweep_from_raw,
+    run_wizard_discovery_sweep,
+)
+from quant_platform.crypto_wizards_dashboard_capture import (
+    ingest_exhaustive_wizard_dashboard_captures,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
+    build_exhaustive_wizard_hyperliquid_run,
+    build_exhaustive_wizard_hyperliquid_mapping_refresh,
+)
+from quant_platform.orchestration.exhaustive_wizard_api_refresh import (
+    build_exhaustive_wizard_api_refresh_delta,
+)
+from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
+    run_wizard_pair_detail_api_pilot,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_handoff import (
+    build_current_wizard_hyperliquid_handoff,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
+    materialize_current_wizard_hyperliquid_history,
+    run_current_wizard_hyperliquid_canonical_replay,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
+    materialize_current_wizard_hyperliquid_cost_evidence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
+    run_current_wizard_hyperliquid_observed_cost_replay,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
+    run_current_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_regimes import (
+    build_current_wizard_hyperliquid_regime_attribution,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_robustness import (
+    run_current_wizard_hyperliquid_robustness,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_concentration import (
+    build_current_wizard_hyperliquid_concentration,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
+    build_current_wizard_hyperliquid_failure_attribution,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
+    build_current_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
+    build_current_wizard_hyperliquid_learning_ledger,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
+    validate_current_wizard_hyperliquid_chain,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
+    build_current_wizard_hyperliquid_operating_cadence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
+    run_current_wizard_hyperliquid_daily_pipeline,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_completion_audit import (
+    build_current_wizard_hyperliquid_completion_audit,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
+    build_current_wizard_hyperliquid_storage_reclamation_plan,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_archive import (
+    stage_current_wizard_hyperliquid_archive_copy,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_archive_release import (
+    build_current_wizard_hyperliquid_archive_release_dry_run,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_testnet_protocol import (
+    validate_current_wizard_hyperliquid_testnet_protocol,
+)
+from quant_platform.orchestration.current_wizard_ou_optimal_overlay import (
+    build_current_wizard_ou_optimal_overlay,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_replay import (
+    build_exhaustive_wizard_hyperliquid_replay_preflight,
+    materialize_exhaustive_wizard_hyperliquid_history,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
+    run_exhaustive_wizard_hyperliquid_canonical_replay,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_evidence import (
+    materialize_exhaustive_hyperliquid_funding_evidence,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_bridge import (
+    build_exhaustive_wizard_hyperliquid_cost_evidence,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_observed_cost_replay import (
+    run_exhaustive_wizard_hyperliquid_observed_cost_replay,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward import (
+    run_exhaustive_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
+    build_exhaustive_wizard_hyperliquid_regime_attribution,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_robustness import (
+    run_exhaustive_wizard_hyperliquid_robustness,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_concentration import (
+    build_exhaustive_wizard_hyperliquid_concentration,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_leverage import (
+    build_exhaustive_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_learning import (
+    build_exhaustive_wizard_hyperliquid_learning_ledger,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_validation import (
+    run_exhaustive_wizard_hyperliquid_validation,
+)
+from quant_platform.wizard_pair_detail_ui_bundle import (
+    ingest_wizard_pair_detail_ui_bundles,
+)
+from quant_platform.wizard_control_plane import build_wizard_control_plane
 from quant_platform.crypto_wizards_scanner import load_scanner_rows, write_scanner_reports
 from quant_platform.dydx_candles import (
     archive_dydx_candles,
@@ -65,9 +199,11 @@ from quant_platform.dydx_candles import (
     load_loose_candle_payload,
 )
 from quant_platform.execution import (
+    _lookup_dashboard_trade_snapshot,
     DydxNetworkConfig,
     OrderIntent,
     SpreadOrderPlan,
+    append_paper_outcome_record,
     append_paper_trading_record,
     block_paper_plan_for_execution_config,
     build_execution_venue,
@@ -80,14 +216,47 @@ from quant_platform.execution import (
     validate_venue_order_client_adapter,
     venue_has_paper_adapter,
     paper_trading_record,
+    refresh_current_paper_watch_positions,
+    refresh_live_paper_trade_monitor,
+    refresh_paper_trade_price_journal,
+    refresh_paper_trade_decision_report,
     submit_paper_plan,
     PaperDydxExecution,
+    normalize_venue_name,
+    dydx_account_state_snapshot,
+    effective_dydx_account_state_snapshot,
+    dydx_execution_compatibility_snapshot,
+    refresh_dydx_execution_compatibility_table,
+    refresh_injective_execution_compatibility_table,
+    refresh_injective_mirror_candidate_queue,
+    refresh_injective_spot_first_candidate_shortlist,
+    refresh_injective_spot_supported_pair_universe,
+    refresh_gmx_execution_compatibility_table,
+    refresh_gmx_testnet_candidate_shortlist,
+    refresh_gmx_testnet_market_inventory,
+    refresh_hyperliquid_execution_compatibility_table,
+    hyperliquid_testnet_order_preflight_status,
+    refresh_hyperliquid_testnet_candidate_shortlist,
+    refresh_hyperliquid_testnet_market_inventory,
+    refresh_non_eth_route_submit_queue,
+    write_browser_account_state_override,
 )
-from quant_platform.experiments import AcceptanceGate, ExperimentConfig, ExperimentHarness, PairDataset, strategy_acceptance_report
+from quant_platform.experiments import (
+    AcceptanceGate,
+    ExperimentConfig,
+    ExperimentHarness,
+    PairDataset,
+    strategy_acceptance_report,
+)
 from quant_platform.env import load_env_file
 from quant_platform.family_matrix import run_family_matrix
 from quant_platform.field_registry import field_rows
-from quant_platform.fixture_ingestion import CANONICAL_ALIASES, datasets_from_fixtures, snake_case, write_fixture_field_dictionary
+from quant_platform.fixture_ingestion import (
+    CANONICAL_ALIASES,
+    datasets_from_fixtures,
+    snake_case,
+    write_fixture_field_dictionary,
+)
 from quant_platform.formula_registry import FORMULAS
 from quant_platform.funding import (
     enrich_pair_dataset_with_funding,
@@ -97,17 +266,52 @@ from quant_platform.funding import (
     normalize_funding_rows,
 )
 from quant_platform.hyperliquid import (
+    DEFAULT_SLIPPAGE_CALIBRATION_CADENCE_MINUTES,
+    DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES,
+    DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS,
     build_hyperliquid_lane_report,
+    build_hyperliquid_evidence_cadence,
     build_hyperliquid_pair_history,
+    build_hyperliquid_pair_cost_model,
+    build_hyperliquid_research_bundle,
     fetch_hyperliquid_candles,
+    refresh_hyperliquid_funding_history,
+    refresh_hyperliquid_execution_cost_snapshot,
+    refresh_hyperliquid_market_context,
 )
-from quant_platform.meta_learning import JsonlTradeStore, TradeRecord, write_learning_event_summary_report
+from quant_platform.wizard_hyperliquid_bridge import build_hyperliquid_wizard_hypothesis_queue
+from quant_platform.wizard_hyperliquid_mode_proof import run_hyperliquid_wizard_mode_proofs
+from quant_platform.hyperliquid_testnet import (
+    HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON,
+    HyperliquidTestnetConfig,
+    HyperliquidTestnetPairExecutor,
+    write_hyperliquid_testnet_margin_snapshot,
+    write_hyperliquid_testnet_preflight_report,
+)
+from quant_platform.orchestration.hyperliquid_research_cycle import run_hyperliquid_research_cycle
+from quant_platform.orchestration.hyperliquid_research_validation import (
+    build_hyperliquid_auxiliary_timeframe_validation,
+)
+from quant_platform.orchestration.hyperliquid_learning_and_risk import (
+    build_testnet_lifecycle_gate,
+    sign_testnet_smoke_approval,
+    write_testnet_smoke_approval_template,
+)
+from quant_platform.orchestration.hyperliquid_testnet_lifecycle_evidence import (
+    capture_hyperliquid_testnet_lifecycle_evidence,
+)
+from quant_platform.meta_learning import (
+    JsonlTradeStore,
+    TradeRecord,
+    write_learning_event_summary_report,
+)
 from quant_platform.ml_filter import (
     build_trade_filter_dataset,
     shadow_trade_filter_predictions,
     shadow_model_branch_comparison,
     train_trade_filter_walkforward,
 )
+from quant_platform.pair_market_utils import normalize_dydx_market, pair_markets_from_pair
 from quant_platform.pair_detail_ingestion import (
     ECM_FIELD_SOURCE,
     datasets_from_pair_detail_snapshots,
@@ -127,12 +331,52 @@ from quant_platform.pair_detail_ingestion import (
     write_pair_detail_reports,
 )
 from quant_platform.research_quantization import quantize_family_matrix
+from quant_platform.research_ingestion import (
+    build_research_source_registry,
+    ingest_research_source,
+    research_source_audit,
+)
+from quant_platform.research_extract_ccxt import extract_research_knowledge
+from quant_platform.research_extract_udemy import extract_udemy_research, refresh_udemy_research
+from quant_platform.research_extract_youtube import extract_youtube_research
+from quant_platform.research_knowledge_store import (
+    build_research_knowledge_store,
+    research_knowledge_summary,
+)
+from quant_platform.youtube_brain import (
+    build_youtube_brain,
+    build_youtube_brain_dashboard,
+    build_youtube_pair_hypotheses,
+    refresh_youtube_collection,
+    refresh_youtube_outcome_memory,
+    run_youtube_brain_cycle,
+)
+from quant_platform.youtube_caption_insights import build_youtube_caption_insights
+from quant_platform.youtube_channel_research import run_hudson_thames_youtube_research
+from quant_platform.youtube_hypothesis_validation import run_youtube_hypothesis_validation
 from quant_platform.regimes import RegimeConfig, classify_regimes, write_regime_dataset_report
-from quant_platform.orchestration import run_orchestrator
+from quant_platform.orchestration import run_langgraph_agent_workflow, run_orchestrator
+from quant_platform.orchestration.interactive_mixtape_graph import (
+    build_interactive_mixtape_solution,
+)
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
-from quant_platform.rl import export_rl_policy, run_rl_idea_scout, run_rl_research
+from quant_platform.rl import (
+    base_rl_paper_handoff_report,
+    build_brain_readiness_report,
+    evaluate_base_rl,
+    export_rl_policy,
+    run_augmented_rl,
+    refresh_base_rl_feedback,
+    run_base_rl,
+    run_brain_cycle,
+    run_magicka_learning_cycle,
+    run_sequential_thinking_magicka,
+    run_rl_idea_scout,
+    run_rl_learning_cycle,
+    run_rl_research,
+)
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 from quant_platform.strategies import STRATEGIES, strategy_rows, zscore_signal
 from quant_platform.trade_timing import (
@@ -142,18 +386,41 @@ from quant_platform.trade_timing import (
     trade_timing_comparison_summary,
     write_trade_timing_template,
 )
+from quant_platform.v2_run import build_v2_preflight_run, publish_v2_run_status, validate_v2_run
 from quant_platform.wizard_evidence import (
     build_wizard_diagnostic_confirmation,
+    build_wizard_discovery_triage,
     build_wizard_evidence,
     build_wizard_exact_mode_capture_queue,
+    build_wizard_exploratory_cost_sensitivity,
     build_wizard_hypotheses,
     build_wizard_local_parity,
+    build_wizard_mode_matrix_capture_queue,
+    build_wizard_mode_replay_capability,
+    build_wizard_pair_detail_capture_queue,
+    build_wizard_pair_settings_capture_template,
+    build_wizard_replay_handoff,
     build_wizard_research_pack,
+    import_wizard_pair_settings_capture,
 )
-from quant_platform.wizard_local_verification import build_wizard_local_verification_batch, verify_wizard_local_mode
+from quant_platform.wizard_local_verification import (
+    build_wizard_local_verification_batch,
+    verify_wizard_local_mode,
+)
+from quant_platform.wizard_mode_comparison import build_wizard_mode_comparison
+from quant_platform.wizard_research_journal import build_wizard_research_journal
+from quant_platform.yahoo_crypto import (
+    backfill_yahoo_crypto_funding,
+    build_yahoo_crypto_lane_report,
+    build_yahoo_crypto_pair_history,
+    fetch_yahoo_crypto_candles,
+    refresh_yahoo_research_candidates,
+    refresh_yahoo_crypto_pair_history,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SWEEP_MODES = ("light", "deep", "paid")
 PROJECT_OBJECTIVE_PATH = ROOT / "project_objective.md"
 NON_DYDX_ENRICHMENT_SOURCES = ("hyperliquid", "gmx", "dexscreener")
 LEARNING_OUTCOME_TEMPLATE_COLUMNS = [
@@ -169,6 +436,21 @@ LEARNING_OUTCOME_TEMPLATE_COLUMNS = [
 ]
 TRADE_TIMING_DEFAULT_TEMPLATE = ROOT / "data" / "meta_learning" / "trade_timing_template.csv"
 DEFAULT_INDEXER_BASE = os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip()
+
+
+@contextmanager
+def _local_env_for_reports():
+    loaded = load_env_file(ROOT / ".env.local", override=False)
+    try:
+        yield
+    finally:
+        # Report helpers may be called in-process by notebooks or tests. Do not
+        # let values read only for one report become hidden global state.
+        for key, value in loaded.items():
+            if os.environ.get(key) == value:
+                os.environ.pop(key, None)
+
+
 DEFAULT_FAMILY_SWEEP_PAIRS = (
     "BTC-USD-SOL-USD",
     "DOGE-USD-SOL-USD",
@@ -186,6 +468,147 @@ def _acceptance_report_path() -> Path:
         path = ROOT / path
     return path
 
+
+def _native_acceptance_bridge_row(reports: Path) -> dict[str, object] | None:
+    packets = _read_csv_or_empty(reports / "brain" / "native_candidate_packets.csv")
+    forward = _read_csv_or_empty(reports / "brain" / "native_forward_walk.csv")
+    if packets.empty or forward.empty:
+        return None
+
+    packets = packets.copy()
+    packets["candidate_id"] = packets.get("candidate_id", pd.Series(dtype=object)).astype(str)
+    packets["venue"] = packets.get("venue", pd.Series(dtype=object)).astype(str).str.lower()
+    packets["blocker_state"] = (
+        packets.get("blocker_state", pd.Series(dtype=object)).fillna("").astype(str)
+    )
+    eligible_packets = packets[packets["venue"].eq("dydx") & packets["blocker_state"].eq("")].copy()
+    if eligible_packets.empty:
+        return None
+
+    forward = forward.copy()
+    forward["candidate_id"] = forward.get("candidate_id", pd.Series(dtype=object)).astype(str)
+    forward["forward_walk_status"] = (
+        forward.get("forward_walk_status", pd.Series(dtype=object)).astype(str).str.lower()
+    )
+    merged = eligible_packets.merge(
+        forward, on="candidate_id", how="inner", suffixes=("_packet", "_fw")
+    )
+    if merged.empty:
+        return None
+
+    merged["oos_sharpe"] = pd.to_numeric(
+        merged.get("oos_sharpe", pd.Series(dtype=float)), errors="coerce"
+    )
+    merged["oos_profit_factor"] = pd.to_numeric(
+        merged.get("oos_profit_factor", pd.Series(dtype=float)), errors="coerce"
+    )
+    merged["oos_max_drawdown"] = pd.to_numeric(
+        merged.get("oos_max_drawdown", pd.Series(dtype=float)), errors="coerce"
+    )
+    merged["oos_trade_count"] = pd.to_numeric(
+        merged.get("oos_trade_count", pd.Series(dtype=float)), errors="coerce"
+    ).fillna(0)
+
+    passing = merged[merged["forward_walk_status"].eq("pass")].copy()
+    pairs_tested = (
+        int(merged.get("pair", pd.Series(dtype=object)).astype(str).nunique())
+        if "pair" in merged.columns
+        else 0
+    )
+    passing_pairs = (
+        int(passing.get("pair", pd.Series(dtype=object)).astype(str).nunique())
+        if not passing.empty
+        else 0
+    )
+    total_trades = int(passing["oos_trade_count"].sum()) if not passing.empty else 0
+    median_pf = float(passing["oos_profit_factor"].median()) if not passing.empty else 0.0
+    median_sharpe = float(passing["oos_sharpe"].median()) if not passing.empty else 0.0
+    worst_drawdown = float(passing["oos_max_drawdown"].max()) if not passing.empty else 0.0
+
+    production_eligible = passing_pairs >= 2
+    preferred_failures: list[str] = []
+    if not production_eligible:
+        preferred_failures.append("not_production_eligible")
+    if median_pf < 1.25:
+        preferred_failures.append("median_profit_factor<1.25")
+    if median_sharpe < 0.15:
+        preferred_failures.append("median_sharpe<0.15")
+    if worst_drawdown > 0.35:
+        preferred_failures.append("worst_drawdown>0.35")
+    if total_trades < 100:
+        preferred_failures.append("total_trades<100")
+
+    top_pairs = (
+        ",".join(passing.get("pair", pd.Series(dtype=object)).astype(str).head(5).tolist())
+        if not passing.empty
+        else ""
+    )
+    concern = []
+    if passing_pairs < 2:
+        concern.append("thin_pair_support")
+    if worst_drawdown > 0.35:
+        concern.append("elevated_drawdown")
+    if median_sharpe < 0.15:
+        concern.append("fragile_sharpe")
+
+    return {
+        "strategy_id": 9001,
+        "strategy_name": "Native Local Math",
+        "family": "native",
+        "production_eligible": production_eligible,
+        "preferred_eligible": not preferred_failures,
+        "research_eligible": passing_pairs >= 1,
+        "research_tier": "research_ready"
+        if production_eligible
+        else ("research_watch" if passing_pairs >= 1 else "research_explore"),
+        "acceptance_reason": "passed" if production_eligible else "passing_pairs<2",
+        "preferred_reason": "passed" if not preferred_failures else ";".join(preferred_failures),
+        "research_reason": "passed" if passing_pairs >= 1 else "research_passing_pairs<1",
+        "evaluated_runs": int(len(merged)),
+        "passing_runs": int(len(passing)),
+        "pairs_tested": pairs_tested,
+        "passing_pairs": passing_pairs,
+        "research_pairs_tested": pairs_tested,
+        "research_passing_pairs": passing_pairs,
+        "two_leg_pairs_tested": pairs_tested,
+        "two_leg_execution_input_pairs": pairs_tested,
+        "two_leg_passing_pairs": passing_pairs,
+        "research_score": round(
+            min(100.0, 40.0 + passing_pairs * 10.0 + median_pf * 10.0 + median_sharpe * 20.0), 2
+        ),
+        "research_conviction_score": round(min(100.0, median_pf * 25.0), 2),
+        "research_stability_score": round(max(0.0, 100.0 - worst_drawdown * 100.0), 2),
+        "research_breadth_score": round(min(100.0, pairs_tested * 25.0), 2),
+        "research_strengths": "native_forward_walk_passes" if passing_pairs >= 1 else "",
+        "research_concerns": ",".join(concern),
+        "research_setup_mix": "native_dydx_forward_walk",
+        "research_top_pairs": top_pairs,
+        "research_next_step": "promote_native_candidates_into_strategy_acceptance"
+        if production_eligible
+        else "expand_native_pair_support",
+        "required_cost_buckets": "base;stress",
+        "required_backtest_mode": "two_leg",
+        "required_two_leg_inputs": "price_x;price_y;hedge_ratio;beta;funding_x;funding_y",
+        "total_trades": total_trades,
+        "median_profit_factor": round(median_pf, 6),
+        "median_sharpe": round(median_sharpe, 6),
+        "worst_drawdown": round(worst_drawdown, 6),
+    }
+
+
+def _augmented_acceptance_frame(reports: Path | None = None) -> pd.DataFrame:
+    reports_dir = reports or (ROOT / "reports")
+    acceptance = _read_csv_or_empty(_acceptance_report_path()).copy()
+    native_row = _native_acceptance_bridge_row(reports_dir)
+    if native_row is None:
+        return acceptance
+    if acceptance.empty:
+        return pd.DataFrame([native_row])
+    acceptance = acceptance[
+        acceptance.get("strategy_id", pd.Series(dtype=object)).astype(str)
+        != str(native_row["strategy_id"])
+    ].copy()
+    return pd.concat([acceptance, pd.DataFrame([native_row])], ignore_index=True)
 
 
 def _project_objective_snippet(max_chars: int = 1200) -> str:
@@ -269,7 +692,9 @@ def _assert_dydx_raw_target(path: Path, source: str | None) -> None:
     canonical = _canonical_source_name(source)
     resolved = path.resolve()
     dydx_dirs = (_dydx_inbox_dir(), _dydx_manual_dir())
-    if any(_is_relative_to(resolved, folder) or resolved == folder.resolve() for folder in dydx_dirs):
+    if any(
+        _is_relative_to(resolved, folder) or resolved == folder.resolve() for folder in dydx_dirs
+    ):
         if canonical != "dydx":
             raise SystemExit(
                 f"only dYdX actors may write into {_dydx_inbox_dir()} or {_dydx_manual_dir()}; "
@@ -291,7 +716,9 @@ def _assert_fixture_experiment_input_normalized(input_dir: Path) -> None:
             f"raw root may mix dYdX and enrichment payloads: {input_dir}. "
             "Use a normalized enrichment folder or the dYdX pair-detail path."
         )
-    if _is_relative_to(resolved, _dydx_inbox_dir()) or _is_relative_to(resolved, _dydx_manual_dir()):
+    if _is_relative_to(resolved, _dydx_inbox_dir()) or _is_relative_to(
+        resolved, _dydx_manual_dir()
+    ):
         raise SystemExit(
             f"dYdX raw folders are not fixture experiment inputs: {input_dir}. "
             "Use the dYdX pair-detail build path instead."
@@ -380,10 +807,14 @@ def _request_variants_for_url(url: str) -> list[tuple[str, dict[str, str], bool]
         alt = parsed._replace(netloc=f"{ip}:{parsed.port}" if parsed.port else ip)
         alt_url = alt.geturl()
         headers = {**base_headers, "Host": host}
-        if (alt_url, tuple(sorted(headers.items())), True) not in {(u, tuple(sorted(h.items())), v) for u, h, v in variants}:
+        if (alt_url, tuple(sorted(headers.items())), True) not in {
+            (u, tuple(sorted(h.items())), v) for u, h, v in variants
+        }:
             variants.append((alt_url, headers, True))
         if parsed.scheme == "https":
-            if (alt_url, tuple(sorted(headers.items())), False) not in {(u, tuple(sorted(h.items())), v) for u, h, v in variants}:
+            if (alt_url, tuple(sorted(headers.items())), False) not in {
+                (u, tuple(sorted(h.items())), v) for u, h, v in variants
+            }:
                 variants.append((alt_url, headers, False))
 
     return variants
@@ -559,23 +990,34 @@ def _acceptance_gate_from_env(base_gate: AcceptanceGate | None = None) -> Accept
     base = base_gate or AcceptanceGate()
     return AcceptanceGate(
         min_profit_factor=_read_positive_float_env("QPA_MIN_PROFIT_FACTOR", base.min_profit_factor),
-        preferred_profit_factor=_read_positive_float_env("QPA_PREFERRED_PROFIT_FACTOR", base.preferred_profit_factor),
+        preferred_profit_factor=_read_positive_float_env(
+            "QPA_PREFERRED_PROFIT_FACTOR", base.preferred_profit_factor
+        ),
         min_sharpe=_read_positive_float_env("QPA_MIN_SHARPE", base.min_sharpe),
         preferred_sharpe=_read_positive_float_env("QPA_PREFERRED_SHARPE", base.preferred_sharpe),
         max_drawdown=_read_positive_float_env("QPA_MAX_DRAWDOWN", base.max_drawdown),
-        preferred_max_drawdown=_read_positive_float_env("QPA_PREFERRED_MAX_DRAWDOWN", base.preferred_max_drawdown),
+        preferred_max_drawdown=_read_positive_float_env(
+            "QPA_PREFERRED_MAX_DRAWDOWN", base.preferred_max_drawdown
+        ),
         min_trades=_read_positive_int_env("QPA_MIN_TRADES", base.min_trades),
         preferred_trades=_read_positive_int_env("QPA_PREFERRED_TRADES", base.preferred_trades),
         min_pairs=_read_positive_int_env("QPA_MIN_PAIRS", base.min_pairs),
         required_cost_buckets=tuple(
             bucket.strip().lower()
-            for bucket in os.getenv("QPA_REQUIRED_COST_BUCKETS", ",".join(base.required_cost_buckets)).split(",")
+            for bucket in os.getenv(
+                "QPA_REQUIRED_COST_BUCKETS", ",".join(base.required_cost_buckets)
+            ).split(",")
             if bucket.strip()
         )
         or base.required_cost_buckets,
-        required_regime=os.getenv("QPA_REQUIRED_REGIME", base.required_regime).strip() or base.required_regime,
-        require_positive_expectancy=_read_bool_env("QPA_REQUIRE_POSITIVE_EXPECTANCY", base.require_positive_expectancy),
-        require_two_leg_backtests=_read_bool_env("QPA_REQUIRE_TWO_LEG_BACKTESTS", base.require_two_leg_backtests),
+        required_regime=os.getenv("QPA_REQUIRED_REGIME", base.required_regime).strip()
+        or base.required_regime,
+        require_positive_expectancy=_read_bool_env(
+            "QPA_REQUIRE_POSITIVE_EXPECTANCY", base.require_positive_expectancy
+        ),
+        require_two_leg_backtests=_read_bool_env(
+            "QPA_REQUIRE_TWO_LEG_BACKTESTS", base.require_two_leg_backtests
+        ),
         require_two_leg_execution_inputs=_read_bool_env(
             "QPA_REQUIRE_TWO_LEG_EXECUTION_INPUTS",
             base.require_two_leg_execution_inputs,
@@ -587,6 +1029,7 @@ def _experiment_harness(
     *,
     min_rows: int | None = None,
     gate: AcceptanceGate | None = None,
+    strategy_ids: tuple[int, ...] | None = None,
 ) -> ExperimentHarness:
     base = ExperimentConfig()
     return ExperimentHarness(
@@ -596,8 +1039,13 @@ def _experiment_harness(
             include_overall_regime=base.include_overall_regime,
             regime_column=base.regime_column,
             gate=gate or _acceptance_gate_from_env(base.gate),
-        )
+        ),
+        strategies=tuple(
+            spec for spec in STRATEGIES if strategy_ids is None or spec.id in strategy_ids
+        ),
     )
+
+
 LEARNING_OUTCOME_REQUIRED_COLUMNS = ["pair", "strategy_id", "realized_return"]
 FUNDING_TEMPLATE_COLUMNS = ["market", "timestamp", "funding_bps"]
 FUNDING_TEMPLATE_REQUIRED_COLUMNS = ["market", "funding_bps"]
@@ -621,7 +1069,13 @@ DEFAULT_DYDX_EXPANSION_PAIRS = (
 DYDX_PAIR_EXPANSION_HUNT_PATH = ROOT / "reports" / "dydx_pair_expansion_plan_hunt.csv"
 DYDX_LIVE_MARKET_SELECTOR_CUSTOM_PATH = ROOT / "reports" / "dydx_live_market_selector_custom.csv"
 DEFAULT_DYDX_LIVE_SELECTOR_ANCHORS = ("BTC-USD", "ETH-USD", "SOL-USD")
-DEFAULT_DYDX_LIVE_SELECTOR_EXCLUDED_MARKETS = {"DAI-USD", "EUR-USD", "EURC-USD", "PAXG-USD", "WTI-USD"}
+DEFAULT_DYDX_LIVE_SELECTOR_EXCLUDED_MARKETS = {
+    "DAI-USD",
+    "EUR-USD",
+    "EURC-USD",
+    "PAXG-USD",
+    "WTI-USD",
+}
 
 
 def _write_csv_atomic(frame: pd.DataFrame, output: Path) -> Path:
@@ -680,7 +1134,9 @@ def run_demo_backtest() -> None:
     for i in range(1, n):
         spread[i] = 0.96 * spread[i - 1] + rng.normal(0, 0.02)
     frame = pd.DataFrame({"spread": spread})
-    frame["zscore"] = (frame["spread"] - frame["spread"].rolling(80).mean()) / frame["spread"].rolling(80).std()
+    frame["zscore"] = (frame["spread"] - frame["spread"].rolling(7).mean()) / frame[
+        "spread"
+    ].rolling(7).std()
     frame = frame.dropna().reset_index(drop=True)
     result = backtest_pair(frame, zscore_signal(frame), CostModel())
     pd.DataFrame([result.__dict__]).to_csv(reports / "demo_backtest.csv", index=False)
@@ -693,9 +1149,13 @@ def _demo_pair_frame(seed: int, n: int, phi: float, noise: float) -> pd.DataFram
     for i in range(1, n):
         spread[i] = phi * spread[i - 1] + rng.normal(0, noise)
     frame = pd.DataFrame({"spread": spread})
-    frame["zscore"] = (frame["spread"] - frame["spread"].rolling(80).mean()) / frame["spread"].rolling(80).std()
+    frame["zscore"] = (frame["spread"] - frame["spread"].rolling(7).mean()) / frame[
+        "spread"
+    ].rolling(7).std()
     frame["conditional_probability_distortion"] = np.tanh(frame["zscore"].fillna(0.0) / 3.0)
-    return classify_regimes(frame.dropna().reset_index(drop=True), RegimeConfig(lookback=40, trend_threshold=0.03))
+    return classify_regimes(
+        frame.dropna().reset_index(drop=True), RegimeConfig(lookback=40, trend_threshold=0.03)
+    )
 
 
 def run_demo_experiments() -> None:
@@ -720,12 +1180,26 @@ def ingest_fixtures(input_dir: Path | None = None) -> None:
     reports = ROOT / "reports"
     docs.mkdir(exist_ok=True)
     reports.mkdir(exist_ok=True)
-    field_path = write_fixture_field_dictionary(input_dir, docs / "crypto_wizards_fixture_field_dictionary.csv")
+    field_path = write_fixture_field_dictionary(
+        input_dir, docs / "crypto_wizards_fixture_field_dictionary.csv"
+    )
     datasets = datasets_from_fixtures(input_dir)
-    datasets = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    datasets = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     write_regime_dataset_report(datasets, reports / "regime_dataset_report.csv")
     pd.DataFrame(
-        [{"pair": dataset.pair, "rows": len(dataset.frame), "columns": ";".join(dataset.frame.columns)} for dataset in datasets]
+        [
+            {
+                "pair": dataset.pair,
+                "rows": len(dataset.frame),
+                "columns": ";".join(dataset.frame.columns),
+            }
+            for dataset in datasets
+        ]
     ).to_csv(reports / "fixture_ingestion_summary.csv", index=False)
     print(f"field_dictionary: {field_path}")
     print(f"datasets: {len(datasets)}")
@@ -771,14 +1245,21 @@ def normalize_enrichment_fixtures(
     return output_path
 
 
-def run_fixture_experiments(input_dir: Path | None = None, funding_path: Path | None = None) -> None:
+def run_fixture_experiments(
+    input_dir: Path | None = None, funding_path: Path | None = None
+) -> None:
     input_dir = input_dir or _normalized_root()
     _assert_fixture_experiment_input_normalized(input_dir)
     reports = ROOT / "reports"
     reports.mkdir(exist_ok=True)
     datasets = datasets_from_fixtures(input_dir)
     datasets = _enrich_datasets_with_funding(datasets, funding_path)
-    datasets = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    datasets = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     if not datasets:
         raise SystemExit(f"no experiment-ready fixture datasets found in {input_dir}")
     write_regime_dataset_report(datasets, reports / "regime_dataset_report.csv")
@@ -852,7 +1333,9 @@ def import_pair_detail_capture(input_path: Path, output_name: str | None = None)
         raise SystemExit(f"input is not valid JSON: {input_path}: {exc}") from exc
 
     snapshot = snapshot_from_payload(payload)
-    pair_id = snapshot.pair_id if snapshot.pair_id and snapshot.pair_id != "unknown" else input_path.stem
+    pair_id = (
+        snapshot.pair_id if snapshot.pair_id and snapshot.pair_id != "unknown" else input_path.stem
+    )
     filename = output_name or f"pair_{pair_id}_capture.json"
     if not filename.endswith(".json"):
         filename = f"{filename}.json"
@@ -864,7 +1347,9 @@ def import_pair_detail_capture(input_path: Path, output_name: str | None = None)
     rows = extract_history_rows(payload)
     paths = write_pair_detail_reports(output_dir, ROOT / "reports")
     coverage = pd.DataFrame(pair_detail_history_coverage(output_dir))
-    imported_row = coverage[coverage["path"] == str(output_path)] if not coverage.empty else pd.DataFrame()
+    imported_row = (
+        coverage[coverage["path"] == str(output_path)] if not coverage.empty else pd.DataFrame()
+    )
     print(f"imported_pair_detail_capture: {output_path}")
     print(f"pair: {snapshot.pair}")
     print(f"history_rows_detected: {len(rows)}")
@@ -885,11 +1370,15 @@ def import_pair_detail_capture(input_path: Path, output_name: str | None = None)
     if not imported_audit.empty:
         ready_paths = imported_audit[imported_audit["experiment_ready"]]["json_path"].tolist()
         ecm_ready_paths = imported_audit[imported_audit["ecm_history_ready"]]["json_path"].tolist()
-        two_leg_ready_paths = imported_audit[imported_audit["two_leg_execution_ready"]]["json_path"].tolist()
+        two_leg_ready_paths = imported_audit[imported_audit["two_leg_execution_ready"]][
+            "json_path"
+        ].tolist()
         print(f"capture_candidate_paths: {len(imported_audit)}")
         print(f"experiment_ready_paths: {','.join(ready_paths) if ready_paths else 'none'}")
         print(f"ecm_ready_paths: {','.join(ecm_ready_paths) if ecm_ready_paths else 'none'}")
-        print(f"two_leg_ready_paths: {','.join(two_leg_ready_paths) if two_leg_ready_paths else 'none'}")
+        print(
+            f"two_leg_ready_paths: {','.join(two_leg_ready_paths) if two_leg_ready_paths else 'none'}"
+        )
     checklist = pair_detail_payload_capture_checklist(payload, output_path)
     print(f"found_required_fields: {checklist['found_required_fields'] or 'none'}")
     print(f"missing_required_fields: {checklist['missing_required_fields'] or 'none'}")
@@ -899,7 +1388,9 @@ def import_pair_detail_capture(input_path: Path, output_name: str | None = None)
         print(f"{name}: {path}")
 
 
-def import_latest_pair_detail_download(download_dir: Path | None = None, output_name: str | None = None) -> Path:
+def import_latest_pair_detail_download(
+    download_dir: Path | None = None, output_name: str | None = None
+) -> Path:
     download_dir = download_dir or Path.home() / "Downloads"
     if not download_dir.exists():
         raise SystemExit(f"download directory not found: {download_dir}")
@@ -933,7 +1424,9 @@ def import_dydx_candles(input_path: Path, output_dir: Path | None = None) -> Pat
     if not input_path.exists():
         raise SystemExit(f"dYdX candle response not found: {input_path}")
     try:
-        output = archive_dydx_candles(input_path, output_dir or ROOT / "data" / "raw" / "dydx_candles")
+        output = archive_dydx_candles(
+            input_path, output_dir or ROOT / "data" / "raw" / "dydx_candles"
+        )
         candles = load_loose_candle_payload(output)
     except (json.JSONDecodeError, ValueError) as exc:
         raise SystemExit(f"input is not a valid dYdX candle response: {input_path}: {exc}") from exc
@@ -1088,15 +1581,21 @@ def fetch_dydx_long_history_windows(
                 & (matched_plan.get("asset_y").astype(str).str.upper() == required_asset_y)
             ]
         elif required_asset_x:
-            matched_plan = matched_plan[matched_plan.get("asset_x").astype(str).str.upper() == required_asset_x]
+            matched_plan = matched_plan[
+                matched_plan.get("asset_x").astype(str).str.upper() == required_asset_x
+            ]
         elif required_asset_y:
-            matched_plan = matched_plan[matched_plan.get("asset_y").astype(str).str.upper() == required_asset_y]
+            matched_plan = matched_plan[
+                matched_plan.get("asset_y").astype(str).str.upper() == required_asset_y
+            ]
 
         if matched_plan.empty:
             expected = _md_text(
                 f"pair_id={required_pair_id or 'any'}|asset_x={required_asset_x or 'any'}|asset_y={required_asset_y or 'any'}"
             )
-            raise SystemExit(f"long-history plan {plan_file} did not include requested target ({expected})")
+            raise SystemExit(
+                f"long-history plan {plan_file} did not include requested target ({expected})"
+            )
         plan = matched_plan.copy()
 
     rows = plan[plan["method"].astype(str).str.upper() == "GET"].copy()
@@ -1200,7 +1699,9 @@ def run_dydx_long_history(
         indexer_scheme=indexer_scheme,
         to_iso=to_iso,
     )
-    resolved_pair_id = str(plan.iloc[0]["pair_id"]) if not plan.empty else (pair_id or "long_history")
+    resolved_pair_id = (
+        str(plan.iloc[0]["pair_id"]) if not plan.empty else (pair_id or "long_history")
+    )
     resolved_asset_x = str(plan.iloc[0]["asset_x"]) if not plan.empty else (asset_x or "")
     resolved_asset_y = str(plan.iloc[0]["asset_y"]) if not plan.empty else (asset_y or "")
     plan_path = ROOT / "reports" / "dydx_long_history_plan.csv"
@@ -1225,7 +1726,7 @@ def run_dydx_long_history(
         hedge_ratio=1.0,
         beta=1.0,
         interval=resolution.lower(),
-        zscore_window=320,
+        zscore_window=7,
         derive_hedge_ratio=derive_hedge_ratio,
         run_research=run_research,
         funding_path=funding_path,
@@ -1235,7 +1736,9 @@ def run_dydx_long_history(
     return paths
 
 
-def import_dydx_candle_bundle_from_cli(input_path: Path, output_dir: Path | None = None, zscore_window: int = 320) -> list[Path]:
+def import_dydx_candle_bundle_from_cli(
+    input_path: Path, output_dir: Path | None = None, zscore_window: int = 7
+) -> list[Path]:
     if not input_path.exists():
         raise SystemExit(f"dYdX candle bundle not found: {input_path}")
     pair_dir = output_dir or ROOT / "data" / "raw" / "pair_details"
@@ -1255,8 +1758,14 @@ def import_dydx_candle_bundle_from_cli(input_path: Path, output_dir: Path | None
         print(f"pair_history: {path}")
     if paths:
         report_paths = write_pair_detail_reports(pair_dir, ROOT / "reports")
-        quality = pd.DataFrame(pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS)
-        imported_quality = quality[quality["path"].isin({str(path) for path in paths})] if not quality.empty else quality
+        quality = pd.DataFrame(
+            pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS
+        )
+        imported_quality = (
+            quality[quality["path"].isin({str(path) for path in paths})]
+            if not quality.empty
+            else quality
+        )
         if not imported_quality.empty:
             columns = [
                 "pair",
@@ -1279,7 +1788,7 @@ def dydx_two_leg_request_template_report(
     pair_id: str = "manual",
     hedge_ratio: float = 1.0,
     beta: float | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     limit: int = 100,
     indexer_base: str = DEFAULT_INDEXER_BASE,
     indexer_scheme: str = "",
@@ -1311,7 +1820,7 @@ def print_dydx_two_leg_request_template(
     pair_id: str = "manual",
     hedge_ratio: float = 1.0,
     beta: float | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     limit: int = 100,
     indexer_base: str = DEFAULT_INDEXER_BASE,
     indexer_scheme: str = "",
@@ -1322,14 +1831,14 @@ def print_dydx_two_leg_request_template(
         asset_x=asset_x,
         asset_y=asset_y,
         pair_id=pair_id,
-            hedge_ratio=hedge_ratio,
-            beta=beta,
-            zscore_window=zscore_window,
-            limit=limit,
-            indexer_base=indexer_base,
-            indexer_scheme=indexer_scheme,
-            output_path=output_path,
-        )
+        hedge_ratio=hedge_ratio,
+        beta=beta,
+        zscore_window=zscore_window,
+        limit=limit,
+        indexer_base=indexer_base,
+        indexer_scheme=indexer_scheme,
+        output_path=output_path,
+    )
     output = output_path or ROOT / "reports" / "dydx_two_leg_data_requests.csv"
     print(frame[["request_name", "url", "save_as", "notes"]].to_string(index=False))
     print(f"dydx_two_leg_data_requests: {output}")
@@ -1343,7 +1852,7 @@ def fetch_dydx_two_leg_data(
     pair_id: str = "manual",
     hedge_ratio: float = 1.0,
     beta: float | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     indexer_base: str = DEFAULT_INDEXER_BASE,
     indexer_scheme: str = "",
     limit: int = 100,
@@ -1408,11 +1917,17 @@ def fetch_dydx_two_leg_data(
     result_paths: dict[str, Path] = {"request_report": request_report}
     result_paths.update(saved)
     try:
-        left_candles = archive_dydx_candles(saved["asset_x_candles_5mins"], ROOT / "data" / "raw" / "dydx_candles")
-        right_candles = archive_dydx_candles(saved["asset_y_candles_5mins"], ROOT / "data" / "raw" / "dydx_candles")
+        left_candles = archive_dydx_candles(
+            saved["asset_x_candles_5mins"], ROOT / "data" / "raw" / "dydx_candles"
+        )
+        right_candles = archive_dydx_candles(
+            saved["asset_y_candles_5mins"], ROOT / "data" / "raw" / "dydx_candles"
+        )
     except ValueError:
         return result_paths
-    funding_csv = export_dydx_funding_payload(manual_dir, funding_path or ROOT / "data" / "processed" / "dydx_funding.csv")
+    funding_csv = export_dydx_funding_payload(
+        manual_dir, funding_path or ROOT / "data" / "processed" / "dydx_funding.csv"
+    )
     pair_history = build_dydx_pair_history(
         left_candles=left_candles,
         right_candles=right_candles,
@@ -1434,11 +1949,11 @@ def fetch_dydx_two_leg_data(
         )
     result_paths.update(
         {
-        "left_candles": left_candles,
-        "right_candles": right_candles,
-        "pair_history": pair_history,
-        "funding_csv": funding_csv,
-        "funding_coverage": ROOT / "reports" / "funding_coverage.csv",
+            "left_candles": left_candles,
+            "right_candles": right_candles,
+            "pair_history": pair_history,
+            "funding_csv": funding_csv,
+            "funding_coverage": ROOT / "reports" / "funding_coverage.csv",
         }
     )
     return result_paths
@@ -1452,7 +1967,7 @@ def print_fetch_dydx_two_leg_data(
     pair_id: str = "manual",
     hedge_ratio: float = 1.0,
     beta: float | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     indexer_base: str = DEFAULT_INDEXER_BASE,
     indexer_scheme: str = "",
     limit: int = 100,
@@ -1494,8 +2009,17 @@ def _fetch_public_json(
     fetch_scheme: str | None = None,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    allow_stale = allow_stale_fetch or os.getenv("QPA_ALLOW_STALE_FETCH", "").lower() in {"1", "true", "yes"}
-    use_requests = os.getenv("QPA_USE_REQUESTS_FETCH", "").lower() not in {"0", "false", "no", "off"}
+    allow_stale = allow_stale_fetch or os.getenv("QPA_ALLOW_STALE_FETCH", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    use_requests = os.getenv("QPA_USE_REQUESTS_FETCH", "").lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }
     if allow_stale and output_path.exists() and output_path.stat().st_size > 0:
         return output_path
 
@@ -1514,7 +2038,9 @@ def _fetch_public_json(
                         response.raise_for_status()
                         try:
                             payload = response.json()
-                            output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+                            output_path.write_text(
+                                json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+                            )
                         except ValueError:
                             output_path.write_text(response.text, encoding="utf-8")
                         return output_path
@@ -1580,11 +2106,17 @@ def _fetch_public_json(
                 ]
 
                 if target_ip:
-                    connect_port = str(parse.port) if parse.port else ("443" if parse.scheme == "https" else "80")
+                    connect_port = (
+                        str(parse.port)
+                        if parse.port
+                        else ("443" if parse.scheme == "https" else "80")
+                    )
                     resolve_host = f"{fallback_host}:{connect_port}:{target_ip}"
                     # Keep host-based URL to preserve TLS SNI while routing via explicit DNS fallback.
                     # `curl --resolve` handles host-to-IP mapping without forcing IP into URL path.
-                    curl_cmd.extend(["--http1.1", "--resolve", resolve_host, "-H", f"Host: {fallback_host}"])
+                    curl_cmd.extend(
+                        ["--http1.1", "--resolve", resolve_host, "-H", f"Host: {fallback_host}"]
+                    )
                 curl_cmd.extend([resolved_url, "--insecure"])
 
                 curl_trace.append(f"{cmd} target={target_ip or 'default'}")
@@ -1627,16 +2159,24 @@ def _fetch_public_json(
     return output_path
 
 
-def _resolve_two_leg_assets(*, pair: str | None, asset_x: str | None, asset_y: str | None) -> tuple[str, str]:
+def _resolve_two_leg_assets(
+    *, pair: str | None, asset_x: str | None, asset_y: str | None
+) -> tuple[str, str]:
     if asset_x and asset_y:
         return asset_x, asset_y
     if pair:
         requirements = funding_market_requirements([pair])
         if not requirements.empty and bool(requirements.iloc[0].get("valid", False)):
             return str(requirements.iloc[0]["market_x"]), str(requirements.iloc[0]["market_y"])
-        error = str(requirements.iloc[0].get("error", "invalid pair")) if not requirements.empty else "invalid pair"
+        error = (
+            str(requirements.iloc[0].get("error", "invalid pair"))
+            if not requirements.empty
+            else "invalid pair"
+        )
         raise SystemExit(f"could not resolve dYdX markets from --pair {pair}: {error}")
-    raise SystemExit("dydx-two-leg-request-template requires --pair or both --asset-x and --asset-y")
+    raise SystemExit(
+        "dydx-two-leg-request-template requires --pair or both --asset-x and --asset-y"
+    )
 
 
 def inspect_pair_detail_capture(input_path: Path) -> None:
@@ -1654,7 +2194,9 @@ def inspect_pair_detail_capture(input_path: Path) -> None:
     checklist = pair_detail_payload_capture_checklist(payload, input_path)
     ready_paths = [row["json_path"] for row in audit if bool(row.get("experiment_ready"))]
     ecm_ready_paths = [row["json_path"] for row in audit if bool(row.get("ecm_history_ready"))]
-    two_leg_ready_paths = [row["json_path"] for row in audit if bool(row.get("two_leg_execution_ready"))]
+    two_leg_ready_paths = [
+        row["json_path"] for row in audit if bool(row.get("two_leg_execution_ready"))
+    ]
 
     print(f"inspected_pair_detail_capture: {input_path}")
     print(f"pair: {snapshot.pair}")
@@ -1669,14 +2211,18 @@ def inspect_pair_detail_capture(input_path: Path) -> None:
     print(f"capture_candidate_paths: {len(audit)}")
     print(f"experiment_ready_paths: {','.join(ready_paths) if ready_paths else 'none'}")
     print(f"ecm_ready_paths: {','.join(ecm_ready_paths) if ecm_ready_paths else 'none'}")
-    print(f"two_leg_ready_paths: {','.join(two_leg_ready_paths) if two_leg_ready_paths else 'none'}")
+    print(
+        f"two_leg_ready_paths: {','.join(two_leg_ready_paths) if two_leg_ready_paths else 'none'}"
+    )
     print(f"found_required_fields: {checklist['found_required_fields'] or 'none'}")
     print(f"missing_required_fields: {checklist['missing_required_fields'] or 'none'}")
     _print_capture_checklist_summary(checklist)
     print(f"next_capture_focus: {checklist['next_capture_focus']}")
 
 
-def pair_detail_capture_preflight(input_path: Path, output_path: Path | None = None) -> pd.DataFrame:
+def pair_detail_capture_preflight(
+    input_path: Path, output_path: Path | None = None
+) -> pd.DataFrame:
     if not input_path.exists():
         raise SystemExit(f"pair-detail capture JSON not found: {input_path}")
     try:
@@ -1692,7 +2238,9 @@ def pair_detail_capture_preflight(input_path: Path, output_path: Path | None = N
     return frame
 
 
-def print_pair_detail_capture_preflight(input_path: Path | None, output_path: Path | None = None) -> None:
+def print_pair_detail_capture_preflight(
+    input_path: Path | None, output_path: Path | None = None
+) -> None:
     if input_path is None:
         raise SystemExit("capture-preflight requires --json-path")
     output = output_path or ROOT / "reports" / "pair_detail_capture_preflight.csv"
@@ -1706,7 +2254,9 @@ def write_pair_detail_capture_checklist(input_dir: Path | None = None) -> None:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = reports / "pair_detail_capture_checklist.csv"
-    frame = pd.DataFrame(pair_detail_capture_checklist(input_dir), columns=PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS)
+    frame = pd.DataFrame(
+        pair_detail_capture_checklist(input_dir), columns=PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS
+    )
     _write_csv_atomic(frame, output)
     print(frame.to_string(index=False))
     print(f"pair_detail_capture_checklist: {output}")
@@ -1727,23 +2277,150 @@ def run_pair_detail_experiments(
     input_dir: Path | None = None,
     funding_path: Path | None = None,
     require_research_usable: bool = False,
+    pair_filter: tuple[str, ...] = (),
+    strategy_ids: tuple[int, ...] | None = None,
 ) -> None:
     input_dir = input_dir or ROOT / "data" / "raw" / "pair_details"
     reports = ROOT / "reports"
     reports.mkdir(exist_ok=True)
-    datasets = datasets_from_pair_detail_snapshots(input_dir, require_research_usable=require_research_usable)
+    datasets = datasets_from_pair_detail_snapshots(
+        input_dir, require_research_usable=require_research_usable
+    )
+    if pair_filter:
+        requested = {_normalize_pair_for_filter(pair) for pair in pair_filter if pair}
+        filtered: list[PairDataset] = []
+        for dataset in datasets:
+            if _normalize_pair_for_filter(dataset.pair) in requested:
+                filtered.append(dataset)
+        datasets = filtered
     datasets = _enrich_datasets_with_funding(datasets, funding_path)
-    datasets = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    datasets = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     if not datasets:
         raise SystemExit(f"no experiment-ready pair-detail history datasets found in {input_dir}")
     write_regime_dataset_report(datasets, reports / "regime_dataset_report.csv")
-    harness = _experiment_harness()
+    harness = _experiment_harness(
+        strategy_ids=tuple(int(v) for v in strategy_ids) if strategy_ids else None,
+    )
     results = harness.run(datasets)
     paths = harness.write_reports(results, reports)
     print(f"loaded {len(datasets)} pair-detail history dataset(s)")
     print(f"wrote {len(results)} experiment rows")
     for name, path in paths.items():
         print(f"{name}: {path}")
+
+
+def _normalize_pair_for_filter(pair: str) -> str:
+    if not pair:
+        return ""
+    normalized = pair.strip().lower().replace("/", "-").replace("_", "-")
+    normalized = normalized.replace(" ", "")
+    parts = [part for part in normalized.split("-") if part]
+    # Accept both pair-id style (btc_eth) and full market style (BTC-USD-ETH-USD)
+    # by reducing to the pair of market tickers, sorted for deterministic comparisons.
+    symbols = [part for part in parts if part != "usd"]
+    if not symbols:
+        return ""
+    symbols = sorted(set(symbols))
+    if len(symbols) >= 2:
+        return f"{symbols[0]}_{symbols[1]}"
+    return symbols[0]
+
+
+def _recommended_strategies_from_mode(strategy_mode: str | None) -> list[int]:
+    text = (strategy_mode or "").strip().lower()
+    if not text:
+        return []
+    if "copula" in text:
+        return [33, 34, 35, 36, 37, 5, 6, 7, 28, 29]
+    if "ou" in text:
+        return [14, 1, 2, 11, 12, 13, 20]
+    if "dynamic" in text:
+        return [20, 1, 2, 11, 12, 13]
+    if "mean" in text or "reversion" in text or "zscore" in text or text == "static":
+        return [1, 2, 11, 12, 13, 14, 20]
+    return [1, 2, 11, 12, 13, 14, 20]
+
+
+def _extract_recommended_strategy_ids(payload: dict) -> list[int]:
+    """Best-effort strategy IDs from common pair detail recommendation fields."""
+
+    recommended: list[int] = []
+
+    def _append_ids(ids: list[int]) -> None:
+        for sid in ids:
+            if sid and sid not in recommended:
+                recommended.append(sid)
+
+    def _to_int(value: object) -> int | None:
+        try:
+            return int(str(value).strip())
+        except (TypeError, ValueError):
+            return None
+
+    for field in ("strategy_id", "local_strategy_id"):
+        sid = _to_int(payload.get(field))
+        if sid is not None:
+            _append_ids([sid])
+
+    for key in (
+        "dashboard_recommended_strategy",
+        "strategy_mode",
+        "exact_mode",
+        "strategy_hint",
+        "strategy",
+    ):
+        _append_ids(_recommended_strategies_from_mode(str(payload.get(key, ""))))
+
+    return recommended
+
+
+def _pair_expansion_recommended_and_all_strategy_ids(
+    input_dir: Path,
+    pair_filter: tuple[str, ...],
+) -> tuple[int, ...]:
+    ordered: list[int] = []
+    seen: set[int] = set()
+    for sid in _strategy_id_priority_for_pair_details(input_dir=input_dir, pair_filter=pair_filter):
+        if sid not in seen:
+            ordered.append(sid)
+            seen.add(sid)
+    for spec in STRATEGIES:
+        sid = int(spec.id)
+        if sid not in seen:
+            ordered.append(sid)
+            seen.add(sid)
+    return tuple(ordered)
+
+
+def _strategy_id_priority_for_pair_details(
+    input_dir: Path,
+    pair_filter: tuple[str, ...],
+) -> list[int]:
+    requested = {_normalize_pair_for_filter(pair) for pair in pair_filter} if pair_filter else None
+    prioritized: list[int] = []
+
+    for path in sorted(Path(input_dir).glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        pair = _normalize_pair_for_filter(str(payload.get("pair", "")))
+        if requested is not None and pair not in requested:
+            continue
+        if not pair:
+            continue
+        for strategy_id in _extract_recommended_strategy_ids(payload):
+            if strategy_id not in prioritized:
+                prioritized.append(strategy_id)
+
+    if not prioritized:
+        return [1]
+    return prioritized
 
 
 def build_ml_trade_filter_dataset_report(
@@ -1754,9 +2431,16 @@ def build_ml_trade_filter_dataset_report(
 ) -> Path:
     source = input_dir or ROOT / "data" / "raw" / "pair_details"
     output = output_path or ROOT / "reports" / "ml_trade_filter_dataset.csv"
-    datasets = datasets_from_pair_detail_snapshots(source, require_research_usable=require_research_usable)
+    datasets = datasets_from_pair_detail_snapshots(
+        source, require_research_usable=require_research_usable
+    )
     datasets = _enrich_datasets_with_funding(datasets, funding_path)
-    datasets = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    datasets = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     frame = build_trade_filter_dataset(datasets)
     if frame.empty:
         raise SystemExit(f"no ML trade-filter candidate rows could be built from {source}")
@@ -1827,7 +2511,9 @@ def print_shadow_ml_trade_filter(
     dataset = _load_ml_trade_filter_dataset(input_dir, funding_path)
     artifact = model_path or ROOT / "reports" / "ml_trade_filter" / "ml_trade_filter_best_model.pkl"
     output = output_path or ROOT / "reports" / "ml_trade_filter_shadow_predictions.csv"
-    path = shadow_trade_filter_predictions(dataset, model_artifact_path=artifact, output_path=output)
+    path = shadow_trade_filter_predictions(
+        dataset, model_artifact_path=artifact, output_path=output
+    )
     frame = pd.read_csv(path)
     print(frame.head(20).to_string(index=False))
     print(f"ml_trade_filter_shadow_predictions: {path}")
@@ -1838,14 +2524,21 @@ def print_compare_ml_shadow_models(
     output_dir: Path | None = None,
     pair_list: tuple[str, ...] = (),
 ) -> None:
-    predictions_path = input_dir or ROOT / "reports" / "ml_trade_filter" / "ml_trade_filter_walkforward_predictions.csv"
+    predictions_path = (
+        input_dir
+        or ROOT / "reports" / "ml_trade_filter" / "ml_trade_filter_walkforward_predictions.csv"
+    )
     if not predictions_path.exists():
         raise SystemExit(f"ML walk-forward predictions not found: {predictions_path}")
     output = output_dir or predictions_path.parent
     predictions = pd.read_csv(predictions_path)
     model_report, pair_report = shadow_model_branch_comparison(predictions, pairs=pair_list or None)
-    model_path = _write_csv_atomic(model_report, output / "ml_trade_filter_branch_model_comparison.csv")
-    pair_path = _write_csv_atomic(pair_report, output / "ml_trade_filter_branch_pair_comparison.csv")
+    model_path = _write_csv_atomic(
+        model_report, output / "ml_trade_filter_branch_model_comparison.csv"
+    )
+    pair_path = _write_csv_atomic(
+        pair_report, output / "ml_trade_filter_branch_pair_comparison.csv"
+    )
     print(model_report.to_string(index=False))
     print(f"ml_trade_filter_branch_model_comparison: {model_path}")
     print(f"ml_trade_filter_branch_pair_comparison: {pair_path}")
@@ -1859,7 +2552,12 @@ def _best_requested_pair_datasets(
     requested = requested_pairs or DEFAULT_FAMILY_SWEEP_PAIRS
     datasets = datasets_from_pair_detail_snapshots(input_dir, require_research_usable=True)
     datasets = _enrich_datasets_with_funding(datasets, funding_path)
-    classified = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    classified = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     best_by_pair: dict[str, PairDataset] = {}
     for dataset in classified:
         if dataset.pair not in requested:
@@ -1956,7 +2654,9 @@ def strategy_family_sweep_report(
         .reset_index(drop=True)
     )
     best_by_family.insert(0, "family_rank", range(1, len(best_by_family) + 1))
-    best_by_family_path = _write_csv_atomic(best_by_family, output / "strategy_family_best_by_family.csv")
+    best_by_family_path = _write_csv_atomic(
+        best_by_family, output / "strategy_family_best_by_family.csv"
+    )
 
     shortlist = best_by_family[
         (
@@ -1967,11 +2667,18 @@ def strategy_family_sweep_report(
     ].copy()
     if shortlist.empty:
         shortlist = best_by_family.head(min(3, len(best_by_family))).copy()
-    shortlist.insert(1, "promotion_reason", shortlist.apply(_strategy_family_promotion_reason, axis=1))
-    shortlist_path = _write_csv_atomic(shortlist, output / "strategy_family_promotion_shortlist.csv")
+    shortlist.insert(
+        1, "promotion_reason", shortlist.apply(_strategy_family_promotion_reason, axis=1)
+    )
+    shortlist_path = _write_csv_atomic(
+        shortlist, output / "strategy_family_promotion_shortlist.csv"
+    )
 
     notes_path = output / "strategy_family_sweep_notes.md"
-    notes_path.write_text(_strategy_family_sweep_notes(selected_pairs, summary, best_by_family, shortlist), encoding="utf-8")
+    notes_path.write_text(
+        _strategy_family_sweep_notes(selected_pairs, summary, best_by_family, shortlist),
+        encoding="utf-8",
+    )
     failure_attribution_path = output / "strategy_family_failure_attribution.csv"
     family_failure_attribution_report(output, failure_attribution_path)
     failure_notes_path = output / "strategy_family_failure_attribution.md"
@@ -1994,7 +2701,9 @@ def _strategy_family_promotion_reason(row: pd.Series) -> str:
         return "production_eligible"
     if bool(row.get("preferred_eligible", False)):
         return "preferred_eligible"
-    passing_pairs = int(pd.to_numeric(pd.Series([row.get("passing_pairs")]), errors="coerce").fillna(0).iloc[0])
+    passing_pairs = int(
+        pd.to_numeric(pd.Series([row.get("passing_pairs")]), errors="coerce").fillna(0).iloc[0]
+    )
     if passing_pairs > 0:
         return "positive_passing_pairs"
     return "top_family_placeholder"
@@ -2035,7 +2744,9 @@ def _strategy_family_sweep_notes(
         )
     lines.extend(["", "## Promotion Shortlist", ""])
     for _, row in shortlist.iterrows():
-        lines.append(f"- `{row['family']}` / `{row['strategy_name']}` because `{row['promotion_reason']}`")
+        lines.append(
+            f"- `{row['family']}` / `{row['strategy_name']}` because `{row['promotion_reason']}`"
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -2171,33 +2882,67 @@ def family_failure_attribution_report(
                 "family": family,
                 "best_strategy": best.get("strategy_name", ""),
                 "strategies_in_family": int(len(group)),
-                "evaluated_runs_best_strategy": int(pd.to_numeric(pd.Series([best.get("evaluated_runs")]), errors="coerce").fillna(0).iloc[0]),
-                "best_passing_pairs": int(pd.to_numeric(pd.Series([best.get("passing_pairs")]), errors="coerce").fillna(0).iloc[0]),
-                "best_total_trades": int(pd.to_numeric(pd.Series([best.get("total_trades")]), errors="coerce").fillna(0).iloc[0]),
-                "best_median_profit_factor": float(pd.to_numeric(pd.Series([best.get("median_profit_factor")]), errors="coerce").fillna(0.0).iloc[0]),
-                "best_median_sharpe": float(pd.to_numeric(pd.Series([best.get("median_sharpe")]), errors="coerce").fillna(0.0).iloc[0]),
-                "best_worst_drawdown": float(pd.to_numeric(pd.Series([best.get("worst_drawdown")]), errors="coerce").fillna(0.0).iloc[0]),
+                "evaluated_runs_best_strategy": int(
+                    pd.to_numeric(pd.Series([best.get("evaluated_runs")]), errors="coerce")
+                    .fillna(0)
+                    .iloc[0]
+                ),
+                "best_passing_pairs": int(
+                    pd.to_numeric(pd.Series([best.get("passing_pairs")]), errors="coerce")
+                    .fillna(0)
+                    .iloc[0]
+                ),
+                "best_total_trades": int(
+                    pd.to_numeric(pd.Series([best.get("total_trades")]), errors="coerce")
+                    .fillna(0)
+                    .iloc[0]
+                ),
+                "best_median_profit_factor": float(
+                    pd.to_numeric(pd.Series([best.get("median_profit_factor")]), errors="coerce")
+                    .fillna(0.0)
+                    .iloc[0]
+                ),
+                "best_median_sharpe": float(
+                    pd.to_numeric(pd.Series([best.get("median_sharpe")]), errors="coerce")
+                    .fillna(0.0)
+                    .iloc[0]
+                ),
+                "best_worst_drawdown": float(
+                    pd.to_numeric(pd.Series([best.get("worst_drawdown")]), errors="coerce")
+                    .fillna(0.0)
+                    .iloc[0]
+                ),
                 "strategies_blocked_by_passing_pairs": blocker_counts.get("passing_pairs", 0),
                 "strategies_blocked_by_total_trades": blocker_counts.get("total_trades", 0),
-                "strategies_blocked_by_median_profit_factor": blocker_counts.get("median_profit_factor", 0),
+                "strategies_blocked_by_median_profit_factor": blocker_counts.get(
+                    "median_profit_factor", 0
+                ),
                 "strategies_blocked_by_median_sharpe": blocker_counts.get("median_sharpe", 0),
                 "strategies_blocked_by_worst_drawdown": blocker_counts.get("worst_drawdown", 0),
-                "strategies_blocked_by_no_evaluated_runs": blocker_counts.get("no_evaluated_runs", 0),
-                "top_blockers": ";".join(f"{name}:{count}" for name, count in _sorted_counter_items(blocker_counts)[:5]),
+                "strategies_blocked_by_no_evaluated_runs": blocker_counts.get(
+                    "no_evaluated_runs", 0
+                ),
+                "top_blockers": ";".join(
+                    f"{name}:{count}" for name, count in _sorted_counter_items(blocker_counts)[:5]
+                ),
                 "diagnosis": diagnosis,
                 "next_action": _strategy_failure_next_action(diagnosis),
             }
         )
-    frame = pd.DataFrame(rows).sort_values(
-        [
-            "best_passing_pairs",
-            "best_median_sharpe",
-            "best_median_profit_factor",
-            "best_total_trades",
-            "best_worst_drawdown",
-        ],
-        ascending=[False, False, False, False, True],
-    ).reset_index(drop=True)
+    frame = (
+        pd.DataFrame(rows)
+        .sort_values(
+            [
+                "best_passing_pairs",
+                "best_median_sharpe",
+                "best_median_profit_factor",
+                "best_total_trades",
+                "best_worst_drawdown",
+            ],
+            ascending=[False, False, False, False, True],
+        )
+        .reset_index(drop=True)
+    )
     _write_csv_atomic(frame, output)
     return frame
 
@@ -2239,11 +2984,23 @@ def _sorted_counter_items(counts: dict[str, int]) -> list[tuple[str, int]]:
 
 
 def _family_sweep_diagnosis(best: pd.Series, blocker_counts: dict[str, int]) -> str:
-    best_passing_pairs = int(pd.to_numeric(pd.Series([best.get("passing_pairs")]), errors="coerce").fillna(0).iloc[0])
-    best_total_trades = int(pd.to_numeric(pd.Series([best.get("total_trades")]), errors="coerce").fillna(0).iloc[0])
-    best_pf = float(pd.to_numeric(pd.Series([best.get("median_profit_factor")]), errors="coerce").fillna(0.0).iloc[0])
-    best_sharpe = float(pd.to_numeric(pd.Series([best.get("median_sharpe")]), errors="coerce").fillna(0.0).iloc[0])
-    best_dd = float(pd.to_numeric(pd.Series([best.get("worst_drawdown")]), errors="coerce").fillna(0.0).iloc[0])
+    best_passing_pairs = int(
+        pd.to_numeric(pd.Series([best.get("passing_pairs")]), errors="coerce").fillna(0).iloc[0]
+    )
+    best_total_trades = int(
+        pd.to_numeric(pd.Series([best.get("total_trades")]), errors="coerce").fillna(0).iloc[0]
+    )
+    best_pf = float(
+        pd.to_numeric(pd.Series([best.get("median_profit_factor")]), errors="coerce")
+        .fillna(0.0)
+        .iloc[0]
+    )
+    best_sharpe = float(
+        pd.to_numeric(pd.Series([best.get("median_sharpe")]), errors="coerce").fillna(0.0).iloc[0]
+    )
+    best_dd = float(
+        pd.to_numeric(pd.Series([best.get("worst_drawdown")]), errors="coerce").fillna(0.0).iloc[0]
+    )
     if blocker_counts.get("no_evaluated_runs", 0) > 0 and best_total_trades == 0:
         return "no_evaluated_runs"
     if best_passing_pairs == 0 and best_total_trades < 10:
@@ -2261,7 +3018,9 @@ def _family_sweep_diagnosis(best: pd.Series, blocker_counts: dict[str, int]) -> 
 
 def _strategy_family_failure_notes(sweep_dir: Path | None = None) -> str:
     base = sweep_dir or ROOT / "reports" / "strategy_family_sweep"
-    frame = family_failure_attribution_report(base, base / "strategy_family_failure_attribution.csv")
+    frame = family_failure_attribution_report(
+        base, base / "strategy_family_failure_attribution.csv"
+    )
     if frame.empty:
         return "# Strategy Family Failure Attribution\n\nNo attribution data available.\n"
     lines = [
@@ -2282,13 +3041,19 @@ def print_strategy_family_failure_attribution(
     sweep_dir: Path | None = None,
     output_path: Path | None = None,
 ) -> None:
-    output = output_path or (sweep_dir or ROOT / "reports" / "strategy_family_sweep") / "strategy_family_failure_attribution.csv"
+    output = (
+        output_path
+        or (sweep_dir or ROOT / "reports" / "strategy_family_sweep")
+        / "strategy_family_failure_attribution.csv"
+    )
     frame = family_failure_attribution_report(sweep_dir, output)
     print(frame.to_string(index=False))
     print(f"strategy_family_failure_attribution: {output}")
 
 
-def _enrich_datasets_with_funding(datasets: list[PairDataset], funding_path: Path | None) -> list[PairDataset]:
+def _enrich_datasets_with_funding(
+    datasets: list[PairDataset], funding_path: Path | None
+) -> list[PairDataset]:
     if funding_path is None:
         return datasets
     funding = _load_funding_rows(funding_path)
@@ -2314,7 +3079,9 @@ def _load_funding_rows(path: Path) -> pd.DataFrame:
     raise SystemExit(f"unsupported funding file type: {path}")
 
 
-def export_dydx_funding_payload(input_path: Path, output_path: Path | None = None, market: str | None = None) -> Path:
+def export_dydx_funding_payload(
+    input_path: Path, output_path: Path | None = None, market: str | None = None
+) -> Path:
     if not input_path.exists():
         raise SystemExit(f"dYdX funding payload not found: {input_path}")
     rows = _dydx_funding_rows_from_path(input_path, market)
@@ -2328,11 +3095,15 @@ def export_dydx_funding_payload(input_path: Path, output_path: Path | None = Non
 
 def fetch_dydx_funding(markets: list[str], output_path: Path | None = None) -> Path:
     if not markets:
-        raise SystemExit("fetch-dydx-funding requires --market, with comma-separated markets allowed")
+        raise SystemExit(
+            "fetch-dydx-funding requires --market, with comma-separated markets allowed"
+        )
     config = DydxNetworkConfig.paper_testnet_from_env()
     adapter = build_dydx_indexer_adapter(config)
     if adapter is None:
-        raise SystemExit("dYdX indexer adapter is not available; install/wire the official v4 client first")
+        raise SystemExit(
+            "dYdX indexer adapter is not available; install/wire the official v4 client first"
+        )
     rows: list[dict[str, object]] = []
     for market in markets:
         try:
@@ -2389,19 +3160,27 @@ def rerun_p2_acceptance_evidence(
     }
 
 
-def _dydx_funding_rows_from_path(input_path: Path, market: str | None = None) -> list[dict[str, object]]:
+def _dydx_funding_rows_from_path(
+    input_path: Path, market: str | None = None
+) -> list[dict[str, object]]:
     if input_path.is_dir():
         rows: list[dict[str, object]] = []
         paths = sorted(path for path in input_path.glob("*.json") if path.is_file())
         if not paths:
             raise SystemExit(f"no JSON funding payloads found in {input_path}")
         for path in paths:
-            rows.extend(_dydx_funding_rows_from_file(path, market or _market_from_funding_filename(path)))
+            rows.extend(
+                _dydx_funding_rows_from_file(path, market or _market_from_funding_filename(path))
+            )
         return rows
-    return _dydx_funding_rows_from_file(input_path, market or _market_from_funding_filename(input_path))
+    return _dydx_funding_rows_from_file(
+        input_path, market or _market_from_funding_filename(input_path)
+    )
 
 
-def _dydx_funding_rows_from_file(input_path: Path, market: str | None = None) -> list[dict[str, object]]:
+def _dydx_funding_rows_from_file(
+    input_path: Path, market: str | None = None
+) -> list[dict[str, object]]:
     try:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -2410,7 +3189,9 @@ def _dydx_funding_rows_from_file(input_path: Path, market: str | None = None) ->
 
 
 def _market_from_funding_filename(path: Path) -> str | None:
-    stem = re.sub(r"(?i)(?:^funding[_-]?|[_-]?funding$|[_-]?historical$|[_-]?history$)", "", path.stem)
+    stem = re.sub(
+        r"(?i)(?:^funding[_-]?|[_-]?funding$|[_-]?historical$|[_-]?history$)", "", path.stem
+    )
     normalized = stem.replace("_", "-").upper()
     match = re.search(r"([A-Z0-9]+-USD)", normalized)
     return match.group(1) if match else None
@@ -2451,9 +3232,13 @@ def print_funding_requirements(pair: str | None = None, output_path: Path | None
     print(frame.to_string(index=False))
     valid_rows = frame[frame.get("valid", pd.Series(dtype=bool)).fillna(False).astype(bool)]
     required_markets = _semicolon_values(valid_rows.get("required_markets", pd.Series(dtype=str)))
-    invalid_pairs = sorted(str(value) for value in frame.loc[~frame.index.isin(valid_rows.index), "pair"].dropna())
+    invalid_pairs = sorted(
+        str(value) for value in frame.loc[~frame.index.isin(valid_rows.index), "pair"].dropna()
+    )
     print(f"funding_required_markets: {';'.join(required_markets) if required_markets else 'none'}")
-    print(f"fetch_dydx_funding_market_arg: {','.join(required_markets) if required_markets else 'none'}")
+    print(
+        f"fetch_dydx_funding_market_arg: {','.join(required_markets) if required_markets else 'none'}"
+    )
     print(f"funding_invalid_pairs: {';'.join(invalid_pairs) if invalid_pairs else 'none'}")
     print(f"funding_requirements: {output}")
 
@@ -2463,7 +3248,9 @@ def funding_template_report(
     output_path: Path | None = None,
 ) -> pd.DataFrame:
     requirements = funding_requirements_report(pairs)
-    valid_rows = requirements[requirements.get("valid", pd.Series(dtype=bool)).fillna(False).astype(bool)]
+    valid_rows = requirements[
+        requirements.get("valid", pd.Series(dtype=bool)).fillna(False).astype(bool)
+    ]
     markets = _semicolon_values(valid_rows.get("required_markets", pd.Series(dtype=str)))
     frame = pd.DataFrame(
         [{"market": market, "timestamp": "", "funding_bps": ""} for market in markets],
@@ -2505,18 +3292,28 @@ def funding_template_check_report(
     except (pd.errors.EmptyDataError, OSError, UnicodeDecodeError):
         data = pd.DataFrame()
     missing_columns, ready_indices, invalid_rows = _funding_template_validation(data)
-    normalized = normalize_funding_rows(data.loc[ready_indices]) if ready_indices and not missing_columns else pd.DataFrame()
+    normalized = (
+        normalize_funding_rows(data.loc[ready_indices])
+        if ready_indices and not missing_columns
+        else pd.DataFrame()
+    )
     required_markets = _funding_required_markets()
-    ready_markets = sorted(normalized["market"].dropna().astype(str).unique()) if not normalized.empty else []
+    ready_markets = (
+        sorted(normalized["market"].dropna().astype(str).unique()) if not normalized.empty else []
+    )
     missing_markets = sorted(set(required_markets).difference(ready_markets))
-    ready_to_import = bool(ready_indices and not invalid_rows and not missing_columns and not missing_markets)
+    ready_to_import = bool(
+        ready_indices and not invalid_rows and not missing_columns and not missing_markets
+    )
     frame = pd.DataFrame(
         [
             {
                 "path": str(source),
                 "rows": len(data),
                 "ready_rows": len(ready_indices),
-                "blocked_rows": max(len(data) - len(ready_indices), 0) if not missing_columns else len(data),
+                "blocked_rows": max(len(data) - len(ready_indices), 0)
+                if not missing_columns
+                else len(data),
                 "required_markets": ";".join(required_markets),
                 "ready_markets": ";".join(ready_markets),
                 "missing_markets": ";".join(missing_markets),
@@ -2551,7 +3348,9 @@ def import_funding_template(
                     "imported_rows": 0,
                     "funding_output": str(funding_output),
                     "status": "blocked",
-                    "blocker": row.get("invalid_rows", "") or row.get("missing_markets", "") or row.get("missing_columns", ""),
+                    "blocker": row.get("invalid_rows", "")
+                    or row.get("missing_markets", "")
+                    or row.get("missing_columns", ""),
                     "next_action": row.get("next_action", "fill required funding template rows"),
                 }
             ]
@@ -2587,21 +3386,27 @@ def print_funding_template(pair: str | None = None, output_path: Path | None = N
     print(f"funding_template: {output}")
 
 
-def print_funding_template_check(input_path: Path | None = None, output_path: Path | None = None) -> None:
+def print_funding_template_check(
+    input_path: Path | None = None, output_path: Path | None = None
+) -> None:
     output = output_path or ROOT / "reports" / "funding_template_check.csv"
     frame = funding_template_check_report(input_path, output)
     print(frame.to_string(index=False))
     print(f"funding_template_check: {output}")
 
 
-def print_import_funding_template(input_path: Path | None = None, output_path: Path | None = None) -> None:
+def print_import_funding_template(
+    input_path: Path | None = None, output_path: Path | None = None
+) -> None:
     frame = import_funding_template(input_path=input_path, output_path=output_path)
     report = ROOT / "reports" / "funding_template_import_report.csv"
     print(frame.to_string(index=False))
     print(f"funding_template_import_report: {report}")
 
 
-def print_funding_coverage(funding_path: Path | None, pair: str | None = None, output_path: Path | None = None) -> None:
+def print_funding_coverage(
+    funding_path: Path | None, pair: str | None = None, output_path: Path | None = None
+) -> None:
     if funding_path is None:
         raise SystemExit("funding-coverage requires --funding-path")
     pairs = [pair] if pair else None
@@ -2609,12 +3414,18 @@ def print_funding_coverage(funding_path: Path | None, pair: str | None = None, o
     frame = funding_coverage_report(funding_path, pairs, output)
     print(frame.to_string(index=False))
     if not frame.empty:
-        ready_pairs = int(frame["ready"].fillna(False).astype(bool).sum()) if "ready" in frame.columns else 0
+        ready_pairs = (
+            int(frame["ready"].fillna(False).astype(bool).sum()) if "ready" in frame.columns else 0
+        )
         required_markets = _semicolon_values(frame.get("required_markets", pd.Series(dtype=str)))
         missing_markets = _semicolon_values(frame.get("missing_markets", pd.Series(dtype=str)))
         print(f"funding_pairs_ready: {ready_pairs}/{len(frame)}")
-        print(f"funding_required_markets: {';'.join(required_markets) if required_markets else 'none'}")
-        print(f"funding_missing_markets: {';'.join(missing_markets) if missing_markets else 'none'}")
+        print(
+            f"funding_required_markets: {';'.join(required_markets) if required_markets else 'none'}"
+        )
+        print(
+            f"funding_missing_markets: {';'.join(missing_markets) if missing_markets else 'none'}"
+        )
     print(f"funding_coverage: {output}")
 
 
@@ -2633,18 +3444,26 @@ def _funding_required_markets() -> list[str]:
         requirements = funding_requirements_report()
     except SystemExit:
         return []
-    valid_rows = requirements[requirements.get("valid", pd.Series(dtype=bool)).fillna(False).astype(bool)]
+    valid_rows = requirements[
+        requirements.get("valid", pd.Series(dtype=bool)).fillna(False).astype(bool)
+    ]
     return _semicolon_values(valid_rows.get("required_markets", pd.Series(dtype=str)))
 
 
 def _funding_template_validation(frame: pd.DataFrame) -> tuple[list[str], list[int], list[str]]:
-    missing_columns = [column for column in FUNDING_TEMPLATE_REQUIRED_COLUMNS if column not in frame.columns]
+    missing_columns = [
+        column for column in FUNDING_TEMPLATE_REQUIRED_COLUMNS if column not in frame.columns
+    ]
     invalid_rows: list[str] = []
     ready_indices: list[int] = []
     if missing_columns or frame.empty:
         return missing_columns, ready_indices, invalid_rows
     for index, row in frame.iterrows():
-        missing = [column for column in FUNDING_TEMPLATE_REQUIRED_COLUMNS if str(row.get(column, "")).strip() == ""]
+        missing = [
+            column
+            for column in FUNDING_TEMPLATE_REQUIRED_COLUMNS
+            if str(row.get(column, "")).strip() == ""
+        ]
         invalid = []
         market = str(row.get("market", "")).strip()
         if market:
@@ -2684,7 +3503,9 @@ def research_spine(
     reports.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, object]] = []
     objective_status, objective_detail = _project_objective_spine_status()
-    rows.append(_spine_row(step="project_objective", status=objective_status, detail=objective_detail))
+    rows.append(
+        _spine_row(step="project_objective", status=objective_status, detail=objective_detail)
+    )
 
     try:
         paths = write_pair_detail_reports(input_dir, reports)
@@ -2703,7 +3524,11 @@ def research_spine(
         return frame
 
     readiness = priority_readiness_report()
-    rows.append(_spine_row(step="priority_readiness", status="completed", detail="reports/priority_readiness.csv"))
+    rows.append(
+        _spine_row(
+            step="priority_readiness", status="completed", detail="reports/priority_readiness.csv"
+        )
+    )
 
     gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
     history_gate = _gate_ready(gates, "pair_detail_history")
@@ -2713,7 +3538,8 @@ def research_spine(
             _spine_row(
                 step="run_pair_detail_experiments",
                 status="skipped",
-                detail=_gate_blocker(gates, "pair_detail_history") or "pair_detail_history_not_ready",
+                detail=_gate_blocker(gates, "pair_detail_history")
+                or "pair_detail_history_not_ready",
             )
         )
     elif require_two_leg and not two_leg_gate:
@@ -2721,14 +3547,19 @@ def research_spine(
             _spine_row(
                 step="run_pair_detail_experiments",
                 status="skipped",
-                detail=_gate_blocker(gates, "pair_detail_two_leg_execution_history") or "two_leg_history_not_ready",
+                detail=_gate_blocker(gates, "pair_detail_two_leg_execution_history")
+                or "two_leg_history_not_ready",
             )
         )
     else:
-        datasets = datasets_from_pair_detail_snapshots(input_dir, require_research_usable=require_two_leg)
+        datasets = datasets_from_pair_detail_snapshots(
+            input_dir, require_research_usable=require_two_leg
+        )
         datasets = _enrich_datasets_with_funding(datasets, funding_path)
         datasets = [
-            PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True)))
+            PairDataset(
+                dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+            )
             for dataset in datasets
         ]
         if not datasets:
@@ -2756,7 +3587,11 @@ def research_spine(
             )
             priority_readiness_report()
             rows.append(
-                _spine_row(step="priority_readiness_after_experiments", status="completed", detail="reports/priority_readiness.csv")
+                _spine_row(
+                    step="priority_readiness_after_experiments",
+                    status="completed",
+                    detail="reports/priority_readiness.csv",
+                )
             )
 
     frame = pd.DataFrame(rows)
@@ -2769,7 +3604,9 @@ def print_research_spine(
     require_two_leg: bool = True,
     funding_path: Path | None = None,
 ) -> None:
-    frame = research_spine(input_dir=input_dir, require_two_leg=require_two_leg, funding_path=funding_path)
+    frame = research_spine(
+        input_dir=input_dir, require_two_leg=require_two_leg, funding_path=funding_path
+    )
     print(frame.to_string(index=False))
     print(f"research_spine_report: {ROOT / 'reports' / 'research_spine.csv'}")
 
@@ -2796,15 +3633,21 @@ def funded_research_spine(
                 detail="missing_funding_path",
             )
         )
-        rows.append(_spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready"))
+        rows.append(
+            _spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready")
+        )
         frame = pd.DataFrame(rows)
         _write_csv_atomic(frame, output)
         return frame
     try:
-        coverage = funding_coverage_report(funding_path, output_path=reports / "funding_coverage.csv")
+        coverage = funding_coverage_report(
+            funding_path, output_path=reports / "funding_coverage.csv"
+        )
     except SystemExit as exc:
         rows.append(_spine_row(step="funding_coverage", status="blocked", detail=str(exc)))
-        rows.append(_spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready"))
+        rows.append(
+            _spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready")
+        )
         frame = pd.DataFrame(rows)
         _write_csv_atomic(frame, output)
         return frame
@@ -2828,7 +3671,9 @@ def funded_research_spine(
                 ),
             )
         )
-        rows.append(_spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready"))
+        rows.append(
+            _spine_row(step="research_spine", status="skipped", detail="funding_coverage_not_ready")
+        )
         frame = pd.DataFrame(rows)
         _write_csv_atomic(frame, output)
         return frame
@@ -2839,9 +3684,15 @@ def funded_research_spine(
             detail=f"ready_pairs={ready_pairs}/{total_pairs};funding_path={funding_path}",
         )
     )
-    spine = research_spine(input_dir=input_dir, require_two_leg=require_two_leg, funding_path=funding_path)
-    spine_status = "completed" if not spine.empty and not (spine["status"] == "failed").any() else "failed"
-    refreshed_coverage = funding_coverage_report(funding_path, output_path=reports / "funding_coverage.csv")
+    spine = research_spine(
+        input_dir=input_dir, require_two_leg=require_two_leg, funding_path=funding_path
+    )
+    spine_status = (
+        "completed" if not spine.empty and not (spine["status"] == "failed").any() else "failed"
+    )
+    refreshed_coverage = funding_coverage_report(
+        funding_path, output_path=reports / "funding_coverage.csv"
+    )
     refreshed_ready_pairs = int(
         refreshed_coverage.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
     )
@@ -2857,7 +3708,9 @@ def funded_research_spine(
         )
     )
     acceptance = strategy_acceptance_checklist_report(reports / "strategy_acceptance_checklist.csv")
-    ready_steps = int(acceptance.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
+    ready_steps = int(
+        acceptance.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+    )
     rows.append(
         _spine_row(
             step="strategy_acceptance_checklist",
@@ -2877,7 +3730,9 @@ def print_funded_research_spine(
     output_path: Path | None = None,
 ) -> None:
     output = output_path or ROOT / "reports" / "funded_research_spine.csv"
-    frame = funded_research_spine(funding_path, input_dir=input_dir, require_two_leg=require_two_leg, output_path=output)
+    frame = funded_research_spine(
+        funding_path, input_dir=input_dir, require_two_leg=require_two_leg, output_path=output
+    )
     print(frame.to_string(index=False))
     print(f"funded_research_spine_report: {output}")
 
@@ -3072,7 +3927,9 @@ def crawl_crypto_wizards_min5_backtests(
         )
     except CryptoWizardsFetchError as exc:
         raise SystemExit(f"Crypto Wizards Min5 backtest crawl failed: {exc}") from exc
-    _print_imported_pair_quality(paths, pair_dir, label="crypto_wizards_min5_backtest_histories_written")
+    _print_imported_pair_quality(
+        paths, pair_dir, label="crypto_wizards_min5_backtest_histories_written"
+    )
     if run_research and paths:
         print("running_pair_detail_experiments: true")
         run_pair_detail_experiments(pair_dir)
@@ -3087,15 +3944,28 @@ def _print_imported_pair_quality(
     label: str = "crypto_wizards_min5_histories_written",
 ) -> None:
     report_paths = write_pair_detail_reports(pair_dir, ROOT / "reports")
-    quality = pd.DataFrame(pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS)
-    imported_quality = quality[quality["path"].isin({str(path) for path in paths})] if not quality.empty else quality
+    quality = pd.DataFrame(
+        pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS
+    )
+    imported_quality = (
+        quality[quality["path"].isin({str(path) for path in paths})]
+        if not quality.empty
+        else quality
+    )
     print(f"{label}: {len(paths)}")
     for path in paths:
         print(f"pair_history: {path}")
     if not imported_quality.empty:
         print(
             imported_quality[
-                ["pair", "interval", "history_rows", "research_usable", "execution_usable", "quality_blockers"]
+                [
+                    "pair",
+                    "interval",
+                    "history_rows",
+                    "research_usable",
+                    "execution_usable",
+                    "quality_blockers",
+                ]
             ].to_string(index=False)
         )
     print(f"pair_detail_quality_report: {report_paths['quality']}")
@@ -3121,7 +3991,9 @@ def import_crypto_wizards_zscores_history(
     except json.JSONDecodeError as exc:
         raise SystemExit(f"input is not valid JSON: {input_path}: {exc}") from exc
     if not isinstance(response, dict):
-        raise SystemExit(f"input JSON must be an object response from /v1beta/zscores: {input_path}")
+        raise SystemExit(
+            f"input JSON must be an object response from /v1beta/zscores: {input_path}"
+        )
 
     pair_dir = output_dir or ROOT / "data" / "raw" / "pair_details"
     request = CryptoWizardsHistoryRequest(
@@ -3135,13 +4007,22 @@ def import_crypto_wizards_zscores_history(
     )
     path = write_zscores_pair_payload(request, response, pair_dir)
     report_paths = write_pair_detail_reports(pair_dir, ROOT / "reports")
-    quality = pd.DataFrame(pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS)
+    quality = pd.DataFrame(
+        pair_detail_quality_report(pair_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS
+    )
     imported_quality = quality[quality["path"] == str(path)] if not quality.empty else quality
     print(f"imported_crypto_wizards_zscores_history: {path}")
     if not imported_quality.empty:
         print(
             imported_quality[
-                ["pair", "interval", "history_rows", "research_usable", "execution_usable", "quality_blockers"]
+                [
+                    "pair",
+                    "interval",
+                    "history_rows",
+                    "research_usable",
+                    "execution_usable",
+                    "quality_blockers",
+                ]
             ].to_string(index=False)
         )
     print(f"pair_detail_quality_report: {report_paths['quality']}")
@@ -3172,7 +4053,9 @@ def import_crypto_wizards_backtest_history(
     except json.JSONDecodeError as exc:
         raise SystemExit(f"input is not valid JSON: {input_path}: {exc}") from exc
     if not isinstance(response, dict):
-        raise SystemExit(f"input JSON must be an object response from /v1beta/backtest: {input_path}")
+        raise SystemExit(
+            f"input JSON must be an object response from /v1beta/backtest: {input_path}"
+        )
 
     pair_dir = output_dir or ROOT / "data" / "raw" / "pair_details"
     request = CryptoWizardsHistoryRequest(
@@ -3185,7 +4068,9 @@ def import_crypto_wizards_backtest_history(
         roll_w=roll_w,
     )
     path = write_backtest_pair_payload(request, response, pair_dir)
-    _print_imported_pair_quality([path], pair_dir, label="imported_crypto_wizards_backtest_histories")
+    _print_imported_pair_quality(
+        [path], pair_dir, label="imported_crypto_wizards_backtest_histories"
+    )
     if run_research:
         print("running_pair_detail_experiments: true")
         run_pair_detail_experiments(pair_dir)
@@ -3216,7 +4101,9 @@ def verify_crypto_wizards_live_artifacts() -> None:
     if not live_dictionary.exists():
         raise SystemExit("missing docs/crypto_wizards_live_field_dictionary.csv")
     report = crypto_wizards_live_coverage_report()
-    ecm_fields = report[(report["type"] == "field") & report["name"].isin({"ecm_x", "ecm_y", "ecm_strength"})]
+    ecm_fields = report[
+        (report["type"] == "field") & report["name"].isin({"ecm_x", "ecm_y", "ecm_strength"})
+    ]
     missing_ecm = sorted(ecm_fields.loc[~ecm_fields["present_in_live"], "name"].astype(str))
     print(f"live_ecm_fields_present: {not missing_ecm}")
     print(f"live_ecm_missing_fields: {','.join(missing_ecm) if missing_ecm else 'none'}")
@@ -3229,7 +4116,9 @@ def crypto_wizards_live_coverage_report() -> pd.DataFrame:
         raise SystemExit("missing docs/crypto_wizards_live_field_dictionary.csv")
 
     live_fields = pd.read_csv(live_dictionary)
-    normalized_live, live_sources = _canonical_live_fields(live_fields["field"].dropna().astype(str))
+    normalized_live, live_sources = _canonical_live_fields(
+        live_fields["field"].dropna().astype(str)
+    )
     pair_detail_fields, pair_detail_sources = _pair_detail_live_fields()
     all_fields = set(normalized_live) | set(pair_detail_fields)
     all_sources = _merge_sources(live_sources, pair_detail_sources)
@@ -3263,7 +4152,8 @@ def crypto_wizards_live_coverage_report() -> pd.DataFrame:
                 "present_in_live": not missing,
                 "missing_fields": ";".join(missing),
                 "prescanned_present": False,
-                "pair_detail_present": bool(required) and set(required).issubset(pair_detail_fields),
+                "pair_detail_present": bool(required)
+                and set(required).issubset(pair_detail_fields),
                 "source_fields": "",
                 "notes": strategy.family,
             }
@@ -3309,10 +4199,14 @@ def _canonical_live_fields(fields: pd.Series) -> tuple[set[str], dict[str, list[
         sources.setdefault("conditional_probabilities", source_pair)
     if "conditional_probability_distortion" in canonical_fields:
         canonical_fields.add("conditional_probabilities")
-        sources.setdefault("conditional_probabilities", sources.get("conditional_probability_distortion", []))
+        sources.setdefault(
+            "conditional_probabilities", sources.get("conditional_probability_distortion", [])
+        )
     if "conditional_probabilities" in canonical_fields:
         canonical_fields.add("conditional_probability_distortion")
-        sources.setdefault("conditional_probability_distortion", sources.get("conditional_probabilities", []))
+        sources.setdefault(
+            "conditional_probability_distortion", sources.get("conditional_probabilities", [])
+        )
     return canonical_fields, sources
 
 
@@ -3340,7 +4234,10 @@ def _pair_detail_live_fields() -> tuple[set[str], dict[str, list[str]]]:
             sources.setdefault("ecm_strength", []).append(ECM_FIELD_SOURCE["ecm_strength"])
         if snapshot.u1_given_u2 is not None and snapshot.u2_given_u1 is not None:
             fields.update({"conditional_probabilities", "conditional_probability_distortion"})
-            source_pair = [f"pair_detail:{snapshot.pair}:u1_given_u2", f"pair_detail:{snapshot.pair}:u2_given_u1"]
+            source_pair = [
+                f"pair_detail:{snapshot.pair}:u1_given_u2",
+                f"pair_detail:{snapshot.pair}:u2_given_u1",
+            ]
             sources.setdefault("conditional_probabilities", source_pair)
             sources.setdefault("conditional_probability_distortion", source_pair)
     return fields, sources
@@ -3397,8 +4294,15 @@ def check_dydx_config() -> None:
         indexer_adapter_wired=build_dydx_indexer_adapter(config) is not None,
     )
     if order_adapter_error:
-        report["blockers"] = [*report["blockers"], f"invalid_dydx_order_client_adapter:{order_adapter_error}"]
-    elif adapter_contract["configured"] and adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]:
+        report["blockers"] = [
+            *report["blockers"],
+            f"invalid_dydx_order_client_adapter:{order_adapter_error}",
+        ]
+    elif (
+        adapter_contract["configured"]
+        and adapter_contract["valid"]
+        and not adapter_contract["exchange_submission_capable"]
+    ):
         report["blockers"] = [*report["blockers"], "record_only_dydx_order_client_adapter"]
     report["ready_for_paper_submission"] = len(report["blockers"]) == 0
     for key, value in report.items():
@@ -3439,6 +4343,11 @@ def print_dydx_order_adapter_contract(output_path: Path | None = None) -> None:
 
 
 def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
+    with _local_env_for_reports():
+        return _dydx_execution_checklist_report(output_path)
+
+
+def _dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "dydx_execution_checklist.csv"
@@ -3446,7 +4355,9 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
     indexer_wired = build_dydx_indexer_adapter(config) is not None
     order_client, order_adapter_error = _load_dydx_order_client_adapter()
     adapter_contract = validate_dydx_order_client_adapter()
-    adapter_submission_capable = bool(adapter_contract["valid"] and adapter_contract["exchange_submission_capable"])
+    adapter_submission_capable = bool(
+        adapter_contract["valid"] and adapter_contract["exchange_submission_capable"]
+    )
     readiness = dydx_readiness_report(
         config=config,
         order_client_wired=order_client is not None and adapter_submission_capable,
@@ -3457,8 +4368,10 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
     two_leg_passing_pairs = 0
     production_eligible = 0
     if acceptance_path.exists():
-        acceptance = pd.read_csv(acceptance_path)
-        production_eligible = int(acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum())
+        acceptance = _augmented_acceptance_frame(ROOT / "reports")
+        production_eligible = int(
+            acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum()
+        )
         two_leg_passing_pairs = _max_int_column(acceptance, "two_leg_passing_pairs")
         strategy_ready = production_eligible > 0 and two_leg_passing_pairs > 0
 
@@ -3466,7 +4379,9 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
         _execution_check_row(
             step="indexer_market_data",
             ready=bool(readiness["dydx_indexer_adapter_wired"]),
-            blocker="" if readiness["dydx_indexer_adapter_wired"] else "missing_dydx_indexer_adapter",
+            blocker=""
+            if readiness["dydx_indexer_adapter_wired"]
+            else "missing_dydx_indexer_adapter",
             evidence=f"rest_indexer={readiness['rest_indexer']};websocket_indexer={readiness['websocket_indexer']}",
             next_action="read market/funding data from testnet indexer"
             if readiness["dydx_indexer_adapter_wired"]
@@ -3524,9 +4439,9 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
                 "record_only_dydx_order_client_adapter"
                 if adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]
                 else (
-                "invalid_dydx_order_client_adapter"
-                if order_adapter_error or adapter_contract["configured"]
-                else "missing_dydx_order_client_adapter"
+                    "invalid_dydx_order_client_adapter"
+                    if order_adapter_error or adapter_contract["configured"]
+                    else "missing_dydx_order_client_adapter"
                 )
             ),
             evidence=(
@@ -3548,9 +4463,9 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
                 "replace record-only adapter with an authenticated dYdX testnet order adapter"
                 if adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]
                 else (
-                "fix DYDX_TESTNET_ORDER_CLIENT_ADAPTER module:object path"
-                if order_adapter_error or adapter_contract["configured"]
-                else "set DYDX_TESTNET_ORDER_CLIENT_ADAPTER to a module:object implementing place_order"
+                    "fix DYDX_TESTNET_ORDER_CLIENT_ADAPTER module:object path"
+                    if order_adapter_error or adapter_contract["configured"]
+                    else "set DYDX_TESTNET_ORDER_CLIENT_ADAPTER to a module:object implementing place_order"
                 )
             ),
         ),
@@ -3581,12 +4496,126 @@ def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataF
             ready=paper_ready,
             blocker="" if paper_ready else ";".join(blockers),
             evidence=f"dydx_ready={readiness['ready_for_paper_submission']};strategy_ready={strategy_ready}",
-            next_action="paper submission is allowed by current gates" if paper_ready else "do not submit paper orders",
+            next_action="paper submission is allowed by current gates"
+            if paper_ready
+            else "do not submit paper orders",
         )
     )
     frame = pd.DataFrame(rows)
     _write_csv_atomic(frame, output)
     return frame
+
+
+def _venue_cost_model_profile(venue: str) -> tuple[str, bool, str]:
+    mapping = {
+        "dydx": ("dydx_research_model", True, "dydx_cost_model_ready"),
+        "hyperliquid": (
+            "hyperliquid_research_model_pending",
+            False,
+            "cost_model_alignment_pending",
+        ),
+        "binance": (
+            "binance_spot_fee_or_borrow_not_implemented",
+            False,
+            "cost_model_alignment_pending",
+        ),
+        "binanceus": (
+            "binanceus_spot_fee_or_borrow_not_implemented",
+            False,
+            "cost_model_alignment_pending",
+        ),
+        "coinbase": ("coinbase_venue_model_not_wired", False, "cost_model_alignment_pending"),
+        "bybit": ("bybit_venue_model_not_wired", False, "cost_model_alignment_pending"),
+    }
+    normalized = normalize_venue_name(venue)
+    profile, ready, next_action = mapping.get(
+        normalized, ("unknown_venue_cost_model", False, "wire_exchange_cost_model_before_paper")
+    )
+    return profile, ready, next_action
+
+
+def _normalize_report_pair(value: object) -> str:
+    return str(value or "").replace("_", "-").replace("/", "-").upper().strip()
+
+
+def _check_exchange_cost_model_alignment_from_quality(results: pd.DataFrame) -> dict[str, object]:
+    quality = _read_csv_or_empty(ROOT / "reports" / "pair_detail_quality_report.csv")
+    if quality.empty:
+        return {
+            "ready": False,
+            "blocker": "pair_detail_quality_report_missing",
+            "evidence": "pair_detail_quality_report_missing;must_validate_cost_model_alignment",
+            "next_action": "run pair-detail quality report to verify execution model coverage",
+            "missing_pairs": "",
+        }
+
+    if (
+        quality.empty
+        or "pair" not in quality.columns
+        or (
+            "execution_usable" not in quality.columns
+            and "research_execution_usable" not in quality.columns
+        )
+    ):
+        return {
+            "ready": False,
+            "blocker": "pair_detail_quality_report_incomplete",
+            "evidence": "pair_detail_quality_report_missing_or_incomplete;required_execution_usable_flags_missing",
+            "next_action": "rebuild pair_detail_quality_report.csv via pair_detail quality path",
+            "missing_pairs": "",
+        }
+
+    tested_pairs = {
+        str(pair) for pair in results.get("pair", pd.Series(dtype=str)).dropna().astype(str)
+    }
+    if not tested_pairs:
+        return {
+            "ready": True,
+            "blocker": "",
+            "evidence": "no_pairs_to_validate_cost_model_alignment",
+            "next_action": "run experiments first",
+            "missing_pairs": "",
+        }
+
+    q = quality.copy()
+    q["pair_normalized"] = q["pair"].map(_normalize_report_pair)
+    tested_normalized = {_normalize_report_pair(pair) for pair in tested_pairs}
+    aligned = True
+    blockers: list[str] = []
+    missing: list[str] = []
+    for pair in tested_normalized:
+        matched = q[q["pair_normalized"] == pair]
+        if matched.empty:
+            aligned = False
+            blockers.append(f"missing_cost_quality_row:{pair}")
+            missing.append(pair)
+            continue
+        execution_ready = bool(
+            matched.get("execution_usable", pd.Series(dtype=bool)).fillna(False).any()
+        )
+        research_ready = bool(
+            matched.get("research_execution_usable", pd.Series(dtype=bool)).fillna(False).any()
+        )
+        if not execution_ready and not research_ready:
+            aligned = False
+            blockers.append(f"missing_cost_execution_alignment:{pair}")
+            missing.append(pair)
+
+    return {
+        "ready": aligned,
+        "blocker": ";".join(sorted(set(blockers))),
+        "evidence": (
+            f"tested_pairs={len(tested_normalized)};"
+            f"quality_rows={len(quality)};"
+            f"misaligned_pairs={';'.join(missing) or 'none'}"
+        ),
+        "next_action": (
+            "refresh pair_detail_quality_report and fill venue-specific cost/slippage/funding assumptions"
+            if blockers
+            else "cost-model alignment has venue-specific evidence in quality report"
+        ),
+        "missing_pairs": ";".join(sorted(set(missing))),
+    }
 
 
 def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
@@ -3597,13 +4626,25 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
     results_path = reports / "experiment_results.csv"
     funding_coverage_path = reports / "funding_coverage.csv"
     funding_requirements_path = reports / "funding_requirements.csv"
-    acceptance = _read_csv_or_empty(acceptance_path)
+    acceptance = _augmented_acceptance_frame(reports)
     results = _read_csv_or_empty(results_path)
     funding_coverage = _read_csv_or_empty(funding_coverage_path)
 
-    evaluated_runs = int((results.get("status", pd.Series(dtype=str)) == "evaluated").sum()) if not results.empty else 0
-    two_leg_runs = int((results.get("backtest_mode", pd.Series(dtype=str)) == "two_leg").sum()) if not results.empty else 0
-    spread_runs = int((results.get("backtest_mode", pd.Series(dtype=str)) == "spread").sum()) if not results.empty else 0
+    evaluated_runs = (
+        int((results.get("status", pd.Series(dtype=str)) == "evaluated").sum())
+        if not results.empty
+        else 0
+    )
+    two_leg_runs = (
+        int((results.get("backtest_mode", pd.Series(dtype=str)) == "two_leg").sum())
+        if not results.empty
+        else 0
+    )
+    spread_runs = (
+        int((results.get("backtest_mode", pd.Series(dtype=str)) == "spread").sum())
+        if not results.empty
+        else 0
+    )
     production_eligible = _sum_bool_column(acceptance, "production_eligible")
     preferred_eligible = _sum_bool_column(acceptance, "preferred_eligible")
     max_two_leg_pairs_tested = _max_int_column(acceptance, "two_leg_pairs_tested")
@@ -3611,13 +4652,17 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
     max_two_leg_passing_pairs = _max_int_column(acceptance, "two_leg_passing_pairs")
     max_total_trades = _max_int_column(acceptance, "total_trades")
     required_cost_buckets = _required_cost_buckets_from_acceptance(acceptance)
-    missing_cost_buckets = sorted(required_cost_buckets.difference(_cost_buckets_from_results(results)))
+    missing_cost_buckets = sorted(
+        required_cost_buckets.difference(_cost_buckets_from_results(results))
+    )
     blocker_counts = _acceptance_blocker_counts(acceptance)
     top_blockers = ";".join(f"{name}:{count}" for name, count in blocker_counts[:5])
     two_leg_input_blocker = _two_leg_execution_input_blocker(acceptance)
     missing_two_leg_inputs = _missing_two_leg_inputs_from_acceptance(acceptance)
     funding_missing = "funding_x" in missing_two_leg_inputs or "funding_y" in missing_two_leg_inputs
-    funding_requirements = _funding_requirements_for_preflight(funding_missing, funding_requirements_path)
+    funding_requirements = _funding_requirements_for_preflight(
+        funding_missing, funding_requirements_path
+    )
     funding_preflight = _funding_preflight_status(
         funding_coverage,
         funding_missing,
@@ -3625,6 +4670,7 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
         funding_requirements,
         funding_requirements_path,
     )
+    cost_model_alignment = _check_exchange_cost_model_alignment_from_quality(results)
 
     rows = [
         _execution_check_row(
@@ -3632,12 +4678,16 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
             ready=evaluated_runs > 0,
             blocker="" if evaluated_runs > 0 else "missing_evaluated_experiments",
             evidence=f"results_exists={results_path.exists()};evaluated_runs={evaluated_runs};spread_runs={spread_runs};two_leg_runs={two_leg_runs}",
-            next_action="continue acceptance diagnostics" if evaluated_runs > 0 else "run experiments on real pair-detail history",
+            next_action="continue acceptance diagnostics"
+            if evaluated_runs > 0
+            else "run experiments on real pair-detail history",
         ),
         _execution_check_row(
             step="two_leg_coverage",
             ready=max_two_leg_pairs_tested >= 2 and two_leg_runs > 0,
-            blocker="" if max_two_leg_pairs_tested >= 2 and two_leg_runs > 0 else "missing_two_leg_backtests",
+            blocker=""
+            if max_two_leg_pairs_tested >= 2 and two_leg_runs > 0
+            else "missing_two_leg_backtests",
             evidence=f"two_leg_runs={two_leg_runs};max_two_leg_pairs_tested={max_two_leg_pairs_tested}",
             next_action="evaluate strategy acceptance on two-leg results"
             if max_two_leg_pairs_tested >= 2 and two_leg_runs > 0
@@ -3660,6 +4710,13 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
             ),
         ),
         _execution_check_row(
+            step="exchange_cost_model_alignment",
+            ready=bool(cost_model_alignment["ready"]),
+            blocker=str(cost_model_alignment["blocker"]),
+            evidence=cost_model_alignment["evidence"],
+            next_action=cost_model_alignment["next_action"],
+        ),
+        _execution_check_row(
             step="funding_preflight",
             ready=funding_preflight["ready"],
             blocker=funding_preflight["blocker"],
@@ -3669,7 +4726,9 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
         _execution_check_row(
             step="cost_bucket_coverage",
             ready=not missing_cost_buckets and bool(required_cost_buckets),
-            blocker="" if not missing_cost_buckets and bool(required_cost_buckets) else "missing_required_cost_buckets",
+            blocker=""
+            if not missing_cost_buckets and bool(required_cost_buckets)
+            else "missing_required_cost_buckets",
             evidence=(
                 f"required_cost_buckets={';'.join(sorted(required_cost_buckets)) or 'unknown'};"
                 f"missing_cost_buckets={';'.join(missing_cost_buckets) or 'none'}"
@@ -3718,7 +4777,7 @@ def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.D
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "strategy_failure_attribution.csv"
     results = _read_csv_or_empty(reports / "experiment_results.csv")
-    acceptance = _read_csv_or_empty(_acceptance_report_path())
+    acceptance = _augmented_acceptance_frame(reports)
     if results.empty:
         frame = pd.DataFrame(
             [
@@ -3735,13 +4794,29 @@ def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.D
         return frame
 
     rows: list[dict[str, object]] = []
-    acceptance_by_id = acceptance.set_index("strategy_id") if "strategy_id" in acceptance.columns and not acceptance.empty else pd.DataFrame()
-    for (strategy_id, strategy_name, family), group in results.groupby(["strategy_id", "strategy_name", "family"], dropna=False):
+    acceptance_by_id = (
+        acceptance.set_index("strategy_id")
+        if "strategy_id" in acceptance.columns and not acceptance.empty
+        else pd.DataFrame()
+    )
+    for (strategy_id, strategy_name, family), group in results.groupby(
+        ["strategy_id", "strategy_name", "family"], dropna=False
+    ):
         evaluated = group[group.get("status", pd.Series(dtype=str)) == "evaluated"].copy()
         skipped = group[group.get("status", pd.Series(dtype=str)) != "evaluated"].copy()
-        eligible = int(evaluated.get("eligible", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()) if not evaluated.empty else 0
-        reason_counts = _reason_counts(evaluated.get("reason", pd.Series(dtype=str))) if not evaluated.empty else []
-        skip_counts = _reason_counts(skipped.get("reason", pd.Series(dtype=str))) if not skipped.empty else []
+        eligible = (
+            int(evaluated.get("eligible", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
+            if not evaluated.empty
+            else 0
+        )
+        reason_counts = (
+            _reason_counts(evaluated.get("reason", pd.Series(dtype=str)))
+            if not evaluated.empty
+            else []
+        )
+        skip_counts = (
+            _reason_counts(skipped.get("reason", pd.Series(dtype=str))) if not skipped.empty else []
+        )
         missing_columns = sorted(
             {
                 item
@@ -3751,9 +4826,23 @@ def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.D
                 if item
             }
         )
-        pair_count = int(evaluated.get("pair", pd.Series(dtype=str)).nunique()) if not evaluated.empty else 0
-        total_trades = int(pd.to_numeric(evaluated.get("trades", pd.Series(dtype=float)), errors="coerce").fillna(0).sum())
-        max_trades = int(pd.to_numeric(evaluated.get("trades", pd.Series(dtype=float)), errors="coerce").fillna(0).max()) if not evaluated.empty else 0
+        pair_count = (
+            int(evaluated.get("pair", pd.Series(dtype=str)).nunique()) if not evaluated.empty else 0
+        )
+        total_trades = int(
+            pd.to_numeric(evaluated.get("trades", pd.Series(dtype=float)), errors="coerce")
+            .fillna(0)
+            .sum()
+        )
+        max_trades = (
+            int(
+                pd.to_numeric(evaluated.get("trades", pd.Series(dtype=float)), errors="coerce")
+                .fillna(0)
+                .max()
+            )
+            if not evaluated.empty
+            else 0
+        )
         median_pf = _median_numeric(evaluated, "profit_factor")
         median_sharpe = _median_numeric(evaluated, "sharpe")
         worst_drawdown = _max_numeric(evaluated, "max_drawdown")
@@ -3799,8 +4888,12 @@ def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.D
                 "worst_drawdown": worst_drawdown,
                 "median_expectancy": median_expectancy,
                 "median_cost_drag": median_cost_drag,
-                "top_run_failures": ";".join(f"{reason}:{count}" for reason, count in reason_counts[:5]),
-                "top_skip_reasons": ";".join(f"{reason}:{count}" for reason, count in skip_counts[:5]),
+                "top_run_failures": ";".join(
+                    f"{reason}:{count}" for reason, count in reason_counts[:5]
+                ),
+                "top_skip_reasons": ";".join(
+                    f"{reason}:{count}" for reason, count in skip_counts[:5]
+                ),
                 "missing_columns": ";".join(missing_columns),
                 "acceptance_reason": acceptance_reason,
                 "preferred_reason": preferred_reason,
@@ -3828,13 +4921,21 @@ def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFram
     failures = strategy_failure_attribution_report(reports / "strategy_failure_attribution.csv")
     results = _read_csv_or_empty(reports / "experiment_results.csv")
     quality = _read_csv_or_empty(reports / "pair_detail_quality_report.csv")
-    acceptance = _read_csv_or_empty(_acceptance_report_path())
+    acceptance = _augmented_acceptance_frame(reports)
 
     rows: list[dict[str, object]] = []
-    evaluated = results[results.get("status", pd.Series(dtype=str)) == "evaluated"].copy() if not results.empty else pd.DataFrame()
+    evaluated = (
+        results[results.get("status", pd.Series(dtype=str)) == "evaluated"].copy()
+        if not results.empty
+        else pd.DataFrame()
+    )
     if not evaluated.empty:
-        trades = pd.to_numeric(evaluated.get("trades", pd.Series(dtype=float)), errors="coerce").fillna(0)
-        observations = pd.to_numeric(evaluated.get("observations", pd.Series(dtype=float)), errors="coerce").fillna(0)
+        trades = pd.to_numeric(
+            evaluated.get("trades", pd.Series(dtype=float)), errors="coerce"
+        ).fillna(0)
+        observations = pd.to_numeric(
+            evaluated.get("observations", pd.Series(dtype=float)), errors="coerce"
+        ).fillna(0)
         max_trades = int(trades.max())
         total_trades = int(trades.sum())
         pairs_tested = int(evaluated.get("pair", pd.Series(dtype=str)).nunique())
@@ -3869,11 +4970,15 @@ def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFram
     threshold_summary = _read_csv_or_empty(reports / "zscore_threshold_sweep_summary.csv")
     if not threshold_summary.empty:
         best_threshold = threshold_summary.copy()
-        best_threshold["_max_trades"] = pd.to_numeric(best_threshold.get("max_trades", pd.Series(dtype=float)), errors="coerce").fillna(0)
+        best_threshold["_max_trades"] = pd.to_numeric(
+            best_threshold.get("max_trades", pd.Series(dtype=float)), errors="coerce"
+        ).fillna(0)
         best_threshold["_passing_pairs"] = pd.to_numeric(
             best_threshold.get("passing_pairs", pd.Series(dtype=float)), errors="coerce"
         ).fillna(0)
-        best_threshold = best_threshold.sort_values(["_passing_pairs", "_max_trades"], ascending=[False, False]).iloc[0]
+        best_threshold = best_threshold.sort_values(
+            ["_passing_pairs", "_max_trades"], ascending=[False, False]
+        ).iloc[0]
         passing_pairs = int(best_threshold.get("_passing_pairs", 0))
         max_sweep_trades = int(best_threshold.get("_max_trades", 0))
         rows.append(
@@ -3910,7 +5015,9 @@ def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFram
                 item = missing_counts.setdefault(column, {"strategies": set(), "families": set()})
                 item["strategies"].add(_md_text(row.get("strategy_name", "")))
                 item["families"].add(_md_text(row.get("family", "")))
-        for column, item in sorted(missing_counts.items(), key=lambda kv: (-len(kv[1]["strategies"]), kv[0])):
+        for column, item in sorted(
+            missing_counts.items(), key=lambda kv: (-len(kv[1]["strategies"]), kv[0])
+        ):
             strategies = sorted(item["strategies"])
             families = sorted(item["families"])
             rows.append(
@@ -3928,8 +5035,12 @@ def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFram
             )
 
     if not quality.empty:
-        research_usable = int(quality.get("research_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
-        execution_usable = int(quality.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
+        research_usable = int(
+            quality.get("research_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+        )
+        execution_usable = int(
+            quality.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+        )
         rows.append(
             {
                 "priority": 3,
@@ -3946,7 +5057,9 @@ def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFram
 
     production_eligible = 0
     if not acceptance.empty and "production_eligible" in acceptance.columns:
-        production_eligible = int(acceptance["production_eligible"].fillna(False).astype(bool).sum())
+        production_eligible = int(
+            acceptance["production_eligible"].fillna(False).astype(bool).sum()
+        )
     rows.append(
         {
             "priority": 4,
@@ -3988,7 +5101,12 @@ def zscore_threshold_sweep_report(
     datasets = datasets_from_pair_detail_snapshots(input_dir, require_research_usable=True)
     if funding_path.exists():
         datasets = _enrich_datasets_with_funding(datasets, funding_path)
-    datasets = [PairDataset(dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))) for dataset in datasets]
+    datasets = [
+        PairDataset(
+            dataset.pair, classify_regimes(dataset.frame, RegimeConfig(preserve_existing=True))
+        )
+        for dataset in datasets
+    ]
     rows: list[dict[str, object]] = []
     cost_buckets = ExperimentConfig().cost_buckets
     for dataset in datasets:
@@ -4039,7 +5157,9 @@ def zscore_threshold_sweep_report(
     return frame
 
 
-def zscore_threshold_sweep_summary(frame: pd.DataFrame, output_path: Path | None = None) -> pd.DataFrame:
+def zscore_threshold_sweep_summary(
+    frame: pd.DataFrame, output_path: Path | None = None
+) -> pd.DataFrame:
     output = output_path or ROOT / "reports" / "zscore_threshold_sweep_summary.csv"
     if frame.empty:
         summary = pd.DataFrame(
@@ -4071,7 +5191,10 @@ def zscore_threshold_sweep_summary(frame: pd.DataFrame, output_path: Path | None
             worst_drawdown=("max_drawdown", "max"),
             passing_pairs=("passes_quality_gate", "sum"),
         )
-        .sort_values(["passing_pairs", "median_trades", "median_profit_factor"], ascending=[False, False, False])
+        .sort_values(
+            ["passing_pairs", "median_trades", "median_profit_factor"],
+            ascending=[False, False, False],
+        )
     )
     summary["diagnosis"] = summary.apply(_threshold_sweep_diagnosis, axis=1)
     _write_csv_atomic(summary, output)
@@ -4084,10 +5207,14 @@ def print_zscore_threshold_sweep(
     output_path: Path | None = None,
 ) -> None:
     output = output_path or ROOT / "reports" / "zscore_threshold_sweep.csv"
-    frame = zscore_threshold_sweep_report(input_dir=input_dir, funding_path=funding_path, output_path=output)
+    frame = zscore_threshold_sweep_report(
+        input_dir=input_dir, funding_path=funding_path, output_path=output
+    )
     print(frame.to_string(index=False))
     print(f"zscore_threshold_sweep: {output}")
-    print(f"zscore_threshold_sweep_summary: {ROOT / 'reports' / 'zscore_threshold_sweep_summary.csv'}")
+    print(
+        f"zscore_threshold_sweep_summary: {ROOT / 'reports' / 'zscore_threshold_sweep_summary.csv'}"
+    )
 
 
 def dydx_pair_expansion_plan_report(
@@ -4127,7 +5254,9 @@ def dydx_pair_expansion_plan_report(
                 hunt_rank = int(rank)
             ranked_rows.append((asset_x, asset_y, hunt_rank, "hunt"))
         ranked_rows = sorted(ranked_rows, key=lambda item: item[2])
-        return [(asset_x, asset_y, 1000 + rank, "hunt") for (asset_x, asset_y, rank, _) in ranked_rows]
+        return [
+            (asset_x, asset_y, 1000 + rank, "hunt") for (asset_x, asset_y, rank, _) in ranked_rows
+        ]
 
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
@@ -4155,7 +5284,9 @@ def dydx_pair_expansion_plan_report(
         seen_pairs.add(key)
         unique_pairs.append((asset_x, asset_y, order, source))
 
-    for order, (asset_x, asset_y, _, source) in enumerate(sorted(unique_pairs, key=lambda item: item[2])):
+    for order, (asset_x, asset_y, _, source) in enumerate(
+        sorted(unique_pairs, key=lambda item: item[2])
+    ):
         left = _normalize_dydx_market(asset_x)
         right = _normalize_dydx_market(asset_y)
         pair_key = frozenset({left, right})
@@ -4163,7 +5294,9 @@ def dydx_pair_expansion_plan_report(
         fetched_info = fetched_pairs.get(pair_key, {})
         already_fetched = bool(fetched_info)
         fresh_candidate = not already_tested and not already_fetched
-        risk_reasons = [risky_markets[market] for market in (left, right) if market in risky_markets]
+        risk_reasons = [
+            risky_markets[market] for market in (left, right) if market in risky_markets
+        ]
         candidate = {
             "order": order,
             "asset_x": left,
@@ -4181,8 +5314,12 @@ def dydx_pair_expansion_plan_report(
         if fresh_candidate:
             fresh_candidates.append(candidate)
 
-    ranked_fresh = sorted(fresh_candidates, key=lambda row: (int(row["risk_score"]), int(row["order"])))
-    rank_by_key = {candidate["pair_key"]: rank for rank, candidate in enumerate(ranked_fresh, start=1)}
+    ranked_fresh = sorted(
+        fresh_candidates, key=lambda row: (int(row["risk_score"]), int(row["order"]))
+    )
+    rank_by_key = {
+        candidate["pair_key"]: rank for rank, candidate in enumerate(ranked_fresh, start=1)
+    }
 
     rows: list[dict[str, object]] = []
     for candidate in candidates:
@@ -4192,12 +5329,16 @@ def dydx_pair_expansion_plan_report(
         already_tested = bool(candidate["already_tested"])
         already_fetched = bool(candidate["already_fetched"])
         fresh_candidate = bool(candidate["fresh_candidate"])
-        fetched_info = candidate["fetched_info"] if isinstance(candidate["fetched_info"], dict) else {}
+        fetched_info = (
+            candidate["fetched_info"] if isinstance(candidate["fetched_info"], dict) else {}
+        )
         rank = rank_by_key.get(pair_key, "")
         if fresh_candidate and rank and int(rank) > max_pairs:
             continue
         pair_id = _pair_id_from_markets(left, right)
-        missing_markets = sorted(market for market in (left, right) if market not in covered_markets)
+        missing_markets = sorted(
+            market for market in (left, right) if market not in covered_markets
+        )
         scheme_flag = f" --indexer-scheme {indexer_scheme}" if indexer_scheme else ""
         fetch_command = (
             "PYTHONPATH=src python3 -m quant_platform.cli fetch-dydx-two-leg-data "
@@ -4271,7 +5412,9 @@ def dydx_long_history_plan_report(
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "dydx_long_history_plan.csv"
-    left, right, resolved_pair_id = _resolve_long_history_pair(pair=pair, asset_x=asset_x, asset_y=asset_y, pair_id=pair_id)
+    left, right, resolved_pair_id = _resolve_long_history_pair(
+        pair=pair, asset_x=asset_x, asset_y=asset_y, pair_id=pair_id
+    )
     end_time = _parse_iso_datetime(to_iso) if to_iso else datetime.now(timezone.utc)
     step = _resolution_timedelta(resolution) * limit
     requested_indexer_base = _indexer_base_with_scheme(indexer_base, indexer_scheme)
@@ -4279,7 +5422,9 @@ def dydx_long_history_plan_report(
     for window in range(1, windows + 1):
         window_to = end_time - step * (window - 1)
         window_from = window_to - step
-        window_dir = ROOT / "data" / "raw" / "dydx_long_history" / resolved_pair_id / f"window_{window:03d}"
+        window_dir = (
+            ROOT / "data" / "raw" / "dydx_long_history" / resolved_pair_id / f"window_{window:03d}"
+        )
         request_rows = dydx_two_leg_request_rows(
             asset_x=left,
             asset_y=right,
@@ -4308,28 +5453,28 @@ def dydx_long_history_plan_report(
                 }
             )
     rows.append(
-            {
-                "window": "",
-                "pair_id": resolved_pair_id,
-                "asset_x": left,
-                "asset_y": right,
+        {
+            "window": "",
+            "pair_id": resolved_pair_id,
+            "asset_x": left,
+            "asset_y": right,
             "resolution": resolution,
             "limit": limit,
-                "from_iso": "",
-                "to_iso": "",
-                "request_name": "long_history_next_step",
-                "method": "LOCAL",
-                "url": "",
-                "curl": "",
-                "save_as": str(ROOT / "data" / "raw" / "dydx_long_history" / resolved_pair_id),
-                "import_command": (
+            "from_iso": "",
+            "to_iso": "",
+            "request_name": "long_history_next_step",
+            "method": "LOCAL",
+            "url": "",
+            "curl": "",
+            "save_as": str(ROOT / "data" / "raw" / "dydx_long_history" / resolved_pair_id),
+            "import_command": (
                 "PYTHONPATH=src python3 -m quant_platform.cli run-dydx-long-history "
                 f"--asset-x {left} --asset-y {right} --pair-id {resolved_pair_id} "
                 f"--windows {windows} --limit {limit} --interval {resolution} "
                 "--derive-hedge-ratio --run-research "
-                    f"{('--indexer-scheme ' + indexer_scheme + ' ') if indexer_scheme else ''}"
-                    "--research-funding-path data/processed/dydx_funding.csv"
-                ),
+                f"{('--indexer-scheme ' + indexer_scheme + ' ') if indexer_scheme else ''}"
+                "--research-funding-path data/processed/dydx_funding.csv"
+            ),
             "notes": (
                 f"{windows} windows x {limit} {resolution} candles targets roughly "
                 f"{windows * limit} bars before overlap/deduplication. Current P2 evidence needs longer histories."
@@ -4389,7 +5534,9 @@ def dydx_long_history_coverage_report(
 ) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
-    resolved_pair_id = _resolve_long_history_pair(pair=pair, asset_x=asset_x, asset_y=asset_y, pair_id=pair_id)[2]
+    resolved_pair_id = _resolve_long_history_pair(
+        pair=pair, asset_x=asset_x, asset_y=asset_y, pair_id=pair_id
+    )[2]
     output = output_path or reports / f"{resolved_pair_id}_dydx_long_history_coverage.csv"
     plan = dydx_long_history_plan_report(
         pair=pair,
@@ -4403,7 +5550,9 @@ def dydx_long_history_coverage_report(
         indexer_scheme=indexer_scheme,
         to_iso=to_iso,
     )
-    requests = plan[plan.get("method", pd.Series(dtype=str)).astype(str).str.upper() == "GET"].copy()
+    requests = plan[
+        plan.get("method", pd.Series(dtype=str)).astype(str).str.upper() == "GET"
+    ].copy()
     if requests.empty:
         raise SystemExit("long-history plan produced no GET rows")
     rows: list[dict[str, object]] = []
@@ -4487,6 +5636,8 @@ def run_dydx_pair_expansion(
     run_research: bool = True,
     skip_fetch: bool = False,
     allow_stale_fetch: bool = False,
+    pair_ids: tuple[str, ...] = (),
+    strategy_ids: tuple[int, ...] | None = None,
 ) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
@@ -4497,8 +5648,21 @@ def run_dydx_pair_expansion(
         indexer_base=indexer_base,
         indexer_scheme=indexer_scheme,
     )
-    tested = plan["already_tested"].map(_coerce_bool) if "already_tested" in plan.columns else pd.Series(False, index=plan.index)
-    fetched = plan["already_fetched"].map(_coerce_bool) if "already_fetched" in plan.columns else pd.Series(False, index=plan.index)
+    if pair_ids:
+        requested_pairs = {_normalize_pair_for_filter(pair) for pair in pair_ids if pair}
+        plan = plan[
+            plan["pair_id"]
+            .map(lambda value: _normalize_pair_for_filter(str(value)))
+            .isin(requested_pairs)
+        ]
+    tested = pd.Series(
+        plan["already_tested"].map(_coerce_bool) if "already_tested" in plan.columns else False,
+        index=plan.index,
+    )
+    fetched = pd.Series(
+        plan["already_fetched"].map(_coerce_bool) if "already_fetched" in plan.columns else False,
+        index=plan.index,
+    )
     fresh = plan[(~tested) & (~fetched)].copy()
     if "rank" in fresh.columns:
         fresh["_rank"] = pd.to_numeric(fresh["rank"], errors="coerce")
@@ -4566,9 +5730,35 @@ def run_dydx_pair_expansion(
     frame = pd.DataFrame(rows)
     _write_csv_atomic(frame, output)
     if run_research:
-        strategy_failure_attribution_report()
-        research_unblock_plan_report()
-        priority_readiness_report()
+        if pair_ids or strategy_ids:
+            if pair_ids:
+                pair_filter = tuple(_parse_pair_list(",".join(pair_ids)))
+                if strategy_ids is None:
+                    strategy_ids = _pair_expansion_recommended_and_all_strategy_ids(
+                        ROOT / "data" / "raw" / "pair_details",
+                        pair_filter,
+                    )
+            else:
+                pair_filter = tuple(plan.get("pair_id", pd.Series(dtype=str)).astype(str).tolist())
+            try:
+                run_pair_detail_experiments(
+                    input_dir=ROOT / "data" / "raw" / "pair_details",
+                    funding_path=ROOT / "data" / "processed" / "dydx_funding.csv",
+                    pair_filter=pair_filter,
+                    strategy_ids=strategy_ids,
+                )
+            except SystemExit as exc:
+                if "no experiment-ready pair-detail history datasets found" in str(exc):
+                    print(
+                        "run_dydx_pair_expansion: research experiments skipped "
+                        f"(no experiment-ready datasets for pair_filter={pair_filter})"
+                    )
+                else:
+                    raise
+        else:
+            strategy_failure_attribution_report()
+            research_unblock_plan_report()
+            priority_readiness_report()
     return frame
 
 
@@ -4584,7 +5774,7 @@ def run_dydx_local_pair_universe(
     input_dir: Path | None = None,
     pair_output_dir: Path | None = None,
     funding_output_path: Path | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     output_path: Path | None = None,
     run_research: bool = True,
 ) -> pd.DataFrame:
@@ -4601,7 +5791,9 @@ def run_dydx_local_pair_universe(
         funding_rows = normalize_funding_rows(_load_funding_rows(funding_csv))
 
     candle_paths = sorted(manual_dir.glob("*_5MINS_candles.json"))
-    markets = sorted({_normalize_dydx_market(path.name.split("_5MINS_candles.json")[0]) for path in candle_paths})
+    markets = sorted(
+        {_normalize_dydx_market(path.name.split("_5MINS_candles.json")[0]) for path in candle_paths}
+    )
     if len(markets) < 2:
         raise SystemExit(f"need at least two 5-minute candle markets in {manual_dir}")
 
@@ -4679,7 +5871,9 @@ def materialize_p2_rerun_subset(
         if not quality.empty:
             _write_csv_atomic(quality, quality_path)
     if quality.empty or "research_usable" not in quality.columns or "path" not in quality.columns:
-        raise SystemExit(f"research-usable quality report is missing required columns: {quality_path}")
+        raise SystemExit(
+            f"research-usable quality report is missing required columns: {quality_path}"
+        )
 
     subset_dir = output_dir or ROOT / "work" / "p2_rerun_subset"
     subset_dir.mkdir(parents=True, exist_ok=True)
@@ -4689,12 +5883,15 @@ def materialize_p2_rerun_subset(
     selected = quality[quality["research_usable"].fillna(False).astype(bool)].copy()
     if selected.empty:
         raise SystemExit(f"no research-usable pair-detail histories found in {quality_path}")
-    selected["_execution_usable"] = selected.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool)
-    selected["_history_rows"] = pd.to_numeric(selected.get("history_rows", pd.Series(dtype=float)), errors="coerce").fillna(0)
-    selected = (
-        selected.sort_values(["pair", "_execution_usable", "_history_rows"], ascending=[True, False, False])
-        .drop_duplicates(["pair"], keep="first")
+    selected["_execution_usable"] = (
+        selected.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool)
     )
+    selected["_history_rows"] = pd.to_numeric(
+        selected.get("history_rows", pd.Series(dtype=float)), errors="coerce"
+    ).fillna(0)
+    selected = selected.sort_values(
+        ["pair", "_execution_usable", "_history_rows"], ascending=[True, False, False]
+    ).drop_duplicates(["pair"], keep="first")
 
     rows: list[dict[str, object]] = []
     for _, row in selected.iterrows():
@@ -4707,7 +5904,11 @@ def materialize_p2_rerun_subset(
         chosen = source
         replacement = None
         if source.name.endswith("_dydx_candles_derived_history.json"):
-            replacement = source.with_name(source.name.replace("_dydx_candles_derived_history.json", "_dydx_long_history_derived_history.json"))
+            replacement = source.with_name(
+                source.name.replace(
+                    "_dydx_candles_derived_history.json", "_dydx_long_history_derived_history.json"
+                )
+            )
             if replacement.exists():
                 chosen = replacement
         status = "copied"
@@ -4718,7 +5919,11 @@ def materialize_p2_rerun_subset(
         else:
             target = subset_dir / chosen.name
             target.write_bytes(chosen.read_bytes())
-            detail = "long_history_replacement" if replacement is not None and chosen == replacement else "quality_report_source"
+            detail = (
+                "long_history_replacement"
+                if replacement is not None and chosen == replacement
+                else "quality_report_source"
+            )
         rows.append(
             {
                 "pair": row.get("pair", ""),
@@ -4740,7 +5945,9 @@ def print_materialize_p2_rerun_subset(
     output_dir: Path | None = None,
     quality_report_path: Path | None = None,
 ) -> None:
-    frame = materialize_p2_rerun_subset(input_dir=input_dir, output_dir=output_dir, quality_report_path=quality_report_path)
+    frame = materialize_p2_rerun_subset(
+        input_dir=input_dir, output_dir=output_dir, quality_report_path=quality_report_path
+    )
     print(frame.to_string(index=False))
     print(f"p2_rerun_subset: {output_dir or (ROOT / 'work' / 'p2_rerun_subset')}")
     print(f"p2_rerun_subset_manifest: {ROOT / 'reports' / 'p2_rerun_subset_manifest.csv'}")
@@ -4751,7 +5958,7 @@ def print_dydx_local_pair_universe(
     input_dir: Path | None = None,
     pair_output_dir: Path | None = None,
     funding_output_path: Path | None = None,
-    zscore_window: int = 320,
+    zscore_window: int = 7,
     output_path: Path | None = None,
     run_research: bool = True,
 ) -> None:
@@ -4778,6 +5985,8 @@ def print_run_dydx_pair_expansion(
     run_research: bool = True,
     skip_fetch: bool = False,
     allow_stale_fetch: bool = False,
+    pair_ids: tuple[str, ...] = (),
+    strategy_ids: tuple[int, ...] | None = None,
 ) -> None:
     output = output_path or ROOT / "reports" / "dydx_pair_expansion_run.csv"
     frame = run_dydx_pair_expansion(
@@ -4789,6 +5998,8 @@ def print_run_dydx_pair_expansion(
         run_research=run_research,
         skip_fetch=skip_fetch,
         allow_stale_fetch=allow_stale_fetch,
+        pair_ids=pair_ids,
+        strategy_ids=strategy_ids,
     )
     print(frame.to_string(index=False))
     print(f"dydx_pair_expansion_run: {output}")
@@ -4811,6 +6022,14 @@ def priority_spine_dashboard_report(
     dydx = _read_csv_or_empty(reports / "dydx_execution_checklist.csv")
     paper = _read_csv_or_empty(reports / "paper_execution_preflight.csv")
     learning = _read_csv_or_empty(reports / "learning_event_summary.csv")
+    paper_submission_ready = _checklist_step_ready(paper, "paper_submission_gate")
+    paper_submission_blocker = _checklist_step_value(paper, "paper_submission_gate", "blocker")
+    paper_submission_next_action = _checklist_step_value(
+        paper, "paper_submission_gate", "next_action"
+    )
+    strategy_dependency_next_action = _checklist_step_value(
+        paper, "strategy_acceptance_dependency", "next_action"
+    )
 
     rows = [
         _dashboard_row(
@@ -4875,12 +6094,26 @@ def priority_spine_dashboard_report(
         _dashboard_row(
             priority="P4",
             area="paper_execution_gate",
-            ready=_gate_ready_from_index(gates, "paper_execution_gate"),
-            blocker=_gate_value(gates, "paper_execution_gate", "blocker"),
-            key_metric=_checklist_dashboard_metric(paper) if not paper.empty else _gate_value(gates, "paper_execution_gate", "evidence"),
-            source_report="reports/paper_execution_preflight.csv" if not paper.empty else "reports/priority_readiness.csv",
-            next_action=_checklist_first_blocked_next_action(paper)
-            or _gate_value(gates, "paper_execution_gate", "next_action"),
+            ready=_gate_ready_from_index(gates, "paper_execution_gate")
+            if paper_submission_ready is None
+            else bool(paper_submission_ready),
+            blocker=_gate_value(gates, "paper_execution_gate", "blocker")
+            if paper_submission_ready is None or paper_submission_ready
+            else paper_submission_blocker,
+            key_metric=_checklist_dashboard_metric(paper)
+            if not paper.empty
+            else _gate_value(gates, "paper_execution_gate", "evidence"),
+            source_report="reports/paper_execution_preflight.csv"
+            if not paper.empty
+            else "reports/priority_readiness.csv",
+            next_action=(
+                strategy_dependency_next_action
+                if not _gate_ready_from_index(gates, "strategy_acceptance")
+                and strategy_dependency_next_action
+                else paper_submission_next_action
+                or _checklist_first_blocked_next_action(paper)
+                or _gate_value(gates, "paper_execution_gate", "next_action")
+            ),
         ),
         _dashboard_row(
             priority="P5",
@@ -4958,7 +6191,9 @@ def priority_runbook(output_path: Path | None = None) -> Path:
     if actions.empty:
         lines.append("No blocked gates.")
     else:
-        lines.extend(["| Rank | Gate | Depends On | Blocker | Command/Action |", "|---:|---|---|---|---|"])
+        lines.extend(
+            ["| Rank | Gate | Depends On | Blocker | Command/Action |", "|---:|---|---|---|---|"]
+        )
         for index, row in actions.reset_index(drop=True).iterrows():
             lines.append(
                 "| {rank} | {gate} | {depends_on} | {blocker} | {next_action} |".format(
@@ -5029,23 +6264,72 @@ def print_priority_runbook() -> None:
     print(f"priority_runbook: {output}")
 
 
-def paper_execution_preflight_report(output_path: Path | None = None) -> pd.DataFrame:
+def paper_execution_preflight_report(
+    output_path: Path | None = None,
+    readiness: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    with _local_env_for_reports():
+        return _paper_execution_preflight_report(output_path=output_path, readiness=readiness)
+
+
+def _paper_execution_preflight_report(
+    output_path: Path | None = None,
+    readiness: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "paper_execution_preflight.csv"
-    readiness = priority_readiness_report()
+    readiness = readiness if readiness is not None else priority_readiness_report()
     gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
     strategy = _read_csv_or_empty(reports / "strategy_acceptance_checklist.csv")
     dydx = _read_csv_or_empty(reports / "dydx_execution_checklist.csv")
+    venue_preflight = _read_csv_or_empty(reports / "paper_venue_preflight.csv")
     paper_journal = reports / "paper_trading_journal.csv"
+    route_candidates = _read_csv_or_empty(reports / "rl" / "base_rl_route_candidates.csv")
+    route_markets = _route_markets_from_candidates(route_candidates)
+    compatibility = dydx_execution_compatibility_snapshot(route_markets, root=ROOT)
+    account_state = effective_dydx_account_state_snapshot(
+        DydxNetworkConfig.paper_testnet_from_env(), root=ROOT
+    )
+    compatibility_ready = bool(compatibility.get("checked", False)) and not compatibility.get(
+        "blocker"
+    )
+    account_state_ready = bool(account_state.get("checked", False)) and not account_state.get(
+        "blocker"
+    )
+
+    venue_cost_model_ready = True
+    venue_blocker = ""
+    venue_evidence = "paper_venue_preflight_missing"
+    if not venue_preflight.empty and "cost_model_aligned" in venue_preflight.columns:
+        venue_cost_aligned_pairs = int(
+            venue_preflight.get("cost_model_aligned", pd.Series(dtype=bool)).map(_coerce_bool).sum()
+        )
+        venue_rows = int(len(venue_preflight))
+        venue_cost_model_ready = venue_cost_aligned_pairs > 0
+        venue_evidence = f"paper_venue_preflight_rows={venue_rows};cost_model_aligned_pairs={venue_cost_aligned_pairs}"
+        if not venue_cost_model_ready:
+            venue_blocker = "venue_cost_model_alignment_pending"
 
     strategy_ready = _gate_ready_from_index(gates, "strategy_acceptance")
     dydx_ready = _gate_ready_from_index(gates, "dydx_testnet_readiness")
     paper_ready = _gate_ready_from_index(gates, "paper_execution_gate")
-    strategy_next_action = (
-        _checklist_first_blocked_next_action(strategy) or _gate_value(gates, "strategy_acceptance", "next_action")
+    submission_gate_ready = bool(paper_ready and compatibility_ready and account_state_ready)
+    submission_gate_blocker = ""
+    if not strategy_ready or not dydx_ready or not paper_ready:
+        submission_gate_blocker = "strategy_or_dydx_gate_not_ready"
+    elif compatibility.get("blocker"):
+        submission_gate_blocker = str(
+            compatibility.get("blocker", "execution_compatibility_blocked")
+        )
+    elif account_state.get("blocker"):
+        submission_gate_blocker = str(account_state.get("blocker", "account_state_blocked"))
+    strategy_next_action = _checklist_first_blocked_next_action(strategy) or _gate_value(
+        gates, "strategy_acceptance", "next_action"
     )
-    dydx_next_action = _checklist_first_blocked_next_action(dydx) or _gate_value(gates, "dydx_testnet_readiness", "next_action")
+    dydx_next_action = _checklist_first_blocked_next_action(dydx) or _gate_value(
+        gates, "dydx_testnet_readiness", "next_action"
+    )
     rows = [
         _execution_check_row(
             step="strategy_acceptance_dependency",
@@ -5063,12 +6347,37 @@ def paper_execution_preflight_report(output_path: Path | None = None) -> pd.Data
         ),
         _execution_check_row(
             step="paper_submission_gate",
-            ready=paper_ready,
-            blocker="" if paper_ready else _gate_value(gates, "paper_execution_gate", "blocker"),
-            evidence=_gate_value(gates, "paper_execution_gate", "evidence"),
-            next_action="paper-plan may create and submit research-gated paper orders"
-            if paper_ready
-            else "do not submit paper orders until strategy and dYdX dependencies are ready",
+            ready=submission_gate_ready,
+            blocker=submission_gate_blocker,
+            evidence=(
+                f"{_gate_value(gates, 'paper_execution_gate', 'evidence')};"
+                f"compatibility_ready={compatibility_ready};"
+                f"account_state_ready={account_state_ready}"
+            ),
+            next_action=(
+                "paper-plan may create and submit research-gated paper orders"
+                if submission_gate_ready
+                else (
+                    "only route paper through markets that have confirmed on exchange"
+                    if compatibility.get("blocker")
+                    else (
+                        "flatten lingering account legs before any new paper submission"
+                        if account_state.get("blocker")
+                        else "do not submit paper orders until strategy and dYdX dependencies are ready"
+                    )
+                )
+            ),
+        ),
+        _execution_check_row(
+            step="venue_cost_model_readiness",
+            ready=bool(venue_cost_model_ready),
+            blocker=venue_blocker,
+            evidence=venue_evidence,
+            next_action=(
+                "refresh pair_detail_quality_report and venue cost model mappings"
+                if not venue_cost_model_ready
+                else "venue cost-model status is ready"
+            ),
         ),
         _execution_check_row(
             step="paper_journal",
@@ -5079,10 +6388,55 @@ def paper_execution_preflight_report(output_path: Path | None = None) -> pd.Data
             if paper_journal.exists()
             else "paper-plan will create reports/paper_trading_journal.csv on first attempted handoff",
         ),
+        _execution_check_row(
+            step="execution_compatibility",
+            ready=bool(compatibility.get("checked", False)) and not compatibility.get("blocker"),
+            blocker=str(compatibility.get("blocker", "")),
+            evidence=(
+                f"route_markets={','.join(compatibility.get('route_markets', []))};"
+                f"compatible={','.join(compatibility.get('compatible_markets', []))};"
+                f"incompatible={','.join(compatibility.get('incompatible_markets', []))};"
+                f"missing={','.join(compatibility.get('missing_markets', []))}"
+            ),
+            next_action=(
+                "only route paper through markets that have confirmed on exchange"
+                if compatibility.get("blocker")
+                else "execution compatibility is aligned with the route candidate set"
+            ),
+        ),
+        _execution_check_row(
+            step="account_state_clean",
+            ready=bool(account_state.get("checked", False)) and not account_state.get("blocker"),
+            blocker=str(account_state.get("blocker", "")),
+            evidence=(
+                f"open_markets={','.join(account_state.get('open_markets', []))};"
+                f"positions={json.dumps(account_state.get('positions', []), sort_keys=True)};"
+                f"source={account_state.get('source', '')};"
+                f"browser_override_confirmed_at_utc={account_state.get('browser_override_confirmed_at_utc', '')}"
+            ),
+            next_action=(
+                "flatten lingering account legs before any new paper submission"
+                if account_state.get("blocker")
+                else "account state is flat and ready for fresh paper submissions"
+            ),
+        ),
     ]
     frame = pd.DataFrame(rows)
     _write_csv_atomic(frame, output)
     return frame
+
+
+def _route_markets_from_candidates(frame: pd.DataFrame) -> list[str]:
+    if frame.empty or "pair" not in frame.columns:
+        return []
+    markets: list[str] = []
+    for pair in frame.get("pair", pd.Series(dtype=object)).astype(str).tolist():
+        markets.extend(_pair_to_markets(pair))
+    return sorted({market for market in markets if market})
+
+
+def _pair_to_markets(pair: str) -> list[str]:
+    return pair_markets_from_pair(pair)
 
 
 def print_paper_execution_preflight() -> None:
@@ -5090,6 +6444,127 @@ def print_paper_execution_preflight() -> None:
     frame = paper_execution_preflight_report(output)
     print(frame.to_string(index=False))
     print(f"paper_execution_preflight: {output}")
+
+
+def refresh_execution_truth_surfaces(root: Path = ROOT) -> dict[str, str]:
+    reports = root / "reports"
+    active = reports / "active"
+    rl = reports / "rl"
+    compatibility = refresh_dydx_execution_compatibility_table(root=root)
+    injective_compatibility = refresh_injective_execution_compatibility_table(root=root)
+    refresh_injective_mirror_candidate_queue(root=root)
+    refresh_injective_spot_supported_pair_universe(root=root)
+    refresh_injective_spot_first_candidate_shortlist(root=root)
+    gmx_inventory = refresh_gmx_testnet_market_inventory(root=root)
+    gmx_compatibility = refresh_gmx_execution_compatibility_table(root=root)
+    refresh_gmx_testnet_candidate_shortlist(root=root)
+    hyperliquid_inventory = refresh_hyperliquid_testnet_market_inventory(root=root)
+    hyperliquid_compatibility = refresh_hyperliquid_execution_compatibility_table(root=root)
+    refresh_hyperliquid_testnet_candidate_shortlist(root=root)
+    refresh_non_eth_route_submit_queue(root=root)
+    paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
+    journal_result = build_wizard_research_journal(root=root)
+    refresh_paper_trade_price_journal(root=root)
+    shortlist = paper_candidate_shortlist_rows(root=root)
+    shortlist_path = active / "compatibility_first_candidate_shortlist.csv"
+    shortlist.to_csv(shortlist_path, index=False)
+    refresh_paper_trade_decision_report(root=root)
+    live_monitor_paths = refresh_live_paper_trade_monitor(root=root)
+    base_rl_paper_handoff_report(root=root)
+    current_state(root=root)
+    return {
+        "execution_compatibility": str(active / "dydx_execution_market_compatibility.csv"),
+        "injective_execution_compatibility": str(
+            active / "injective_execution_market_compatibility.csv"
+        ),
+        "injective_mirror_candidate_queue": str(active / "injective_mirror_candidate_queue.csv"),
+        "injective_spot_supported_pair_universe": str(
+            active / "injective_spot_supported_pair_universe.csv"
+        ),
+        "injective_spot_first_candidate_shortlist": str(
+            active / "injective_spot_first_candidate_shortlist.csv"
+        ),
+        "gmx_testnet_market_inventory": str(active / "gmx_testnet_market_inventory.csv"),
+        "gmx_execution_compatibility": str(active / "gmx_execution_market_compatibility.csv"),
+        "gmx_testnet_candidate_shortlist": str(active / "gmx_testnet_candidate_shortlist.csv"),
+        "hyperliquid_testnet_market_inventory": str(
+            active / "hyperliquid_testnet_market_inventory.csv"
+        ),
+        "hyperliquid_execution_compatibility": str(
+            active / "hyperliquid_execution_market_compatibility.csv"
+        ),
+        "hyperliquid_testnet_candidate_shortlist": str(
+            active / "hyperliquid_testnet_candidate_shortlist.csv"
+        ),
+        "route_submit_queue": str(active / "non_eth_route_submit_queue.csv"),
+        "compatibility_first_candidate_shortlist": str(shortlist_path),
+        "paper_trade_decision_report": str(active / "paper_trade_decision_report.csv"),
+        "live_paper_trade_monitor": str(live_monitor_paths["summary"]),
+        "live_paper_trade_timeframe_monitor": str(live_monitor_paths["timeframe"]),
+        "live_paper_trade_monitor_md": str(live_monitor_paths["markdown"]),
+        "paper_execution_preflight": str(reports / "paper_execution_preflight.csv"),
+        "base_rl_paper_handoff_status": str(rl / "base_rl_paper_handoff_status.csv"),
+        "current_state": str(active / "current_state.csv"),
+        "wizard_research_scanner_capture": str(
+            journal_result.paths["wizard_research_scanner_capture"]
+        ),
+        "wizard_research_pair_detail_capture": str(
+            journal_result.paths["wizard_research_pair_detail_capture"]
+        ),
+        "wizard_research_journal": str(journal_result.paths["wizard_research_journal"]),
+        "wizard_research_journal_json": str(journal_result.paths["wizard_research_journal_json"]),
+        "compatible_markets": str(
+            int(
+                compatibility.get("compatible_for_paper_submit", pd.Series(dtype=bool))
+                .fillna(False)
+                .astype(bool)
+                .sum()
+            )
+        )
+        if not compatibility.empty
+        else "0",
+        "injective_mirrorable_pairs": str(
+            int(
+                injective_compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool))
+                .fillna(False)
+                .astype(bool)
+                .sum()
+            )
+        )
+        if not injective_compatibility.empty
+        else "0",
+        "gmx_testnet_markets": str(int(len(gmx_inventory))) if not gmx_inventory.empty else "0",
+        "gmx_mirrorable_pairs": str(
+            int(
+                gmx_compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool))
+                .fillna(False)
+                .astype(bool)
+                .sum()
+            )
+        )
+        if not gmx_compatibility.empty
+        else "0",
+        "hyperliquid_testnet_markets": str(
+            int(
+                hyperliquid_inventory.get("tradable_perp", pd.Series(dtype=bool))
+                .fillna(False)
+                .astype(bool)
+                .sum()
+            )
+        )
+        if not hyperliquid_inventory.empty
+        else "0",
+        "hyperliquid_mirrorable_pairs": str(
+            int(
+                hyperliquid_compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool))
+                .fillna(False)
+                .astype(bool)
+                .sum()
+            )
+        )
+        if not hyperliquid_compatibility.empty
+        else "0",
+    }
 
 
 def paper_venue_preflight_report(
@@ -5109,7 +6584,9 @@ def paper_venue_preflight_report(
     else:
         pair_rows = []
         if not universe.empty and "pair" in universe.columns:
-            score_col = pd.to_numeric(universe.get("combined_score", pd.Series(dtype=float)), errors="coerce")
+            score_col = pd.to_numeric(
+                universe.get("combined_score", pd.Series(dtype=float)), errors="coerce"
+            )
             ranked = universe.copy()
             ranked["combined_score"] = score_col
             pair_rows = (
@@ -5156,6 +6633,9 @@ def paper_venue_preflight_report(
                     "execution_ready": False,
                     "adapter_ready": False,
                     "ready_for_submission": False,
+                    "cost_model_profile": "unknown_venue_cost_model",
+                    "cost_model_aligned": False,
+                    "cost_model_next_action": "wire_exchange_cost_model_report_before_execution",
                     "contract_configured": False,
                     "contract_valid": False,
                     "exchange_submission_capable": False,
@@ -5172,7 +6652,9 @@ def paper_venue_preflight_report(
             venue_lanes = str(venue_row.get("venue_lanes", ""))
             preference = str(venue_row.get("preference", "candidate"))
             execution_ready = bool(venue_row.get("execution_ready", False))
-            blockers: list[str] = [item for item in str(venue_row.get("blockers", "")).split(";") if item]
+            blockers: list[str] = [
+                item for item in str(venue_row.get("blockers", "")).split(";") if item
+            ]
 
             if venue == "dydx":
                 config = DydxNetworkConfig.paper_testnet_from_env()
@@ -5191,12 +6673,19 @@ def paper_venue_preflight_report(
                 elif not adapter_contract.get("configured"):
                     blockers.append("missing_dydx_order_client_adapter")
                 elif not adapter_contract.get("valid"):
-                    blockers.append(f"dydx_order_client_adapter_invalid:{adapter_contract.get('error')}")
+                    blockers.append(
+                        f"dydx_order_client_adapter_invalid:{adapter_contract.get('error')}"
+                    )
                 if not indexer_ready:
                     blockers.append("missing_dydx_indexer_adapter")
                 if not adapter_ready:
                     blockers.append("dydx_not_submission_ready")
-                ready_for_submission = execution_ready and adapter_ready and indexer_ready and not bool(config.paper_trading_blockers())
+                ready_for_submission = (
+                    execution_ready
+                    and adapter_ready
+                    and indexer_ready
+                    and not bool(config.paper_trading_blockers())
+                )
 
                 rows.append(
                     {
@@ -5207,9 +6696,14 @@ def paper_venue_preflight_report(
                         "execution_ready": execution_ready,
                         "adapter_ready": bool(adapter_ready),
                         "ready_for_submission": bool(ready_for_submission),
+                        "cost_model_profile": _venue_cost_model_profile(venue)[0],
+                        "cost_model_aligned": bool(_venue_cost_model_profile(venue)[1]),
+                        "cost_model_next_action": _venue_cost_model_profile(venue)[2],
                         "contract_configured": bool(adapter_contract.get("configured")),
                         "contract_valid": bool(adapter_contract.get("valid")),
-                        "exchange_submission_capable": bool(adapter_contract.get("exchange_submission_capable")),
+                        "exchange_submission_capable": bool(
+                            adapter_contract.get("exchange_submission_capable")
+                        ),
                         "record_only": bool(adapter_contract.get("record_only")),
                         "contract_error": str(adapter_contract.get("error") or ""),
                         "blockers": ";".join(sorted(set([item for item in blockers if item]))),
@@ -5217,6 +6711,52 @@ def paper_venue_preflight_report(
                             f"dydx_submit_orders={config.submit_orders};"
                             f"dydx_indexer_ready={indexer_ready};"
                             f"dydx_order_adapter_ready={order_client is not None}"
+                        ),
+                    }
+                )
+                continue
+
+            if venue == "hyperliquid":
+                config = HyperliquidTestnetConfig.paper_testnet_from_env()
+                preflight = hyperliquid_testnet_order_preflight_status()
+                adapter_contract = validate_venue_order_client_adapter(venue)
+                adapter_ready = bool(adapter_contract.get("valid")) and bool(
+                    preflight.get("pair_executor_available")
+                )
+                preflight_blockers = [
+                    item for item in str(preflight.get("blocker") or "").split(";") if item
+                ]
+                blockers.extend(preflight_blockers)
+                if not adapter_ready:
+                    blockers.append("hyperliquid_pair_executor_not_available")
+                if not bool(preflight.get("ready")):
+                    blockers.append("hyperliquid_not_submission_ready")
+                ready_for_submission = execution_ready and bool(preflight.get("ready"))
+
+                rows.append(
+                    {
+                        "pair": candidate_pair,
+                        "venue": venue,
+                        "preference": preference,
+                        "venue_lanes": venue_lanes,
+                        "execution_ready": execution_ready,
+                        "adapter_ready": adapter_ready,
+                        "ready_for_submission": ready_for_submission,
+                        "cost_model_profile": _venue_cost_model_profile(venue)[0],
+                        "cost_model_aligned": bool(_venue_cost_model_profile(venue)[1]),
+                        "cost_model_next_action": _venue_cost_model_profile(venue)[2],
+                        "contract_configured": bool(adapter_contract.get("configured")),
+                        "contract_valid": bool(adapter_contract.get("valid")),
+                        "exchange_submission_capable": bool(
+                            preflight.get("pair_executor_available")
+                        ),
+                        "record_only": bool(adapter_contract.get("record_only")),
+                        "contract_error": str(adapter_contract.get("error") or ""),
+                        "blockers": ";".join(sorted(set(item for item in blockers if item))),
+                        "evidence": (
+                            f"hyperliquid_submit_orders={config.submit_orders};"
+                            f"pair_executor_available={preflight.get('pair_executor_available')};"
+                            f"single_leg_order_path_blocked={preflight.get('single_leg_order_path_blocked')}"
                         ),
                     }
                 )
@@ -5235,7 +6775,9 @@ def paper_venue_preflight_report(
             elif not adapter_contract.get("configured"):
                 blockers.append(f"missing_{venue}_order_client_adapter")
             elif not adapter_contract.get("valid"):
-                blockers.append(f"{venue}_order_client_adapter_invalid:{adapter_contract.get('error')}")
+                blockers.append(
+                    f"{venue}_order_client_adapter_invalid:{adapter_contract.get('error')}"
+                )
             if not adapter_ready:
                 blockers.append(f"{venue}_not_submission_ready")
             ready_for_submission = execution_ready and adapter_ready
@@ -5249,9 +6791,14 @@ def paper_venue_preflight_report(
                     "execution_ready": execution_ready,
                     "adapter_ready": bool(adapter_ready),
                     "ready_for_submission": bool(ready_for_submission),
+                    "cost_model_profile": _venue_cost_model_profile(venue)[0],
+                    "cost_model_aligned": bool(_venue_cost_model_profile(venue)[1]),
+                    "cost_model_next_action": _venue_cost_model_profile(venue)[2],
                     "contract_configured": bool(adapter_contract.get("configured")),
                     "contract_valid": bool(adapter_contract.get("valid")),
-                    "exchange_submission_capable": bool(adapter_contract.get("exchange_submission_capable")),
+                    "exchange_submission_capable": bool(
+                        adapter_contract.get("exchange_submission_capable")
+                    ),
                     "record_only": bool(adapter_contract.get("record_only")),
                     "contract_error": str(adapter_contract.get("error") or ""),
                     "blockers": ";".join(sorted(set([item for item in blockers if item]))),
@@ -5274,15 +6821,399 @@ def print_paper_venue_preflight(pair: str | None = None, max_pairs: int = 25) ->
     print(f"paper_venue_preflight: {output}")
 
 
-def priority_gap_test_report(
-    readiness: pd.DataFrame | None = None,
-    output_path: Path | None = None,
-) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def paper_readiness_checkpoint(
+    root: Path | None = None, readiness_threshold: float = 0.65
+) -> dict[str, object]:
+    """Run a no-trade, no-spend checkpoint pass for paper-readiness continuity."""
+    if root is None:
+        root = ROOT
+    reports = root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
-    output = output_path or reports / "priority_gap_test.csv"
-    readiness = readiness if readiness is not None else priority_readiness_report()
-    dashboard = priority_spine_dashboard_report(readiness)
+    output_path = reports / "paper_readiness_checkpoint.csv"
+    readiness = priority_readiness_report()
+    gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
+    brain_readiness = build_brain_readiness_report(root=root, score_threshold=readiness_threshold)
+    paper_preflight = paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
+    brain_ready = str(brain_readiness.summary.get("score_gate")) == "pass"
+    if not readiness.empty:
+        priority_ready = True
+        priority_blocker = ""
+        priority_next = "continue"
+    else:
+        priority_ready = False
+        priority_blocker = "missing_priority_readiness"
+        priority_next = "run: PYTHONPATH=src python3 -m quant_platform.cli priority-readiness"
+
+    if brain_ready:
+        brain_blocker = ""
+        brain_next = "keep running for trend and provider quality improvements"
+    else:
+        brain_blocker = "brain_readiness_not_ready"
+        brain_next = "review paper_readiness_trend.csv"
+
+    paper_gate_ready = _gate_ready_from_index(gates, "paper_execution_gate")
+    paper_blocker = _gate_value(gates, "paper_execution_gate", "blocker")
+    if paper_gate_ready:
+        paper_next = "paper-readiness checkpoint passed; use paper-execution-preflight to continue"
+        paper_blocker = ""
+    else:
+        paper_next = "fix blockers in priority checklist and venue adapters before paper plan"
+
+    paper_preflight_ready = len(paper_preflight) > 0 and bool(
+        paper_preflight.get("ready", pd.Series(dtype=bool)).map(_coerce_bool).all()
+    )
+    paper_cost_blocker = "paper_preflight_not_clean" if not paper_preflight_ready else ""
+
+    rows = []
+    rows.append(
+        _execution_check_row(
+            step="priority_readiness",
+            ready=priority_ready,
+            blocker=priority_blocker,
+            evidence="reports/priority_readiness.csv",
+            next_action=priority_next,
+        )
+    )
+    rows.append(
+        _execution_check_row(
+            step="brain_readiness_score",
+            ready=brain_ready,
+            blocker=brain_blocker,
+            evidence=f"reports/brain/{Path(brain_readiness.paths['brain_readiness_report']).name}",
+            next_action=brain_next,
+        )
+    )
+    rows.append(
+        _execution_check_row(
+            step="paper_execution_preflight",
+            ready=paper_gate_ready,
+            blocker=paper_blocker,
+            evidence="reports/paper_execution_preflight.csv",
+            next_action=paper_next,
+        )
+    )
+    rows.append(
+        _execution_check_row(
+            step="paper_venue_cost_alignment",
+            ready=paper_preflight_ready,
+            blocker=paper_cost_blocker,
+            evidence="reports/paper_venue_preflight.csv",
+            next_action="maintain no-live-cost checkpoint mode until venue readiness stabilizes",
+        )
+    )
+    frame = pd.DataFrame(rows)
+    _write_csv_atomic(frame, output_path)
+    return {
+        "summary": {
+            "readiness_gate": str(brain_readiness.summary.get("score_gate")),
+            "readiness_score": float(brain_readiness.summary.get("readiness_score", 0.0)),
+            "ready_rows": int(frame["status"].eq("ready").sum()),
+            "blocked_rows": int(frame["status"].eq("blocked").sum()),
+            "checkpoint_path": str(output_path),
+        },
+        "paths": {
+            "paper_readiness_checkpoint": str(output_path),
+            "paper_execution_preflight": str(reports / "paper_execution_preflight.csv"),
+            "brain_readiness_report": str(brain_readiness.paths["brain_readiness_report"]),
+            "brain_readiness_trend": str(reports / "brain" / "paper_readiness_trend.csv"),
+        },
+    }
+
+
+def _sweep_row(
+    step: str, status: str, detail: str, artifact_path: str = "", mode: str = ""
+) -> dict[str, object]:
+    return {
+        "mode": mode,
+        "step": step,
+        "status": status,
+        "detail": detail,
+        "artifact_path": artifact_path,
+    }
+
+
+def run_research_sweep(
+    *,
+    mode: str = "light",
+    root: Path = ROOT,
+    mcp_url: str | None = None,
+    api_token: str | None = None,
+    source_filter: str | None = None,
+    wait_seconds: int = 90,
+    do_fetch: bool = True,
+    readiness_threshold: float = 0.65,
+) -> dict[str, object]:
+    if mode not in SWEEP_MODES:
+        raise SystemExit(f"unsupported sweep mode: {mode}")
+
+    reports = root / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output_path = reports / "research_sweep_status.csv"
+    summary_path = reports / "research_sweep_summary.json"
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    rows: list[dict[str, object]] = []
+
+    current = current_state()
+    rows.append(
+        _sweep_row(
+            "current_state",
+            "completed",
+            f"rows={current.summary.get('rows', 0)}",
+            str(current.paths.get("current_state", "")),
+            mode,
+        )
+    )
+    system = system_check()
+    rows.append(
+        _sweep_row(
+            "system_check",
+            "completed",
+            f"checks={system.summary.get('checks', 0)};blocked={system.summary.get('blocked', 0)}",
+            str(system.paths.get("system_check", "")),
+            mode,
+        )
+    )
+
+    if mode == "paid":
+        if not mcp_url:
+            rows.append(
+                _sweep_row(
+                    "apify_refresh",
+                    "skipped",
+                    "missing_mcp_url_or_apify_server",
+                    str(root / "reports" / "active" / "apify_source_capture_manifest.csv"),
+                    mode,
+                )
+            )
+        else:
+            apify = refresh_apify_sources(
+                root=root,
+                mcp_url=mcp_url,
+                source_filter=source_filter,
+                do_fetch=do_fetch,
+                api_token=api_token if api_token else None,
+                wait_seconds=wait_seconds,
+            )
+            rows.append(
+                _sweep_row(
+                    "apify_refresh",
+                    "completed",
+                    f"sources={apify.source_count};sampled={apify.sampled_count};failed={apify.failed_count};needs_key={apify.needs_key_count}",
+                    str(apify.manifest_path),
+                    mode,
+                )
+            )
+    else:
+        rows.append(
+            _sweep_row(
+                "apify_refresh",
+                "skipped",
+                "mode_does_not_run_paid_confirmation",
+                str(root / "reports" / "active" / "apify_source_capture_manifest.csv"),
+                mode,
+            )
+        )
+
+    venue_context = build_market_venue_context()
+    rows.append(
+        _sweep_row(
+            "market_venue_context",
+            "completed",
+            f"rows={venue_context.summary.get('rows', 0)}",
+            str(venue_context.paths.get("market_venue_context", "")),
+            mode,
+        )
+    )
+    pair_universe = build_pair_universe()
+    rows.append(
+        _sweep_row(
+            "pair_universe",
+            "completed",
+            f"pairs={pair_universe.summary.get('pairs', 0)};promoted={pair_universe.summary.get('promoted', 0)}",
+            str(pair_universe.paths.get("pair_universe", "")),
+            mode,
+        )
+    )
+
+    if mode in {"deep", "paid"}:
+        dataset = build_trade_dataset()
+        rows.append(
+            _sweep_row(
+                "trade_dataset",
+                "completed",
+                f"rows={dataset.summary.get('rows', 0)}",
+                str(dataset.paths.get("dataset_csv", "")),
+                mode,
+            )
+        )
+        trade_gate = train_trade_gate()
+        rows.append(
+            _sweep_row(
+                "train_trade_gate",
+                "completed",
+                f"accepted={trade_gate.summary.get('accepted', False)}",
+                str(trade_gate.paths.get("metrics_json", trade_gate.paths.get("metrics", ""))),
+                mode,
+            )
+        )
+        gated = run_model_gated_backtest()
+        rows.append(
+            _sweep_row(
+                "model_gated_backtest",
+                "completed",
+                f"accepted={gated.summary.get('accepted', False)}",
+                str(gated.paths.get("acceptance", "")),
+                mode,
+            )
+        )
+    else:
+        rows.append(
+            _sweep_row(
+                "trade_dataset",
+                "skipped",
+                "mode_does_not_run_deep_modeling",
+                str(root / "data" / "ml" / "trade_training_dataset.csv"),
+                mode,
+            )
+        )
+        rows.append(
+            _sweep_row(
+                "train_trade_gate",
+                "skipped",
+                "mode_does_not_run_deep_modeling",
+                str(root / "models" / "trade_gate" / "metrics.json"),
+                mode,
+            )
+        )
+        rows.append(
+            _sweep_row(
+                "model_gated_backtest",
+                "skipped",
+                "mode_does_not_run_deep_modeling",
+                str(root / "reports" / "ml" / "model_gated_acceptance.csv"),
+                mode,
+            )
+        )
+
+    brain = build_brain_readiness_report(root=root, score_threshold=readiness_threshold)
+    rows.append(
+        _sweep_row(
+            "brain_readiness",
+            "completed",
+            f"score_gate={brain.summary.get('score_gate', '')};score={brain.summary.get('readiness_score', 0.0)}",
+            str(brain.paths.get("brain_readiness_report", "")),
+            mode,
+        )
+    )
+
+    dashboard = build_command_dashboard(refresh_profile="monitor" if mode == "light" else "deep")
+    rows.append(
+        _sweep_row(
+            "command_dashboard",
+            "completed",
+            f"dashboard_files={dashboard.summary.get('dashboard_files', 0)};blocked_rows={dashboard.summary.get('blocked_rows', 0)}",
+            str(dashboard.paths.get("command_center", "")),
+            mode,
+        )
+    )
+    readiness = priority_readiness_report(reports / "priority_readiness.csv")
+    ready_gates = (
+        int(readiness.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
+        if not readiness.empty
+        else 0
+    )
+    rows.append(
+        _sweep_row(
+            "priority_readiness",
+            "completed",
+            f"ready_gates={ready_gates}/{len(readiness)}",
+            str(reports / "priority_readiness.csv"),
+            mode,
+        )
+    )
+    paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
+    checkpoint = paper_readiness_checkpoint(root=root, readiness_threshold=readiness_threshold)
+    rows.append(
+        _sweep_row(
+            "paper_readiness_checkpoint",
+            "completed",
+            f"readiness_gate={checkpoint['summary'].get('readiness_gate', '')};ready_rows={checkpoint['summary'].get('ready_rows', 0)};blocked_rows={checkpoint['summary'].get('blocked_rows', 0)}",
+            str(checkpoint["paths"].get("paper_readiness_checkpoint", "")),
+            mode,
+        )
+    )
+
+    if mode in {"deep", "paid"}:
+        supreme_csv, supreme_md = print_supreme_team_checkpoint()
+        rows.append(
+            _sweep_row("supreme_team", "completed", "checkpoint_refreshed", str(supreme_md), mode)
+        )
+    else:
+        rows.append(
+            _sweep_row(
+                "supreme_team",
+                "skipped",
+                "mode_does_not_run_full_audit",
+                str(root / "reports" / "supreme_team" / "latest_supreme_team.md"),
+                mode,
+            )
+        )
+
+    frame = pd.DataFrame(rows, columns=["mode", "step", "status", "detail", "artifact_path"])
+    _write_csv_atomic(frame, output_path)
+    blocked = (
+        readiness[~readiness.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool)].copy()
+        if not readiness.empty
+        else pd.DataFrame()
+    )
+    paper_gate_ready = bool(
+        not readiness.empty
+        and readiness[readiness["gate"] == "paper_execution_gate"]["ready"]
+        .fillna(False)
+        .astype(bool)
+        .any()
+    )
+    summary = {
+        "mode": mode,
+        "run_id": f"research_sweep_{mode}_{timestamp}",
+        "completed_steps": int((frame["status"] == "completed").sum()),
+        "skipped_steps": int((frame["status"] == "skipped").sum()),
+        "blocked_gates": int(len(blocked)),
+        "paper_trading_ready": paper_gate_ready,
+        "next_action": "paper trading lane is ready"
+        if paper_gate_ready
+        else ";".join(blocked["next_action"].dropna().astype(str).head(3).tolist())
+        or "review readiness blockers",
+    }
+    summary_path.write_text(
+        json.dumps(
+            {
+                "summary": summary,
+                "paths": {
+                    "research_sweep_status": str(output_path),
+                    "research_sweep_summary": str(summary_path),
+                    "priority_readiness": str(reports / "priority_readiness.csv"),
+                    "paper_execution_preflight": str(reports / "paper_execution_preflight.csv"),
+                    "command_dashboard": str(root / "reports" / "dashboard" / "command_center.md"),
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return {
+        "summary": summary,
+        "paths": {
+            "research_sweep_status": str(output_path),
+            "research_sweep_summary": str(summary_path),
+            "priority_readiness": str(reports / "priority_readiness.csv"),
+            "paper_execution_preflight": str(reports / "paper_execution_preflight.csv"),
+            "command_dashboard": str(root / "reports" / "dashboard" / "command_center.md"),
+        },
+    }
+
+
+def _priority_gap_frame_from_dashboard(dashboard: pd.DataFrame, output: Path) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     for _, row in dashboard.iterrows():
         priority = str(row["priority"])
@@ -5307,11 +7238,133 @@ def priority_gap_test_report(
     return frame
 
 
+def _append_current_state_operational_gaps(frame: pd.DataFrame, output: Path) -> pd.DataFrame:
+    current_path = ROOT / "reports" / "active" / "current_state.csv"
+    current = _read_csv_or_empty(current_path)
+    if current.empty or "area" not in current.columns:
+        return frame
+
+    canonical_authority = _read_csv_or_empty(
+        ROOT / "reports" / "active" / "hyperliquid_authority_state.csv"
+    )
+    critical_areas = (
+        [
+            "canonical_hyperliquid_authority",
+            "hyperliquid_wizard_exact_mode_intake",
+            "hyperliquid_walkforward",
+            "teacher_council",
+            "student_learning",
+            "portfolio_critic",
+        ]
+        if not canonical_authority.empty
+        else [
+            "base_rl_handoff",
+            "paper_status",
+            "injective_mirror_lane",
+            "wizard_readiness",
+            "overall_readiness",
+        ]
+    )
+    working = current[current["area"].astype(str).isin(critical_areas)].copy()
+    if working.empty:
+        return frame
+
+    rows: list[dict[str, object]] = []
+    priority_index = 1
+    for area in critical_areas:
+        matches = working[working["area"].astype(str) == area]
+        if matches.empty:
+            continue
+        row = matches.iloc[0]
+        ready = str(row.get("ready", "")).strip().lower() in {"true", "1", "yes"}
+        if ready:
+            continue
+        blocker = str(row.get("blocker", "") or "").strip() or str(row.get("status", "blocked"))
+        rows.append(
+            {
+                "priority": f"CS{priority_index}",
+                "area": f"current_state_{area}",
+                "status": "gap",
+                "severity": "critical"
+                if area
+                in {"canonical_hyperliquid_authority", "hyperliquid_wizard_exact_mode_intake"}
+                else (
+                    "high"
+                    if area
+                    in {
+                        "hyperliquid_walkforward",
+                        "teacher_council",
+                        "student_learning",
+                        "portfolio_critic",
+                        "base_rl_handoff",
+                        "paper_status",
+                        "overall_readiness",
+                    }
+                    else "medium"
+                ),
+                "gap": blocker,
+                "current_evidence": str(row.get("detail", "") or ""),
+                "required_proof": "current_state_ready_true_with_matching_evidence",
+                "source_report": str(row.get("evidence_path", "") or current_path),
+                "next_action": str(
+                    row.get("next_action", "")
+                    or "repair current-state blocker and rerun current-state"
+                ),
+            }
+        )
+        priority_index += 1
+
+    if not rows:
+        return frame
+    augmented = pd.concat([frame, pd.DataFrame(rows)], ignore_index=True, sort=False)
+    _write_csv_atomic(augmented, output)
+    return augmented
+
+
+def priority_gap_test_report(
+    readiness: pd.DataFrame | None = None,
+    output_path: Path | None = None,
+    refresh_paper_preflight: bool = True,
+) -> pd.DataFrame:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output = output_path or reports / "priority_gap_test.csv"
+    readiness = readiness if readiness is not None else priority_readiness_report()
+    if refresh_paper_preflight:
+        paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
+    dashboard = priority_spine_dashboard_report(readiness)
+    frame = _priority_gap_frame_from_dashboard(dashboard, output)
+    canonical_authority = _read_csv_or_empty(
+        ROOT / "reports" / "active" / "hyperliquid_authority_state.csv"
+    )
+    if not canonical_authority.empty and "area" in frame.columns:
+        historical_mask = frame["area"].astype(str).eq("crypto_wizards_capture")
+        frame.loc[historical_mask, "area"] = "crypto_wizards_historical_capture"
+        frame.loc[historical_mask, "priority"] = "P1H"
+        frame.loc[historical_mask, "required_proof"] = (
+            "historical_capture_corpus_complete_with_lineage"
+        )
+        frame.loc[historical_mask, "next_action"] = (
+            "preserve as historical discovery evidence; do not treat it as current candidate readiness"
+        )
+        legacy_areas = {
+            "strategy_acceptance",
+            "dydx_testnet_readiness",
+            "paper_execution_gate",
+            "learning_event_store",
+        }
+        frame = frame.loc[~frame["area"].astype(str).isin(legacy_areas)].copy()
+        _write_csv_atomic(frame, output)
+    return _append_current_state_operational_gaps(frame, output)
+
+
 def print_gap_test() -> None:
     output = ROOT / "reports" / "priority_gap_test.csv"
     readiness = priority_readiness_report()
-    paper_execution_preflight_report(ROOT / "reports" / "paper_execution_preflight.csv")
-    frame = priority_gap_test_report(readiness, output)
+    paper_execution_preflight_report(
+        ROOT / "reports" / "paper_execution_preflight.csv", readiness=readiness
+    )
+    frame = priority_gap_test_report(readiness, output, refresh_paper_preflight=False)
     print(frame.to_string(index=False))
     print(f"priority_gap_test: {output}")
 
@@ -5410,7 +7463,17 @@ def print_gap_analysis_checklist(run_dir: Path | None = None) -> tuple[Path, Pat
     index_path = reports / "gap_analysis_index.csv"
     index_frame = _read_csv_or_empty(index_path)
     if index_frame.empty:
-        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+        index_frame = pd.DataFrame(
+            columns=[
+                "run_id",
+                "timestamp_utc",
+                "open_gaps",
+                "pass_gates",
+                "critical",
+                "high",
+                "medium",
+            ]
+        )
     index_frame = pd.concat(
         [
             index_frame,
@@ -5439,7 +7502,10 @@ def print_gap_analysis_checklist(run_dir: Path | None = None) -> tuple[Path, Pat
     return csv_path, checkpoint_md
 
 
-def print_pre_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+def print_pre_mortem_checklist(
+    run_dir: Path | None = None,
+    readiness: pd.DataFrame | None = None,
+) -> tuple[Path, Path]:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "pre_mortem")
@@ -5447,7 +7513,12 @@ def print_pre_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"pre_mortem_{timestamp}"
 
-    gap_frame = priority_gap_test_report()
+    readiness = readiness if readiness is not None else priority_readiness_report()
+    paper_execution_preflight_report(reports / "paper_execution_preflight.csv", readiness=readiness)
+    try:
+        gap_frame = priority_gap_test_report(readiness, refresh_paper_preflight=False)
+    except TypeError:
+        gap_frame = priority_gap_test_report(readiness)
     if gap_frame.empty:
         pm_frame = pd.DataFrame(
             [
@@ -5566,7 +7637,17 @@ def print_pre_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]
     index_path = reports / "pre_mortem_index.csv"
     index_frame = _read_csv_or_empty(index_path)
     if index_frame.empty:
-        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+        index_frame = pd.DataFrame(
+            columns=[
+                "run_id",
+                "timestamp_utc",
+                "open_gaps",
+                "pass_gates",
+                "critical",
+                "high",
+                "medium",
+            ]
+        )
     index_frame = pd.concat(
         [
             index_frame,
@@ -5595,7 +7676,10 @@ def print_pre_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]
     return csv_path, checkpoint_md
 
 
-def print_post_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
+def print_post_mortem_checklist(
+    run_dir: Path | None = None,
+    readiness: pd.DataFrame | None = None,
+) -> tuple[Path, Path]:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "post_mortem")
@@ -5612,7 +7696,12 @@ def print_post_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path
             for area, status in zip(previous["area"].astype(str), previous["status"].astype(str))
         }
 
-    gap_frame = priority_gap_test_report()
+    readiness = readiness if readiness is not None else priority_readiness_report()
+    paper_execution_preflight_report(reports / "paper_execution_preflight.csv", readiness=readiness)
+    try:
+        gap_frame = priority_gap_test_report(readiness, refresh_paper_preflight=False)
+    except TypeError:
+        gap_frame = priority_gap_test_report(readiness)
     if gap_frame.empty:
         pm_frame = pd.DataFrame(
             [
@@ -5647,7 +7736,9 @@ def print_post_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path
             evidence = str(row["current_evidence"] or "")
             source_report = str(row["source_report"] or "")
             prev_status = str(previous_by_area.get(area, "unknown"))
-            trajectory = _post_mortem_status_trajectory(area=area, current_status=status, previous_status=prev_status)
+            trajectory = _post_mortem_status_trajectory(
+                area=area, current_status=status, previous_status=prev_status
+            )
             rows.append(
                 {
                     "run_id": run_id,
@@ -5738,7 +7829,15 @@ def print_post_mortem_checklist(run_dir: Path | None = None) -> tuple[Path, Path
     index_frame = _read_csv_or_empty(index_path)
     if index_frame.empty:
         index_frame = pd.DataFrame(
-            columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"]
+            columns=[
+                "run_id",
+                "timestamp_utc",
+                "open_gaps",
+                "pass_gates",
+                "critical",
+                "high",
+                "medium",
+            ]
         )
     index_frame = pd.concat(
         [
@@ -5905,7 +8004,17 @@ def print_red_team_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
     index_path = reports / "red_team_index.csv"
     index_frame = _read_csv_or_empty(index_path)
     if index_frame.empty:
-        index_frame = pd.DataFrame(columns=["run_id", "timestamp_utc", "open_gaps", "pass_gates", "critical", "high", "medium"])
+        index_frame = pd.DataFrame(
+            columns=[
+                "run_id",
+                "timestamp_utc",
+                "open_gaps",
+                "pass_gates",
+                "critical",
+                "high",
+                "medium",
+            ]
+        )
     index_frame = pd.concat(
         [
             index_frame,
@@ -5972,9 +8081,13 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
                 ]
             )
         local = frame.copy()
-        local["run_id"] = local.get("run_id", pd.Series(dtype=str)).fillna("").astype(str).replace({"": run_id})
+        local["run_id"] = (
+            local.get("run_id", pd.Series(dtype=str)).fillna("").astype(str).replace({"": run_id})
+        )
         local["source_checkpoint"] = source
-        local["timestamp_utc"] = local.get("timestamp_utc", pd.Series([timestamp] * len(local))).fillna(timestamp)
+        local["timestamp_utc"] = local.get(
+            "timestamp_utc", pd.Series([timestamp] * len(local))
+        ).fillna(timestamp)
         local["source_run_id"] = local["run_id"]
         local["source_row"] = source
         if "next_action" in local.columns:
@@ -6000,13 +8113,17 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
     )
 
     def _severity_rank(value: object) -> int:
-        return {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 4, "": 5}.get(str(value).strip().lower(), 5)
+        return {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 4, "": 5}.get(
+            str(value).strip().lower(), 5
+        )
 
     worklist = all_checkpoints[all_checkpoints["status"] != "pass"].copy()
     if not worklist.empty:
         worklist["_priority_rank"] = worklist["priority"].map(_priority_sort_key)
         worklist["_severity_rank"] = worklist["severity"].map(_severity_rank)
-        worklist = worklist.sort_values(["_severity_rank", "_priority_rank", "source_checkpoint", "area"]).reset_index(drop=True)
+        worklist = worklist.sort_values(
+            ["_severity_rank", "_priority_rank", "source_checkpoint", "area"]
+        ).reset_index(drop=True)
         worklist["rank"] = list(range(1, len(worklist) + 1))
         worklist_rows = [
             {
@@ -6111,7 +8228,15 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
     index_frame = _read_csv_or_empty(index_path)
     if index_frame.empty:
         index_frame = pd.DataFrame(
-            columns=["run_id", "timestamp_utc", "open_actions", "pass_gates", "critical", "high", "medium"]
+            columns=[
+                "run_id",
+                "timestamp_utc",
+                "open_actions",
+                "pass_gates",
+                "critical",
+                "high",
+                "medium",
+            ]
         )
     index_frame = pd.concat(
         [
@@ -6196,16 +8321,17 @@ def strategy_trade_count_gap_report(
         return empty
 
     required_buckets = {"base", "stress"}
-    grouped = (
-        evaluated.groupby(["strategy_id", "strategy_name", "pair", "cost_bucket"], as_index=False)
-        .agg(
-            trades=("trades", "max"),
-            observations=("observations", "max"),
-        )
+    grouped = evaluated.groupby(
+        ["strategy_id", "strategy_name", "pair", "cost_bucket"], as_index=False
+    ).agg(
+        trades=("trades", "max"),
+        observations=("observations", "max"),
     )
 
     rows: list[dict[str, object]] = []
-    for (strategy_id, strategy_name, pair), scope in grouped.groupby(["strategy_id", "strategy_name", "pair"]):
+    for (strategy_id, strategy_name, pair), scope in grouped.groupby(
+        ["strategy_id", "strategy_name", "pair"]
+    ):
         base = scope[scope["cost_bucket"] == "base"]
         stress = scope[scope["cost_bucket"] == "stress"]
         base_trades = int(base["trades"].max()) if not base.empty else 0
@@ -6221,7 +8347,9 @@ def strategy_trade_count_gap_report(
             stress_multiplier = max(1, int((required_trades + stress_trades - 1) // stress_trades))
 
         present_buckets = set(str(v) for v in scope["cost_bucket"].dropna().unique())
-        missing_cost_buckets = ";".join(sorted(required_buckets.difference(present_buckets))) or "none"
+        missing_cost_buckets = (
+            ";".join(sorted(required_buckets.difference(present_buckets))) or "none"
+        )
         if missing_cost_buckets != "none":
             notes = "missing_required_cost_bucket"
             pair_multiplier = 0
@@ -6278,16 +8406,24 @@ def print_strategy_trade_count_gap(
         status_counts = frame["status"].value_counts().to_dict()
         ready_count = int(status_counts.get("ready", 0))
         gap_count = int(status_counts.get("gap", 0))
-        print(f"strategy_trade_count_gap: total_rows={len(frame)} ready={ready_count} gap={gap_count}")
+        print(
+            f"strategy_trade_count_gap: total_rows={len(frame)} ready={ready_count} gap={gap_count}"
+        )
         print("ready_examples=", end=" ")
-        ready_examples = frame[frame["status"] == "ready"].head(5)[
-            ["strategy_id", "strategy_name", "pair", "base_trades", "pair_multiplier"]
-        ].to_string(index=False)
+        ready_examples = (
+            frame[frame["status"] == "ready"]
+            .head(5)[["strategy_id", "strategy_name", "pair", "base_trades", "pair_multiplier"]]
+            .to_string(index=False)
+        )
         print(ready_examples if ready_examples.strip() else "(none)")
         print("top_gaps=", end=" ")
-        top_gaps = frame[frame["status"] == "gap"].head(5)[
-            ["strategy_id", "strategy_name", "pair", "base_trades", "stress_trades", "notes"]
-        ].to_string(index=False)
+        top_gaps = (
+            frame[frame["status"] == "gap"]
+            .head(5)[
+                ["strategy_id", "strategy_name", "pair", "base_trades", "stress_trades", "notes"]
+            ]
+            .to_string(index=False)
+        )
         print(top_gaps if top_gaps.strip() else "(none)")
     print(f"strategy_trade_count_gap: {output}")
 
@@ -6300,6 +8436,11 @@ def print_dydx_execution_checklist(output_path: Path | None = None) -> None:
 
 
 def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
+    with _local_env_for_reports():
+        return _priority_readiness_report(output_path)
+
+
+def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_readiness.csv"
@@ -6319,7 +8460,9 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
             ready=live_ready,
             evidence=f"payloads={len(raw_payloads)};dictionary_exists={live_dictionary.exists()}",
             blocker="" if live_ready else "missing_live_payload_or_dictionary",
-            next_action="crawl or import Crypto Wizards payloads" if not live_ready else "continue field coverage checks",
+            next_action="crawl or import Crypto Wizards payloads"
+            if not live_ready
+            else "continue field coverage checks",
         )
     )
 
@@ -6341,7 +8484,9 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
             gate="pair_detail_history",
             ready=bool(experiment_ready and ecm_ready),
             evidence=f"snapshots={len(history_rows)};experiment_ready={len(experiment_ready)};ecm_ready={len(ecm_ready)}",
-            blocker="" if experiment_ready and ecm_ready else "missing_spread_zscore_or_ecm_history",
+            blocker=""
+            if experiment_ready and ecm_ready
+            else "missing_spread_zscore_or_ecm_history",
             next_action="import authenticated pair-detail capture with spread/zscore/ecm arrays"
             if not (experiment_ready and ecm_ready)
             else "run pair-detail experiments",
@@ -6405,13 +8550,17 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
                         "pair": _md_text(row.get("pair", "")),
                         "json_path": path,
                         "candidate_type": "cached_checklist",
-                        "row_count": int(float(pd.to_numeric(row.get("history_rows", 0), errors="coerce") or 0)),
+                        "row_count": int(
+                            float(pd.to_numeric(row.get("history_rows", 0), errors="coerce") or 0)
+                        ),
                         "columns": "",
                         "experiment_ready": _coerce_bool(
                             row.get("experiment_ready", row.get("baseline_ready", False))
                         ),
                         "missing_for_baseline_backtest": "",
-                        "ecm_history_ready": _coerce_bool(row.get("ecm_history_ready", row.get("ecm_ready", False))),
+                        "ecm_history_ready": _coerce_bool(
+                            row.get("ecm_history_ready", row.get("ecm_ready", False))
+                        ),
                         "missing_for_ecm_backtest": "",
                         "two_leg_execution_ready": _coerce_bool(
                             row.get("two_leg_execution_ready", row.get("two_leg_ready", False))
@@ -6424,15 +8573,19 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
                     }
                 )
         else:
-            capture_rows = pair_detail_capture_audit(pair_detail_dir) if pair_detail_dir.exists() else []
-    if capture_rows:
-            _write_csv_atomic(
-                pd.DataFrame(capture_rows, columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS),
-                capture_report_path,
+            capture_rows = (
+                pair_detail_capture_audit(pair_detail_dir) if pair_detail_dir.exists() else []
             )
+    if capture_rows:
+        _write_csv_atomic(
+            pd.DataFrame(capture_rows, columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS),
+            capture_report_path,
+        )
     capture_experiment_ready = [row for row in capture_rows if bool(row.get("experiment_ready"))]
     capture_ecm_ready = [row for row in capture_rows if bool(row.get("ecm_history_ready"))]
-    capture_two_leg_ready = [row for row in capture_rows if bool(row.get("two_leg_execution_ready"))]
+    capture_two_leg_ready = [
+        row for row in capture_rows if bool(row.get("two_leg_execution_ready"))
+    ]
     rows.append(
         _readiness_row(
             priority="P1",
@@ -6459,9 +8612,13 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     research_unblock_path = reports / "research_unblock_plan.csv"
     research_unblock_plan_report(research_unblock_path)
     if acceptance_path.exists():
-        acceptance = pd.read_csv(acceptance_path)
-        production_ready = int(acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum())
-        preferred_ready = int(acceptance.get("preferred_eligible", pd.Series(dtype=bool)).fillna(False).sum())
+        acceptance = _augmented_acceptance_frame(reports)
+        production_ready = int(
+            acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum()
+        )
+        preferred_ready = int(
+            acceptance.get("preferred_eligible", pd.Series(dtype=bool)).fillna(False).sum()
+        )
         two_leg_pairs_tested = _max_int_column(acceptance, "two_leg_pairs_tested")
         two_leg_passing_pairs = _max_int_column(acceptance, "two_leg_passing_pairs")
         total_strategies = len(acceptance)
@@ -6488,13 +8645,10 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
         )
     )
 
-    config = DydxNetworkConfig.paper_testnet_from_env()
+    config: object = DydxNetworkConfig.paper_testnet_from_env()
     order_client, order_adapter_error = _load_dydx_order_client_adapter()
     adapter_contract = validate_dydx_order_client_adapter()
-    order_adapter_loaded = (
-        order_client is not None
-        and not order_adapter_error
-    )
+    order_adapter_loaded = order_client is not None and not order_adapter_error
     order_adapter_ready = (
         order_client is not None
         and not order_adapter_error
@@ -6511,7 +8665,11 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     dydx_blockers = list(dydx_report.get("blockers", []))
     if order_adapter_error or (adapter_contract["configured"] and not adapter_contract["valid"]):
         dydx_blockers.append("invalid_dydx_order_client_adapter")
-    elif adapter_contract["configured"] and adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]:
+    elif (
+        adapter_contract["configured"]
+        and adapter_contract["valid"]
+        and not adapter_contract["exchange_submission_capable"]
+    ):
         dydx_blockers.append("record_only_dydx_order_client_adapter")
     dydx_ready = len(dydx_blockers) == 0
     dydx_report["ready_for_paper_submission"] = dydx_ready
@@ -6544,7 +8702,9 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
             ready=paper_gate_ready,
             evidence=f"strategy_ready={strategy_ready};dydx_ready={dydx_report['ready_for_paper_submission']}",
             blocker="" if paper_gate_ready else "strategy_or_dydx_gate_not_ready",
-            next_action="paper trade only accepted strategies" if paper_gate_ready else "do not submit paper orders yet",
+            next_action="paper trade only accepted strategies"
+            if paper_gate_ready
+            else "do not submit paper orders yet",
         )
     )
 
@@ -6553,8 +8713,12 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     learning_summary_path = reports / "learning_event_summary.csv"
     write_learning_event_summary_report(paper_journal, trade_store, learning_summary_path)
     learning_summary = _read_csv_or_empty(learning_summary_path)
-    combined_learning = learning_summary[learning_summary.get("source", pd.Series(dtype=str)) == "combined"]
-    combined_row = combined_learning.iloc[0] if not combined_learning.empty else pd.Series(dtype=object)
+    combined_learning = learning_summary[
+        learning_summary.get("source", pd.Series(dtype=str)) == "combined"
+    ]
+    combined_row = (
+        combined_learning.iloc[0] if not combined_learning.empty else pd.Series(dtype=object)
+    )
     paper_journal_rows = _csv_row_count(paper_journal)
     trade_store_rows = _jsonl_row_count(trade_store)
     learning_events = int(combined_row.get("events", 0) or 0)
@@ -6563,7 +8727,9 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     learning_outcomes_remaining = int(combined_row.get("outcome_events_remaining", 100) or 0)
     learning_ready_for_modeling = bool(combined_row.get("ready_for_modeling", False))
     learning_ready = learning_ready_for_modeling
-    learning_blocker = "missing_learning_events" if learning_events == 0 else "missing_model_ready_outcomes"
+    learning_blocker = (
+        "missing_learning_events" if learning_events == 0 else "missing_model_ready_outcomes"
+    )
     rows.append(
         _readiness_row(
             priority="P5",
@@ -6586,19 +8752,23 @@ def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     frame = pd.DataFrame(rows)
     _write_csv_atomic(frame, output)
     _write_csv_atomic(priority_action_plan(frame), reports / "priority_action_plan.csv")
-    priority_spine_dashboard_report(frame, reports / "priority_spine_dashboard.csv")
-    priority_gap_test_report(frame, reports / "priority_gap_test.csv")
+    dashboard = priority_spine_dashboard_report(frame, reports / "priority_spine_dashboard.csv")
+    _priority_gap_frame_from_dashboard(dashboard, reports / "priority_gap_test.csv")
     return frame
 
 
 def print_priority_readiness(output_path: Path | None = None) -> None:
     frame = priority_readiness_report(output_path)
     print(frame.to_string(index=False))
-    print(f"priority_readiness_report: {output_path or ROOT / 'reports' / 'priority_readiness.csv'}")
+    print(
+        f"priority_readiness_report: {output_path or ROOT / 'reports' / 'priority_readiness.csv'}"
+    )
     print(f"priority_action_plan: {ROOT / 'reports' / 'priority_action_plan.csv'}")
 
 
-def priority_action_plan(readiness: pd.DataFrame | None = None, output_path: Path | None = None) -> pd.DataFrame:
+def priority_action_plan(
+    readiness: pd.DataFrame | None = None, output_path: Path | None = None
+) -> pd.DataFrame:
     readiness = readiness if readiness is not None else priority_readiness_report()
     blocked = readiness[~readiness["ready"].astype(bool)].copy()
     if blocked.empty:
@@ -6687,7 +8857,10 @@ def seed_learning_outcome_template_from_paper_journal(
     rows: list[dict[str, object]] = []
     if not journal.empty:
         statuses = journal.get("plan_status", pd.Series(dtype=str)).fillna("").astype(str)
-        for _, row in journal.loc[statuses == "paper_ready"].iterrows():
+        eligible = statuses.isin(
+            ["paper_ready", "paper_submitted", "confirmed_on_exchange", "paper_completed"]
+        )
+        for _, row in journal.loc[eligible].iterrows():
             fill_statuses: list[str] = []
             try:
                 parsed_fills = json.loads(str(row.get("fills_json", "")) or "[]")
@@ -6697,7 +8870,9 @@ def seed_learning_outcome_template_from_paper_journal(
                 for item in parsed_fills:
                     if isinstance(item, dict) and item.get("status") is not None:
                         fill_statuses.append(str(item["status"]))
-            if not any(status == "paper_submitted" for status in fill_statuses):
+            if not any(
+                status in {"paper_submitted", "confirmed_on_exchange"} for status in fill_statuses
+            ):
                 continue
             pair = str(row.get("pair", "")).strip()
             strategy_id = str(row.get("strategy_id", "")).strip()
@@ -6729,7 +8904,9 @@ def print_seed_learning_outcome_template_from_paper_journal(
 ) -> None:
     output = output_path or ROOT / "data" / "meta_learning" / "learning_outcome_template.csv"
     source = input_path or ROOT / "reports" / "paper_trading_journal.csv"
-    frame = seed_learning_outcome_template_from_paper_journal(input_path=input_path, output_path=output)
+    frame = seed_learning_outcome_template_from_paper_journal(
+        input_path=input_path, output_path=output
+    )
     print(frame.to_string(index=False))
     print(f"seeded_rows: {len(frame)}")
     print(f"paper_trading_journal_source: {source}")
@@ -6752,7 +8929,9 @@ def trade_timing_comparison_report(
     exit_threshold: float = 0.0,
 ) -> pd.DataFrame:
     if trades_path is None:
-        raise SystemExit("trade-timing-comparison-report requires --input-dir pointing to a trades CSV")
+        raise SystemExit(
+            "trade-timing-comparison-report requires --input-dir pointing to a trades CSV"
+        )
     if history_path is None:
         raise SystemExit("trade-timing-comparison-report requires --history-path")
     trades = pd.read_csv(trades_path, dtype=str).fillna("")
@@ -6848,7 +9027,9 @@ def learning_outcome_template_check_report(
     return frame
 
 
-def print_learning_outcome_template_check(input_path: Path | None = None, output_path: Path | None = None) -> None:
+def print_learning_outcome_template_check(
+    input_path: Path | None = None, output_path: Path | None = None
+) -> None:
     output = output_path or ROOT / "reports" / "learning_outcome_template_check.csv"
     frame = learning_outcome_template_check_report(input_path, output)
     print(frame.to_string(index=False))
@@ -6872,7 +9053,9 @@ def import_learning_outcomes_from_template(
                     "blocked_rows": 0,
                     "missing_columns": ";".join(LEARNING_OUTCOME_REQUIRED_COLUMNS),
                     "invalid_rows": "",
-                    "trade_store": str(trade_store_path or ROOT / "data" / "meta_learning" / "trades.jsonl"),
+                    "trade_store": str(
+                        trade_store_path or ROOT / "data" / "meta_learning" / "trades.jsonl"
+                    ),
                     "status": "blocked",
                     "next_action": "create learning outcome template and fill realized outcomes",
                 }
@@ -6938,21 +9121,31 @@ def import_learning_outcomes_from_template(
     return frame
 
 
-def print_import_learning_outcomes(input_path: Path | None = None, output_path: Path | None = None) -> None:
+def print_import_learning_outcomes(
+    input_path: Path | None = None, output_path: Path | None = None
+) -> None:
     frame = import_learning_outcomes_from_template(input_path=input_path, report_path=output_path)
     output = output_path or ROOT / "reports" / "learning_outcome_import_report.csv"
     print(frame.to_string(index=False))
     print(f"learning_outcome_import_report: {output}")
 
 
-def _learning_outcome_template_validation(frame: pd.DataFrame) -> tuple[list[str], list[int], list[str]]:
-    missing_columns = [column for column in LEARNING_OUTCOME_REQUIRED_COLUMNS if column not in frame.columns]
+def _learning_outcome_template_validation(
+    frame: pd.DataFrame,
+) -> tuple[list[str], list[int], list[str]]:
+    missing_columns = [
+        column for column in LEARNING_OUTCOME_REQUIRED_COLUMNS if column not in frame.columns
+    ]
     invalid_rows: list[str] = []
     ready_indices: list[int] = []
     if missing_columns or frame.empty:
         return missing_columns, ready_indices, invalid_rows
     for index, row in frame.iterrows():
-        missing = [column for column in LEARNING_OUTCOME_REQUIRED_COLUMNS if str(row.get(column, "")).strip() == ""]
+        missing = [
+            column
+            for column in LEARNING_OUTCOME_REQUIRED_COLUMNS
+            if str(row.get(column, "")).strip() == ""
+        ]
         numeric_errors = []
         for column in ("strategy_id", "realized_return"):
             value = str(row.get(column, "")).strip()
@@ -7033,7 +9226,9 @@ def run_append_learning_outcome(
     output_path: Path | None,
 ) -> None:
     if pair is None or strategy_id is None or realized_return is None:
-        raise SystemExit("append-learning-outcome requires --pair, --strategy-id, and --realized-return")
+        raise SystemExit(
+            "append-learning-outcome requires --pair, --strategy-id, and --realized-return"
+        )
     path = append_learning_outcome(
         pair=pair,
         strategy_id=strategy_id,
@@ -7068,7 +9263,9 @@ def _readiness_row(
     }
 
 
-def _execution_check_row(step: str, ready: bool, blocker: str, evidence: str, next_action: str) -> dict[str, object]:
+def _execution_check_row(
+    step: str, ready: bool, blocker: str, evidence: str, next_action: str
+) -> dict[str, object]:
     return {
         "step": step,
         "ready": ready,
@@ -7150,8 +9347,12 @@ def _first_next_action(gates: pd.DataFrame, gate_names: list[str]) -> str:
 def _capture_dashboard_metric(frame: pd.DataFrame) -> str:
     if frame.empty:
         return "captures=0"
-    ready = int(frame.get("research_spine_ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
-    completeness = pd.to_numeric(frame.get("capture_completeness_score", pd.Series(dtype=float)), errors="coerce")
+    ready = int(
+        frame.get("research_spine_ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+    )
+    completeness = pd.to_numeric(
+        frame.get("capture_completeness_score", pd.Series(dtype=float)), errors="coerce"
+    )
     if completeness.dropna().empty:
         best_row = frame.iloc[0]
     else:
@@ -7159,15 +9360,21 @@ def _capture_dashboard_metric(frame: pd.DataFrame) -> str:
     next_focus = str(best_row.get("next_capture_focus", "unknown") or "unknown")
     missing_value = best_row.get("missing_required_fields", "")
     missing = "" if pd.isna(missing_value) else str(missing_value or "")
-    best_score = "" if completeness.dropna().empty else f";best_completeness={float(completeness.max()):.2f}"
+    best_score = (
+        "" if completeness.dropna().empty else f";best_completeness={float(completeness.max()):.2f}"
+    )
     return f"captures={len(frame)};research_spine_ready={ready}{best_score};next_focus={next_focus};missing={missing or 'none'}"
 
 
 def _capture_quality_dashboard_metric(frame: pd.DataFrame) -> str:
     if frame.empty:
         return "quality_rows=0"
-    research_usable = int(frame.get("research_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
-    execution_usable = int(frame.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
+    research_usable = int(
+        frame.get("research_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+    )
+    execution_usable = int(
+        frame.get("execution_usable", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+    )
     blocked = frame[~frame.get("research_usable", pd.Series(dtype=bool)).fillna(False).astype(bool)]
     first_blocker = ""
     if not blocked.empty and "quality_blockers" in blocked.columns:
@@ -7199,6 +9406,25 @@ def _checklist_first_blocked_next_action(frame: pd.DataFrame) -> str:
     return str(blocked["next_action"].fillna("").iloc[0])
 
 
+def _checklist_step_ready(frame: pd.DataFrame, step: str) -> bool | None:
+    if frame.empty or "step" not in frame.columns or "ready" not in frame.columns:
+        return None
+    matches = frame[frame["step"].astype(str) == step]
+    if matches.empty:
+        return None
+    return bool(matches["ready"].fillna(False).astype(bool).iloc[0])
+
+
+def _checklist_step_value(frame: pd.DataFrame, step: str, column: str) -> str:
+    if frame.empty or "step" not in frame.columns or column not in frame.columns:
+        return ""
+    matches = frame[frame["step"].astype(str) == step]
+    if matches.empty:
+        return ""
+    value = matches[column].fillna("").iloc[0]
+    return "" if pd.isna(value) else str(value)
+
+
 def _learning_dashboard_metric(frame: pd.DataFrame) -> str:
     if frame.empty:
         return "events=0"
@@ -7225,6 +9451,8 @@ def _gap_severity(priority: str) -> str:
 def _required_gap_proof(area: str) -> str:
     proofs = {
         "crypto_wizards_capture": "pair-detail capture with spread,zscore,ecm_x,ecm_y,ecm_strength,price_x,price_y history",
+        "crypto_wizards_historical_capture": "historical_capture_corpus_complete_with_lineage",
+        "current_state_hyperliquid_wizard_exact_mode_intake": "same-day exact-mode settings for every current candidate",
         "strategy_acceptance": "production-eligible strategy with required two-leg base/stress results across multiple pairs",
         "dydx_testnet_readiness": "submit flag, credentials, SDK, indexer, and authenticated order adapter all ready",
         "paper_execution_gate": "strategy_acceptance ready and dydx_testnet_readiness ready",
@@ -7235,16 +9463,18 @@ def _required_gap_proof(area: str) -> str:
 
 def _pre_mortem_question(priority: str, area: str, severity: str) -> str:
     if severity == "critical":
-        return (
-            f"{priority} {area}: If we move to execution without this, what hard failure would most likely break us first?"
-        )
+        return f"{priority} {area}: If we move to execution without this, what hard failure would most likely break us first?"
     if severity == "high":
         return f"{priority} {area}: What would fail and what signal would we watch first?"
     return f"{priority} {area}: What is the most likely downside risk we are accepting by skipping this?"
 
 
 def _pre_mortem_failure_mode(area: str, gap: str) -> str:
-    if area == "crypto_wizards_capture":
+    if area in {
+        "crypto_wizards_capture",
+        "crypto_wizards_historical_capture",
+        "current_state_hyperliquid_wizard_exact_mode_intake",
+    }:
         return (
             "Selection decisions may be based on incomplete spread/score history, producing false positives and "
             "pairs that are untradeable in practice."
@@ -7265,6 +9495,8 @@ def _pre_mortem_failure_mode(area: str, gap: str) -> str:
 def _pre_mortem_prevention(area: str, required_proof: str) -> str:
     preventions = {
         "crypto_wizards_capture": "Require capture completeness on spread/z-score/ECM metrics before any research promotion.",
+        "crypto_wizards_historical_capture": "Keep historical capture coverage separate from current candidate readiness and promotion authority.",
+        "current_state_hyperliquid_wizard_exact_mode_intake": "Require same-day exact-mode settings and timestamps for every current candidate; never inherit settings from historical captures.",
         "strategy_acceptance": "Keep strategy acceptance gates as mandatory before moving any pair into execution lanes.",
         "dydx_testnet_readiness": "Keep all venue execution checks and adapter wiring as hard blockers before paper/live signals.",
         "paper_execution_gate": "Run paper preflight as a strict step with explicit block reasons and no override path.",
@@ -7286,7 +9518,11 @@ def _post_mortem_status_trajectory(area: str, current_status: str, previous_stat
 
 
 def _post_mortem_incident(area: str, gap: str) -> str:
-    if area == "crypto_wizards_capture":
+    if area in {
+        "crypto_wizards_capture",
+        "crypto_wizards_historical_capture",
+        "current_state_hyperliquid_wizard_exact_mode_intake",
+    }:
         return (
             "We likely selected a candidate on stale or incomplete pair-structure data and entered with misleading "
             "spread/z-score/ECM signal quality."
@@ -7316,9 +9552,7 @@ def _post_mortem_insight(area: str, trajectory: str, evidence: str) -> str:
             "Prioritize root-cause containment and replay controls."
         )
     if trajectory == "persistent":
-        return (
-            f"{area} remained open in previous checks and continues to pose operational risk until evidence is completed."
-        )
+        return f"{area} remained open in previous checks and continues to pose operational risk until evidence is completed."
     return "No recent trajectory comparison data was available; treat this as first-observed post-run evidence."
 
 
@@ -7420,8 +9654,12 @@ def _funding_preflight_status(
     ready_pairs = int(ready_values.sum())
     total_pairs = int(len(coverage))
     blocked = coverage[~ready_values]
-    blocked_pairs = ";".join(str(pair) for pair in blocked.get("pair", pd.Series(dtype=str)).dropna().unique())
-    missing = ";".join(str(value) for value in blocked.get("missing", pd.Series(dtype=str)).dropna().unique())
+    blocked_pairs = ";".join(
+        str(pair) for pair in blocked.get("pair", pd.Series(dtype=str)).dropna().unique()
+    )
+    missing = ";".join(
+        str(value) for value in blocked.get("missing", pd.Series(dtype=str)).dropna().unique()
+    )
     missing_markets = _semicolon_values(blocked.get("missing_markets", pd.Series(dtype=str)))
     missing_market_arg = ",".join(missing_markets)
     all_ready = total_pairs > 0 and ready_pairs == total_pairs
@@ -7580,7 +9818,10 @@ def _quality_blocker_summary(frame: pd.DataFrame) -> str:
             item = item.strip()
             if item:
                 counts[item] = counts.get(item, 0) + 1
-    return ";".join(f"{blocker}:{count}" for blocker, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:8])
+    return ";".join(
+        f"{blocker}:{count}"
+        for blocker, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:8]
+    )
 
 
 def _coerce_bool(value: object) -> bool:
@@ -7749,30 +9990,23 @@ def _covered_funding_markets() -> set[str]:
     coverage = _read_csv_or_empty(reports / "funding_coverage.csv")
     for column in ("market_x", "market_y"):
         if column in coverage.columns:
-            markets.update(_normalize_dydx_market(value) for value in coverage[column].dropna().astype(str) if value)
+            markets.update(
+                _normalize_dydx_market(value)
+                for value in coverage[column].dropna().astype(str)
+                if value
+            )
     return markets
 
 
 def _markets_from_pair_name(pair: str) -> tuple[str, str] | None:
-    text = str(pair).upper()
-    if "-USD-" in text:
-        left, right = text.split("-USD-", 1)
-        if left and right:
-            return _normalize_dydx_market(left), _normalize_dydx_market(right)
-    parts = [part for part in re.split(r"[-_/]", text) if part and part != "USD"]
-    if len(parts) >= 2:
-        return _normalize_dydx_market(parts[0]), _normalize_dydx_market(parts[1])
+    markets = pair_markets_from_pair(pair)
+    if len(markets) >= 2:
+        return markets[0], markets[1]
     return None
 
 
 def _normalize_dydx_market(asset: str) -> str:
-    text = str(asset).upper().replace("/", "-").strip()
-    parts = [part for part in text.split("-") if part]
-    if len(parts) >= 2 and parts[-1] == "USD":
-        return f"{parts[0]}-USD"
-    if len(parts) == 1:
-        return f"{parts[0]}-USD"
-    return text
+    return normalize_dydx_market(asset)
 
 
 def _normalize_dydx_pair(pair: str) -> str:
@@ -7817,7 +10051,9 @@ def _local_cached_dydx_markets() -> set[str]:
     return markets
 
 
-def _fetch_live_dydx_market_catalog(indexer_base: str = DEFAULT_INDEXER_BASE, max_markets: int = 300) -> dict[str, dict[str, object]]:
+def _fetch_live_dydx_market_catalog(
+    indexer_base: str = DEFAULT_INDEXER_BASE, max_markets: int = 300
+) -> dict[str, dict[str, object]]:
     requested_indexer_base = _indexer_base_with_scheme(indexer_base, "")
     url = f"{requested_indexer_base}/v4/perpetualMarkets?limit={max_markets}"
     response = requests.get(url, headers={"Content-Type": "application/json"}, timeout=20.0)
@@ -7829,7 +10065,10 @@ def _fetch_live_dydx_market_catalog(indexer_base: str = DEFAULT_INDEXER_BASE, ma
 
 def _live_market_selector_score(trades_24h: float, volume_24h: float) -> float:
     # Favor markets that are both frequently traded and meaningfully liquid.
-    return round((np.log10(max(trades_24h, 0.0) + 1.0) * 0.6) + (np.log10(max(volume_24h, 0.0) + 1.0) * 0.4), 6)
+    return round(
+        (np.log10(max(trades_24h, 0.0) + 1.0) * 0.6) + (np.log10(max(volume_24h, 0.0) + 1.0) * 0.4),
+        6,
+    )
 
 
 def dydx_live_market_selector_report(
@@ -7939,6 +10178,81 @@ def dydx_live_market_selector_report(
     return frame
 
 
+def dydx_anchor_sweep_report(
+    *,
+    anchors: list[str] | None = None,
+    max_pairs: int = 10,
+    indexer_base: str = DEFAULT_INDEXER_BASE,
+    output_path: Path | None = None,
+) -> pd.DataFrame:
+    reports = ROOT / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    output = output_path or reports / "dydx_anchor_sweep.csv"
+    anchor_markets = [
+        _normalize_dydx_market(anchor)
+        for anchor in (anchors or list(DEFAULT_DYDX_LIVE_SELECTOR_ANCHORS))
+        if str(anchor).strip()
+    ]
+    if not anchor_markets:
+        raise SystemExit("dydx-anchor-sweep requires at least one anchor market")
+
+    selector = dydx_live_market_selector_report(
+        max_pairs=max(max_pairs * len(anchor_markets) * 8, 50),
+        indexer_base=indexer_base,
+        output_path=reports / "dydx_live_market_selector.csv",
+    )
+    if selector.empty:
+        _write_csv_atomic(selector, output)
+        return selector
+
+    filtered = selector[selector["asset_x"].isin(anchor_markets)].copy()
+    if filtered.empty:
+        _write_csv_atomic(filtered, output)
+        return filtered
+
+    filtered["_selector_score"] = pd.to_numeric(filtered["selector_score"], errors="coerce").fillna(
+        0.0
+    )
+    filtered["_candidate_trades_24h"] = pd.to_numeric(
+        filtered["candidate_trades_24h"], errors="coerce"
+    ).fillna(0.0)
+    filtered["_candidate_volume_24h"] = pd.to_numeric(
+        filtered["candidate_volume_24h"], errors="coerce"
+    ).fillna(0.0)
+    filtered = filtered.sort_values(
+        ["asset_x", "_selector_score", "_candidate_trades_24h", "_candidate_volume_24h", "asset_y"],
+        ascending=[True, False, False, False, True],
+    )
+    filtered["anchor_rank"] = filtered.groupby("asset_x").cumcount() + 1
+    filtered = filtered[filtered["anchor_rank"] <= max(max_pairs, 1)].copy()
+    filtered = filtered.sort_values(
+        ["_selector_score", "_candidate_trades_24h", "_candidate_volume_24h", "asset_x", "asset_y"],
+        ascending=[False, False, False, True, True],
+    )
+    filtered["overall_rank"] = range(1, len(filtered) + 1)
+    filtered.insert(0, "anchor", filtered["asset_x"])
+    frame = filtered[
+        [
+            "overall_rank",
+            "anchor_rank",
+            "anchor",
+            "pair_id",
+            "asset_x",
+            "asset_y",
+            "selector_score",
+            "candidate_trades_24h",
+            "candidate_volume_24h",
+            "candidate_oracle_price",
+            "fetch_command",
+            "request_template_command",
+            "sample_size_note",
+            "notes",
+        ]
+    ].reset_index(drop=True)
+    _write_csv_atomic(frame, output)
+    return frame
+
+
 def dydx_live_market_counts_report(
     *,
     indexer_base: str = DEFAULT_INDEXER_BASE,
@@ -7949,15 +10263,25 @@ def dydx_live_market_counts_report(
     output = output_path or reports / "dydx_live_market_counts.csv"
 
     markets = _fetch_live_dydx_market_catalog(indexer_base=indexer_base)
-    normalized_markets = {_normalize_dydx_market(name): meta for name, meta in markets.items() if "," not in str(name)}
+    normalized_markets = {
+        _normalize_dydx_market(name): meta for name, meta in markets.items() if "," not in str(name)
+    }
     total_markets = len(normalized_markets)
     active_markets = {
-        market: meta for market, meta in normalized_markets.items() if str(meta.get("status", "")).upper() == "ACTIVE"
+        market: meta
+        for market, meta in normalized_markets.items()
+        if str(meta.get("status", "")).upper() == "ACTIVE"
     }
     active_cross_markets = {
-        market: meta for market, meta in active_markets.items() if str(meta.get("marketType", "")).upper() == "CROSS"
+        market: meta
+        for market, meta in active_markets.items()
+        if str(meta.get("marketType", "")).upper() == "CROSS"
     }
-    excluded_markets = {market for market in active_cross_markets if market in DEFAULT_DYDX_LIVE_SELECTOR_EXCLUDED_MARKETS}
+    excluded_markets = {
+        market
+        for market in active_cross_markets
+        if market in DEFAULT_DYDX_LIVE_SELECTOR_EXCLUDED_MARKETS
+    }
     cached_markets = _local_cached_dydx_markets()
     risky_markets = _stale_market_risk_info()
     tested_pairs = _tested_market_pairs()
@@ -8034,6 +10358,24 @@ def print_dydx_live_market_selector(
     print(f"dydx_live_market_selector: {output}")
 
 
+def print_dydx_anchor_sweep(
+    *,
+    anchors: list[str] | None = None,
+    max_pairs: int = 10,
+    indexer_base: str = DEFAULT_INDEXER_BASE,
+    output_path: Path | None = None,
+) -> None:
+    output = output_path or ROOT / "reports" / "dydx_anchor_sweep.csv"
+    frame = dydx_anchor_sweep_report(
+        anchors=anchors,
+        max_pairs=max_pairs,
+        indexer_base=indexer_base,
+        output_path=output,
+    )
+    print(frame.to_string(index=False))
+    print(f"dydx_anchor_sweep: {output}")
+
+
 def _resolve_long_history_pair(
     *,
     pair: str | None,
@@ -8046,8 +10388,16 @@ def _resolve_long_history_pair(
         return left, right, pair_id or _pair_id_from_markets(left, right)
     plan = dydx_pair_expansion_plan_report(max_pairs=1)
     if not plan.empty:
-        tested = plan["already_tested"].map(_coerce_bool) if "already_tested" in plan.columns else pd.Series(False, index=plan.index)
-        fetched = plan["already_fetched"].map(_coerce_bool) if "already_fetched" in plan.columns else pd.Series(False, index=plan.index)
+        tested = (
+            plan["already_tested"].map(_coerce_bool)
+            if "already_tested" in plan.columns
+            else pd.Series(False, index=plan.index)
+        )
+        fetched = (
+            plan["already_fetched"].map(_coerce_bool)
+            if "already_fetched" in plan.columns
+            else pd.Series(False, index=plan.index)
+        )
         fresh = plan[(~tested) & (~fetched)].copy()
         if "rank" in fresh.columns:
             fresh["_rank"] = pd.to_numeric(fresh["rank"], errors="coerce")
@@ -8056,8 +10406,14 @@ def _resolve_long_history_pair(
             row = fresh.iloc[0]
             left = _md_text(row.get("asset_x", ""))
             right = _md_text(row.get("asset_y", ""))
-            return left, right, pair_id or _md_text(row.get("pair_id", "")) or _pair_id_from_markets(left, right)
-    raise SystemExit("dydx-long-history-plan requires --pair or --asset-x/--asset-y when no fresh expansion pair exists")
+            return (
+                left,
+                right,
+                pair_id or _md_text(row.get("pair_id", "")) or _pair_id_from_markets(left, right),
+            )
+    raise SystemExit(
+        "dydx-long-history-plan requires --pair or --asset-x/--asset-y when no fresh expansion pair exists"
+    )
 
 
 def _parse_iso_datetime(value: str) -> datetime:
@@ -8195,19 +10551,37 @@ def build_paper_plan_from_cli(
     acceptance_path: Path | None = None,
     venue: str = "dydx",
 ) -> tuple[SpreadOrderPlan, list[dict[str, object]]]:
-    acceptance_path = acceptance_path or _acceptance_report_path()
-    if not acceptance_path.exists():
-        raise SystemExit(f"acceptance report not found: {acceptance_path}")
     venue = (venue or "").lower()
-    acceptance = pd.read_csv(acceptance_path)
+    if acceptance_path is None:
+        acceptance = _augmented_acceptance_frame(ROOT / "reports")
+    else:
+        if not acceptance_path.exists():
+            raise SystemExit(f"acceptance report not found: {acceptance_path}")
+        acceptance = pd.read_csv(acceptance_path)
+    signal_row = {
+        "pair": pair,
+        "strategy_id": strategy_id,
+        "signal": signal,
+        "hedge_ratio": hedge_ratio,
+        "beta": beta,
+    }
+    if venue == "dydx":
+        config = DydxNetworkConfig.paper_testnet_from_env()
+        indexer = build_dydx_indexer_adapter(config)
+        if indexer is not None:
+            left, right = _split_pair_assets(pair)
+            left_market = left if left.endswith("-USD") else f"{left}-USD"
+            right_market = right if right.endswith("-USD") else f"{right}-USD"
+            left_payload = indexer.market_data(left_market).get("payload", {})
+            right_payload = indexer.market_data(right_market).get("payload", {})
+            left_meta = left_payload.get("markets", {}).get(left_market, {})
+            right_meta = right_payload.get("markets", {}).get(right_market, {})
+            signal_row["price_x"] = float(left_meta.get("oraclePrice") or 0.0)
+            signal_row["price_y"] = float(right_meta.get("oraclePrice") or 0.0)
+            signal_row["step_size_x"] = float(left_meta.get("stepSize") or 0.0)
+            signal_row["step_size_y"] = float(right_meta.get("stepSize") or 0.0)
     plan = build_research_gated_paper_plan(
-        {
-            "pair": pair,
-            "strategy_id": strategy_id,
-            "signal": signal,
-            "hedge_ratio": hedge_ratio,
-            "beta": beta,
-        },
+        signal_row,
         acceptance,
         notional_usd=notional_usd,
         venue=venue,
@@ -8248,6 +10622,24 @@ def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
         preferred = str(row.iloc[0].get("best_execution_venue", "") or "").strip().lower()
         available = str(row.iloc[0].get("available_venues", "") or "")
         preferreds = [venue.strip().lower() for venue in available.split(";") if venue.strip()]
+
+    recommendations = _read_csv_or_empty(
+        ROOT / "reports" / "active" / "venue_route_recommendations.csv"
+    )
+    route_row = _lookup_pair_universe_row(recommendations, pair)
+    if not route_row.empty:
+        route_preferreds = []
+        for column in (
+            "recommended_paper_venue",
+            "recommended_execution_venue",
+            "recommended_research_venue",
+        ):
+            venue = str(route_row.iloc[0].get(column, "") or "").strip().lower()
+            if venue and venue not in {"nan", "none", "null"}:
+                route_preferreds.append(venue)
+        if route_preferreds:
+            preferred = route_preferreds[0]
+            preferreds = list(dict.fromkeys([*route_preferreds, *preferreds]))
 
     left_map = context_by_asset.get(x, {})
     right_map = context_by_asset.get(y, {})
@@ -8312,14 +10704,36 @@ def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
             blockers.append("thin_venue_liquidity")
         blockers.extend(leg_blockers)
 
-        has_execution_support = venue_has_paper_adapter(normalized_venue) or normalized_venue == "dydx"
-        execution_ready = left_authority and right_authority and left_tradable and right_tradable and has_execution_support
-        if (left_authority and right_authority and left_tradable and right_tradable) and not has_execution_support:
+        venue_context_ready = (
+            left_authority
+            and right_authority
+            and left_tradable
+            and right_tradable
+            and not leg_blockers
+        )
+        generic_execution_supported = (
+            venue_has_paper_adapter(normalized_venue) or normalized_venue == "dydx"
+        )
+        if normalized_venue == "hyperliquid":
+            adapter_contract = validate_venue_order_client_adapter(normalized_venue)
+            generic_execution_supported = bool(
+                adapter_contract.get("valid")
+                and adapter_contract.get("exchange_submission_capable")
+                and adapter_contract.get("pair_submission_capable")
+            )
+            if venue_context_ready and not generic_execution_supported:
+                blockers.append("hyperliquid_pair_submission_not_supported")
+        execution_ready = venue_context_ready and generic_execution_supported
+        if (
+            venue_context_ready
+            and not generic_execution_supported
+            and normalized_venue != "hyperliquid"
+        ):
             blockers.append("paper_execution_not_implemented")
         options.append(
             {
                 "venue": normalized_venue,
-                "executable": execution_ready,
+                "executable": venue_context_ready and generic_execution_supported,
                 "execution_ready": execution_ready,
                 "research_ready": left_tradable and right_tradable,
                 "blockers": ";".join(sorted(set(blockers))),
@@ -8399,6 +10813,7 @@ def run_paper_plan(
     acceptance_path: Path | None = None,
     journal_path: Path | None = None,
     venue: str | None = None,
+    order_approval_id: str | None = None,
 ) -> None:
     venue = (venue or "").lower().strip() or "auto"
     selected_venue = _resolve_paper_venue(pair, venue)
@@ -8422,12 +10837,17 @@ def run_paper_plan(
     print(f"paper_plan_venue: {selected_venue}")
     if intent_rows:
         print(pd.DataFrame(intent_rows).to_string(index=False))
+    dashboard_snapshot = _lookup_dashboard_trade_snapshot(pair=pair)
     if plan.status != "paper_ready":
         path = append_paper_trading_record(
-            paper_trading_record(plan),
+            paper_trading_record(plan, dashboard_snapshot=dashboard_snapshot),
             journal_path or ROOT / "reports" / "paper_trading_journal.csv",
         )
+        watch_path = refresh_current_paper_watch_positions(
+            journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+        )
         print(f"paper_trading_journal: {path}")
+        print(f"current_paper_watch_positions: {watch_path}")
         return
 
     blockers: list[str] = []
@@ -8440,10 +10860,31 @@ def run_paper_plan(
         adapter_contract = validate_dydx_order_client_adapter()
         if order_adapter_error:
             blockers.append("invalid_dydx_order_client_adapter")
-        elif adapter_contract["configured"] and adapter_contract["valid"] and not adapter_contract["exchange_submission_capable"]:
+        elif (
+            adapter_contract["configured"]
+            and adapter_contract["valid"]
+            and not adapter_contract["exchange_submission_capable"]
+        ):
             blockers.append("record_only_dydx_order_client_adapter")
         if order_client is None and "missing_dydx_v4_client" not in blockers:
             blockers.append("missing_dydx_order_client_adapter")
+    elif selected_venue == "hyperliquid":
+        config = replace(
+            HyperliquidTestnetConfig.paper_testnet_from_env(),
+            order_approval_id=str(order_approval_id or "").strip() or None,
+        )
+        preflight = hyperliquid_testnet_order_preflight_status()
+        blockers.extend(item for item in str(preflight.get("blocker") or "").split(";") if item)
+        order_client, order_adapter_error = _load_venue_order_client_adapter(selected_venue)
+        adapter_contract = validate_venue_order_client_adapter(selected_venue)
+        if order_adapter_error:
+            blockers.append(f"invalid_hyperliquid_order_client_adapter:{order_adapter_error}")
+        elif not bool(adapter_contract.get("pair_submission_capable")):
+            blockers.append("hyperliquid_pair_submission_not_supported")
+        elif not bool(adapter_contract.get("exchange_submission_capable")):
+            blockers.append("record_only_hyperliquid_order_client_adapter")
+        if not config.order_approval_id:
+            blockers.append("missing_explicit_hyperliquid_order_approval")
     else:
         order_client, order_adapter_error = _load_venue_order_client_adapter(selected_venue)
         adapter_contract = validate_venue_order_client_adapter(selected_venue)
@@ -8453,7 +10894,9 @@ def run_paper_plan(
             if not adapter_contract["configured"]:
                 blockers.append(f"missing_{selected_venue}_order_client_adapter")
             elif not adapter_contract["valid"]:
-                blockers.append(f"{selected_venue}_order_client_adapter_invalid:{adapter_contract.get('error')}")
+                blockers.append(
+                    f"{selected_venue}_order_client_adapter_invalid:{adapter_contract.get('error')}"
+                )
             elif not adapter_contract["exchange_submission_capable"]:
                 blockers.append(f"record_only_{selected_venue}_order_client_adapter")
     if order_client is None and not blockers:
@@ -8463,20 +10906,71 @@ def run_paper_plan(
         print(f"execution_blockers: {','.join(blockers)}")
         blocked_plan = block_paper_plan_for_execution_config(plan, blockers)
         path = append_paper_trading_record(
-            paper_trading_record(blocked_plan, blockers=blockers),
+            paper_trading_record(
+                blocked_plan, blockers=blockers, dashboard_snapshot=dashboard_snapshot
+            ),
             journal_path or ROOT / "reports" / "paper_trading_journal.csv",
         )
+        watch_path = refresh_current_paper_watch_positions(
+            journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+        )
         print(f"paper_trading_journal: {path}")
+        print(f"current_paper_watch_positions: {watch_path}")
         return
-    execution = build_execution_venue(selected_venue, config=config, order_client=order_client, market_data_client=build_dydx_indexer_adapter(config))
+    market_data_client = build_dydx_indexer_adapter(config) if selected_venue == "dydx" else None
+    execution = build_execution_venue(
+        selected_venue,
+        config=config,
+        order_client=order_client,
+        market_data_client=market_data_client,
+    )
     fills = submit_paper_plan(plan, execution)
     if fills:
         print(pd.DataFrame([fill.__dict__ for fill in fills]).to_string(index=False))
     path = append_paper_trading_record(
-        paper_trading_record(plan, fills=fills, blockers=blockers),
+        paper_trading_record(
+            plan, fills=fills, blockers=blockers, dashboard_snapshot=dashboard_snapshot
+        ),
         journal_path or ROOT / "reports" / "paper_trading_journal.csv",
     )
+    watch_path = refresh_current_paper_watch_positions(
+        journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+    )
     print(f"paper_trading_journal: {path}")
+    print(f"current_paper_watch_positions: {watch_path}")
+
+
+def print_current_paper_watch(
+    journal_path: Path | None = None, output_path: Path | None = None
+) -> None:
+    source = journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+    output = refresh_current_paper_watch_positions(source, output_path=output_path)
+    frame = _read_csv_or_empty(output)
+    print(frame.to_string(index=False))
+    print(f"current_paper_watch_positions: {output}")
+
+
+def run_close_paper_trade(
+    *,
+    realized_return: float,
+    trade_id: str | None = None,
+    pair: str | None = None,
+    strategy_id: int | None = None,
+    journal_path: Path | None = None,
+    output_path: Path | None = None,
+) -> None:
+    source = journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+    path, record = append_paper_outcome_record(
+        source,
+        trade_id=trade_id,
+        pair=pair,
+        strategy_id=strategy_id,
+        realized_return=realized_return,
+    )
+    watch_path = refresh_current_paper_watch_positions(source, output_path=output_path)
+    print(pd.DataFrame([asdict(record)]).to_string(index=False))
+    print(f"paper_trading_journal: {path}")
+    print(f"current_paper_watch_positions: {watch_path}")
 
 
 def _intent_row(intent: OrderIntent) -> dict[str, object]:
@@ -8495,6 +10989,37 @@ def _cli_endpoint_specs(endpoint_specs: list[str] | None):
     return parse_endpoint_specs(",".join(endpoint_specs))
 
 
+def refresh_augmented_research(root: Path = ROOT) -> CommandResult:
+    registry = build_research_source_registry(root=root)
+    youtube_extraction = extract_youtube_research(root=root)
+    udemy_extraction = extract_udemy_research(root=root)
+    ccxt_extraction = extract_research_knowledge(root=root)
+    knowledge = build_research_knowledge_store(root=root)
+    audit = research_source_audit(root=root)
+    summary = research_knowledge_summary(root=root)
+    return CommandResult(
+        paths={
+            **registry.paths,
+            **youtube_extraction.paths,
+            **udemy_extraction.paths,
+            **ccxt_extraction.paths,
+            **knowledge.paths,
+            **audit.paths,
+            **summary.paths,
+        },
+        summary={
+            "sources": int(registry.summary.get("sources", 0)),
+            "extracted_rows": (
+                int(youtube_extraction.summary.get("rows", 0))
+                + int(udemy_extraction.summary.get("knowledge_rows", 0))
+                + int(ccxt_extraction.summary.get("rows", 0))
+            ),
+            "knowledge_rows": int(knowledge.summary.get("rows", 0)),
+            "knowledge_tables": int(summary.summary.get("tables", 0)),
+        },
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -8509,30 +11034,148 @@ def main() -> None:
             "run-model-gated-backtest",
             "export-trade-gate-model",
             "build-command-dashboard",
+            "build-v2-preflight-run",
+            "validate-v2-run",
+            "publish-v2-run-status",
+            "apify-cost-audit",
+            "paper-candidate-shortlist",
+            "focused-paper-validation",
+            "run-langgraph-agent-workflow",
             "run-orchestrator",
+            "interactive-mixtape-solution",
             "build-mini-agent-orchestration",
             "build-orchestrator-assistant",
             "build-specialist-scoreboard",
             "run-rl-research",
             "run-rl-idea-scout",
+            "run-brain-cycle",
+            "brain-readiness-report",
+            "run-magicka-learning",
+            "run-sequential-thinking-magicka",
             "train-rl-ppo",
             "export-rl-policy",
+            "ingest-research-source",
+            "build-research-source-registry",
+            "research-source-audit",
+            "extract-research-knowledge",
+            "build-research-knowledge-store",
+            "research-knowledge-summary",
+            "refresh-augmented-research",
+            "refresh-udemy-research",
+            "refresh-youtube-collection",
+            "build-youtube-caption-insights",
+            "build-youtube-brain",
+            "build-youtube-hypotheses",
+            "refresh-youtube-outcomes",
+            "build-youtube-brain-dashboard",
+            "run-youtube-brain",
+            "run-hudson-thames-youtube-research",
+            "run-youtube-hypothesis-validation",
+            "run-base-rl",
+            "evaluate-base-rl",
+            "base-rl-paper-handoff",
+            "refresh-base-rl-feedback",
+            "run-augmented-rl",
+            "compare-base-vs-augmented-rl",
+            "promotion-readiness-report",
             "archive-from-index",
             "build-wizard-evidence",
             "build-wizard-hypotheses",
             "build-wizard-diagnostic-confirmation",
+            "build-wizard-discovery-triage",
             "build-wizard-local-parity",
+            "build-wizard-pair-detail-capture-queue",
+            "build-wizard-mode-matrix-capture-queue",
+            "build-wizard-pair-settings-capture-template",
+            "import-wizard-pair-settings-capture",
+            "build-wizard-replay-handoff",
+            "build-wizard-mode-replay-capability",
+            "build-wizard-mode-comparison",
+            "build-wizard-exploratory-cost-sensitivity",
             "build-wizard-exact-mode-capture-queue",
             "build-wizard-research-pack",
+            "ingest-exhaustive-wizard-dashboard-captures",
+            "build-exhaustive-wizard-hyperliquid-run",
+            "build-exhaustive-wizard-api-refresh-delta",
+            "run-wizard-pair-detail-api-pilot",
+            "build-current-wizard-hyperliquid-handoff",
+            "materialize-current-wizard-hyperliquid-history",
+            "run-current-wizard-hyperliquid-canonical-replay",
+            "materialize-current-wizard-hyperliquid-cost-evidence",
+            "run-current-wizard-hyperliquid-observed-cost-replay",
+            "run-current-wizard-hyperliquid-walkforward",
+            "build-current-wizard-hyperliquid-regime-attribution",
+            "run-current-wizard-hyperliquid-robustness",
+            "build-current-wizard-hyperliquid-concentration",
+            "build-current-wizard-hyperliquid-failure-attribution",
+            "build-current-wizard-hyperliquid-leverage-surface",
+            "build-current-wizard-hyperliquid-learning-ledger",
+            "validate-current-wizard-hyperliquid-chain",
+            "build-current-wizard-hyperliquid-operating-cadence",
+            "run-current-wizard-hyperliquid-daily-pipeline",
+            "build-current-wizard-hyperliquid-completion-audit",
+            "build-current-wizard-hyperliquid-storage-reclamation-plan",
+            "stage-current-wizard-hyperliquid-archive-copy",
+            "plan-current-wizard-hyperliquid-archive-release",
+            "validate-current-wizard-hyperliquid-testnet-protocol",
+            "build-current-wizard-ou-optimal-overlay",
+            "build-exhaustive-wizard-hyperliquid-mapping-refresh",
+            "build-exhaustive-wizard-hyperliquid-replay-preflight",
+            "materialize-exhaustive-wizard-hyperliquid-history",
+            "run-exhaustive-wizard-hyperliquid-canonical-replay",
+            "materialize-exhaustive-hyperliquid-funding-evidence",
+            "build-exhaustive-wizard-hyperliquid-cost-evidence",
+            "run-exhaustive-wizard-hyperliquid-observed-cost-replay",
+            "run-exhaustive-wizard-hyperliquid-walkforward",
+            "build-exhaustive-wizard-hyperliquid-regime-attribution",
+            "run-exhaustive-wizard-hyperliquid-robustness",
+            "build-exhaustive-wizard-hyperliquid-concentration",
+            "build-exhaustive-wizard-hyperliquid-leverage-surface",
+            "build-exhaustive-wizard-hyperliquid-learning-ledger",
+            "run-exhaustive-wizard-hyperliquid-validation",
+            "ingest-wizard-pair-detail-ui-bundles",
             "build-market-venue-context",
             "build-venue-lane-test-plan",
             "build-multi-venue-history-readiness",
+            "build-venue-route-scorecard",
+            "refresh-hyperliquid-market-context",
+            "refresh-hyperliquid-execution-cost-snapshot",
+            "refresh-hyperliquid-funding-history",
             "fetch-hyperliquid-candles",
             "build-hyperliquid-pair-history",
+            "build-hyperliquid-research-bundle",
+            "build-hyperliquid-wizard-hypothesis-queue",
+            "run-hyperliquid-wizard-mode-proofs",
+            "build-hyperliquid-pair-cost-model",
+            "build-hyperliquid-evidence-cadence",
             "hyperliquid-lane-readiness",
+            "hyperliquid-testnet-market-inventory",
+            "hyperliquid-testnet-preflight",
+            "hyperliquid-testnet-margin-snapshot",
+            "hyperliquid-testnet-smoke-approval-template",
+            "build-hyperliquid-testnet-lifecycle-gate",
+            "capture-hyperliquid-testnet-lifecycle-evidence",
+            "hyperliquid-testnet-recover-pair-state",
+            "hyperliquid-testnet-sign-smoke-approval",
+            "hyperliquid-execution-compatibility",
+            "hyperliquid-testnet-candidate-shortlist",
+            "run-hyperliquid-research-cycle",
+            "run-hyperliquid-auxiliary-timeframe-validation",
+            "gmx-testnet-market-inventory",
+            "gmx-execution-compatibility",
+            "gmx-testnet-candidate-shortlist",
             "fetch-binance-spot-candles",
             "build-binance-spot-pair-history",
             "binance-spot-history-readiness",
+            "binance-testnet-preflight",
+            "binance-testnet-adapter-contract",
+            "binance-testnet-pair-preflight",
+            "fetch-yahoo-crypto-candles",
+            "build-yahoo-crypto-pair-history",
+            "refresh-yahoo-crypto-pair-history",
+            "yahoo-crypto-history-readiness",
+            "refresh-yahoo-research-candidates",
+            "backfill-yahoo-crypto-funding",
             "verify-wizard-local-mode",
             "build-wizard-local-verification-batch",
             "build-dictionaries",
@@ -8567,6 +11210,8 @@ def main() -> None:
             "capture-preflight",
             "verify-crypto-wizards-live-artifacts",
             "crypto-wizards-live-coverage",
+            "paper-readiness-checkpoint",
+            "research-sweep",
             "check-dydx-config",
             "dydx-order-adapter-contract",
             "dydx-execution-checklist",
@@ -8587,6 +11232,7 @@ def main() -> None:
             "strategy-trade-count-gap",
             "dydx-pair-expansion-plan",
             "dydx-live-market-selector",
+            "dydx-anchor-sweep",
             "dydx-live-market-counts",
             "dydx-local-pair-universe",
             "dydx-long-history-plan",
@@ -8626,15 +11272,33 @@ def main() -> None:
             "learning-outcome-template-check",
             "import-learning-outcomes",
             "append-learning-outcome",
+            "paper-watch",
             "research-spine",
             "crawl-crypto-wizards",
+            "crypto-wizards-full-sweep",
+            "restore-wizard-sweep-from-raw",
+            "wizard-control-plane",
             "crawl-crypto-wizards-min5",
             "crawl-crypto-wizards-min5-backtest",
             "paper-plan",
+            "close-paper-trade",
         ],
     )
     parser.add_argument("--input-dir", type=Path, default=None)
+    parser.add_argument("--run-id", default=None, help="Immutable V2 run identifier.")
     parser.add_argument("--queue-path", type=Path, default=None)
+    parser.add_argument(
+        "--candidate-path",
+        type=Path,
+        default=None,
+        help="Explicit candidate CSV for bounded Hyperliquid funding, history, and L2 evidence jobs.",
+    )
+    parser.add_argument(
+        "--wizard-source-path",
+        type=Path,
+        default=None,
+        help="Wizard snapshot used to build the exhaustive no-prefilter research run.",
+    )
     parser.add_argument(
         "--endpoint",
         action="append",
@@ -8642,7 +11306,19 @@ def main() -> None:
         help="Crypto Wizards endpoint as name=/path or name=https://host/path. May be repeated.",
     )
     parser.add_argument("--pair", default=None)
+    parser.add_argument("--pair-ids", default="")
     parser.add_argument("--source", default=None)
+    parser.add_argument("--source-type", default=None)
+    parser.add_argument("--title", default=None)
+    parser.add_argument("--author", default="")
+    parser.add_argument("--channel-or-publisher", default="")
+    parser.add_argument("--topic-tags", default="")
+    parser.add_argument("--status", default="active")
+    parser.add_argument("--review-status", default="unreviewed")
+    parser.add_argument("--quarantine-status", default="active")
+    parser.add_argument("--confidence", type=float, default=0.5)
+    parser.add_argument("--notes", default="")
+    parser.add_argument("--source-id", default="")
     parser.add_argument("--stage", default="all")
     parser.add_argument("--strategy-id", type=int, default=None)
     parser.add_argument("--signal", type=float, default=None)
@@ -8654,14 +11330,96 @@ def main() -> None:
     parser.add_argument("--asset-y", default=None)
     parser.add_argument("--pair-id", default="1")
     parser.add_argument("--interval", default=None)
-    parser.add_argument("--zscore-window", type=int, default=320)
+    parser.add_argument("--zscore-window", type=int, default=7)
     parser.add_argument("--max-pairs", type=int, default=10)
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--windows", type=int, default=12)
+    parser.add_argument(
+        "--strategy-ids",
+        default="",
+        help="Comma-separated strategy IDs to run explicitly, overriding default all strategies.",
+    )
+    parser.add_argument(
+        "--recommended-strategy-priority",
+        action="store_true",
+        help="Prioritize recommended strategies (from pair strategy_mode) by running those first.",
+    )
     parser.add_argument("--to-iso", default=None)
     parser.add_argument("--similarity-k", type=int, default=6)
     parser.add_argument("--priority", default="Sharpe")
     parser.add_argument("--cw-strategy", default="Spread")
+    parser.add_argument(
+        "--wizard-exchanges",
+        default="Binance,BinanceUs,ByBit,Coinbase,Dydx",
+        help="Comma-separated Crypto Wizards crypto venues for crypto-wizards-full-sweep.",
+    )
+    parser.add_argument(
+        "--wizard-intervals",
+        default="Daily,Hourly",
+        help="Comma-separated prescanned intervals for crypto-wizards-full-sweep.",
+    )
+    parser.add_argument(
+        "--wizard-strategies",
+        default="Spread,ZScoreRoll,Copula",
+        help="Comma-separated prescanned strategy families for crypto-wizards-full-sweep.",
+    )
+    parser.add_argument(
+        "--wizard-priorities",
+        default="Sharpe",
+        help="Comma-separated prescanned priorities for crypto-wizards-full-sweep.",
+    )
+    parser.add_argument("--wizard-daily-credit-limit", type=int, default=1000)
+    parser.add_argument("--wizard-reserved-credits", type=int, default=100)
+    parser.add_argument(
+        "--wizard-pair-group-key",
+        default="binance|daily|ETH|WIF",
+        help="Exact pair_group_key for the bounded Wizard pair-detail API pilot.",
+    )
+    parser.add_argument(
+        "--execute-wizard-detail-pilot",
+        action="store_true",
+        help="Execute the bounded six-endpoint Wizard pair-detail API schema pilot.",
+    )
+    parser.add_argument(
+        "--wizard-detail-endpoints",
+        default="",
+        help=(
+            "Optional comma-separated endpoint subset for a credit-bounded pair-detail "
+            "retry, for example backtest. Empty means all six endpoints."
+        ),
+    )
+    parser.add_argument(
+        "--current-pair-group-keys",
+        default="binance|daily|ETH|WIF",
+        help=(
+            "Comma-separated exact current-board pair_group_key values. History network "
+            "and disk work is limited to this explicit selection."
+        ),
+    )
+    parser.add_argument(
+        "--minimum-free-disk-mib",
+        type=int,
+        default=512,
+        help="Free-disk reserve that bounded current-board history materialization must preserve.",
+    )
+    parser.add_argument(
+        "--execute-wizard-sweep",
+        action="store_true",
+        help="Execute the full Wizard sweep after credit preflight; otherwise write a zero-credit plan.",
+    )
+    parser.add_argument(
+        "--execute-daily-pipeline",
+        action="store_true",
+        help=(
+            "Execute the storage-gated 19-stage current Wizard research cadence. "
+            "Without this flag the command is plan-only."
+        ),
+    )
+    parser.add_argument(
+        "--wizard-attempt-only",
+        action="store_true",
+        help="Write dated/latest-attempt Wizard evidence without replacing the canonical active sweep.",
+    )
     parser.add_argument("--exchange", default="Dydx")
     parser.add_argument("--period", type=int, default=320)
     parser.add_argument("--spread-type", default="Static")
@@ -8669,6 +11427,24 @@ def main() -> None:
     parser.add_argument("--asset", default=None)
     parser.add_argument("--coin", default=None)
     parser.add_argument("--days", type=int, default=500)
+    parser.add_argument(
+        "--intraday-days",
+        type=int,
+        default=30,
+        help="Days of intraday history for build-hyperliquid-research-bundle.",
+    )
+    parser.add_argument(
+        "--max-wizard-age-hours",
+        type=float,
+        default=24.0,
+        help="Maximum age of a Wizard capture before it is blocked from exact-mode proof.",
+    )
+    parser.add_argument(
+        "--execute-wizard-proof",
+        action="store_true",
+        help="Request a bounded Crypto Wizards custom-series proof. It also requires QPA_ENABLE_WIZARD_CUSTOM_SERIES_PROOF=true.",
+    )
+    parser.add_argument("--range", dest="lookback_range", default="max")
     parser.add_argument(
         "--run-research",
         action="store_true",
@@ -8686,21 +11462,86 @@ def main() -> None:
         help="Derive hedge ratio and beta from dYdX candles instead of using manual CLI values.",
     )
     parser.add_argument("--notional-usd", type=float, default=1000.0)
+    parser.add_argument(
+        "--max-assets",
+        type=int,
+        default=0,
+        help="Maximum new asset funding fetches for a resumable exhaustive checkpoint; zero means all pending assets.",
+    )
+    parser.add_argument(
+        "--notionals",
+        default="250,1000,5000",
+        help="Comma-separated per-leg notionals for public Hyperliquid L2 slippage sampling.",
+    )
+    parser.add_argument(
+        "--slippage-min-samples",
+        type=int,
+        default=DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES,
+        help="Complete public L2 samples required for each leg in the rolling calibration window.",
+    )
+    parser.add_argument(
+        "--slippage-window-hours",
+        type=float,
+        default=DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS,
+        help="Rolling public L2 calibration-window length in hours.",
+    )
+    parser.add_argument(
+        "--slippage-cadence-minutes",
+        type=int,
+        default=DEFAULT_SLIPPAGE_CALIBRATION_CADENCE_MINUTES,
+        help="Minutes between public L2 evidence snapshots.",
+    )
     parser.add_argument("--acceptance-path", type=Path, default=None)
     parser.add_argument("--journal-path", type=Path, default=None)
     parser.add_argument("--history-path", type=Path, default=None)
     parser.add_argument("--funding-path", type=Path, default=None)
     parser.add_argument("--output-path", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--brief-path", type=Path, default=None)
     parser.add_argument("--entry-threshold", type=float, default=2.0)
     parser.add_argument("--exit-threshold", type=float, default=0.0)
+    parser.add_argument(
+        "--required-trades",
+        type=int,
+        default=100,
+        help="Required trades for strategy-trade-count-gap reporting (used by strategy-trade-count-gap).",
+    )
+    parser.add_argument(
+        "--experiment-path",
+        type=Path,
+        default=None,
+        help="Experiment CSV path for strategy-trade-count-gap reporting.",
+    )
     parser.add_argument("--walkforward-splits", type=int, default=5)
     parser.add_argument("--min-train-rows", type=int, default=100)
     parser.add_argument("--max-combo-size", type=int, default=4)
     parser.add_argument("--top-n", type=int, default=10)
+    parser.add_argument("--readiness-threshold", type=float, default=0.65)
+    parser.add_argument("--sweep-mode", choices=list(SWEEP_MODES), default="light")
+    parser.add_argument("--dashboard-refresh-profile", choices=["monitor", "deep"], default="deep")
+    parser.add_argument(
+        "--wizard-archive-destination",
+        type=Path,
+        default=None,
+        help="Existing off-volume directory for Wizard archive preflight or an explicitly approved copy-only stage.",
+    )
+    parser.add_argument(
+        "--archive-copy-approval-id",
+        default="",
+        help="Explicit one-run approval identifier required by the copy-only archive stage.",
+    )
     parser.add_argument("--model-path", type=Path, default=None)
     parser.add_argument("--market", default=None)
-    parser.add_argument("--venue", default=None, help="Execution venue to target: dydx|hyperliquid|binance|binanceus|coinbase|bybit|auto")
+    parser.add_argument(
+        "--venue",
+        default=None,
+        help="Execution venue to target: dydx|hyperliquid|binance|binanceus|coinbase|bybit|auto",
+    )
+    parser.add_argument(
+        "--order-approval-id",
+        default=None,
+        help="One-run approval identifier required for a Hyperliquid Testnet pair submission.",
+    )
     parser.add_argument(
         "--indexer-base",
         default="",
@@ -8726,13 +11567,31 @@ def main() -> None:
         action="store_true",
         help="Skip network fetches for fetch-dydx-two-leg-data and require existing payload files in --download-dir.",
     )
+    parser.add_argument(
+        "--collect-l2",
+        action="store_true",
+        help="Collect one public Hyperliquid L2 snapshot for the frozen candidate set during the no-order research cycle.",
+    )
     parser.add_argument("--diagnostic-output", type=Path, default=None)
     parser.add_argument("--json-path", type=Path, default=None)
     parser.add_argument("--download-dir", type=Path, default=None)
-    parser.add_argument("--mcp-url", default=None, help="Apify MCP server URL; defaults to APIFY_MCP_SERVER_URL")
-    parser.add_argument("--source-filter", dest="source_filter", default=None, help="Limit Apify source refresh to a single source_id")
-    parser.add_argument("--wait-seconds", type=int, default=90, help="Actor fetch timeout for Apify (seconds)")
-    parser.add_argument("--no-fetch", action="store_true", help="Skip actor runs while building the Apify source coverage table")
+    parser.add_argument(
+        "--mcp-url", default=None, help="Apify MCP server URL; defaults to APIFY_MCP_SERVER_URL"
+    )
+    parser.add_argument(
+        "--source-filter",
+        dest="source_filter",
+        default=None,
+        help="Limit Apify source refresh to a single source_id",
+    )
+    parser.add_argument(
+        "--wait-seconds", type=int, default=90, help="Actor fetch timeout for Apify (seconds)"
+    )
+    parser.add_argument(
+        "--no-fetch",
+        action="store_true",
+        help="Skip actor runs while building the Apify source coverage table",
+    )
     parser.add_argument("--apify-token", default=None, help="Optional APIFY_API_TOKEN override")
     parser.add_argument("--endpoint-name", default="manual")
     parser.add_argument("--output-name", default=None)
@@ -8760,42 +11619,144 @@ def main() -> None:
         default=ROOT / ".env.local",
         help="Local env file with API keys. Defaults to .env.local.",
     )
-    parser.add_argument("--force-refresh", action="store_true", help="For run-orchestrator, ignore reusable stage artifacts where supported.")
-    parser.add_argument("--fail-fast", action="store_true", help="For run-orchestrator, stop at the first blocked or failed stage.")
-    parser.add_argument("--report-only", action="store_true", help="For run-orchestrator, only build reporting stages.")
+    parser.add_argument(
+        "--force-refresh",
+        action="store_true",
+        help="For run-orchestrator, ignore reusable stage artifacts where supported.",
+    )
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="For run-orchestrator, stop at the first blocked or failed stage.",
+    )
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="For run-orchestrator, only build reporting stages.",
+    )
     args = parser.parse_args()
     load_env_file(args.env_file)
     if not args.indexer_base:
-        args.indexer_base = os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip() or "https://indexer.dydx.trade"
+        args.indexer_base = (
+            os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip()
+            or "https://indexer.dydx.trade"
+        )
     if not args.indexer_scheme:
         args.indexer_scheme = os.getenv("QPA_INDEXER_SCHEME", "").strip()
     if args.command == "system-check":
         result = system_check()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-artifact-index":
         result = build_artifact_index()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "current-state":
         result = current_state()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-pair-universe":
         result = build_pair_universe()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-market-venue-context":
         result = build_market_venue_context()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-venue-lane-test-plan":
         result = build_venue_lane_test_plan()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-multi-venue-history-readiness":
         result = build_multi_venue_history_readiness(top_n=args.top_n)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-venue-route-scorecard":
+        result = build_venue_route_scorecard(max_pairs=args.max_pairs)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-hyperliquid-market-context":
+        result = refresh_hyperliquid_market_context()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-hyperliquid-execution-cost-snapshot":
+        try:
+            notionals = tuple(
+                float(value.strip()) for value in args.notionals.split(",") if value.strip()
+            )
+        except ValueError as exc:
+            raise SystemExit(f"--notionals must be comma-separated numbers: {exc}") from exc
+        result = refresh_hyperliquid_execution_cost_snapshot(
+            max_pairs=args.max_pairs,
+            notionals=notionals,
+            candidate_path=args.candidate_path,
+            min_samples=args.slippage_min_samples,
+            window_hours=args.slippage_window_hours,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-hyperliquid-funding-history":
+        result = refresh_hyperliquid_funding_history(
+            max_pairs=args.max_pairs,
+            candidate_path=args.candidate_path,
+            days=args.days,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "fetch-hyperliquid-candles":
         coin = args.coin or args.asset or args.market
         if not coin:
             raise SystemExit("--coin, --asset, or --market is required")
         path = fetch_hyperliquid_candles(coin=coin, interval=args.interval or "1d", days=args.days)
-        print(json.dumps({"path": str(path), "coin": coin, "interval": args.interval or "1d"}, indent=2))
+        print(
+            json.dumps(
+                {"path": str(path), "coin": coin, "interval": args.interval or "1d"}, indent=2
+            )
+        )
     elif args.command == "build-hyperliquid-pair-history":
         if not args.asset_x or not args.asset_y:
             raise SystemExit("--asset-x and --asset-y are required")
@@ -8808,16 +11769,230 @@ def main() -> None:
             beta=None if args.derive_hedge_ratio else args.beta,
             zscore_window=args.zscore_window,
         )
-        print(json.dumps({"path": str(path), "asset_x": args.asset_x, "asset_y": args.asset_y, "interval": args.interval or "1d"}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "path": str(path),
+                    "asset_x": args.asset_x,
+                    "asset_y": args.asset_y,
+                    "interval": args.interval or "1d",
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-hyperliquid-research-bundle":
+        intervals = tuple(
+            value.strip() for value in (args.interval or "1d,5m").split(",") if value.strip()
+        )
+        result = build_hyperliquid_research_bundle(
+            max_pairs=args.max_pairs,
+            intervals=intervals,
+            daily_days=args.days,
+            intraday_days=args.intraday_days,
+            refresh=not args.skip_fetch,
+            candidate_path=args.candidate_path,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-hyperliquid-wizard-hypothesis-queue":
+        result = build_hyperliquid_wizard_hypothesis_queue(
+            max_wizard_age_hours=args.max_wizard_age_hours
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-hyperliquid-wizard-mode-proofs":
+        result = run_hyperliquid_wizard_mode_proofs(
+            root=ROOT,
+            max_pairs=args.max_pairs,
+            execute=args.execute_wizard_proof,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-hyperliquid-pair-cost-model":
+        result = build_hyperliquid_pair_cost_model(
+            max_pairs=args.max_pairs,
+            leg_notional_usd=args.notional_usd,
+            candidate_path=args.candidate_path,
+            min_samples=args.slippage_min_samples,
+            window_hours=args.slippage_window_hours,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-hyperliquid-evidence-cadence":
+        result = build_hyperliquid_evidence_cadence(
+            target_samples=args.slippage_min_samples,
+            cadence_minutes=args.slippage_cadence_minutes,
+            window_hours=args.slippage_window_hours,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "hyperliquid-lane-readiness":
         result = build_hyperliquid_lane_report()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "hyperliquid-testnet-market-inventory":
+        frame = refresh_hyperliquid_testnet_market_inventory(root=ROOT)
+        output = ROOT / "reports" / "active" / "hyperliquid_testnet_market_inventory.csv"
+        print(frame.to_string(index=False))
+        print(f"hyperliquid_testnet_market_inventory: {output}")
+    elif args.command == "hyperliquid-testnet-preflight":
+        frame = write_hyperliquid_testnet_preflight_report(
+            root=ROOT, config=HyperliquidTestnetConfig.paper_testnet_from_env()
+        )
+        output = ROOT / "reports" / "active" / "hyperliquid_testnet_preflight.csv"
+        print(frame.to_string(index=False))
+        print(f"hyperliquid_testnet_preflight: {output}")
+    elif args.command == "hyperliquid-testnet-margin-snapshot":
+        frame = write_hyperliquid_testnet_margin_snapshot(
+            root=ROOT, config=HyperliquidTestnetConfig.paper_testnet_from_env()
+        )
+        output = ROOT / "reports" / "active" / "hyperliquid_testnet_margin_snapshot.csv"
+        print(frame.to_string(index=False))
+        print(f"hyperliquid_testnet_margin_snapshot: {output}")
+    elif args.command == "hyperliquid-testnet-smoke-approval-template":
+        result = write_testnet_smoke_approval_template(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-hyperliquid-testnet-lifecycle-gate":
+        result = build_testnet_lifecycle_gate(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "capture-hyperliquid-testnet-lifecycle-evidence":
+        result = capture_hyperliquid_testnet_lifecycle_evidence(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "hyperliquid-testnet-sign-smoke-approval":
+        result = sign_testnet_smoke_approval(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "hyperliquid-testnet-recover-pair-state":
+        if not str(args.order_approval_id or "").strip():
+            raise SystemExit(
+                "hyperliquid-testnet-recover-pair-state requires --order-approval-id"
+            )
+        config = replace(
+            HyperliquidTestnetConfig.paper_testnet_from_env(),
+            order_approval_id=str(args.order_approval_id).strip(),
+        )
+        result = HyperliquidTestnetPairExecutor(
+            state_path=HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON
+        ).recover_incomplete_pair(config)
+        print(json.dumps(asdict(result), indent=2))
+    elif args.command == "hyperliquid-execution-compatibility":
+        frame = refresh_hyperliquid_execution_compatibility_table(root=ROOT)
+        output = ROOT / "reports" / "active" / "hyperliquid_execution_market_compatibility.csv"
+        print(frame.to_string(index=False))
+        print(f"hyperliquid_execution_compatibility: {output}")
+    elif args.command == "hyperliquid-testnet-candidate-shortlist":
+        frame = refresh_hyperliquid_testnet_candidate_shortlist(root=ROOT, max_pairs=args.max_pairs)
+        output = ROOT / "reports" / "active" / "hyperliquid_testnet_candidate_shortlist.csv"
+        print(frame.to_string(index=False))
+        print(f"hyperliquid_testnet_candidate_shortlist: {output}")
+    elif args.command == "run-hyperliquid-research-cycle":
+        result = run_hyperliquid_research_cycle(root=ROOT, collect_l2=args.collect_l2)
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-hyperliquid-auxiliary-timeframe-validation":
+        result = build_hyperliquid_auxiliary_timeframe_validation(
+            root=ROOT,
+            interval=args.interval or "4h",
+            intraday_days=args.intraday_days,
+        )
+        print(
+            json.dumps(
+                {
+                    key: str(value) if isinstance(value, Path) else value
+                    for key, value in result.items()
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "gmx-testnet-market-inventory":
+        frame = refresh_gmx_testnet_market_inventory(root=ROOT)
+        output = ROOT / "reports" / "active" / "gmx_testnet_market_inventory.csv"
+        print(frame.to_string(index=False))
+        print(f"gmx_testnet_market_inventory: {output}")
+    elif args.command == "gmx-execution-compatibility":
+        frame = refresh_gmx_execution_compatibility_table(root=ROOT)
+        output = ROOT / "reports" / "active" / "gmx_execution_market_compatibility.csv"
+        print(frame.to_string(index=False))
+        print(f"gmx_execution_compatibility: {output}")
+    elif args.command == "gmx-testnet-candidate-shortlist":
+        frame = refresh_gmx_testnet_candidate_shortlist(root=ROOT, max_pairs=args.max_pairs)
+        output = ROOT / "reports" / "active" / "gmx_testnet_candidate_shortlist.csv"
+        print(frame.to_string(index=False))
+        print(f"gmx_testnet_candidate_shortlist: {output}")
     elif args.command == "fetch-binance-spot-candles":
         symbol = args.market or args.asset or args.coin
         if not symbol:
             raise SystemExit("--market, --asset, or --coin is required")
-        path = fetch_binance_spot_candles(symbol=symbol, interval=args.interval or "1d", limit=args.limit)
-        print(json.dumps({"path": str(path), "symbol": symbol, "interval": args.interval or "1d"}, indent=2))
+        path = fetch_binance_spot_candles(
+            symbol=symbol, interval=args.interval or "1d", limit=args.limit
+        )
+        print(
+            json.dumps(
+                {"path": str(path), "symbol": symbol, "interval": args.interval or "1d"}, indent=2
+            )
+        )
     elif args.command == "build-binance-spot-pair-history":
         if not args.asset_x or not args.asset_y:
             raise SystemExit("--asset-x and --asset-y are required")
@@ -8830,25 +12005,264 @@ def main() -> None:
             beta=None if args.derive_hedge_ratio else args.beta,
             zscore_window=args.zscore_window,
         )
-        print(json.dumps({"path": str(path), "asset_x": args.asset_x, "asset_y": args.asset_y, "interval": args.interval or "1d"}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "path": str(path),
+                    "asset_x": args.asset_x,
+                    "asset_y": args.asset_y,
+                    "interval": args.interval or "1d",
+                },
+                indent=2,
+            )
+        )
     elif args.command == "binance-spot-history-readiness":
         result = build_binance_spot_lane_report()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "binance-testnet-preflight":
+        frame = binance_testnet_preflight(root=ROOT)
+        print(frame.to_string(index=False))
+        print(
+            f"binance_testnet_preflight: {ROOT / 'reports' / 'active' / 'binance_testnet_preflight.csv'}"
+        )
+    elif args.command == "binance-testnet-adapter-contract":
+        rows = [
+            validate_venue_order_client_adapter("binance_spot_testnet"),
+            validate_venue_order_client_adapter("binance_usdm_testnet"),
+        ]
+        frame = pd.DataFrame(rows)
+        output = ROOT / "reports" / "active" / "binance_testnet_adapter_contract.csv"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output, index=False)
+        print(frame.to_string(index=False))
+        print(f"binance_testnet_adapter_contract: {output}")
+    elif args.command == "binance-testnet-pair-preflight":
+        if not args.asset_x or not args.asset_y:
+            raise SystemExit("binance-testnet-pair-preflight requires --asset-x and --asset-y")
+        lane = normalize_venue_name(args.venue or "binance_usdm_testnet")
+        if lane == "binance_spot_testnet":
+            config = BinanceTestnetConfig.spot_testnet_from_env()
+        elif lane == "binance_usdm_testnet":
+            config = BinanceTestnetConfig.usdm_testnet_from_env()
+        else:
+            raise SystemExit("--venue must be binance_spot_testnet or binance_usdm_testnet")
+        frame = binance_testnet_pair_preflight(
+            asset_x=args.asset_x,
+            asset_y=args.asset_y,
+            config=config,
+            root=ROOT,
+        )
+        print(frame.to_string(index=False))
+        print(
+            f"binance_testnet_pair_preflight: {ROOT / 'reports' / 'active' / 'binance_testnet_pair_preflight.csv'}"
+        )
+    elif args.command == "fetch-yahoo-crypto-candles":
+        symbol = args.market or args.asset or args.coin
+        if not symbol:
+            raise SystemExit("--market, --asset, or --coin is required")
+        path = fetch_yahoo_crypto_candles(
+            symbol=symbol,
+            interval=args.interval or "1d",
+            lookback_range=args.lookback_range or "max",
+        )
+        print(
+            json.dumps(
+                {
+                    "path": str(path),
+                    "symbol": symbol,
+                    "interval": args.interval or "1d",
+                    "range": args.lookback_range or "max",
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-yahoo-crypto-pair-history":
+        if not args.asset_x or not args.asset_y:
+            raise SystemExit("--asset-x and --asset-y are required")
+        path = build_yahoo_crypto_pair_history(
+            asset_x=args.asset_x,
+            asset_y=args.asset_y,
+            interval=args.interval or "1d",
+            pair_id=args.pair_id if args.pair_id != "1" else None,
+            hedge_ratio=None if args.derive_hedge_ratio else args.hedge_ratio,
+            beta=None if args.derive_hedge_ratio else args.beta,
+            zscore_window=args.zscore_window,
+        )
+        print(
+            json.dumps(
+                {
+                    "path": str(path),
+                    "asset_x": args.asset_x,
+                    "asset_y": args.asset_y,
+                    "interval": args.interval or "1d",
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-yahoo-crypto-pair-history":
+        if not args.asset_x or not args.asset_y:
+            raise SystemExit("--asset-x and --asset-y are required")
+        path = refresh_yahoo_crypto_pair_history(
+            asset_x=args.asset_x,
+            asset_y=args.asset_y,
+            interval=args.interval or "1d",
+            lookback_range=args.lookback_range or "max",
+            pair_id=args.pair_id if args.pair_id != "1" else None,
+            hedge_ratio=None if args.derive_hedge_ratio else args.hedge_ratio,
+            beta=None if args.derive_hedge_ratio else args.beta,
+            zscore_window=args.zscore_window,
+        )
+        print(
+            json.dumps(
+                {
+                    "path": str(path),
+                    "asset_x": args.asset_x,
+                    "asset_y": args.asset_y,
+                    "interval": args.interval or "1d",
+                    "range": args.lookback_range or "max",
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "yahoo-crypto-history-readiness":
+        result = build_yahoo_crypto_lane_report()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-yahoo-research-candidates":
+        result = refresh_yahoo_research_candidates(
+            max_pairs=args.max_pairs,
+            interval=args.interval or "1d",
+            lookback_range=args.lookback_range or "max",
+            zscore_window=args.zscore_window,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "backfill-yahoo-crypto-funding":
+        funding_path = args.funding_path or ROOT / "data" / "processed" / "dydx_funding.csv"
+        result = backfill_yahoo_crypto_funding(funding_path=funding_path)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-trade-dataset":
         result = build_trade_dataset(input_dir=args.input_dir, funding_path=args.funding_path)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "train-trade-gate":
-        result = train_trade_gate(input_path=args.input_dir, walkforward_splits=args.walkforward_splits, min_train_rows=args.min_train_rows)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        result = train_trade_gate(
+            input_path=args.input_dir,
+            walkforward_splits=args.walkforward_splits,
+            min_train_rows=args.min_train_rows,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "run-model-gated-backtest":
         result = run_model_gated_backtest()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "export-trade-gate-model":
         result = export_trade_gate_model()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-command-dashboard":
-        result = build_command_dashboard()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        result = build_command_dashboard(refresh_profile=args.dashboard_refresh_profile)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-v2-preflight-run":
+        result = build_v2_preflight_run(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "validate-v2-run":
+        if not args.run_id:
+            raise SystemExit("--run-id is required")
+        result = validate_v2_run(root=ROOT, run_id=args.run_id)
+        print(json.dumps({**result, "run_dir": str(result["run_dir"])}, indent=2))
+    elif args.command == "publish-v2-run-status":
+        if not args.run_id:
+            raise SystemExit("--run-id is required")
+        result = publish_v2_run_status(root=ROOT, run_id=args.run_id)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "apify-cost-audit":
+        frame = apify_cost_audit_rows()
+        output = ROOT / "reports" / "dashboard" / "apify_cost_audit.csv"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output, index=False)
+        print(frame.to_string(index=False))
+        print(f"apify_cost_audit: {output}")
+    elif args.command == "paper-candidate-shortlist":
+        frame = paper_candidate_shortlist_rows()
+        output = ROOT / "reports" / "dashboard" / "paper_candidate_shortlist.csv"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output, index=False)
+        print(frame.to_string(index=False))
+        print(f"paper_candidate_shortlist: {output}")
+    elif args.command == "focused-paper-validation":
+        frame = focused_paper_validation_rows()
+        output = ROOT / "reports" / "dashboard" / "focused_paper_validation.csv"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output, index=False)
+        print(frame.to_string(index=False))
+        print(f"focused_paper_validation: {output}")
+    elif args.command == "run-langgraph-agent-workflow":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        result = run_langgraph_agent_workflow(
+            stage=args.stage,
+            pair_id=pair_id,
+            dry_run=args.dry_run,
+            force_refresh=args.force_refresh,
+            fail_fast=args.fail_fast,
+            report_only=args.report_only,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "run-orchestrator":
         pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
         result = run_orchestrator(
@@ -8859,55 +12273,1007 @@ def main() -> None:
             fail_fast=args.fail_fast,
             report_only=args.report_only,
         )
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "interactive-mixtape-solution":
+        brief = args.notes or ""
+        if args.brief_path is not None:
+            brief = args.brief_path.read_text(encoding="utf-8")
+        if not brief.strip():
+            raise SystemExit("interactive-mixtape-solution requires --brief-path or --notes")
+        result = build_interactive_mixtape_solution(
+            brief=brief,
+            brand_name=args.title or "Interactive Mixtape",
+            target_platform=args.source or "Shopify",
+            output_dir=args.output_dir,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-mini-agent-orchestration":
         result = build_mini_agent_orchestration()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-orchestrator-assistant":
         result = build_orchestrator_assistant()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-specialist-scoreboard":
         result = build_specialist_scoreboard()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "run-rl-research":
         pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
         result = run_rl_research(pair_id=pair_id)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "run-rl-idea-scout":
         result = run_rl_idea_scout(
             pair_filter=args.pair,
             top_ideas=args.top_n,
             similarity_k=args.similarity_k,
         )
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-brain-cycle":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        policy_candidates = max(1, args.top_n)
+        max_recommendations = max(1, args.top_n)
+        result = run_brain_cycle(
+            root=ROOT,
+            pair_id=pair_id,
+            policy_candidates=policy_candidates,
+            max_recommendations=max_recommendations,
+            readiness_threshold=args.readiness_threshold,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "brain-readiness-report":
+        result = build_brain_readiness_report(
+            root=ROOT,
+            score_threshold=args.readiness_threshold,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-magicka-learning":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        policy_candidates = max(1, args.top_n)
+        result = run_magicka_learning_cycle(
+            root=ROOT, pair_id=pair_id, policy_candidates=policy_candidates
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-sequential-thinking-magicka":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        max_recommendations = max(1, args.top_n)
+        result = run_sequential_thinking_magicka(
+            root=ROOT, pair_id=pair_id, max_recommendations=max_recommendations
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "train-rl-ppo":
         pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
         result = train_ppo_research_policy(pair_id=pair_id)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "export-rl-policy":
         result = export_rl_policy()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "ingest-research-source":
+        if not args.source_type or not args.title or not args.source:
+            raise SystemExit("ingest-research-source requires --source-type, --title, and --source")
+        result = ingest_research_source(
+            source_type=args.source_type,
+            title=args.title,
+            source_path_or_url=args.source,
+            root=ROOT,
+            author=args.author,
+            channel_or_publisher=args.channel_or_publisher,
+            topic_tags=args.topic_tags,
+            status=args.status,
+            review_status=args.review_status,
+            quarantine_status=args.quarantine_status,
+            confidence=args.confidence,
+            notes=args.notes,
+            source_id=args.source_id,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-research-source-registry":
+        result = build_research_source_registry(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "research-source-audit":
+        result = research_source_audit(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "extract-research-knowledge":
+        youtube_result = extract_youtube_research(root=ROOT)
+        udemy_result = extract_udemy_research(root=ROOT)
+        ccxt_result = extract_research_knowledge(root=ROOT)
+        result = CommandResult(
+            paths={**youtube_result.paths, **udemy_result.paths, **ccxt_result.paths},
+            summary={
+                "rows": (
+                    int(youtube_result.summary.get("rows", 0))
+                    + int(udemy_result.summary.get("knowledge_rows", 0))
+                    + int(ccxt_result.summary.get("rows", 0))
+                ),
+                "youtube_rows": int(youtube_result.summary.get("rows", 0)),
+                "udemy_rows": int(udemy_result.summary.get("knowledge_rows", 0)),
+                "ccxt_rows": int(ccxt_result.summary.get("ccxt_rows", 0)),
+            },
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-research-knowledge-store":
+        result = build_research_knowledge_store(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "research-knowledge-summary":
+        result = research_knowledge_summary(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-augmented-research":
+        result = refresh_augmented_research(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-udemy-research":
+        result = refresh_udemy_research(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-youtube-collection":
+        result = refresh_youtube_collection(
+            root=ROOT,
+            fetch_live=not args.no_fetch,
+            force=args.force_refresh,
+            catalog_path=Path(args.source) if args.source else None,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-youtube-caption-insights":
+        result = build_youtube_caption_insights(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-youtube-brain":
+        result = build_youtube_brain(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-youtube-hypotheses":
+        result = build_youtube_pair_hypotheses(
+            root=ROOT, candidate_path=Path(args.candidate_path) if args.candidate_path else None
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "refresh-youtube-outcomes":
+        result = refresh_youtube_outcome_memory(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-youtube-brain-dashboard":
+        result = build_youtube_brain_dashboard(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-youtube-brain":
+        result = run_youtube_brain_cycle(
+            root=ROOT,
+            fetch_live=False if args.no_fetch else None,
+            force=args.force_refresh,
+            candidate_path=Path(args.candidate_path) if args.candidate_path else None,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-hudson-thames-youtube-research":
+        result = run_hudson_thames_youtube_research(root=ROOT, fetch_live=not args.no_fetch)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-youtube-hypothesis-validation":
+        result = run_youtube_hypothesis_validation(
+            root=ROOT,
+            candidate_path=Path(args.candidate_path) if args.candidate_path else None,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-base-rl":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        result = run_base_rl(root=ROOT, pair_id=pair_id)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "evaluate-base-rl":
+        result = evaluate_base_rl(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "base-rl-paper-handoff":
+        frame = base_rl_paper_handoff_report(root=ROOT)
+        print(frame.to_string(index=False))
+        print(
+            f"base_rl_paper_handoff: {ROOT / 'reports' / 'rl' / 'base_rl_paper_handoff_status.csv'}"
+        )
+    elif args.command == "run-augmented-rl":
+        pair_id = "" if args.pair_id == "1" else (args.pair_id or "")
+        result = run_augmented_rl(root=ROOT, pair_id=pair_id)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "compare-base-vs-augmented-rl":
+        result = evaluate_base_rl(root=ROOT)
+        report = ROOT / "reports" / "rl" / "base_vs_augmented_pair_comparison.csv"
+        print(
+            json.dumps({"summary": result.summary, "paths": {"comparison": str(report)}}, indent=2)
+        )
+    elif args.command == "promotion-readiness-report":
+        frame = (
+            pd.read_csv(ROOT / "reports" / "rl" / "base_rl_promotion_readiness.csv")
+            if (ROOT / "reports" / "rl" / "base_rl_promotion_readiness.csv").exists()
+            else pd.DataFrame()
+        )
+        output = ROOT / "reports" / "rl" / "base_rl_promotion_readiness.csv"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output, index=False)
+        print(frame.to_string(index=False))
+        print(f"promotion_readiness_report: {output}")
+    elif args.command == "refresh-base-rl-feedback":
+        result = refresh_base_rl_feedback(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "archive-from-index":
         result = archive_from_index(dry_run=not args.apply)
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-evidence":
         result = build_wizard_evidence()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-hypotheses":
         result = build_wizard_hypotheses()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-diagnostic-confirmation":
         result = build_wizard_diagnostic_confirmation()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-discovery-triage":
+        result = build_wizard_discovery_triage()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-local-parity":
         result = build_wizard_local_parity()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-pair-detail-capture-queue":
+        result = build_wizard_pair_detail_capture_queue()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-mode-matrix-capture-queue":
+        result = build_wizard_mode_matrix_capture_queue()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-pair-settings-capture-template":
+        result = build_wizard_pair_settings_capture_template()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "import-wizard-pair-settings-capture":
+        if args.input_dir is None:
+            raise SystemExit(
+                "import-wizard-pair-settings-capture requires --input-dir pointing to a completed CSV"
+            )
+        result = import_wizard_pair_settings_capture(args.input_dir)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-replay-handoff":
+        result = build_wizard_replay_handoff()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-mode-replay-capability":
+        result = build_wizard_mode_replay_capability()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-mode-comparison":
+        result = build_wizard_mode_comparison()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-exploratory-cost-sensitivity":
+        result = build_wizard_exploratory_cost_sensitivity()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-exact-mode-capture-queue":
         result = build_wizard_exact_mode_capture_queue()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-research-pack":
         result = build_wizard_research_pack()
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "ingest-exhaustive-wizard-dashboard-captures":
+        result = ingest_exhaustive_wizard_dashboard_captures(
+            root=ROOT,
+            input_dir=args.input_dir,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-run":
+        result = build_exhaustive_wizard_hyperliquid_run(
+            root=ROOT,
+            source_path=args.wizard_source_path,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-api-refresh-delta":
+        result = build_exhaustive_wizard_api_refresh_delta(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-wizard-pair-detail-api-pilot":
+        wizard_detail_endpoints = tuple(
+            value.strip()
+            for value in args.wizard_detail_endpoints.split(",")
+            if value.strip()
+        )
+        result = run_wizard_pair_detail_api_pilot(
+            root=ROOT,
+            pair_group_key=args.wizard_pair_group_key,
+            execute=args.execute_wizard_detail_pilot,
+            api_key=os.getenv("CRYPTO_WIZARDS_API_KEY"),
+            daily_credit_limit=args.wizard_daily_credit_limit,
+            reserved_credits=args.wizard_reserved_credits,
+            endpoint_names=wizard_detail_endpoints or None,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-handoff":
+        result = build_current_wizard_hyperliquid_handoff(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "materialize-current-wizard-hyperliquid-history":
+        selected_pair_keys = tuple(
+            value.strip()
+            for value in args.current_pair_group_keys.split(",")
+            if value.strip()
+        )
+        result = materialize_current_wizard_hyperliquid_history(
+            root=ROOT,
+            pair_group_keys=selected_pair_keys,
+            minimum_free_disk_bytes=args.minimum_free_disk_mib * 1024 * 1024,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-current-wizard-hyperliquid-canonical-replay":
+        result = run_current_wizard_hyperliquid_canonical_replay(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "materialize-current-wizard-hyperliquid-cost-evidence":
+        selected_pair_keys = tuple(
+            value.strip()
+            for value in args.current_pair_group_keys.split(",")
+            if value.strip()
+        )
+        result = materialize_current_wizard_hyperliquid_cost_evidence(
+            root=ROOT,
+            pair_group_keys=selected_pair_keys,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-current-wizard-hyperliquid-observed-cost-replay":
+        result = run_current_wizard_hyperliquid_observed_cost_replay(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-current-wizard-hyperliquid-walkforward":
+        result = run_current_wizard_hyperliquid_walkforward(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-regime-attribution":
+        result = build_current_wizard_hyperliquid_regime_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-current-wizard-hyperliquid-robustness":
+        result = run_current_wizard_hyperliquid_robustness(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-concentration":
+        result = build_current_wizard_hyperliquid_concentration(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-failure-attribution":
+        result = build_current_wizard_hyperliquid_failure_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-leverage-surface":
+        result = build_current_wizard_hyperliquid_leverage_surface(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-learning-ledger":
+        result = build_current_wizard_hyperliquid_learning_ledger(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "validate-current-wizard-hyperliquid-chain":
+        result = validate_current_wizard_hyperliquid_chain(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-operating-cadence":
+        result = build_current_wizard_hyperliquid_operating_cadence(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-current-wizard-hyperliquid-daily-pipeline":
+        result = run_current_wizard_hyperliquid_daily_pipeline(
+            root=ROOT,
+            execute=args.execute_daily_pipeline,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-completion-audit":
+        result = build_current_wizard_hyperliquid_completion_audit(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-storage-reclamation-plan":
+        result = build_current_wizard_hyperliquid_storage_reclamation_plan(
+            root=ROOT,
+            archive_destination=args.wizard_archive_destination,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "stage-current-wizard-hyperliquid-archive-copy":
+        result = stage_current_wizard_hyperliquid_archive_copy(
+            root=ROOT,
+            archive_destination=args.wizard_archive_destination,
+            approval_id=args.archive_copy_approval_id,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "plan-current-wizard-hyperliquid-archive-release":
+        result = build_current_wizard_hyperliquid_archive_release_dry_run(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "validate-current-wizard-hyperliquid-testnet-protocol":
+        result = validate_current_wizard_hyperliquid_testnet_protocol(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-ou-optimal-overlay":
+        result = build_current_wizard_ou_optimal_overlay(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-mapping-refresh":
+        result = build_exhaustive_wizard_hyperliquid_mapping_refresh(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-replay-preflight":
+        result = build_exhaustive_wizard_hyperliquid_replay_preflight(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "materialize-exhaustive-wizard-hyperliquid-history":
+        result = materialize_exhaustive_wizard_hyperliquid_history(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-exhaustive-wizard-hyperliquid-canonical-replay":
+        result = run_exhaustive_wizard_hyperliquid_canonical_replay(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "materialize-exhaustive-hyperliquid-funding-evidence":
+        result = materialize_exhaustive_hyperliquid_funding_evidence(
+            root=ROOT,
+            max_assets=args.max_assets,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-cost-evidence":
+        result = build_exhaustive_wizard_hyperliquid_cost_evidence(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-exhaustive-wizard-hyperliquid-observed-cost-replay":
+        result = run_exhaustive_wizard_hyperliquid_observed_cost_replay(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-exhaustive-wizard-hyperliquid-walkforward":
+        result = run_exhaustive_wizard_hyperliquid_walkforward(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-regime-attribution":
+        result = build_exhaustive_wizard_hyperliquid_regime_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-exhaustive-wizard-hyperliquid-robustness":
+        result = run_exhaustive_wizard_hyperliquid_robustness(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-concentration":
+        result = build_exhaustive_wizard_hyperliquid_concentration(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-leverage-surface":
+        result = build_exhaustive_wizard_hyperliquid_leverage_surface(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-exhaustive-wizard-hyperliquid-learning-ledger":
+        result = build_exhaustive_wizard_hyperliquid_learning_ledger(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-exhaustive-wizard-hyperliquid-validation":
+        result = run_exhaustive_wizard_hyperliquid_validation(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "ingest-wizard-pair-detail-ui-bundles":
+        result = ingest_wizard_pair_detail_ui_bundles(
+            root=ROOT,
+            input_dir=args.input_dir,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
     elif args.command == "verify-wizard-local-mode":
         result = verify_wizard_local_mode(
             history_path=args.history_path,
@@ -8916,13 +13282,23 @@ def main() -> None:
             entry_threshold=args.entry_threshold,
             exit_threshold=args.exit_threshold,
         )
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-wizard-local-verification-batch":
         result = build_wizard_local_verification_batch(
             queue_path=args.queue_path or args.input_dir,
             max_pairs=args.max_pairs,
         )
-        print(json.dumps({"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}}, indent=2))
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-dictionaries":
         build_dictionaries()
     elif args.command == "ingest-fixtures":
@@ -8932,7 +13308,9 @@ def main() -> None:
     elif args.command == "normalize-enrichment-fixtures":
         output = normalize_enrichment_fixtures(args.source, args.input_dir, args.output_path)
         print(f"normalized_enrichment_feed: {output}")
-        print(f"normalization_report: {ROOT / 'reports' / f'{_canonical_source_name(args.source)}_normalization_report.csv'}")
+        print(
+            f"normalization_report: {ROOT / 'reports' / f'{_canonical_source_name(args.source)}_normalization_report.csv'}"
+        )
     elif args.command == "materialize-p2-rerun-subset":
         print_materialize_p2_rerun_subset(args.input_dir, args.output_path)
     elif args.command == "ingest-pair-details":
@@ -8948,7 +13326,27 @@ def main() -> None:
     elif args.command == "run-fixture-experiments":
         run_fixture_experiments(args.input_dir, args.funding_path)
     elif args.command == "run-pair-detail-experiments":
-        run_pair_detail_experiments(args.input_dir, args.funding_path)
+        pairs_arg = args.pair_ids if args.pair_ids else args.pair
+        pair_filter = tuple(
+            pair.strip() for pair in (pairs_arg.split(",") if pairs_arg else []) if pair.strip()
+        )
+        strategy_ids = None
+        if args.strategy_ids.strip():
+            strategy_ids = tuple(
+                int(x) for x in args.strategy_ids.split(",") if x.strip().isdigit()
+            )
+        elif args.recommended_strategy_priority:
+            strategy_ids = tuple(
+                _strategy_id_priority_for_pair_details(
+                    args.input_dir or ROOT / "data" / "raw" / "pair_details", pair_filter
+                )
+            )
+        run_pair_detail_experiments(
+            args.input_dir,
+            args.funding_path,
+            pair_filter=pair_filter,
+            strategy_ids=strategy_ids,
+        )
     elif args.command == "list-strategies":
         for strategy in STRATEGIES:
             print(f"{strategy.id:02d} {strategy.name}")
@@ -9171,7 +13569,9 @@ def main() -> None:
                     {
                         "source_id": source,
                         "venue": infer_apify_venue(source),
-                        "type": "utility" if source.startswith("apify/") else "market_or_context_feed",
+                        "type": "utility"
+                        if source.startswith("apify/")
+                        else "market_or_context_feed",
                     }
                     for source in sources
                 ],
@@ -9188,7 +13588,11 @@ def main() -> None:
         _assert_ready_for_exploration()
         print_zscore_threshold_sweep(args.input_dir, args.funding_path, args.output_path)
     elif args.command == "strategy-trade-count-gap":
-        print_strategy_trade_count_gap()
+        print_strategy_trade_count_gap(
+            experiment_path=args.experiment_path,
+            required_trades=args.required_trades,
+            output_path=args.output_path,
+        )
     elif args.command == "dydx-pair-expansion-plan":
         print_dydx_pair_expansion_plan(
             max_pairs=args.max_pairs,
@@ -9199,6 +13603,16 @@ def main() -> None:
         )
     elif args.command == "dydx-live-market-selector":
         print_dydx_live_market_selector(
+            max_pairs=args.max_pairs,
+            indexer_base=args.indexer_base,
+            output_path=args.output_path,
+        )
+    elif args.command == "dydx-anchor-sweep":
+        anchors = None
+        if args.asset:
+            anchors = [item.strip() for item in str(args.asset).split(",") if item.strip()]
+        print_dydx_anchor_sweep(
+            anchors=anchors,
             max_pairs=args.max_pairs,
             indexer_base=args.indexer_base,
             output_path=args.output_path,
@@ -9223,11 +13637,11 @@ def main() -> None:
             asset_x=args.asset_x,
             asset_y=args.asset_y,
             pair_id=args.pair_id,
-        windows=args.windows,
-        limit=args.limit,
-        resolution=args.interval or "5MINS",
-        indexer_base=args.indexer_base,
-        indexer_scheme=args.indexer_scheme,
+            windows=args.windows,
+            limit=args.limit,
+            resolution=args.interval or "5MINS",
+            indexer_base=args.indexer_base,
+            indexer_scheme=args.indexer_scheme,
             to_iso=args.to_iso,
             output_path=args.output_path,
         )
@@ -9237,11 +13651,11 @@ def main() -> None:
             asset_x=args.asset_x,
             asset_y=args.asset_y,
             pair_id=args.pair_id,
-        windows=args.windows,
-        limit=args.limit,
-        resolution=args.interval or "5MINS",
-        indexer_base=args.indexer_base,
-        indexer_scheme=args.indexer_scheme,
+            windows=args.windows,
+            limit=args.limit,
+            resolution=args.interval or "5MINS",
+            indexer_base=args.indexer_base,
+            indexer_scheme=args.indexer_scheme,
             to_iso=args.to_iso,
             output_path=args.output_path,
         )
@@ -9286,6 +13700,12 @@ def main() -> None:
     elif args.command == "run-dydx-pair-expansion":
         if not args.allow_blocked_exploration:
             _assert_ready_for_exploration()
+        requested_pairs = _parse_pair_list(args.pair_ids if args.pair_ids else args.pair)
+        requested_strategies = None
+        if args.strategy_ids.strip():
+            requested_strategies = tuple(
+                int(x) for x in args.strategy_ids.split(",") if x.strip().isdigit()
+            )
         print_run_dydx_pair_expansion(
             max_pairs=args.max_pairs,
             limit=args.limit,
@@ -9295,6 +13715,8 @@ def main() -> None:
             run_research=args.run_research,
             skip_fetch=args.skip_fetch,
             allow_stale_fetch=args.allow_stale_fetch,
+            pair_ids=requested_pairs,
+            strategy_ids=requested_strategies,
         )
     elif args.command == "backfill-dydx-pair-history-features":
         input_dir = args.input_dir or ROOT / "data" / "raw" / "pair_details"
@@ -9305,7 +13727,7 @@ def main() -> None:
         print_strategy_family_sweep(
             input_dir=args.input_dir,
             funding_path=args.funding_path,
-            output_dir=args.output_path,
+            output_dir=args.output_dir or args.output_path,
             pair_list=_parse_pair_list(args.pair),
         )
     elif args.command == "strategy-family-matrix":
@@ -9337,6 +13759,21 @@ def main() -> None:
         print_priority_runbook()
     elif args.command == "paper-execution-preflight":
         print_paper_execution_preflight()
+    elif args.command == "paper-readiness-checkpoint":
+        result = paper_readiness_checkpoint(readiness_threshold=args.readiness_threshold)
+        print(json.dumps(result, indent=2))
+    elif args.command == "research-sweep":
+        result = run_research_sweep(
+            mode=args.sweep_mode,
+            root=ROOT,
+            mcp_url=args.mcp_url or os.getenv("APIFY_MCP_SERVER_URL", "").strip() or None,
+            api_token=args.apify_token or os.getenv("APIFY_API_TOKEN", "").strip() or None,
+            source_filter=args.source_filter,
+            wait_seconds=args.wait_seconds,
+            do_fetch=not args.no_fetch,
+            readiness_threshold=args.readiness_threshold,
+        )
+        print(json.dumps(result, indent=2))
     elif args.command == "paper-venue-preflight":
         print_paper_venue_preflight(pair=args.pair, max_pairs=args.max_pairs)
     elif args.command == "gap-test":
@@ -9411,10 +13848,74 @@ def main() -> None:
             trade_id=args.trade_id,
             output_path=args.output_path,
         )
+    elif args.command == "paper-watch":
+        print_current_paper_watch(journal_path=args.journal_path, output_path=args.output_path)
     elif args.command == "research-spine":
-        print_research_spine(args.input_dir, require_two_leg=not args.allow_spread_only, funding_path=args.funding_path)
+        print_research_spine(
+            args.input_dir,
+            require_two_leg=not args.allow_spread_only,
+            funding_path=args.funding_path,
+        )
     elif args.command == "crawl-crypto-wizards":
         crawl_crypto_wizards(args.endpoint)
+    elif args.command == "crypto-wizards-full-sweep":
+        result = run_wizard_discovery_sweep(
+            root=ROOT,
+            execute=args.execute_wizard_sweep,
+            api_key=os.getenv("CRYPTO_WIZARDS_API_KEY"),
+            exchanges=tuple(
+                value.strip() for value in args.wizard_exchanges.split(",") if value.strip()
+            ),
+            intervals=tuple(
+                value.strip() for value in args.wizard_intervals.split(",") if value.strip()
+            ),
+            strategies=tuple(
+                value.strip() for value in args.wizard_strategies.split(",") if value.strip()
+            ),
+            priorities=tuple(
+                value.strip() for value in args.wizard_priorities.split(",") if value.strip()
+            ),
+            daily_credit_limit=args.wizard_daily_credit_limit,
+            reserved_credits=args.wizard_reserved_credits,
+            publish_active=not args.wizard_attempt_only,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "restore-wizard-sweep-from-raw":
+        result = restore_complete_wizard_sweep_from_raw(
+            root=ROOT,
+            sweep_id=args.run_id,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "wizard-control-plane":
+        result = build_wizard_control_plane(
+            root=ROOT,
+            max_age_hours=args.max_wizard_age_hours,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
     elif args.command == "crawl-crypto-wizards-min5":
         crawl_crypto_wizards_min5(
             max_pairs=args.max_pairs,
@@ -9454,6 +13955,20 @@ def main() -> None:
             acceptance_path=args.acceptance_path,
             journal_path=args.journal_path,
             venue=args.venue,
+            order_approval_id=args.order_approval_id,
+        )
+    elif args.command == "close-paper-trade":
+        if args.realized_return is None:
+            raise SystemExit("close-paper-trade requires --realized-return")
+        if args.trade_id is None and args.pair is None:
+            raise SystemExit("close-paper-trade requires --trade-id or --pair")
+        run_close_paper_trade(
+            trade_id=args.trade_id,
+            pair=args.pair,
+            strategy_id=args.strategy_id,
+            realized_return=args.realized_return,
+            journal_path=args.journal_path,
+            output_path=args.output_path,
         )
 
 
@@ -9471,14 +13986,22 @@ def _resolve_paper_venue(pair: str, requested_venue: str = "auto") -> str:
 
     target = (pair or "").replace("/", "-").upper()
     universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
-    if not universe.empty and "pair" in universe.columns and "best_execution_venue" in universe.columns:
+    if (
+        not universe.empty
+        and "pair" in universe.columns
+        and "best_execution_venue" in universe.columns
+    ):
         universe_pairs = universe[universe["pair"].astype(str).str.upper() == target]
         if universe_pairs.empty:
             alt = target.replace("-", "/")
             universe_pairs = universe[universe["pair"].astype(str).str.upper() == alt]
         if not universe_pairs.empty:
             best = universe_pairs.iloc[0]
-            venue = str(best.get("best_execution_venue", "") or best.get("exchange", "") or "").strip().lower()
+            venue = (
+                str(best.get("best_execution_venue", "") or best.get("exchange", "") or "")
+                .strip()
+                .lower()
+            )
             if venue:
                 return venue
             if bool(best.get("dydx_tradable", False)):

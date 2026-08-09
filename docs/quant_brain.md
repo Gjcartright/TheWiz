@@ -193,9 +193,9 @@
 - Required tests: nearest_neighbor_outcomes;regime_split
 
 ## ou_optimal
-- Measures: Ornstein-Uhlenbeck optimal entry/exit assessment.
-- Why it exists: Model-based mean-reversion entry/exit attractiveness.
-- How it may create edge: Threshold optimization and expected holding period.
-- When it fails: OU assumptions fail under jumps, trends, or changing volatility.
-- Research role: entry
-- Required tests: ou_parameter_stability;threshold_sweep
+- Measures: a captured Crypto Wizards scanner boolean; its underlying vendor formula and thresholds are not exposed.
+- Why it exists: cohort annotation for possible OU-threshold behavior.
+- How it may create edge: compare true and false rows within the same actual mode, orientation, and time period.
+- When it fails: treating the annotation as an eighth exact mode or reverse-engineering an entry from the flag alone.
+- Research role: stratification
+- Required tests: point_in_time_cohort;ou_parameter_stability;threshold_sweep;walk_forward

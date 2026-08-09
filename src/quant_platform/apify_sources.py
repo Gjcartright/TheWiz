@@ -31,6 +31,25 @@ APIFY_DATASET_COLUMNS = [
 ]
 
 
+APIFY_MANIFEST_COLUMNS = [
+    "timestamp_utc",
+    "source_id",
+    "run_status",
+    "sample_status",
+    "sample_rows",
+    "output_path",
+    "evidence",
+    "run_id",
+    "started_at_utc",
+    "finished_at_utc",
+    "duration_ms",
+    "usage_currency",
+    "usage_credits",
+    "usage_amount",
+    "usage_meta",
+]
+
+
 @dataclass(frozen=True)
 class RefreshResult:
     coverage_path: Path
@@ -233,8 +252,76 @@ def _snapshot_target_path(root: Path, source_id: str) -> Path:
     return output_dir / base_name
 
 
-def _run_actor_fetch(api_token: str, source_id: str, source_input: dict[str, object] | None = None, timeout: int = 90) -> tuple[bool, str, int, list[object]]:
-    """Run an Apify actor and return (ok, status, rows, payload)."""
+def _normalize_usage_value(value: object) -> str | int | float | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        v = value.strip()
+        return v if v else None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value
+    return str(value)
+
+
+def _extract_usage_details(run_payload: dict[str, object] | None, run_id: str | None) -> dict[str, object]:
+    payload = run_payload or {}
+    details: dict[str, object] = {
+        "run_id": run_id,
+        "started_at_utc": payload.get("startedAt") or payload.get("started_at") or payload.get("createdAt") or payload.get("started_at_utc"),
+        "finished_at_utc": payload.get("finishedAt") or payload.get("finished_at") or payload.get("endedAt") or payload.get("ended_at"),
+        "duration_ms": payload.get("stats", {}).get("runTimeMillis") if isinstance(payload.get("stats"), dict) else None,
+    }
+
+    candidate_usage_fields = (
+        payload.get("billing"),
+        payload.get("usage"),
+        payload.get("stats"),
+        payload.get("meta", {}).get("stats") if isinstance(payload.get("meta"), dict) else None,
+        payload.get("meta") if isinstance(payload.get("meta"), dict) else None,
+    )
+    usage_currency = None
+    usage_amount = None
+    usage_credits = None
+    usage_meta = None
+
+    def pick(*keys):
+        for field in candidate_usage_fields:
+            if not isinstance(field, dict):
+                continue
+            for key in keys:
+                if key in field:
+                    return field[key]
+        return None
+
+    usage_currency = pick("currency", "cost_currency")
+    usage_amount = pick("cost", "amount", "amountUsd", "billingUsd", "costUsd", "credits", "computeUnits")
+    usage_credits = pick("credits", "computeUnits", "platformCredits", "creditsUsed", "credits_used")
+
+    if isinstance(payload.get("meta"), dict):
+        usage_meta = payload["meta"]
+    elif isinstance(payload.get("billing"), dict):
+        usage_meta = payload["billing"]
+    elif isinstance(payload.get("usage"), dict):
+        usage_meta = payload["usage"]
+    elif isinstance(payload.get("stats"), dict):
+        usage_meta = payload["stats"]
+
+    return {
+        "run_id": run_id,
+        "started_at_utc": _normalize_usage_value(details["started_at_utc"]),
+        "finished_at_utc": _normalize_usage_value(details["finished_at_utc"]),
+        "duration_ms": _normalize_usage_value(details["duration_ms"]),
+        "usage_currency": _normalize_usage_value(usage_currency),
+        "usage_amount": _normalize_usage_value(usage_amount),
+        "usage_credits": _normalize_usage_value(usage_credits),
+        "usage_meta": json.dumps(usage_meta, ensure_ascii=False, sort_keys=True) if isinstance(usage_meta, dict) else None,
+    }
+
+
+def _run_actor_fetch(api_token: str, source_id: str, source_input: dict[str, object] | None = None, timeout: int = 90) -> tuple[bool, str, int, list[object], dict[str, object]]:
+    """Run an Apify actor and return (ok, status, rows, payload, usage)."""
     base = "https://api.apify.com"
     actor = source_id.replace("/", "~")
     run_payload = {
@@ -250,16 +337,16 @@ def _run_actor_fetch(api_token: str, source_id: str, source_input: dict[str, obj
     try:
         started = requests.post(run_url, headers=headers, params=params, json=run_payload, timeout=30)
     except Exception as exc:  # pragma: no cover - network dependent
-        return False, f"network_error:{exc.__class__.__name__}", 0, []
+        return False, f"network_error:{exc.__class__.__name__}", 0, [], {}
 
     if started.status_code >= 400:
-        return False, f"run_request_failed:{started.status_code}", 0, []
+        return False, f"run_request_failed:{started.status_code}", 0, [], {}
 
     started_json = started.json()
     run_data = started_json.get("data", started_json)
     run_id = run_data.get("id") or run_data.get("runId") or run_data.get("actRunId") or run_data.get("actorRunId")
     if not run_id:
-        return False, "run_id_missing", 0, []
+        return False, "run_id_missing", 0, [], {}
 
     run_endpoint = f"{base}/v2/actor-runs/{run_id}"
     deadline = created_at.timestamp() + timeout
@@ -270,22 +357,22 @@ def _run_actor_fetch(api_token: str, source_id: str, source_input: dict[str, obj
         try:
             status = requests.get(run_endpoint, headers=headers, params=params, timeout=30)
         except Exception as exc:  # pragma: no cover - network dependent
-            return False, f"run_poll_error:{exc.__class__.__name__}", 0, []
+            return False, f"run_poll_error:{exc.__class__.__name__}", 0, [], {}
         if status.status_code >= 400:
-            return False, f"run_poll_failed:{status.status_code}", 0, []
+            return False, f"run_poll_failed:{status.status_code}", 0, [], {}
         payload = status.json().get("data", status.json())
         state = (payload.get("status") or "").upper()
         if state in {"SUCCEEDED", "FAILED", "ABORTED", "TIMED_OUT", "CRASHED"}:
             if state != "SUCCEEDED":
-                return False, f"run_{state.lower()}", 0, []
+                return False, f"run_{state.lower()}", 0, [], _extract_usage_details(payload, run_id)
             succeeded = True
             break
     if not succeeded:
-        return False, f"run_incomplete:{(payload.get('status') or 'unknown').lower()}", 0, []
+        return False, f"run_incomplete:{(payload.get('status') or 'unknown').lower()}", 0, [], _extract_usage_details(payload, run_id)
 
     dataset_id = payload.get("defaultDatasetId")
     if not dataset_id:
-        return True, "succeeded_no_dataset", 0, []
+        return True, "succeeded_no_dataset", 0, [], _extract_usage_details(payload, run_id)
 
     item_url = f"{base}/v2/datasets/{dataset_id}/items"
     items_response = requests.get(
@@ -295,12 +382,15 @@ def _run_actor_fetch(api_token: str, source_id: str, source_input: dict[str, obj
         timeout=30,
     )
     if items_response.status_code >= 400:
-        return False, f"dataset_fetch_failed:{items_response.status_code}", 0, []
+        return False, f"dataset_fetch_failed:{items_response.status_code}", 0, [], _extract_usage_details(payload, run_id)
 
     items = items_response.json()
     if not isinstance(items, list):
-        return True, "sampled", 0, []
-    return True, "sampled", len(items), items
+        return True, "sampled", 0, [], _extract_usage_details(payload, run_id)
+    usage = _extract_usage_details(payload, run_id)
+    usage["dataset_id"] = dataset_id
+    usage["item_count_reported"] = len(items)
+    return True, "sampled", len(items), items, usage
 
 
 def _update_row_after_fetch(row: dict[str, object], fetched_ok: bool, sample_status: str, rows: int, output_path: Path, now: str) -> dict[str, object]:
@@ -361,13 +451,34 @@ def refresh_apify_sources(
         if do_fetch:
             if (not api_token) or sample_status.startswith("needs_api_key"):
                 sample_status = "needs_api_key"
+                usage_record = {
+                    "run_id": None,
+                    "started_at_utc": None,
+                    "finished_at_utc": None,
+                    "duration_ms": None,
+                    "usage_currency": None,
+                    "usage_credits": None,
+                    "usage_amount": None,
+                    "usage_meta": None,
+                }
             elif row.get("category") in {"utility"}:
                 sample_status = str(row.get("sample_status", "not_market_data"))
+                usage_record = {
+                    "run_id": None,
+                    "started_at_utc": None,
+                    "finished_at_utc": None,
+                    "duration_ms": None,
+                    "usage_currency": None,
+                    "usage_credits": None,
+                    "usage_amount": None,
+                    "usage_meta": None,
+                }
             else:
-                ok, status, fetched_rows, items = _run_actor_fetch(api_token=api_token.strip(), source_id=source_id, timeout=wait_seconds)
+                ok, status, fetched_rows, items, usage = _run_actor_fetch(api_token=api_token.strip(), source_id=source_id, timeout=wait_seconds)
                 run_status = status
                 sample_status = status
                 sample_rows = int(fetched_rows)
+                usage_record = dict(usage or {})
                 if ok and status in {"sampled", "sampled_sparse"}:
                     output_path.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
                     sampled += 1
@@ -375,6 +486,17 @@ def refresh_apify_sources(
                 else:
                     failed += 1
                     row = _update_row_after_fetch(row, False, status, sample_rows, output_path, now)
+        else:
+            usage_record = {
+                "run_id": None,
+                "started_at_utc": None,
+                "finished_at_utc": None,
+                "duration_ms": None,
+                "usage_currency": None,
+                "usage_credits": None,
+                "usage_amount": None,
+                "usage_meta": None,
+            }
 
         if sample_status == "needs_api_key":
             needs_key += 1
@@ -390,6 +512,14 @@ def refresh_apify_sources(
                 "sample_rows": sample_rows,
                 "output_path": str(output_path),
                 "evidence": str(row.get("evidence", "")),
+                "run_id": usage_record.get("run_id", None),
+                "started_at_utc": usage_record.get("started_at_utc", None),
+                "finished_at_utc": usage_record.get("finished_at_utc", None),
+                "duration_ms": usage_record.get("duration_ms", None),
+                "usage_currency": usage_record.get("usage_currency", None),
+                "usage_credits": usage_record.get("usage_credits", None),
+                "usage_amount": usage_record.get("usage_amount", None),
+                "usage_meta": usage_record.get("usage_meta", None),
             }
         )
 
@@ -398,6 +528,7 @@ def refresh_apify_sources(
     coverage_frame.to_csv(coverage, index=False)
 
     manifest_frame = pd.DataFrame(manifest_rows)
+    manifest_frame = manifest_frame.reindex(columns=APIFY_MANIFEST_COLUMNS, fill_value="")
     manifest_frame.to_csv(manifest, index=False)
 
     return RefreshResult(

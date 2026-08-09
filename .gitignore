@@ -26,5 +26,20 @@ reports/rl/
 
 .venv/
 .venv311/
+.venv312/
 .vscode/
 *.egg-info/
+
+runs/
+tmp_subs*.vtt
+scripts/schedule_logs/
+
+reports/snapshots/
+reports/runs/
+reports/brain/
+reports/research/
+reports/gap_analysis/
+reports/pre_mortem/
+reports/post_mortem/
+reports/red_team/
+reports/supreme_team/

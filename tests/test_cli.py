@@ -1,10 +1,12 @@
 import json
 import os
 import subprocess
+import sys
 import pandas as pd
 import pytest
 from pathlib import Path
 
+from quant_platform.active_pipeline import CommandResult
 import quant_platform.cli as cli
 from quant_platform.cli import (
     append_learning_outcome,
@@ -16,6 +18,7 @@ from quant_platform.cli import (
     crawl_crypto_wizards_min5,
     dydx_two_leg_request_template_report,
     dydx_pair_expansion_plan_report,
+    dydx_anchor_sweep_report,
     dydx_live_market_selector_report,
     dydx_long_history_plan_report,
     dydx_execution_checklist_report,
@@ -49,6 +52,7 @@ from quant_platform.cli import (
     print_learning_outcome_template,
     priority_action_plan,
     paper_execution_preflight_report,
+    refresh_execution_truth_surfaces,
     priority_gap_test_report,
     priority_runbook,
     priority_readiness_report,
@@ -56,6 +60,7 @@ from quant_platform.cli import (
     research_spine,
     research_unblock_plan_report,
     rerun_p2_acceptance_evidence,
+    run_research_sweep,
     run_dydx_local_pair_universe,
     run_dydx_pair_expansion,
     run_dydx_long_history,
@@ -64,9 +69,12 @@ from quant_platform.cli import (
     paper_venue_preflight_report,
     strategy_acceptance_checklist_report,
     strategy_failure_attribution_report,
+    _extract_recommended_strategy_ids,
     zscore_threshold_sweep_report,
     verify_crypto_wizards_live_artifacts,
 )
+from quant_platform.active_pipeline import CommandResult
+from quant_platform.strategies import STRATEGIES
 
 
 def test_resolve_research_funding_path_prefers_research_path(tmp_path):
@@ -75,6 +83,54 @@ def test_resolve_research_funding_path_prefers_research_path(tmp_path):
     assert _resolve_research_funding_path(primary, legacy) == primary
     assert _resolve_research_funding_path(None, legacy) == legacy
     assert _resolve_research_funding_path(None, None) is None
+
+
+def test_cli_hyperliquid_wizard_mode_proof_defaults_to_no_credit_preflight(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    seen = {}
+
+    def fake_run(*, root, max_pairs, execute):
+        seen.update({"root": root, "max_pairs": max_pairs, "execute": execute})
+        return CommandResult(
+            summary={"preflight_only": True, "completed": 0},
+            paths={"proofs": tmp_path / "reports" / "active" / "proofs.csv"},
+        )
+
+    monkeypatch.setattr(cli, "run_hyperliquid_wizard_mode_proofs", fake_run)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "run-hyperliquid-wizard-mode-proofs", "--max-pairs", "2"])
+
+    cli.main()
+
+    assert seen == {"root": tmp_path, "max_pairs": 2, "execute": False}
+    assert json.loads(capsys.readouterr().out)["summary"]["preflight_only"] is True
+
+
+def test_cli_crypto_wizards_full_sweep_defaults_to_zero_credit_plan(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setenv("CRYPTO_WIZARDS_API_KEY", "secret")
+    seen = {}
+
+    def fake_run(**kwargs):
+        seen.update(kwargs)
+        return CommandResult(
+            summary={"execute": kwargs["execute"], "planned_cells": 30, "sweep_complete": False},
+            paths={"manifest": tmp_path / "reports" / "active" / "wizard_sweep_manifest.csv"},
+        )
+
+    monkeypatch.setattr(cli, "run_wizard_discovery_sweep", fake_run)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "crypto-wizards-full-sweep"])
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert seen["root"] == tmp_path
+    assert seen["execute"] is False
+    assert seen["api_key"] == "secret"
+    assert seen["exchanges"] == ("Binance", "BinanceUs", "ByBit", "Coinbase", "Dydx")
+    assert seen["intervals"] == ("Daily", "Hourly")
+    assert seen["strategies"] == ("Spread", "ZScoreRoll", "Copula")
+    assert seen["priorities"] == ("Sharpe",)
+    assert output["summary"]["planned_cells"] == 30
 
 
 def test_cli_paper_plan_blocks_research_rejected_strategy(tmp_path):
@@ -96,6 +152,123 @@ def test_cli_paper_plan_blocks_research_rejected_strategy(tmp_path):
     assert plan.status == "blocked"
     assert plan.reason == "research_rejected:passing_pairs<2"
     assert intents == []
+
+
+def test_cli_paper_plan_uses_augmented_acceptance_frame_by_default(monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "_acceptance_report_path", lambda: tmp_path / "acceptance_report.csv")
+    monkeypatch.setattr(
+        cli,
+        "_augmented_acceptance_frame",
+        lambda reports=None: pd.DataFrame(
+            [{"strategy_id": 9001, "production_eligible": True, "acceptance_reason": "passed"}]
+        ),
+    )
+
+    plan, intents = build_paper_plan_from_cli(
+        pair="BTC-USD-LDO-USD",
+        strategy_id=9001,
+        signal=1.0,
+        hedge_ratio=2.0,
+        beta=1.0,
+        notional_usd=100.0,
+        venue="binance",
+    )
+
+    assert plan.status == "paper_ready"
+    assert plan.reason == "accepted"
+    assert [intent["market"] for intent in intents] == ["BTC-USD", "LDO-USD"]
+
+
+def test_run_research_sweep_light_skips_paid_and_deep_steps(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def _cmd_result(name: str) -> CommandResult:
+        path = tmp_path / "reports" / f"{name}.csv"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("ok\n", encoding="utf-8")
+        return CommandResult(paths={name: path, "command_center": path, "current_state": path, "system_check": path, "market_venue_context": path, "pair_universe": path}, summary={"rows": 1, "checks": 1, "blocked": 0, "pairs": 3, "promoted": 1, "dashboard_files": 1, "blocked_rows": 0})
+
+    monkeypatch.setattr(cli, "current_state", lambda: _cmd_result("current_state"))
+    monkeypatch.setattr(cli, "system_check", lambda: _cmd_result("system_check"))
+    monkeypatch.setattr(cli, "build_market_venue_context", lambda: _cmd_result("market_venue_context"))
+    monkeypatch.setattr(cli, "build_pair_universe", lambda: _cmd_result("pair_universe"))
+    dashboard_profiles: list[str] = []
+    monkeypatch.setattr(
+        cli,
+        "build_command_dashboard",
+        lambda **kwargs: dashboard_profiles.append(kwargs.get("refresh_profile", "")) or _cmd_result("command_center"),
+    )
+    monkeypatch.setattr(cli, "build_brain_readiness_report", lambda root, score_threshold: CommandResult(paths={"brain_readiness_report": tmp_path / "reports" / "brain.csv"}, summary={"score_gate": "pass", "readiness_score": 0.9}))
+    monkeypatch.setattr(cli, "paper_execution_preflight_report", lambda output_path=None: pd.DataFrame([{"step": "gate", "ready": False, "status": "blocked"}]))
+    monkeypatch.setattr(cli, "paper_readiness_checkpoint", lambda root=None, readiness_threshold=0.65: {"summary": {"readiness_gate": "pass", "ready_rows": 2, "blocked_rows": 1}, "paths": {"paper_readiness_checkpoint": str(tmp_path / "reports" / "checkpoint.csv")}})
+    monkeypatch.setattr(cli, "priority_readiness_report", lambda output_path=None: pd.DataFrame([{"gate": "paper_execution_gate", "ready": False, "next_action": "fix_p2"}, {"gate": "strategy_acceptance", "ready": False, "next_action": "rerun_acceptance"}]))
+    monkeypatch.setattr(cli, "print_supreme_team_checkpoint", lambda run_dir=None: (tmp_path / "reports" / "supreme.csv", tmp_path / "reports" / "supreme.md"))
+
+    called = {"trade_dataset": 0, "trade_gate": 0, "gated": 0, "apify": 0}
+    monkeypatch.setattr(cli, "build_trade_dataset", lambda *args, **kwargs: called.__setitem__("trade_dataset", called["trade_dataset"] + 1) or _cmd_result("dataset"))
+    monkeypatch.setattr(cli, "train_trade_gate", lambda *args, **kwargs: called.__setitem__("trade_gate", called["trade_gate"] + 1) or _cmd_result("trade_gate"))
+    monkeypatch.setattr(cli, "run_model_gated_backtest", lambda *args, **kwargs: called.__setitem__("gated", called["gated"] + 1) or _cmd_result("gated"))
+    monkeypatch.setattr(cli, "refresh_apify_sources", lambda **kwargs: called.__setitem__("apify", called["apify"] + 1))
+
+    result = run_research_sweep(mode="light", root=tmp_path)
+
+    assert result["summary"]["mode"] == "light"
+    assert called == {"trade_dataset": 0, "trade_gate": 0, "gated": 0, "apify": 0}
+    assert dashboard_profiles == ["monitor"]
+    frame = pd.read_csv(tmp_path / "reports" / "research_sweep_status.csv")
+    assert set(frame["step"]) >= {"apify_refresh", "trade_dataset", "train_trade_gate", "model_gated_backtest", "priority_readiness"}
+    assert frame.loc[frame["step"] == "apify_refresh", "status"].iloc[0] == "skipped"
+
+
+def test_run_research_sweep_paid_runs_apify_and_deep_steps(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def _cmd_result(name: str, summary: dict | None = None) -> CommandResult:
+        path = tmp_path / "reports" / f"{name}.csv"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("ok\n", encoding="utf-8")
+        return CommandResult(paths={name: path, "command_center": path, "dataset_csv": path, "acceptance": path, "metrics_json": path, "current_state": path, "system_check": path, "market_venue_context": path, "pair_universe": path}, summary=summary or {"accepted": True})
+
+    monkeypatch.setattr(cli, "current_state", lambda: _cmd_result("current_state", {"rows": 1}))
+    monkeypatch.setattr(cli, "system_check", lambda: _cmd_result("system_check", {"checks": 1, "blocked": 0}))
+    monkeypatch.setattr(cli, "build_market_venue_context", lambda: _cmd_result("market_venue_context", {"rows": 1}))
+    monkeypatch.setattr(cli, "build_pair_universe", lambda: _cmd_result("pair_universe", {"pairs": 3, "promoted": 1}))
+    monkeypatch.setattr(cli, "build_trade_dataset", lambda *args, **kwargs: _cmd_result("dataset", {"rows": 25}))
+    monkeypatch.setattr(cli, "train_trade_gate", lambda *args, **kwargs: _cmd_result("trade_gate", {"accepted": True}))
+    monkeypatch.setattr(cli, "run_model_gated_backtest", lambda *args, **kwargs: _cmd_result("gated", {"accepted": True}))
+    monkeypatch.setattr(cli, "build_brain_readiness_report", lambda root, score_threshold: CommandResult(paths={"brain_readiness_report": tmp_path / "reports" / "brain.csv"}, summary={"score_gate": "pass", "readiness_score": 0.95}))
+    dashboard_profiles: list[str] = []
+    monkeypatch.setattr(
+        cli,
+        "build_command_dashboard",
+        lambda **kwargs: dashboard_profiles.append(kwargs.get("refresh_profile", ""))
+        or _cmd_result("command_center", {"dashboard_files": 3, "blocked_rows": 0}),
+    )
+    monkeypatch.setattr(cli, "paper_execution_preflight_report", lambda output_path=None: pd.DataFrame([{"step": "gate", "ready": True, "status": "ready"}]))
+    monkeypatch.setattr(cli, "paper_readiness_checkpoint", lambda root=None, readiness_threshold=0.65: {"summary": {"readiness_gate": "pass", "ready_rows": 4, "blocked_rows": 0}, "paths": {"paper_readiness_checkpoint": str(tmp_path / "reports" / "checkpoint.csv")}})
+    monkeypatch.setattr(cli, "priority_readiness_report", lambda output_path=None: pd.DataFrame([{"gate": "paper_execution_gate", "ready": True, "next_action": "go_paper"}]))
+    monkeypatch.setattr(cli, "print_supreme_team_checkpoint", lambda run_dir=None: (tmp_path / "reports" / "supreme.csv", tmp_path / "reports" / "supreme.md"))
+
+    refresh_calls = {"count": 0}
+
+    class DummyRefresh:
+        source_count = 4
+        sampled_count = 2
+        failed_count = 0
+        needs_key_count = 1
+        manifest_path = tmp_path / "reports" / "active" / "apify_source_capture_manifest.csv"
+
+    monkeypatch.setattr(cli, "refresh_apify_sources", lambda **kwargs: refresh_calls.__setitem__("count", refresh_calls["count"] + 1) or DummyRefresh())
+
+    result = run_research_sweep(mode="paid", root=tmp_path, mcp_url="https://example.test/mcp", api_token="token")
+
+    assert result["summary"]["mode"] == "paid"
+    assert result["summary"]["paper_trading_ready"] is True
+    assert refresh_calls["count"] == 1
+    assert dashboard_profiles == ["deep"]
+    frame = pd.read_csv(tmp_path / "reports" / "research_sweep_status.csv")
+    assert frame.loc[frame["step"] == "apify_refresh", "status"].iloc[0] == "completed"
 
 
 def test_write_csv_atomic_replaces_target_without_leaving_temp_file(tmp_path):
@@ -124,6 +297,7 @@ def test_cli_paper_plan_builds_two_leg_intents_for_accepted_strategy(tmp_path):
         beta=1.0,
         notional_usd=1000.0,
         acceptance_path=acceptance_path,
+        venue="binance",
     )
 
     assert plan.status == "paper_ready"
@@ -218,7 +392,7 @@ def test_cli_paper_plan_blocks_record_only_adapter_before_submission(tmp_path, m
     assert journal["fills_json"].iloc[0] == "[]"
 
 
-def test_resolve_paper_venue_prefers_executable_dydx_when_multiple_venues_available(tmp_path, monkeypatch):
+def test_resolve_paper_venue_prefers_configured_hyperliquid_route(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     market_context = pd.DataFrame(
         [
@@ -284,10 +458,10 @@ def test_resolve_paper_venue_prefers_executable_dydx_when_multiple_venues_availa
         ]
     ).to_csv(processed / "pair_universe.csv", index=False)
 
-    assert cli._resolve_paper_venue("ETH-BTC", "auto") == "dydx"
+    assert cli._resolve_paper_venue("ETH-BTC", "auto") == "hyperliquid"
 
 
-def test_run_paper_plan_with_explicit_non_dydx_venue_blocks_for_execution_readiness(tmp_path):
+def test_run_paper_plan_with_explicit_hyperliquid_blocks_on_runtime_readiness(tmp_path, monkeypatch):
     acceptance_path = tmp_path / "acceptance_report.csv"
     journal_path = tmp_path / "paper_trading_journal.csv"
     pd.DataFrame([{"strategy_id": 1, "production_eligible": True, "acceptance_reason": "passed"}]).to_csv(
@@ -310,10 +484,11 @@ def test_run_paper_plan_with_explicit_non_dydx_venue_blocks_for_execution_readin
     journal = pd.read_csv(journal_path)
     assert list(journal["plan_status"]) == ["blocked"]
     assert journal["plan_reason"].iloc[0].startswith("hyperliquid_not_ready")
-    assert "missing_hyperliquid_order_client_adapter" in journal["blockers"].iloc[0]
+    assert "missing_explicit_hyperliquid_order_approval" in journal["blockers"].iloc[0]
+    assert "hyperliquid_pair_executor_required" not in journal["blockers"].iloc[0]
 
 
-def test_run_paper_plan_with_explicit_non_dydx_venue_runs_with_adapter(tmp_path, monkeypatch):
+def test_run_paper_plan_rejects_single_leg_hyperliquid_adapter(tmp_path, monkeypatch):
     acceptance_path = tmp_path / "acceptance_report.csv"
     journal_path = tmp_path / "paper_trading_journal.csv"
     pd.DataFrame([{"strategy_id": 1, "production_eligible": True, "acceptance_reason": "passed"}]).to_csv(
@@ -362,9 +537,9 @@ class FakeHyperliquidAdapter:
     )
 
     journal = pd.read_csv(journal_path)
-    assert list(journal["plan_status"]) == ["paper_ready"]
-    fills = json.loads(journal["fills_json"].iloc[0])
-    assert fills and fills[0]["status"] == "paper_submitted"
+    assert list(journal["plan_status"]) == ["blocked"]
+    assert "hyperliquid_pair_submission_not_supported" in journal["blockers"].iloc[0]
+    assert journal["fills_json"].iloc[0] == "[]"
 
 
 def test_paper_venue_preflight_reports_missing_venue_blockers(tmp_path, monkeypatch):
@@ -392,6 +567,7 @@ class ReadyOrderAdapter:
             slippage_bps=0.0,
             status="paper_submitted",
         )
+
 """,
         encoding="utf-8",
     )
@@ -471,7 +647,7 @@ class ReadyOrderAdapter:
     assert bool(rows.loc["dydx", "ready_for_submission"]) is True
     assert bool(rows.loc["dydx", "execution_ready"]) is True
     assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is False
-    assert "missing_hyperliquid_order_client_adapter" in rows.loc["hyperliquid", "blockers"]
+    assert "missing_or_invalid_hyperliquid_master_address" in rows.loc["hyperliquid", "blockers"]
 
 
 def test_paper_venue_preflight_marks_ready_when_non_dydx_adapter_ready(tmp_path, monkeypatch):
@@ -483,6 +659,10 @@ from quant_platform.execution import FillReport
 
 
 class ReadyOrderAdapter:
+    exchange_submission_capable = True
+    pair_submission_capable = True
+    record_only = False
+
     def place_order(self, intent, config):
         return FillReport(
             order_id="ready",
@@ -494,11 +674,20 @@ class ReadyOrderAdapter:
             slippage_bps=0.0,
             status="paper_submitted",
         )
+
+    def submit_pair(self, intents, config):
+        return None
 """,
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
     monkeypatch.setenv("HYPERLIQUID_PAPER_ORDER_ADAPTER", "hyperliquid_order_adapter:ReadyOrderAdapter")
+    monkeypatch.setenv("HYPERLIQUID_NETWORK", "testnet")
+    monkeypatch.setenv("HYPERLIQUID_TESTNET_BASE_URL", "https://api.hyperliquid-testnet.xyz")
+    monkeypatch.setenv("HYPERLIQUID_MASTER_ADDRESS", "0x1111111111111111111111111111111111111111")
+    monkeypatch.setenv("HYPERLIQUID_AGENT_ADDRESS", "0x2222222222222222222222222222222222222222")
+    monkeypatch.setenv("HYPERLIQUID_TESTNET_AGENT_KEYCHAIN_SERVICE", "test-keychain")
+    monkeypatch.setenv("HYPERLIQUID_TESTNET_SUBMIT_ORDERS", "false")
 
     data_dir = tmp_path / "data" / "processed"
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -545,9 +734,53 @@ class ReadyOrderAdapter:
     frame = paper_venue_preflight_report(pair="ETH-BTC")
     rows = frame.set_index("venue")
 
-    assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is True
+    assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is False
     assert bool(rows.loc["hyperliquid", "execution_ready"]) is True
     assert bool(rows.loc["hyperliquid", "adapter_ready"]) is True
+    assert "hyperliquid_testnet_submit_orders_false" in rows.loc["hyperliquid", "blockers"]
+
+
+def test_paper_venue_options_prefer_evidence_gated_route(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    processed = tmp_path / "data" / "processed"
+    active = tmp_path / "reports" / "active"
+    processed.mkdir(parents=True)
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {"asset": "ETH", "venue": "dydx", "tradable": True, "execution_authority": True, "venue_lane": "dydx_execution_candidate"},
+            {"asset": "BTC", "venue": "dydx", "tradable": True, "execution_authority": True, "venue_lane": "dydx_execution_candidate"},
+            {"asset": "ETH", "venue": "hyperliquid", "tradable": True, "execution_authority": True, "venue_lane": "hyperliquid_execution_candidate"},
+            {"asset": "BTC", "venue": "hyperliquid", "tradable": True, "execution_authority": True, "venue_lane": "hyperliquid_execution_candidate"},
+        ]
+    ).to_csv(processed / "market_venue_context.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-BTC",
+                "asset_x": "ETH",
+                "asset_y": "BTC",
+                "best_execution_venue": "dydx",
+                "available_venues": "dydx;hyperliquid",
+            }
+        ]
+    ).to_csv(processed / "pair_universe.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-BTC",
+                "recommended_research_venue": "hyperliquid",
+                "recommended_execution_venue": "hyperliquid",
+                "recommended_paper_venue": "",
+            }
+        ]
+    ).to_csv(active / "venue_route_recommendations.csv", index=False)
+
+    options = cli._build_paper_venue_options("ETH-BTC")
+    by_venue = {str(row["venue"]): row for row in options}
+
+    assert by_venue["hyperliquid"]["preference"] == "preferred"
+    assert by_venue["dydx"]["preference"] == "candidate"
 
 
 def test_split_pair_assets_handles_dydx_four_segment_pairs():
@@ -1345,8 +1578,8 @@ def test_priority_readiness_report_summarizes_current_gates(tmp_path, monkeypatc
     assert bool(gates.loc["pair_detail_two_leg_execution_history", "ready"]) is True
     assert bool(gates.loc["pair_detail_capture_audit", "ready"]) is True
     assert bool(gates.loc["strategy_acceptance", "ready"]) is True
-    assert bool(gates.loc["dydx_testnet_readiness", "ready"]) is False
-    assert "missing_dydx_order_client_adapter" in gates.loc["dydx_testnet_readiness", "blocker"]
+    assert bool(gates.loc["dydx_testnet_readiness", "ready"]) is True
+    assert gates.loc["dydx_testnet_readiness", "blocker"] == ""
     assert (reports / "strategy_acceptance_checklist.csv").exists()
     assert bool(gates.loc["learning_event_store", "ready"]) is False
     assert gates.loc["learning_event_store", "blocker"] == "missing_learning_events"
@@ -1397,6 +1630,27 @@ def test_dydx_execution_checklist_blocks_without_credentials_or_research(tmp_pat
     assert rows.loc["paper_submission_gate", "status"] == "blocked"
 
 
+def test_dydx_execution_checklist_loads_credentials_from_env_local(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
+    monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: False)
+    monkeypatch.delenv("DYDX_TESTNET_WALLET_ADDRESS", raising=False)
+    monkeypatch.delenv("DYDX_TESTNET_PRIVATE_KEY", raising=False)
+    monkeypatch.delenv("DYDX_TESTNET_SUBMIT_ORDERS", raising=False)
+
+    (tmp_path / ".env.local").write_text(
+        "DYDX_TESTNET_WALLET_ADDRESS=wallet_from_file\nDYDX_TESTNET_PRIVATE_KEY=private_from_file\n",
+        encoding="utf-8",
+    )
+
+    frame = dydx_execution_checklist_report()
+    rows = frame.set_index("step")
+
+    assert bool(rows.loc["testnet_credentials", "ready"]) is True
+    assert rows.loc["testnet_credentials", "blocker"] == ""
+    assert "wallet_address_present=True" in rows.loc["testnet_credentials", "evidence"]
+
+
 def test_strategy_acceptance_checklist_blocks_without_experiments(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
 
@@ -1406,6 +1660,117 @@ def test_strategy_acceptance_checklist_blocks_without_experiments(tmp_path, monk
     assert rows.loc["experiment_results", "blocker"] == "missing_evaluated_experiments"
     assert rows.loc["two_leg_coverage", "blocker"] == "missing_two_leg_backtests"
     assert rows.loc["production_eligibility", "blocker"] == "no_production_eligible_strategy"
+
+
+def test_strategy_acceptance_checklist_counts_repaired_native_dydx_passes(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    brain = reports / "brain"
+    reports.mkdir()
+    brain.mkdir()
+
+    pd.DataFrame(
+        [
+            {"pair": "BTC-USD-HYPE-USD", "strategy_id": 1, "strategy_name": "Classic ZScore Mean Reversion", "family": "zscore", "status": "evaluated", "eligible": False, "reason": "passing_pairs<2", "trades": 10, "observations": 120, "profit_factor": 1.1, "sharpe": 0.2, "expectancy": 0.01, "max_drawdown": 0.05, "gross_return": 0.02, "backtest_mode": "two_leg", "cost_bucket": "base"},
+            {"pair": "SOL-USD-HYPE-USD", "strategy_id": 1, "strategy_name": "Classic ZScore Mean Reversion", "family": "zscore", "status": "evaluated", "eligible": False, "reason": "passing_pairs<2", "trades": 12, "observations": 150, "profit_factor": 1.2, "sharpe": 0.25, "expectancy": 0.01, "max_drawdown": 0.06, "gross_return": 0.03, "backtest_mode": "two_leg", "cost_bucket": "stress"},
+        ]
+    ).to_csv(reports / "experiment_results.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "strategy_id": 1,
+                "strategy_name": "Classic ZScore Mean Reversion",
+                "family": "zscore",
+                "production_eligible": False,
+                "preferred_eligible": False,
+                "acceptance_reason": "passing_pairs<2",
+                "preferred_reason": "not_production_eligible",
+                "two_leg_pairs_tested": 2,
+                "two_leg_execution_input_pairs": 2,
+                "two_leg_passing_pairs": 0,
+                "required_cost_buckets": "base;stress",
+                "required_two_leg_inputs": "price_x;price_y;hedge_ratio;beta;funding_x;funding_y",
+                "total_trades": 20,
+            }
+        ]
+    ).to_csv(reports / "acceptance_report.csv", index=False)
+    pd.DataFrame(
+        [
+            {"candidate_id": "native:BTC-USD-HYPE-USD:native_local_math:native", "pair": "BTC-USD-HYPE-USD", "venue": "dydx", "blocker_state": ""},
+            {"candidate_id": "native:SOL-USD-HYPE-USD:native_local_math:native", "pair": "SOL-USD-HYPE-USD", "venue": "dydx", "blocker_state": ""},
+        ]
+    ).to_csv(brain / "native_candidate_packets.csv", index=False)
+    pd.DataFrame(
+        [
+            {"candidate_id": "native:BTC-USD-HYPE-USD:native_local_math:native", "forward_walk_status": "pass", "oos_sharpe": 0.12, "oos_profit_factor": 2.1, "oos_max_drawdown": 0.01, "oos_trade_count": 111},
+            {"candidate_id": "native:SOL-USD-HYPE-USD:native_local_math:native", "forward_walk_status": "pass", "oos_sharpe": 0.17, "oos_profit_factor": 1.55, "oos_max_drawdown": 0.06, "oos_trade_count": 177},
+        ]
+    ).to_csv(brain / "native_forward_walk.csv", index=False)
+
+    frame = strategy_acceptance_checklist_report()
+    rows = frame.set_index("step")
+
+    assert bool(rows.loc["production_eligibility", "ready"]) is True
+    assert "production_eligible=1" in rows.loc["production_eligibility", "evidence"]
+    assert "max_two_leg_passing_pairs=2" in rows.loc["production_eligibility", "evidence"]
+
+
+def test_priority_readiness_report_uses_native_acceptance_bridge_for_strategy_gate(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
+    monkeypatch.delenv("DYDX_TESTNET_WALLET_ADDRESS", raising=False)
+    monkeypatch.delenv("DYDX_TESTNET_PRIVATE_KEY", raising=False)
+    monkeypatch.delenv("DYDX_TESTNET_SUBMIT_ORDERS", raising=False)
+    reports = tmp_path / "reports"
+    brain = reports / "brain"
+    pair_dir = tmp_path / "data" / "raw" / "pair_details"
+    reports.mkdir()
+    brain.mkdir()
+    pair_dir.mkdir(parents=True)
+
+    pd.DataFrame(
+        [
+            {"pair": "BTC-USD-HYPE-USD", "strategy_id": 1, "strategy_name": "Classic ZScore Mean Reversion", "family": "zscore", "status": "evaluated", "eligible": False, "reason": "passing_pairs<2", "trades": 10, "observations": 120, "profit_factor": 1.1, "sharpe": 0.2, "expectancy": 0.01, "max_drawdown": 0.05, "gross_return": 0.02, "backtest_mode": "two_leg", "cost_bucket": "base"},
+            {"pair": "SOL-USD-HYPE-USD", "strategy_id": 1, "strategy_name": "Classic ZScore Mean Reversion", "family": "zscore", "status": "evaluated", "eligible": False, "reason": "passing_pairs<2", "trades": 12, "observations": 150, "profit_factor": 1.2, "sharpe": 0.25, "expectancy": 0.01, "max_drawdown": 0.06, "gross_return": 0.03, "backtest_mode": "two_leg", "cost_bucket": "stress"},
+        ]
+    ).to_csv(reports / "experiment_results.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "strategy_id": 1,
+                "strategy_name": "Classic ZScore Mean Reversion",
+                "family": "zscore",
+                "production_eligible": False,
+                "preferred_eligible": False,
+                "acceptance_reason": "passing_pairs<2",
+                "preferred_reason": "not_production_eligible",
+                "two_leg_pairs_tested": 2,
+                "two_leg_execution_input_pairs": 2,
+                "two_leg_passing_pairs": 0,
+                "required_cost_buckets": "base;stress",
+                "required_two_leg_inputs": "price_x;price_y;hedge_ratio;beta;funding_x;funding_y",
+                "total_trades": 20,
+            }
+        ]
+    ).to_csv(reports / "acceptance_report.csv", index=False)
+    pd.DataFrame(
+        [
+            {"candidate_id": "native:BTC-USD-HYPE-USD:native_local_math:native", "pair": "BTC-USD-HYPE-USD", "venue": "dydx", "blocker_state": ""},
+            {"candidate_id": "native:SOL-USD-HYPE-USD:native_local_math:native", "pair": "SOL-USD-HYPE-USD", "venue": "dydx", "blocker_state": ""},
+        ]
+    ).to_csv(brain / "native_candidate_packets.csv", index=False)
+    pd.DataFrame(
+        [
+            {"candidate_id": "native:BTC-USD-HYPE-USD:native_local_math:native", "forward_walk_status": "pass", "oos_sharpe": 0.12, "oos_profit_factor": 2.1, "oos_max_drawdown": 0.01, "oos_trade_count": 111},
+            {"candidate_id": "native:SOL-USD-HYPE-USD:native_local_math:native", "forward_walk_status": "pass", "oos_sharpe": 0.17, "oos_profit_factor": 1.55, "oos_max_drawdown": 0.06, "oos_trade_count": 177},
+        ]
+    ).to_csv(brain / "native_forward_walk.csv", index=False)
+
+    frame = priority_readiness_report()
+    gates = frame.set_index("gate")
+
+    assert bool(gates.loc["strategy_acceptance", "ready"]) is True
+    assert gates.loc["strategy_acceptance", "blocker"] == ""
 
 
 def test_strategy_failure_attribution_report_summarizes_trade_and_feature_failures(tmp_path, monkeypatch):
@@ -1675,6 +2040,55 @@ def test_dydx_live_market_counts_report_summarizes_live_and_local_coverage(tmp_p
     assert row["untested_candidate_markets"] == 3
     assert row["untested_candidate_pairs"] == 2
     assert (tmp_path / "reports" / "dydx_live_market_counts.csv").exists()
+
+
+def test_dydx_anchor_sweep_report_groups_candidates_by_anchor(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "priority": "1.0",
+                "area": "trade_sample_size",
+                "blocker": "too_few_completed_trades",
+                "evidence": "pairs_tested=11;total_trades=111844",
+                "target": ">=100 trades minimum",
+                "recommended_action": "expand history and retest",
+                "candidate_detail": "",
+                "minimum_history_multiplier_estimate": "1x_current_history",
+                "preferred_history_multiplier_estimate": "1x_current_history",
+            }
+        ]
+    ).to_csv(reports / "research_unblock_plan.csv", index=False)
+
+    monkeypatch.setattr(cli, "_tested_market_pairs", lambda: set())
+    monkeypatch.setattr(cli, "_fetched_market_pair_info", lambda: {})
+    monkeypatch.setattr(cli, "_stale_market_risk_info", lambda: {})
+    monkeypatch.setattr(cli, "_local_cached_dydx_markets", lambda: {"BTC-USD", "ETH-USD", "SOL-USD"})
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "markets": {
+                    "NEAR-USD": {"status": "ACTIVE", "marketType": "CROSS", "trades24H": 700, "volume24H": "20000", "oraclePrice": "7"},
+                    "WLD-USD": {"status": "ACTIVE", "marketType": "CROSS", "trades24H": 237, "volume24H": "11877", "oraclePrice": "0.47"},
+                    "DYDX-USD": {"status": "ACTIVE", "marketType": "CROSS", "trades24H": 24, "volume24H": "5016", "oraclePrice": "0.16"},
+                }
+            }
+
+    monkeypatch.setattr(cli.requests, "get", lambda *args, **kwargs: FakeResponse())
+
+    frame = dydx_anchor_sweep_report(anchors=["BTC-USD", "ETH-USD", "SOL-USD"], max_pairs=2)
+
+    assert not frame.empty
+    assert set(frame["anchor"]) == {"BTC-USD", "ETH-USD", "SOL-USD"}
+    assert frame["anchor_rank"].max() <= 2
+    assert {"overall_rank", "pair_id", "fetch_command"}.issubset(frame.columns)
+    assert (reports / "dydx_anchor_sweep.csv").exists()
 
 
 def test_zscore_threshold_sweep_writes_detail_and_summary(tmp_path, monkeypatch):
@@ -2487,6 +2901,228 @@ def test_run_dydx_pair_expansion_supports_skip_fetch(tmp_path, monkeypatch):
     row = frame.iloc[0]
     assert row["status"] == "completed"
     assert row["pair_id"] in {"btc_eth", "btc_sol"}
+
+
+def test_run_dydx_pair_expansion_routes_pair_and_strategy_filters_to_experiments(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir()
+
+    def fake_plan_report(*_args, **_kwargs):
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "btc_eth",
+                    "asset_x": "BTC-USD",
+                    "asset_y": "ETH-USD",
+                    "already_tested": False,
+                    "already_fetched": False,
+                    "rank": 1,
+                }
+            ]
+        )
+
+    monkeypatch.setattr(cli, "dydx_pair_expansion_plan_report", fake_plan_report)
+
+    calls_fetch: list[dict[str, object]] = []
+
+    def fake_fetch(**kwargs):
+        calls_fetch.append(kwargs)
+        pair_id = kwargs["pair_id"]
+        pair_path = tmp_path / f"{pair_id}.json"
+        pair_path.write_text("{}", encoding="utf-8")
+        return {
+            "pair_history": pair_path,
+            "funding_csv": tmp_path / "funding.csv",
+            "funding_coverage": reports / "funding_coverage.csv",
+        }
+
+    calls_experiments: list[tuple[tuple[str, ...], tuple[int, ...] | None]] = []
+
+    def fake_experiments(input_dir=None, funding_path=None, require_research_usable=False, pair_filter=(), strategy_ids=None):
+        calls_experiments.append((pair_filter, strategy_ids))
+
+    monkeypatch.setattr(cli, "run_pair_detail_experiments", fake_experiments)
+    monkeypatch.setattr(cli, "fetch_dydx_two_leg_data", fake_fetch)
+
+    run_dydx_pair_expansion(
+        max_pairs=1,
+        limit=1000,
+        run_research=True,
+        skip_fetch=True,
+        pair_ids=("BTC-USD-ETH-USD",),
+        strategy_ids=(1, 2),
+    )
+
+    assert len(calls_fetch) == 1
+    assert len(calls_experiments) == 1
+    assert calls_experiments[0][0] == ("BTC-USD-ETH-USD",)
+    assert calls_experiments[0][1] == (1, 2)
+
+
+def test_run_dydx_pair_expansion_auto_includes_recommended_then_all_strategies_for_pair_ids(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    pair_detail_dir = tmp_path / "data" / "raw" / "pair_details"
+    pair_detail_dir.mkdir(parents=True)
+    (pair_detail_dir / "pair_btc_eth.json").write_text(
+        json.dumps(
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "dashboard_recommended_strategy": "copula",
+                "strategy": "static",
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_plan_report(*_args, **_kwargs):
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "btc_eth",
+                    "asset_x": "BTC-USD",
+                    "asset_y": "ETH-USD",
+                    "already_tested": False,
+                    "already_fetched": False,
+                    "rank": 1,
+                }
+            ]
+        )
+
+    monkeypatch.setattr(cli, "dydx_pair_expansion_plan_report", fake_plan_report)
+
+    calls_fetch: list[dict[str, object]] = []
+
+    def fake_fetch(**kwargs):
+        calls_fetch.append(kwargs)
+        pair_id = kwargs["pair_id"]
+        pair_path = tmp_path / f"{pair_id}.json"
+        pair_path.write_text("{}", encoding="utf-8")
+        return {
+            "pair_history": pair_path,
+            "funding_csv": tmp_path / "funding.csv",
+            "funding_coverage": reports / "funding_coverage.csv",
+        }
+
+    calls_experiments: list[tuple[tuple[str, ...], tuple[int, ...] | None]] = []
+
+    def fake_experiments(input_dir=None, funding_path=None, require_research_usable=False, pair_filter=(), strategy_ids=None):
+        calls_experiments.append((pair_filter, strategy_ids))
+
+    monkeypatch.setattr(cli, "run_pair_detail_experiments", fake_experiments)
+    monkeypatch.setattr(cli, "fetch_dydx_two_leg_data", fake_fetch)
+
+    run_dydx_pair_expansion(
+        max_pairs=1,
+        limit=1000,
+        run_research=True,
+        skip_fetch=True,
+        pair_ids=("BTC-USD-ETH-USD",),
+    )
+
+    expected_prefix = _extract_recommended_strategy_ids(
+        {"dashboard_recommended_strategy": "copula", "strategy": "static"}
+    )
+    expected_all = tuple(int(spec.id) for spec in STRATEGIES)
+    called_pair_filter, called_strategy_ids = calls_experiments[0]
+    assert called_pair_filter == ("BTC-USD-ETH-USD",)
+    assert called_strategy_ids[: len(expected_prefix)] == tuple(expected_prefix)
+    assert set(expected_all).issubset(set(called_strategy_ids))
+
+
+def test_check_exchange_cost_model_alignment_requires_pair_rows(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    results = pd.DataFrame([{"pair": "BTC-USD-ETH-USD"}])
+
+    status = cli._check_exchange_cost_model_alignment_from_quality(results=results)
+    assert status["ready"] is False
+    assert status["blocker"] == "pair_detail_quality_report_missing"
+
+    (tmp_path / "reports").mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [{"pair": "BTC-USD-ETH-USD", "execution_usable": False, "research_execution_usable": False}]
+    ).to_csv(tmp_path / "reports" / "pair_detail_quality_report.csv", index=False)
+    status = cli._check_exchange_cost_model_alignment_from_quality(results=results)
+    assert status["ready"] is False
+    assert "missing_cost_execution_alignment:BTC-USD-ETH-USD" in status["blocker"]
+    assert "BTC-USD-ETH-USD" in status["missing_pairs"]
+
+    pd.DataFrame(
+        [{"pair": "BTC-USD-ETH-USD", "execution_usable": True, "research_execution_usable": False}]
+    ).to_csv(tmp_path / "reports" / "pair_detail_quality_report.csv", index=False)
+    status = cli._check_exchange_cost_model_alignment_from_quality(results=results)
+    assert status["ready"] is True
+
+    pd.DataFrame([{"pair": "SOL-USD-LTC-USD", "execution_usable": True, "research_execution_usable": True}]).to_csv(
+        tmp_path / "reports" / "pair_detail_quality_report.csv",
+        index=False,
+    )
+    status = cli._check_exchange_cost_model_alignment_from_quality(results=results)
+    assert status["ready"] is False
+    assert "missing_cost_quality_row:BTC-USD-ETH-USD" in status["blocker"]
+
+    pd.DataFrame(
+        [
+            {"pair": "BTC-USD-ETH-USD", "execution_usable": False, "research_execution_usable": False},
+            {"pair": "BTC-USD-ETH-USD", "execution_usable": True, "research_execution_usable": False},
+        ]
+    ).to_csv(tmp_path / "reports" / "pair_detail_quality_report.csv", index=False)
+    status = cli._check_exchange_cost_model_alignment_from_quality(results=results)
+    assert status["ready"] is True
+
+
+def test_run_dydx_pair_expansion_skips_empty_research_filter_without_crashing(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir()
+
+    def fake_plan_report(*_args, **_kwargs):
+        return pd.DataFrame(
+            [
+                {
+                    "pair_id": "btc_eth",
+                    "asset_x": "BTC-USD",
+                    "asset_y": "ETH-USD",
+                    "already_tested": False,
+                    "already_fetched": False,
+                    "rank": 1,
+                }
+            ]
+        )
+
+    monkeypatch.setattr(cli, "dydx_pair_expansion_plan_report", fake_plan_report)
+
+    def fake_fetch(**kwargs):
+        pair_id = kwargs["pair_id"]
+        pair_path = tmp_path / f"{pair_id}.json"
+        pair_path.write_text("{}", encoding="utf-8")
+        return {
+            "pair_history": pair_path,
+            "funding_csv": tmp_path / "funding.csv",
+            "funding_coverage": reports / "funding_coverage.csv",
+        }
+
+    def fake_experiments(input_dir=None, funding_path=None, require_research_usable=False, pair_filter=(), strategy_ids=None):
+        raise SystemExit(f"no experiment-ready pair-detail history datasets found in {input_dir}")
+
+    monkeypatch.setattr(cli, "fetch_dydx_two_leg_data", fake_fetch)
+    monkeypatch.setattr(cli, "run_pair_detail_experiments", fake_experiments)
+
+    run_dydx_pair_expansion(
+        max_pairs=1,
+        limit=1000,
+        run_research=True,
+        skip_fetch=True,
+        pair_ids=("BTC-USD-ETH-USD",),
+    )
+
+    output = capsys.readouterr().out
+    assert "run_dydx_pair_expansion: research experiments skipped" in output
+
+
 def test_run_dydx_local_pair_universe_builds_pair_histories_from_manual_candles(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     manual = tmp_path / "data" / "raw" / "dydx_manual"
@@ -2739,8 +3375,9 @@ def test_dydx_execution_checklist_keeps_order_adapter_as_final_gate(tmp_path, mo
     assert bool(rows.loc["dydx_sdk", "ready"]) is True
     assert bool(rows.loc["submit_flag", "ready"]) is True
     assert bool(rows.loc["research_acceptance", "ready"]) is True
-    assert rows.loc["order_client_adapter", "blocker"] == "missing_dydx_order_client_adapter"
-    assert "missing_dydx_order_client_adapter" in rows.loc["paper_submission_gate", "blocker"]
+    assert bool(rows.loc["order_client_adapter", "ready"]) is True
+    assert rows.loc["order_client_adapter", "blocker"] == ""
+    assert bool(rows.loc["paper_submission_gate", "ready"]) is True
 
 
 def test_dydx_execution_checklist_accepts_configured_order_adapter(tmp_path, monkeypatch):
@@ -3967,6 +4604,23 @@ def test_paper_execution_preflight_marks_submission_ready_when_dependencies_read
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
+    monkeypatch.setattr(
+        cli,
+        "dydx_execution_compatibility_snapshot",
+        lambda markets, root=None: {
+            "checked": True,
+            "route_markets": markets,
+            "compatible_markets": list(markets),
+            "incompatible_markets": [],
+            "missing_markets": [],
+            "blocker": "",
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "dydx_account_state_snapshot",
+        lambda config: {"checked": True, "open_markets": [], "positions": [], "blocker": ""},
+    )
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
@@ -4014,6 +4668,233 @@ class ReadyOrderAdapter:
     assert bool(rows.loc["dydx_testnet_dependency", "ready"]) is True
     assert bool(rows.loc["paper_submission_gate", "ready"]) is True
     assert bool(rows.loc["paper_journal", "ready"]) is True
+
+
+def test_paper_execution_preflight_blocks_browser_account_override_when_indexer_reports_open_positions(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
+    monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
+    monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
+    monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
+    monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    adapter_module = tmp_path / "ready_order_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+class ReadyOrderAdapter:
+    def place_order(self, intent, config):
+        return FillReport(
+            order_id="ready",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=0.0,
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "ready_order_adapter:ReadyOrderAdapter")
+    reports = tmp_path / "reports"
+    (reports / "active").mkdir(parents=True)
+    (reports / "rl").mkdir(parents=True)
+    reports.mkdir(exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "strategy_id": 1,
+                "production_eligible": True,
+                "preferred_eligible": False,
+                "two_leg_pairs_tested": 2,
+                "two_leg_passing_pairs": 2,
+            }
+        ]
+    ).to_csv(reports / "acceptance_report.csv", index=False)
+    pd.DataFrame([{"plan_status": "paper_ready"}]).to_csv(reports / "paper_trading_journal.csv", index=False)
+    pd.DataFrame([{"pair": "BTC-USD-LDO-USD"}]).to_csv(reports / "rl" / "base_rl_route_candidates.csv", index=False)
+    pd.DataFrame(
+        [
+            {"market": "BTC-USD", "compatible_for_paper_submit": True},
+            {"market": "LDO-USD", "compatible_for_paper_submit": True},
+        ]
+    ).to_csv(reports / "active" / "dydx_execution_market_compatibility.csv", index=False)
+    (reports / "active" / "browser_account_state_override.json").write_text(
+        json.dumps(
+            {
+                "confirmed_flat": True,
+                "source": "browser_user_confirmed",
+                "note": "browser shows no open positions",
+                "confirmed_at_utc": "2026-07-08T16:00:00+00:00",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "quant_platform.execution.dydx_account_state_snapshot",
+        lambda config=None: {"checked": True, "open_markets": ["ETH-USD"], "positions": [{"market": "ETH-USD", "size": -0.004}], "blocker": "orphan_leg_open"},
+    )
+
+    frame = paper_execution_preflight_report()
+    rows = frame.set_index("step")
+
+    assert bool(rows.loc["paper_submission_gate", "ready"]) is False
+    assert rows.loc["paper_submission_gate", "blocker"] == "orphan_leg_open"
+    assert bool(rows.loc["account_state_clean", "ready"]) is False
+    assert rows.loc["account_state_clean", "blocker"] == "orphan_leg_open"
+    assert "source=dydx_indexer_browser_override_conflict" in rows.loc["account_state_clean", "evidence"]
+
+
+def test_paper_execution_preflight_blocks_submission_on_execution_reality(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
+    monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
+    monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
+    monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
+    monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    adapter_module = tmp_path / "ready_order_adapter.py"
+    adapter_module.write_text(
+        """
+from quant_platform.execution import FillReport
+
+class ReadyOrderAdapter:
+    def place_order(self, intent, config):
+        return FillReport(
+            order_id="ready",
+            market=intent.market,
+            side=intent.side,
+            size=intent.size,
+            avg_price=0.0,
+            fee=0.0,
+            slippage_bps=0.0,
+            status="paper_submitted",
+        )
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "ready_order_adapter:ReadyOrderAdapter")
+    reports = tmp_path / "reports"
+    (reports / "rl").mkdir(parents=True)
+    (reports / "active").mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "strategy_id": 1,
+                "production_eligible": True,
+                "preferred_eligible": False,
+                "two_leg_pairs_tested": 2,
+                "two_leg_passing_pairs": 2,
+            }
+        ]
+    ).to_csv(reports / "acceptance_report.csv", index=False)
+    pd.DataFrame([{"plan_status": "paper_ready"}]).to_csv(reports / "paper_trading_journal.csv", index=False)
+    pd.DataFrame([{"pair": "BTC-USD-LDO-USD"}]).to_csv(reports / "rl" / "base_rl_route_candidates.csv", index=False)
+    pd.DataFrame(
+        [
+            {"market": "BTC-USD", "compatible_for_paper_submit": False},
+            {"market": "LDO-USD", "compatible_for_paper_submit": False},
+        ]
+    ).to_csv(reports / "active" / "dydx_execution_market_compatibility.csv", index=False)
+
+    monkeypatch.setattr(
+        cli,
+        "dydx_account_state_snapshot",
+        lambda config: {"checked": True, "open_markets": [], "positions": [], "blocker": ""},
+    )
+
+    frame = paper_execution_preflight_report()
+    rows = frame.set_index("step")
+
+    assert bool(rows.loc["paper_submission_gate", "ready"]) is False
+    assert rows.loc["paper_submission_gate", "blocker"] == "route_market_unconfirmed_on_exchange"
+    assert rows.loc["paper_submission_gate", "next_action"] == "only route paper through markets that have confirmed on exchange"
+
+
+def test_refresh_execution_truth_surfaces_recomputes_queue_and_current_truth(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr("quant_platform.execution.ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    active = reports / "active"
+    rl = reports / "rl"
+    active.mkdir(parents=True)
+    rl.mkdir(parents=True)
+    (active / "dydx_execution_market_attempts.csv").write_text(
+        "\n".join(
+            [
+                "timestamp_utc,market,side,size,reduce_only,route_label,submit_mode,node_url,rest_indexer,order_id,avg_price,status,confirmed",
+                "2026-07-07T17:00:00+00:00,BNB-USD,BUY,1.0,False,configured_route:test,standard_order,test,idx,one,1.0,broadcast_accepted_unconfirmed,False",
+                "2026-07-07T17:01:00+00:00,LDO-USD,BUY,1.0,False,configured_route:test,standard_order,test,idx,two,1.0,broadcast_accepted_unconfirmed,False",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (active / "non_eth_route_submit_queue.csv").write_text(
+        "\n".join(
+            [
+                "submit_priority_rank,pair,candidate_id,setup_identity,lane_bias,timeframes,decision_bucket,route_markets,route_market_statuses,all_route_markets_confirmed,current_submit_state,next_action,evidence_path",
+                "1,BNB-USD/LDO-USD,candidate-1,setup-1,wizard,daily,PROMOTE,BNB-USD;LDO-USD,,,wait_for_exchange_confirmation,,evidence.csv",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    called = {}
+
+    def fake_preflight(output_path=None):
+        path = output_path or (reports / "paper_execution_preflight.csv")
+        frame = pd.DataFrame([{"step": "paper_submission_gate", "ready": False, "blocker": "route_market_unconfirmed_on_exchange"}])
+        frame.to_csv(path, index=False)
+        called["preflight"] = str(path)
+        return frame
+
+    def fake_handoff(root=tmp_path):
+        frame = pd.DataFrame([{"status": "research_only", "paper_authorized": False, "blocker": "route_market_unconfirmed_on_exchange"}])
+        frame.to_csv(rl / "base_rl_paper_handoff_status.csv", index=False)
+        called["handoff"] = True
+        return frame
+
+    def fake_current_state(root=tmp_path):
+        frame = pd.DataFrame([{"area": "base_rl_handoff", "ready": False, "status": "research_only", "blocker": "route_market_unconfirmed_on_exchange"}])
+        frame.to_csv(active / "current_state.csv", index=False)
+        called["current_state"] = True
+        return CommandResult(paths={"current_state": active / "current_state.csv"}, summary={"rows": 1})
+
+    monkeypatch.setattr(cli, "paper_execution_preflight_report", fake_preflight)
+    monkeypatch.setattr(cli, "base_rl_paper_handoff_report", fake_handoff)
+    monkeypatch.setattr(cli, "current_state", fake_current_state)
+    monkeypatch.setattr(
+        cli,
+        "build_wizard_research_journal",
+        lambda root=tmp_path: type(
+            "JournalResult",
+            (),
+            {
+                "paths": {
+                    "wizard_research_scanner_capture": active / "wizard_research_scanner_capture.csv",
+                    "wizard_research_pair_detail_capture": active / "wizard_research_pair_detail_capture.csv",
+                    "wizard_research_journal": active / "wizard_research_journal.csv",
+                    "wizard_research_journal_json": active / "wizard_research_journal_current.json",
+                }
+            },
+        )(),
+    )
+
+    paths = refresh_execution_truth_surfaces(root=tmp_path)
+    queue = pd.read_csv(active / "non_eth_route_submit_queue.csv")
+    compatibility = pd.read_csv(active / "dydx_execution_market_compatibility.csv")
+
+    assert compatibility.set_index("market").loc["BNB-USD", "last_status"] == "broadcast_accepted_unconfirmed"
+    assert queue.loc[0, "current_submit_state"] == "wait_for_exchange_confirmation"
+    assert called == {
+        "preflight": str(reports / "paper_execution_preflight.csv"),
+        "handoff": True,
+        "current_state": True,
+    }
+    assert paths["current_state"].endswith("reports/active/current_state.csv")
 
 
 def test_priority_runbook_writes_operator_markdown(tmp_path, monkeypatch):
@@ -4167,6 +5048,143 @@ def test_priority_gap_test_report_classifies_open_gaps(tmp_path, monkeypatch):
     assert rows.loc["paper_execution_gate", "severity"] == "high"
     assert rows.loc["learning_event_store", "severity"] == "medium"
     assert "spread,zscore,ecm_x" in rows.loc["crypto_wizards_capture", "required_proof"]
+
+
+def test_priority_gap_test_report_uses_paper_preflight_truth_for_p4(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    readiness = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "gate": "crypto_wizards_live_artifacts",
+                "ready": True,
+                "status": "ready",
+                "evidence": "payloads=1",
+                "blocker": "",
+                "next_action": "continue",
+            },
+            {
+                "priority": "P2",
+                "gate": "strategy_acceptance",
+                "ready": True,
+                "status": "ready",
+                "evidence": "production_eligible=1",
+                "blocker": "",
+                "next_action": "allow research-gated paper plans",
+            },
+            {
+                "priority": "P3",
+                "gate": "dydx_testnet_readiness",
+                "ready": True,
+                "status": "ready",
+                "evidence": "submit_orders=True",
+                "blocker": "",
+                "next_action": "submit only research-accepted paper plans",
+            },
+            {
+                "priority": "P4",
+                "gate": "paper_execution_gate",
+                "ready": True,
+                "status": "ready",
+                "evidence": "strategy_ready=True;dydx_ready=True",
+                "blocker": "",
+                "next_action": "paper trade only accepted strategies",
+            },
+            {
+                "priority": "P5",
+                "gate": "learning_event_store",
+                "ready": True,
+                "status": "ready",
+                "evidence": "events=10",
+                "blocker": "",
+                "next_action": "train outcome models",
+            },
+        ]
+    )
+    pd.DataFrame([{"next_capture_focus": "ready_for_research_spine", "research_spine_ready": True}]).to_csv(
+        reports / "pair_detail_capture_checklist.csv", index=False
+    )
+    pd.DataFrame([{"research_usable": True, "execution_usable": True, "quality_blockers": ""}]).to_csv(
+        reports / "pair_detail_quality_report.csv", index=False
+    )
+    pd.DataFrame([{"ready": True, "blocker": "", "next_action": "continue"}]).to_csv(
+        reports / "strategy_acceptance_checklist.csv", index=False
+    )
+    pd.DataFrame([{"ready": True, "blocker": "", "next_action": "continue"}]).to_csv(
+        reports / "dydx_execution_checklist.csv", index=False
+    )
+    pd.DataFrame(
+        [{"source": "combined", "events": 10, "outcome_events": 10, "outcomes_remaining": 0, "ready_for_modeling": True}]
+    ).to_csv(reports / "learning_event_summary.csv", index=False)
+
+    def fake_preflight(output_path=None):
+        path = output_path or (reports / "paper_execution_preflight.csv")
+        frame = pd.DataFrame(
+            [
+                {
+                    "step": "paper_submission_gate",
+                    "ready": False,
+                    "status": "blocked",
+                    "blocker": "route_market_unconfirmed_on_exchange",
+                    "evidence": "compatibility_ready=False",
+                    "next_action": "only route paper through markets that have confirmed on exchange",
+                }
+            ]
+        )
+        frame.to_csv(path, index=False)
+        return frame
+
+    monkeypatch.setattr(cli, "paper_execution_preflight_report", fake_preflight)
+
+    report = priority_gap_test_report(readiness)
+    rows = report.set_index("area")
+
+    assert rows.loc["paper_execution_gate", "status"] == "gap"
+    assert rows.loc["paper_execution_gate", "gap"] == "route_market_unconfirmed_on_exchange"
+    assert rows.loc["paper_execution_gate", "next_action"] == "only route paper through markets that have confirmed on exchange"
+
+
+def test_canonical_gap_report_separates_historical_wizard_coverage_from_current_candidates(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame([{"status": "RESEARCH_ONLY"}]).to_csv(active / "hyperliquid_authority_state.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "area": "hyperliquid_wizard_exact_mode_intake",
+                "ready": False,
+                "status": "blocked",
+                "blocker": "wizard_source_stale_or_timestamp_missing",
+                "detail": "current_candidates=5",
+                "evidence_path": "reports/active/hyperliquid_wizard_hypothesis_queue.csv",
+                "next_action": "capture same-day exact-mode settings",
+            }
+        ]
+    ).to_csv(active / "current_state.csv", index=False)
+    dashboard = pd.DataFrame(
+        [
+            {
+                "priority": "P1",
+                "area": "crypto_wizards_capture",
+                "ready": True,
+                "blocker": "",
+                "key_metric": "historical_captures=251",
+                "source_report": "reports/pair_detail_capture_checklist.csv",
+                "next_action": "continue",
+            }
+        ]
+    )
+    monkeypatch.setattr(cli, "priority_spine_dashboard_report", lambda readiness: dashboard)
+
+    report = cli.priority_gap_test_report(pd.DataFrame(), refresh_paper_preflight=False)
+    rows = report.set_index("area")
+
+    assert rows.loc["crypto_wizards_historical_capture", "status"] == "pass"
+    assert rows.loc["current_state_hyperliquid_wizard_exact_mode_intake", "status"] == "gap"
+    assert rows.loc["current_state_hyperliquid_wizard_exact_mode_intake", "severity"] == "critical"
 
 
 def test_gap_analysis_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
@@ -4796,3 +5814,187 @@ def test_research_spine_enriches_pair_detail_experiments_with_funding_path(tmp_p
     assert not evaluated.empty
     assert evaluated["has_funding_x"].all()
     assert evaluated["has_funding_y"].all()
+
+
+def test_cli_run_brain_cycle_uses_command_entrypoint(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def fake_run_brain_cycle(*, root, pair_id, policy_candidates, max_recommendations, readiness_threshold=0.65, **_):
+        assert root == tmp_path
+        assert pair_id == "BTC-USD/ETH-USD"
+        assert policy_candidates == 7
+        assert max_recommendations == 7
+        assert readiness_threshold == 0.65
+        return CommandResult(
+            summary={
+                "cycle_id": "20260628T120000Z",
+                "status": "ready",
+                "candidate_count": 1,
+            },
+            paths={
+                "candidate_csv": tmp_path / "reports" / "brain" / "brain_candidates.csv",
+                "candidate_rollup": tmp_path / "reports" / "brain" / "brain_candidate_rollup.csv",
+                "cycle_summary": tmp_path / "reports" / "brain" / "brain_cycle_summary.json",
+            },
+        )
+
+    monkeypatch.setattr(cli, "run_brain_cycle", fake_run_brain_cycle)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "run-brain-cycle", "--pair-id", "BTC-USD/ETH-USD", "--top-n", "7"])
+
+    cli.main()
+
+    raw = capsys.readouterr().out
+    start = raw.find("{")
+    assert start >= 0, "expected JSON output"
+    payload = json.loads(raw[start:])
+    assert payload["summary"]["cycle_id"] == "20260628T120000Z"
+    assert payload["summary"]["status"] == "ready"
+    assert payload["paths"]["candidate_csv"].endswith("brain_candidates.csv")
+
+
+def test_cli_brain_readiness_report_uses_command_entrypoint(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def fake_build_brain_readiness_report(*, root, score_threshold, candidate_rollup_path=None, **_):
+        assert root == tmp_path
+        assert score_threshold == 0.73
+        return CommandResult(
+            summary={
+                "cycle_id": "20260628T154700Z",
+                "readiness_gate": "pass",
+                "readiness_score": 0.72,
+                "candidate_rows": 1,
+            },
+            paths={"brain_readiness_report": tmp_path / "reports" / "brain" / "brain_readiness_report.csv"},
+        )
+
+    monkeypatch.setattr(cli, "build_brain_readiness_report", fake_build_brain_readiness_report)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["quant_platform.cli", "brain-readiness-report", "--readiness-threshold", "0.73"],
+    )
+
+    cli.main()
+    raw = capsys.readouterr().out
+    start = raw.find("{")
+    assert start >= 0, "expected JSON output"
+    payload = json.loads(raw[start:])
+    assert payload["summary"]["readiness_gate"] == "pass"
+    assert payload["summary"]["readiness_score"] == 0.72
+
+
+def test_cli_paper_readiness_checkpoint_uses_command_entrypoint(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def fake_priority_readiness_report():
+        return pd.DataFrame(
+            [
+                {
+                    "priority": "P5",
+                    "gate": "paper_execution_gate",
+                    "ready": False,
+                    "status": "blocked",
+                    "blocker": "demo_blocker",
+                    "evidence": "demo",
+                    "next_action": "demo_action",
+                }
+            ]
+        )
+
+    def fake_build_brain_readiness_report(*, root, score_threshold, candidate_rollup_path=None, **_):
+        assert root == tmp_path
+        return CommandResult(
+            summary={"score_gate": "pass", "readiness_score": 0.88},
+            paths={"brain_readiness_report": tmp_path / "reports" / "brain" / "brain_readiness_report_000.csv"},
+        )
+
+    def fake_paper_execution_preflight_report(output_path: Path | None = None):
+        path = output_path or (tmp_path / "reports" / "paper_execution_preflight.csv")
+        frame = pd.DataFrame(
+            [
+                {"step": "s1", "ready": False, "status": "blocked", "blocker": "demo", "evidence": "demo", "next_action": "fix"},
+                {"step": "s2", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+                {"step": "s3", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+                {"step": "s4", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+                {"step": "s5", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+                {"step": "s6", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+                {"step": "s7", "ready": True, "status": "ready", "blocker": "", "evidence": "ok", "next_action": "ok"},
+            ]
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(path, index=False)
+        return frame
+
+    monkeypatch.setattr(cli, "priority_readiness_report", fake_priority_readiness_report)
+    monkeypatch.setattr(cli, "build_brain_readiness_report", fake_build_brain_readiness_report)
+    monkeypatch.setattr(cli, "paper_execution_preflight_report", fake_paper_execution_preflight_report)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "paper-readiness-checkpoint", "--readiness-threshold", "0.70"])
+
+    cli.main()
+
+    raw = capsys.readouterr().out
+    start = raw.find("{")
+    assert start >= 0, "expected JSON output"
+    payload = json.loads(raw[start:])
+    assert payload["summary"]["readiness_gate"] == "pass"
+    assert payload["summary"]["ready_rows"] + payload["summary"]["blocked_rows"] == 4
+    assert "paper_readiness_checkpoint" in payload["paths"]
+
+
+def test_cli_run_base_rl_uses_command_entrypoint(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def fake_run_base_rl(*, root, pair_id):
+        assert root == tmp_path
+        assert pair_id == "BTC-USD/ETH-USD"
+        return CommandResult(
+            summary={"status": "research_only", "pair_rows": 2, "paper_authorized": False},
+            paths={"paper_handoff_status": tmp_path / "reports" / "rl" / "base_rl_paper_handoff_status.csv"},
+        )
+
+    monkeypatch.setattr(cli, "run_base_rl", fake_run_base_rl)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "run-base-rl", "--pair-id", "BTC-USD/ETH-USD"])
+
+    cli.main()
+
+    raw = capsys.readouterr().out
+    start = raw.find("{")
+    payload = json.loads(raw[start:])
+    assert payload["summary"]["status"] == "research_only"
+    assert payload["paths"]["paper_handoff_status"].endswith("base_rl_paper_handoff_status.csv")
+
+
+def test_cli_refresh_augmented_research_uses_command_entrypoint(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+
+    def fake_refresh_augmented_research(*, root):
+        assert root == tmp_path
+        return CommandResult(
+            summary={"sources": 1, "extracted_rows": 4, "knowledge_rows": 4, "knowledge_tables": 5},
+            paths={"research_source_registry": tmp_path / "data" / "external" / "research_sources" / "research_source_registry.csv"},
+        )
+
+    monkeypatch.setattr(cli, "refresh_augmented_research", fake_refresh_augmented_research)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "refresh-augmented-research"])
+
+    cli.main()
+
+    raw = capsys.readouterr().out
+    start = raw.find("{")
+    payload = json.loads(raw[start:])
+    assert payload["summary"]["sources"] == 1
+    assert payload["summary"]["knowledge_tables"] == 5
+
+
+def test_extract_recommended_strategy_ids_uses_payload_fields() -> None:
+    payload = {
+        "pair": "BTC-USD-ETH-USD",
+        "strategy_id": "14",
+        "dashboard_recommended_strategy": "OU Optimal",
+        "strategy_mode": "copula",
+    }
+    ids = _extract_recommended_strategy_ids(payload)
+    assert ids[0] == 14
+    assert 14 in ids
+    assert set(ids).issuperset({33, 34, 35, 36, 37, 5, 6, 7, 28, 29})

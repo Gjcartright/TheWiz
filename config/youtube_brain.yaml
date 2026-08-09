@@ -1,0 +1,10 @@
+schema_version: youtube_brain.v1
+channel_url: https://www.youtube.com/@CryptoWizards
+auto_refresh_enabled: true
+refresh_hours: 24
+fetch_captions: true
+caption_languages:
+  - en
+  - en-orig
+max_new_caption_fetches_per_cycle: 50
+promotion_authority: none_research_only

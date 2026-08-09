@@ -16,6 +16,21 @@ Build a research and execution ecosystem that discovers whether a statistical ar
 8. Rank pairs and strategies by cost-adjusted expectancy, profit factor, Sharpe, drawdown, and robustness.
 9. Store every trade and feature snapshot for meta-learning.
 
+## LangGraph Agent Workflow
+
+The project orchestration spine is now expressed as a LangGraph workflow. It wraps the existing stage contracts instead of replacing them, so the same research commands still produce the same evidence files while LangGraph owns the run state, stage ordering, and fail-fast/report-only behavior.
+
+The canonical workflow document is `docs/langgraph_agent_workflow.md`. Runtime graph evidence is written to:
+
+- `reports/active/langgraph_agent_lanes.csv`
+- `reports/active/langgraph_agent_edges.csv`
+- `reports/active/langgraph_agent_workflow_state.json`
+- `reports/active/langgraph_agent_workflow.md`
+
+The proposed event-driven extension, including the comparison to the current ordered workflow and the strategy-cell model, is documented in `docs/dynamic_multi_agent_architecture.md`. It remains shadow-mode design work until its evidence and safety behavior is proven against the existing workflow.
+
+The graph lanes are: project scrub, Crypto Wizards capture, local verification, paper watch journal, execution compatibility, ML gate, base RL handoff, and gap/pre-mortem/red-team review. This keeps Wizard discovery, live journaling, Injective/dYdX execution truth, machine learning labels, and reinforcement learning promotion on one explicit workflow path.
+
 ## Unified Experiment Harness
 
 Every strategy is evaluated through one scoreboard. The harness runs strategies by pair, regime, and cost bucket, then writes full results, strategy summaries, regime summaries, and implementation coverage. Strategies without executable signal functions are marked as skipped instead of silently disappearing from research reports.

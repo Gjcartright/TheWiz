@@ -21,7 +21,13 @@ SCANNER_COLUMNS = [
     "source_path",
     "source_url",
     "captured_at",
+    "capture_schema_version",
+    "pagination_mechanism",
+    "pagination_completion_signal",
+    "pagination_complete",
+    "capture_loaded_row_count",
     "scanner_priority",
+    "scanner_interval",
     "scanner_count_filter",
     "scanner_correlation_filter",
     "scanner_hurst_filter",
@@ -63,6 +69,8 @@ SCANNER_COLUMNS = [
     "correlation",
     "jn_flag",
     "eg_flag",
+    "johansen_badge_state",
+    "engle_granger_badge_state",
     "hurst",
     "half_life",
     "sigma_0_count",
@@ -91,7 +99,13 @@ class CryptoWizardsScannerRow:
     source_path: str | None = None
     source_url: str | None = None
     captured_at: str | None = None
+    capture_schema_version: str | None = None
+    pagination_mechanism: str | None = None
+    pagination_completion_signal: str | None = None
+    pagination_complete: bool | None = None
+    capture_loaded_row_count: int | None = None
     scanner_priority: str | None = None
+    scanner_interval: str | None = None
     scanner_count_filter: str | None = None
     scanner_correlation_filter: str | None = None
     scanner_hurst_filter: str | None = None
@@ -133,6 +147,8 @@ class CryptoWizardsScannerRow:
     correlation: float | None = None
     jn_flag: bool | None = None
     eg_flag: bool | None = None
+    johansen_badge_state: str | None = None
+    engle_granger_badge_state: str | None = None
     hurst: float | None = None
     half_life: float | None = None
     sigma_0_count: int | None = None
@@ -177,10 +193,17 @@ def scanner_rows_from_payload(payload: Any, source_path: str | None = None) -> l
         return []
 
     filters = payload.get("scanner_filters") or payload.get("filters") or {}
+    capture_metadata = payload.get("capture_metadata") or {}
     context = {
-        "source_url": payload.get("url") or payload.get("source_url"),
-        "captured_at": payload.get("captured_at"),
+        "source_url": payload.get("url") or payload.get("source_url") or capture_metadata.get("source_url"),
+        "captured_at": payload.get("captured_at") or capture_metadata.get("captured_at"),
+        "capture_schema_version": capture_metadata.get("schema_version"),
+        "pagination_mechanism": capture_metadata.get("pagination_mechanism"),
+        "pagination_completion_signal": capture_metadata.get("pagination_completion_signal"),
+        "pagination_complete": capture_metadata.get("pagination_complete"),
+        "capture_loaded_row_count": capture_metadata.get("loaded_row_count"),
         "scanner_priority": _filter_value(filters, "priority"),
+        "scanner_interval": _filter_value(filters, "interval", "timeframe"),
         "scanner_count_filter": _filter_value(filters, "count"),
         "scanner_correlation_filter": _filter_value(filters, "correlation", "correl"),
         "scanner_hurst_filter": _filter_value(filters, "hurst"),
@@ -281,7 +304,13 @@ def _scanner_row_from_record(
         source_path=source_path,
         source_url=_text_or_none(context.get("source_url") or normalized.get("source_url") or normalized.get("url")),
         captured_at=_text_or_none(context.get("captured_at") or normalized.get("captured_at")),
+        capture_schema_version=_text_or_none(context.get("capture_schema_version")),
+        pagination_mechanism=_text_or_none(context.get("pagination_mechanism")),
+        pagination_completion_signal=_text_or_none(context.get("pagination_completion_signal")),
+        pagination_complete=_safe_bool(context.get("pagination_complete"), None),
+        capture_loaded_row_count=_safe_int(context.get("capture_loaded_row_count"), None),
         scanner_priority=_text_or_none(context.get("scanner_priority")),
+        scanner_interval=_text_or_none(context.get("scanner_interval")),
         scanner_count_filter=_text_or_none(context.get("scanner_count_filter")),
         scanner_correlation_filter=_text_or_none(context.get("scanner_correlation_filter")),
         scanner_hurst_filter=_text_or_none(context.get("scanner_hurst_filter")),
@@ -327,6 +356,8 @@ def _scanner_row_from_record(
         correlation=_safe_float(normalized.get("correlation"), dependency_values[2] if len(dependency_values) > 2 else None),
         jn_flag=_safe_bool(normalized.get("jn_flag"), _contains_token(stationarity_cell, "Jn")),
         eg_flag=_safe_bool(normalized.get("eg_flag"), _contains_token(stationarity_cell, "EG")),
+        johansen_badge_state=_stationarity_badge_state(normalized, "johansen", "jn"),
+        engle_granger_badge_state=_stationarity_badge_state(normalized, "engle_granger", "eg"),
         hurst=_safe_float(normalized.get("hurst"), _labeled_number(stationarity_cell, "hurst") or (stationarity_values[0] if stationarity_values else None)),
         half_life=_safe_float(
             normalized.get("half_life"),
@@ -387,6 +418,29 @@ def _clean_lines(value: str | None) -> str | None:
         return None
     text = re.sub(r"\s+", " ", value.replace("\u03c3", "σ")).strip()
     return text or None
+
+
+def _stationarity_badge_state(record: dict[str, Any], long_name: str, short_name: str) -> str | None:
+    """Keep the dashboard's badge meaning instead of flattening it to token presence."""
+    candidates: list[Any] = [
+        record.get(f"{long_name}_badge_state"),
+        record.get(f"{long_name}_status"),
+        record.get(f"{short_name}_badge_state"),
+        record.get(f"{short_name}_status"),
+    ]
+    badges = record.get("stationarity_badges")
+    if isinstance(badges, dict):
+        candidates.extend([badges.get(long_name), badges.get(short_name)])
+
+    for candidate in candidates:
+        text = _clean_lines(str(candidate)).lower() if candidate is not None else ""
+        if text in {"green", "confirmed", "pass", "passed", "cointegrated"}:
+            return "confirmed"
+        if text in {"orange", "trending", "trend"}:
+            return "trending"
+        if text in {"gray", "grey", "none", "not_confirmed", "not confirmed", "fail", "failed"}:
+            return "not_confirmed"
+    return None
 
 
 def _parse_json_string(value: Any) -> Any:
