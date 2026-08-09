@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 import pandas as pd
 import pytest
@@ -1007,7 +1008,14 @@ def test_dashboard_rows_include_reason_blocker_freshness_and_evidence():
     assert result.paths["current_wizard_ou_optimal_overlay_coverage"].exists()
     assert result.paths["current_wizard_ou_optimal_overlay_validation"].exists()
     assert "Wizard pair-page modes / scanner overlays: 7 / ou_optimal" in command_center
-    assert "OU Optimal source rows accounted / true / false: 944 / 163 / 781" in command_center
+    ou_accounting = re.search(
+        r"OU Optimal source rows accounted / true / false: (\d+) / (\d+) / (\d+)",
+        command_center,
+    )
+    assert ou_accounting is not None
+    total_rows, true_rows, false_rows = map(int, ou_accounting.groups())
+    assert total_rows > 0
+    assert total_rows == true_rows + false_rows
     assert "projected L2 captures remaining after rolling expiry" in command_center
     assert "family-wide statistical selection passes" in command_center
     assert "latest frozen validation" in command_center

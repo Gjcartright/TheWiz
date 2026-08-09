@@ -289,6 +289,14 @@ from quant_platform.hyperliquid_testnet import (
     write_hyperliquid_testnet_preflight_report,
 )
 from quant_platform.orchestration.hyperliquid_research_cycle import run_hyperliquid_research_cycle
+from quant_platform.orchestration.corrective_governance import build_corrective_governance
+from quant_platform.orchestration.corrective_data_evidence import build_corrective_data_evidence
+from quant_platform.orchestration.corrective_wizard_parity import build_corrective_wizard_parity
+from quant_platform.orchestration.corrective_statistical_remediation import build_corrective_statistical_remediation
+from quant_platform.orchestration.corrective_agent_governance import build_corrective_agent_governance
+from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
+from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
+from quant_platform.orchestration.corrective_program import complete_corrective_plan
 from quant_platform.orchestration.hyperliquid_research_validation import (
     build_hyperliquid_auxiliary_timeframe_validation,
 )
@@ -11026,6 +11034,14 @@ def main() -> None:
         "command",
         choices=[
             "system-check",
+            "build-corrective-governance",
+            "build-corrective-data-evidence",
+            "build-corrective-wizard-parity",
+            "build-corrective-statistical-remediation",
+            "build-corrective-daily-cadence",
+            "build-corrective-agent-governance",
+            "build-corrective-release-gates",
+            "complete-corrective-plan",
             "build-artifact-index",
             "current-state",
             "build-pair-universe",
@@ -11645,6 +11661,70 @@ def main() -> None:
         args.indexer_scheme = os.getenv("QPA_INDEXER_SCHEME", "").strip()
     if args.command == "system-check":
         result = system_check()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-governance":
+        result = build_corrective_governance(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-data-evidence":
+        result = build_corrective_data_evidence(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-wizard-parity":
+        result = build_corrective_wizard_parity(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-statistical-remediation":
+        result = build_corrective_statistical_remediation(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-daily-cadence":
+        result = build_corrective_daily_cadence(root=ROOT, install=True)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-agent-governance":
+        result = build_corrective_agent_governance(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-corrective-release-gates":
+        result = build_corrective_release_gates(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "complete-corrective-plan":
+        result = complete_corrective_plan(root=ROOT)
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},

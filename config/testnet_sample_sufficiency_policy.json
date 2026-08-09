@@ -1,0 +1,17 @@
+{
+  "schema_version": "thewiz.testnet_sample_sufficiency.v1",
+  "policy_version": "2026-08-09.1",
+  "effective_at_utc": "2026-08-09T00:00:00Z",
+  "minimum_closed_paired_lifecycles": 30,
+  "minimum_observation_days": 14,
+  "minimum_independent_pairs": 3,
+  "minimum_observed_regimes": 3,
+  "maximum_unresolved_orphan_legs": 0,
+  "maximum_unreconciled_orders": 0,
+  "maximum_execution_failure_rate": 0.02,
+  "requires_positive_after_cost_expectancy": true,
+  "requires_no_risk_policy_override": true,
+  "requires_prospective_feature_and_outcome_logging": true,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

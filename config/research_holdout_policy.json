@@ -1,0 +1,40 @@
+{
+  "schema_version": "thewiz.research_holdout_policy.v1",
+  "policy_version": "2026-08-09.1",
+  "effective_at_utc": "2026-08-09T00:00:00Z",
+  "assignment": {
+    "ordering": "strict_chronological",
+    "development_fraction": 0.5,
+    "validation_fraction": 0.25,
+    "locked_final_holdout_fraction": 0.25,
+    "embargo_bars": 20,
+    "minimum_train_rows": 180,
+    "minimum_validation_rows": 30,
+    "minimum_holdout_rows": 30
+  },
+  "roles": {
+    "development": "parameter_and_formula_development_allowed",
+    "validation": "bounded_model_and_rule_selection_only",
+    "locked_final_holdout": "single_final_evaluation_no_tuning"
+  },
+  "reuse_rules": {
+    "development": "reusable_with_attempt_registration",
+    "validation": "reusable_only_with_multiplicity_and_attempt_registration",
+    "locked_final_holdout": "never_reuse_after_result_influences_any_parameter_or_rule"
+  },
+  "unlock_conditions": {
+    "policy_registered_before_data_result": true,
+    "hypothesis_registered_before_evaluation": true,
+    "development_and_validation_gates_pass": true,
+    "observed_cost_identity_frozen": true,
+    "data_snapshot_identity_frozen": true,
+    "minimum_independent_supporting_clusters": 3,
+    "explicit_risk_governance_approval": true
+  },
+  "contamination_response": {
+    "status": "HOLDOUT_CONTAMINATED",
+    "promotion_authority": false,
+    "required_action": "register_a_new_future_holdout_before_additional_testing"
+  },
+  "live_trading_authorized": false
+}

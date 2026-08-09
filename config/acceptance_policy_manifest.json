@@ -1,0 +1,102 @@
+{
+  "schema_version": "thewiz.acceptance_policy.v1",
+  "policy_version": "2026-08-09.1",
+  "effective_at_utc": "2026-08-09T00:00:00Z",
+  "authority": {
+    "discovery": {
+      "sources": ["crypto_wizards_api", "crypto_wizards_dashboard"],
+      "promotion_authority": false
+    },
+    "research_acceptance": {
+      "source": "local_point_in_time_hyperliquid_replay",
+      "requires_vendor_parity_for_vendor_confirmed_claim": true,
+      "requires_observed_pair_costs": true,
+      "promotion_authority": true
+    },
+    "testnet": {
+      "venue": "hyperliquid_testnet",
+      "requires_final_one_x_survivor_receipt": true,
+      "requires_explicit_order_approval": true,
+      "maximum_initial_leverage": 1.0
+    },
+    "live": {
+      "venue": "hyperliquid",
+      "default_authorized": false,
+      "requires_realized_testnet_sample": true,
+      "requires_supreme_team_checkpoint": true,
+      "requires_explicit_user_authorization": true,
+      "initial_action": "smallest_notional_canary"
+    }
+  },
+  "discovery_gates": {
+    "minimum_sharpe": 1.75,
+    "minimum_returns_total_pct": 10.0,
+    "minimum_closed_trades_for_paid_proof": 5,
+    "score_or_copula_required": false
+  },
+  "research_gates": {
+    "minimum_completed_trades": 10,
+    "minimum_positive_folds": 3,
+    "walkforward_folds": 5,
+    "initial_train_fraction": 0.5,
+    "embargo_bars": 20,
+    "minimum_train_rows": 180,
+    "minimum_test_rows": 30,
+    "minimum_profit_factor": 1.1,
+    "maximum_drawdown": 0.5,
+    "maximum_positive_fold_concentration": 0.8,
+    "false_discovery_rate": 0.1,
+    "required_cost_buckets": ["base", "stress"],
+    "required_regime": "ALL",
+    "minimum_independent_supporting_clusters": 3,
+    "requires_regime_stability": true,
+    "requires_parameter_robustness": true,
+    "requires_concentration_pass": true
+  },
+  "cost_gates": {
+    "strict_l2_window_hours": 2.0,
+    "minimum_strict_l2_samples": 12,
+    "minimum_funding_coverage": 0.95,
+    "maximum_fee_evidence_age_days": 30,
+    "cost_components": [
+      "fees",
+      "slippage",
+      "funding",
+      "partial_fill",
+      "execution_risk"
+    ],
+    "stress_expectancy_must_be_positive": true
+  },
+  "model_gates": {
+    "research_only_until_accepted": true,
+    "full_entry_score": 0.7,
+    "reduced_entry_score": 0.55,
+    "minimum_take_rate": 0.1,
+    "requires_monotonic_score_buckets": true,
+    "requires_pair_and_regime_attribution": true,
+    "quantization_requires_model_acceptance": true
+  },
+  "safety_gates": {
+    "stale_evidence_blocks_action": true,
+    "schema_mismatch_blocks_action": true,
+    "missing_lineage_blocks_action": true,
+    "incomplete_cell_accounting_blocks_action": true,
+    "dashboard_only_promotion_forbidden": true,
+    "execution_agents_may_change_risk_policy": false,
+    "live_trading_authorized": false
+  },
+  "source_contracts": [
+    {
+      "path": "config/research.yaml",
+      "sha256": "d4878f44e5415344eaa2f3dd6c98d39572733f0dc8c2596631e3ef1ba62d6f21"
+    },
+    {
+      "path": "config/wizard_discovery_policy.json",
+      "sha256": "a586d1a4f36143042fbf26194611f07dc7672fff8ffe72a5c8411c3f5ebaec5f"
+    },
+    {
+      "path": "config/hyperliquid_perp_cost_profile.json",
+      "sha256": "ba197519b985373738d204eeb79b8b6a624738843f8d3a53d88916b166595cea"
+    }
+  ]
+}
