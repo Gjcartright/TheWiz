@@ -56,6 +56,7 @@
   "cost_gates": {
     "strict_l2_window_hours": 2.0,
     "minimum_strict_l2_samples": 12,
+    "minimum_strict_l2_span_minutes": 100,
     "minimum_funding_coverage": 0.95,
     "maximum_fee_evidence_age_days": 30,
     "cost_components": [

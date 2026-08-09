@@ -247,6 +247,31 @@ def test_current_handoff_accounts_all_pairs_modes_orientations_and_blockers(
     assert Path(result.paths["snapshot_manifest"]).exists()
 
 
+def test_completed_api_pilot_does_not_block_a_later_board_where_pair_is_absent(
+    tmp_path: Path,
+) -> None:
+    _write_inputs(tmp_path)
+    active = tmp_path / "reports" / "active"
+    manifest_path = active / "wizard_pair_detail_api_pilot_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["pair_group_key"] = "binance|daily|OLD|PAIR"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    result = build_current_wizard_hyperliquid_handoff(
+        root=tmp_path,
+        now=datetime(2026, 8, 9, 12, 30, tzinfo=timezone.utc),
+    )
+    pairs = pd.read_csv(result.paths["pair_status"], keep_default_na=False)
+    validation = pd.read_csv(result.paths["validation"], keep_default_na=False)
+
+    assert not pairs["api_schema_pilot_pair"].astype(bool).any()
+    check = validation.loc[
+        validation["check"].eq("api_pilot_overlay_applied_when_pair_present")
+    ].iloc[0]
+    assert check["status"] == "PASS"
+    assert "pilot_pair_on_current_board=False" in check["evidence"]
+
+
 def _correlated_candle_fetcher():
     rng = np.random.default_rng(712)
     rows = 900

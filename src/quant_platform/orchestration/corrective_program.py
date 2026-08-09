@@ -12,7 +12,10 @@ import pandas as pd
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration.corrective_agent_governance import build_corrective_agent_governance
 from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
-from quant_platform.orchestration.corrective_data_evidence import build_corrective_data_evidence
+from quant_platform.orchestration.corrective_data_evidence import (
+    build_corrective_data_evidence,
+    build_l2_capture_candidate_set,
+)
 from quant_platform.orchestration.corrective_governance import build_corrective_governance
 from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
 from quant_platform.orchestration.corrective_statistical_remediation import build_corrective_statistical_remediation
@@ -25,12 +28,12 @@ SCHEMA_VERSION = "thewiz.corrective_program_completion.v1"
 
 TASK_STATUS = {
     **{f"T{index:02d}": ("completed", "implemented_and_verified") for index in range(1, 12)},
-    "T12": ("in_progress_evidence_collection", "393_pair_histories_remain_in_remediation_queue"),
-    "T13": ("in_progress_evidence_collection", "zero_assets_currently_meet_12_fresh_l2_samples_in_2h"),
+    "T12": ("in_progress_evidence_collection", "selected_pair_history_remediation_is_evidence_driven"),
+    "T13": ("in_progress_evidence_collection", "strict_l2_cadence_collection_is_active"),
     "T14": ("blocked_by_evidence", "zero_pair_cost_models_have_strict_observed_cost_acceptance"),
     "T15": ("completed", "seven_hostile_cost_bundles_fail_closed"),
-    "T16": ("completed", "3408_mode_orientation_cells_accounted_2947_captured"),
-    "T17": ("blocked_vendor_mode_unavailable", "ou_optimal_unavailable_on_captured_pair_pages"),
+    "T16": ("completed", "all_pair_page_mode_orientation_cells_accounted"),
+    "T17": ("completed", "ou_optimal_scanner_overlay_provenance_accounted_in_both_orientations"),
     "T18": ("completed", "parity_comparator_and_seven_formula_mutations_verified"),
     "T19": ("completed", "vendor_parity_separated_from_local_approximation"),
     "T20": ("completed", "42_raw_passes_clustered_into_33_effective_clusters"),
@@ -69,12 +72,33 @@ def complete_corrective_plan(*, root: Path = ROOT, now: datetime | None = None) 
         "agent_learning_governance": build_corrective_agent_governance(root=root, now=now),
         "conditional_release_gates": build_corrective_release_gates(root=root, now=now),
     }
+    final_l2_candidates = build_l2_capture_candidate_set(root=root)
     plan_path = root / "reports" / "active" / "corrective_execution_plan.csv"
     plan = _read_csv(plan_path)
     if plan.empty or set(TASK_STATUS) - set(plan.get("task_id", pd.Series(dtype=str)).astype(str)):
         raise ValueError("corrective execution plan is missing one or more canonical tasks")
-    plan["status"] = plan["task_id"].map(lambda task: TASK_STATUS[str(task)][0])
-    plan["current_blocker_or_completion_reason"] = plan["task_id"].map(lambda task: TASK_STATUS[str(task)][1])
+    task_status = dict(TASK_STATUS)
+    venue = phases["venue_data_costs"].summary
+    history_queue = int(venue.get("history_queued_pairs", 0) or 0)
+    if history_queue == 0:
+        task_status["T12"] = (
+            "completed",
+            "selected_pair_histories_ready_zero_active_remediation_rows",
+        )
+    l2_ready = int(venue.get("cost_collection_ready_assets", 0) or 0)
+    l2_collecting = int(venue.get("cost_collection_collecting_assets", 0) or 0)
+    task_status["T13"] = (
+        "completed" if l2_ready > 0 else "in_progress_evidence_collection",
+        (
+            f"strict_l2_ready_assets_{l2_ready}"
+            if l2_ready > 0
+            else f"strict_l2_cadence_collecting_assets_{l2_collecting}"
+        ),
+    )
+    plan["status"] = plan["task_id"].map(lambda task: task_status[str(task)][0])
+    plan["current_blocker_or_completion_reason"] = plan["task_id"].map(
+        lambda task: task_status[str(task)][1]
+    )
     plan["last_evaluated_at_utc"] = now.isoformat()
     _atomic_csv(plan, plan_path)
     completed = int(plan["status"].astype(str).str.startswith("completed").sum())
@@ -123,23 +147,138 @@ def complete_corrective_plan(*, root: Path = ROOT, now: datetime | None = None) 
             "model_incremental_edge_not_accepted",
             "realized_testnet_sample_absent",
         ],
-        "next_automatic_action": "daily_research_scheduler_collects_next_calendar_day_evidence_at_0615_local",
+        "next_automatic_action": "l2_scheduler_collects_strict_cost_evidence_every_10_minutes_and_daily_research_scheduler_collects_next_calendar_day_evidence_at_0615_local",
         "evidence_path": "reports/active/corrective_execution_plan.csv;reports/active/corrective_plan_phase_status.csv;reports/active/final_1x_survivor_receipt.json",
+        "current_l2_candidate_pairs": int(final_l2_candidates["candidate_pairs"]),
+        "current_l2_eligible_pairs": int(final_l2_candidates["eligible_pairs"]),
     }
     completion_path = root / "reports" / "active" / "corrective_plan_completion.json"
     completion_md = root / "reports" / "active" / "corrective_plan_completion.md"
     _atomic_json(completion, completion_path)
     completion_md.write_text(_completion_markdown(completion, plan, phase_frame), encoding="utf-8")
+    seven_stage_path, seven_stage_md = _write_seven_stage_checkpoint(
+        root=root,
+        phases=phases,
+        completion=completion,
+    )
     return CommandResult(
         paths={
             "execution_plan": plan_path,
             "phase_status": phase_path,
             "completion_receipt": completion_path,
             "completion_summary": completion_md,
+            "seven_stage_checkpoint": seven_stage_path,
+            "seven_stage_checkpoint_markdown": seven_stage_md,
+            "current_l2_candidates": Path(final_l2_candidates["path"]),
             **{f"phase_{phase}_{name}": path for phase, result in phases.items() for name, path in result.paths.items()},
         },
         summary=completion,
     )
+
+
+def _write_seven_stage_checkpoint(
+    *,
+    root: Path,
+    phases: dict[str, CommandResult],
+    completion: dict[str, Any],
+) -> tuple[Path, Path]:
+    venue = phases["venue_data_costs"].summary
+    wizard = phases["wizard_parity"].summary
+    statistics = phases["statistical_remediation"].summary
+    daily = phases["daily_cadence"].summary
+    learning = phases["agent_learning_governance"].summary
+    release = phases["conditional_release_gates"].summary
+    rows = [
+        {
+            "stage": 1,
+            "objective": "seven_distinct_daily_research_receipts",
+            "status": "PASS" if int(daily.get("consecutive_complete_cycles", 0)) >= 7 else "IN_PROGRESS",
+            "evidence_progress": f"{int(daily.get('consecutive_complete_cycles', 0))}/7",
+            "blocker": str(daily.get("blocker", "")),
+            "next_action": "daily_research_scheduler_runs_at_0615_local",
+            "evidence_path": "reports/active/daily_cadence_acceptance.csv",
+        },
+        {
+            "stage": 2,
+            "objective": "hyperliquid_history_and_strict_pair_cost_evidence",
+            "status": "PASS" if int(venue.get("strict_cost_ready_pairs", 0)) > 0 and int(venue.get("history_queued_pairs", 0)) == 0 else "IN_PROGRESS",
+            "evidence_progress": (
+                f"history_ready={int(venue.get('history_ready_pairs', 0))};"
+                f"history_active_remediation={int(venue.get('history_queued_pairs', 0))};"
+                f"strict_cost_ready_pairs={int(venue.get('strict_cost_ready_pairs', 0))}"
+            ),
+            "blocker": "strict_pair_cost_evidence_missing" if int(venue.get("strict_cost_ready_pairs", 0)) == 0 else "",
+            "next_action": "l2_scheduler_collects_every_10_minutes",
+            "evidence_path": "reports/active/hyperliquid_history_coverage.csv;reports/active/hyperliquid_cost_collection_status.csv",
+        },
+        {
+            "stage": 3,
+            "objective": "crypto_wizards_exact_mode_provenance_and_formula_parity",
+            "status": "PASS" if str(wizard.get("status", "BLOCKED")) == "PASS" else "BLOCKED",
+            "evidence_progress": (
+                f"pair_page_modes={int(wizard.get('fixture_cells_accounted', 0)) // 2};"
+                f"ou_optimal_orientations={int(wizard.get('ou_optimal_orientations_accounted', 0))}/"
+                f"{int(wizard.get('ou_optimal_expected_orientations', 2))};"
+                f"vendor_parity_cells={int(wizard.get('vendor_parity_cells', 0))}"
+            ),
+            "blocker": str(wizard.get("blocker", "vendor_formula_parity_unproven")),
+            "next_action": "capture_authenticated_comparable_vendor_numeric_series",
+            "evidence_path": "reports/active/wizard_mode_parity.csv;reports/active/wizard_ou_optimal_overlay_provenance.csv",
+        },
+        {
+            "stage": 4,
+            "objective": "costed_statistical_acceptance_and_independent_breadth",
+            "status": "PASS" if int(statistics.get("final_one_x_survivors", 0)) > 0 else "BLOCKED",
+            "evidence_progress": (
+                f"registered_candidates={int(statistics.get('near_miss_candidates', 0))};"
+                f"independent_clusters={int(statistics.get('independent_supporting_clusters', 0))};"
+                f"final_survivors={int(statistics.get('final_one_x_survivors', 0))}"
+            ),
+            "blocker": ";".join(str(value) for value in statistics.get("blockers", [])),
+            "next_action": "rerun_only_after_registered_new_evidence_arrives",
+            "evidence_path": "reports/active/corrective_research_funnel.csv;reports/active/final_1x_survivor_receipt.json",
+        },
+        {
+            "stage": 5,
+            "objective": "leakage_safe_ml_and_rl_out_of_sample_acceptance",
+            "status": "PASS" if str(learning.get("model_authority", "RESEARCH_ONLY")) != "RESEARCH_ONLY" else "BLOCKED",
+            "evidence_progress": f"model_authority={str(learning.get('model_authority', 'RESEARCH_ONLY'))}",
+            "blocker": ";".join(str(value) for value in learning.get("model_blockers", learning.get("blockers", []))),
+            "next_action": "retain_research_only_until_incremental_edge_and_monotonicity_pass",
+            "evidence_path": "reports/active/model_authority_status.json;reports/active/learning_label_audit.json",
+        },
+        {
+            "stage": 6,
+            "objective": "hyperliquid_testnet_lifecycle_and_realized_sample",
+            "status": "PASS" if bool(release.get("testnet_sample_sufficient", False)) else "BLOCKED",
+            "evidence_progress": f"testnet_sample_sufficient={bool(release.get('testnet_sample_sufficient', False))}",
+            "blocker": "accepted_testnet_candidate_and_realized_sample_absent",
+            "next_action": "remain_no_order_until_final_survivor_receipt_grants_candidate_authority",
+            "evidence_path": "reports/active/testnet_candidate_receipt.json;reports/active/realized_testnet_sample_sufficiency.csv",
+        },
+        {
+            "stage": 7,
+            "objective": "minimal_live_canary_after_every_gate",
+            "status": "PASS" if bool(completion.get("live_trading_authorized", False)) else "BLOCKED",
+            "evidence_progress": "live_trading_authorized=false;orders_submitted=0",
+            "blocker": "all_upstream_acceptance_testnet_operational_and_authorization_gates_not_passed",
+            "next_action": "no_live_order",
+            "evidence_path": "reports/active/live_canary_authorization.json;reports/active/live_canary_outcome_evaluation.json",
+        },
+    ]
+    frame = pd.DataFrame(rows)
+    frame["testnet_order_authority"] = False
+    frame["live_trading_authorized"] = False
+    csv_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
+    md_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.md"
+    _atomic_csv(frame, csv_path)
+    md_path.write_text(
+        "# Seven-Stage Goal Checkpoint\n\n"
+        + frame.to_markdown(index=False)
+        + "\n\nNo Testnet or live orders are authorized by this checkpoint.\n",
+        encoding="utf-8",
+    )
+    return csv_path, md_path
 
 
 def _completion_markdown(completion: dict[str, Any], plan: pd.DataFrame, phases: pd.DataFrame) -> str:

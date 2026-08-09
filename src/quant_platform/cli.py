@@ -295,6 +295,10 @@ from quant_platform.orchestration.corrective_wizard_parity import build_correcti
 from quant_platform.orchestration.corrective_statistical_remediation import build_corrective_statistical_remediation
 from quant_platform.orchestration.corrective_agent_governance import build_corrective_agent_governance
 from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
+from quant_platform.orchestration.corrective_l2_scheduler import (
+    install_corrective_l2_launch_agent,
+    run_corrective_l2_capture,
+)
 from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
 from quant_platform.orchestration.corrective_program import complete_corrective_plan
 from quant_platform.orchestration.hyperliquid_research_validation import (
@@ -11039,6 +11043,8 @@ def main() -> None:
             "build-corrective-wizard-parity",
             "build-corrective-statistical-remediation",
             "build-corrective-daily-cadence",
+            "run-corrective-l2-capture",
+            "install-corrective-l2-cadence",
             "build-corrective-agent-governance",
             "build-corrective-release-gates",
             "complete-corrective-plan",
@@ -11707,6 +11713,17 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "run-corrective-l2-capture":
+        result = run_corrective_l2_capture(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "install-corrective-l2-cadence":
+        result = install_corrective_l2_launch_agent(root=ROOT)
+        print(json.dumps(result, indent=2, default=str))
     elif args.command == "build-corrective-agent-governance":
         result = build_corrective_agent_governance(root=ROOT)
         print(

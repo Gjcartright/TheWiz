@@ -264,7 +264,8 @@ def build_history_remediation(
     failure = _read_csv(active / "current_wizard_hyperliquid_failure_attribution.csv")
     rank = (
         failure.groupby("pair_group_key", dropna=False)["overall_research_rank"].min().rename("best_research_rank")
-        if not failure.empty else pd.Series(dtype=float)
+        if not failure.empty
+        else pd.Series(dtype=float, name="best_research_rank")
     )
     coverage = history.copy()
     coverage["aligned_history_ready"] = (
@@ -277,11 +278,27 @@ def build_history_remediation(
     coverage = coverage.join(rank, on="pair_group_key")
     coverage["history_priority"] = coverage["best_research_rank"].fillna(10**9)
     coverage["history_remediation_reason"] = coverage.apply(_history_reason, axis=1)
+    selected = coverage.get(
+        "selected_for_materialization", pd.Series(False, index=coverage.index)
+    ).map(_truthy)
+    history_status = coverage.get(
+        "history_status", pd.Series("", index=coverage.index)
+    ).astype(str)
+    coverage["history_coverage_class"] = "STRUCTURALLY_BLOCKED"
+    coverage.loc[history_status.eq("DEFERRED_NOT_SELECTED"), "history_coverage_class"] = (
+        "DEFERRED_NOT_SELECTED"
+    )
+    coverage.loc[selected & ~coverage["aligned_history_ready"], "history_coverage_class"] = (
+        "ACTIVE_REMEDIATION"
+    )
+    coverage.loc[coverage["aligned_history_ready"], "history_coverage_class"] = "READY"
     coverage["promotion_authority"] = False
     coverage["live_trading_authorized"] = False
     coverage_path = active / "hyperliquid_history_coverage.csv"
     _atomic_csv(coverage, coverage_path)
-    queue = coverage.loc[~coverage["aligned_history_ready"]].sort_values(["history_priority", "pair_group_key"]).copy()
+    queue = coverage.loc[
+        coverage["history_coverage_class"].eq("ACTIVE_REMEDIATION")
+    ].sort_values(["history_priority", "pair_group_key"]).copy()
     queue["next_action"] = "refetch_both_legs_to_declared_cutoff_then_validate_alignment"
     queue_path = active / "hyperliquid_history_remediation_queue.csv"
     _atomic_csv(queue, queue_path)
@@ -291,7 +308,124 @@ def build_history_remediation(
         "pairs": len(coverage),
         "ready": int(coverage["aligned_history_ready"].sum()),
         "queued": len(queue),
+        "deferred": int(
+            coverage["history_coverage_class"].eq("DEFERRED_NOT_SELECTED").sum()
+        ),
+        "structurally_blocked": int(
+            coverage["history_coverage_class"].eq("STRUCTURALLY_BLOCKED").sum()
+        ),
         "status": "PASS" if not coverage.empty else "BLOCKED",
+        "live_trading_authorized": False,
+    }
+
+
+def build_l2_capture_candidate_set(*, root: Path = ROOT) -> dict[str, Any]:
+    """Normalize registered hypotheses into an explicit Hyperliquid allow-list."""
+
+    active = root / "reports" / "active"
+    hypothesis_path = active / "current_hypothesis_batch.csv"
+    attribution_path = active / "current_wizard_hyperliquid_failure_attribution.csv"
+    market_path = root / "data" / "processed" / "hyperliquid_market_context.csv"
+    hypotheses = _read_csv(hypothesis_path)
+    attribution = _read_csv(attribution_path)
+    markets = _read_csv(market_path)
+    columns = [
+        "experiment_id",
+        "pair_group_key",
+        "pair",
+        "asset_x",
+        "asset_y",
+        "overall_research_rank",
+        "confirmation_role",
+        "collection_eligible",
+        "blocker",
+        "evidence_path",
+        "testnet_order_authority",
+        "live_trading_authorized",
+    ]
+    if hypotheses.empty or attribution.empty:
+        frame = pd.DataFrame(columns=columns)
+    else:
+        required_hypotheses = {"experiment_id", "confirmation_role"}
+        required_attribution = {
+            "experiment_id",
+            "pair_group_key",
+            "pair",
+            "asset_x",
+            "asset_y",
+            "overall_research_rank",
+        }
+        if not required_hypotheses.issubset(hypotheses.columns):
+            raise ValueError("hypothesis batch is missing L2 candidate identity columns")
+        if not required_attribution.issubset(attribution.columns):
+            raise ValueError("failure attribution is missing L2 candidate routing columns")
+        joined = hypotheses[["experiment_id", "confirmation_role"]].merge(
+            attribution[list(required_attribution)],
+            on="experiment_id",
+            how="left",
+            validate="one_to_one",
+        )
+        tradable_assets = set()
+        if not markets.empty and {"asset", "tradable"}.issubset(markets.columns):
+            tradable_assets = {
+                _text(value).upper()
+                for value in markets.loc[markets["tradable"].map(_truthy), "asset"]
+            }
+        rows = []
+        for row in joined.to_dict("records"):
+            asset_x = _text(row.get("asset_x")).upper()
+            asset_y = _text(row.get("asset_y")).upper()
+            blockers = []
+            if not asset_x or not asset_y:
+                blockers.append("normalized_pair_legs_missing")
+            elif not {asset_x, asset_y}.issubset(tradable_assets):
+                blockers.append("one_or_both_legs_not_currently_tradable_on_hyperliquid")
+            rows.append(
+                {
+                    "experiment_id": _text(row.get("experiment_id")),
+                    "pair_group_key": _text(row.get("pair_group_key")),
+                    "pair": _text(row.get("pair")),
+                    "asset_x": asset_x,
+                    "asset_y": asset_y,
+                    "overall_research_rank": _finite(
+                        row.get("overall_research_rank"), default=math.inf
+                    ),
+                    "confirmation_role": _text(row.get("confirmation_role")),
+                    "collection_eligible": not blockers,
+                    "blocker": ";".join(blockers),
+                    "evidence_path": (
+                        f"{_relative(hypothesis_path, root)};"
+                        f"{_relative(attribution_path, root)};{_relative(market_path, root)}"
+                    ),
+                    "testnet_order_authority": False,
+                    "live_trading_authorized": False,
+                }
+            )
+        frame = pd.DataFrame(rows, columns=columns)
+        frame = frame.sort_values(
+            ["collection_eligible", "overall_research_rank", "experiment_id"],
+            ascending=[False, True, True],
+        )
+        frame["_pair_identity"] = frame.apply(
+            lambda row: "|".join(sorted((_text(row["asset_x"]), _text(row["asset_y"])))),
+            axis=1,
+        )
+        frame = frame.drop_duplicates("_pair_identity", keep="first").drop(
+            columns=["_pair_identity"]
+        )
+    path = active / "corrective_l2_capture_candidates.csv"
+    _atomic_csv(frame, path)
+    return {
+        "path": path,
+        "registered_hypotheses": len(hypotheses),
+        "candidate_pairs": len(frame),
+        "eligible_pairs": int(
+            frame.get("collection_eligible", pd.Series(dtype=bool)).map(_truthy).sum()
+        ),
+        "status": "PASS"
+        if frame.get("collection_eligible", pd.Series(dtype=bool)).map(_truthy).any()
+        else "BLOCKED",
+        "testnet_order_authority": False,
         "live_trading_authorized": False,
     }
 
@@ -301,6 +435,10 @@ def build_cost_collection_status(
 ) -> dict[str, Any]:
     now = _as_utc(now)
     active = root / "reports" / "active"
+    policy = _cost_gate_policy(root)
+    strict_window_hours = float(policy.get("strict_l2_window_hours", 2.0))
+    minimum_samples = int(policy.get("minimum_strict_l2_samples", 12))
+    minimum_span_minutes = float(policy.get("minimum_strict_l2_span_minutes", 100.0))
     funding = _read_csv(active / "current_wizard_hyperliquid_funding_asset_results.csv")
     l2 = _read_csv(root / "data" / "processed" / "hyperliquid_l2_slippage_samples.csv")
     assets = sorted(set(funding.get("asset", pd.Series(dtype=str)).astype(str)) | set(l2.get("asset", pd.Series(dtype=str)).astype(str)))
@@ -308,15 +446,38 @@ def build_cost_collection_status(
     for asset in assets:
         f = funding.loc[funding.get("asset", pd.Series(dtype=str)).astype(str).eq(asset)]
         s = l2.loc[l2.get("asset", pd.Series(dtype=str)).astype(str).eq(asset)]
-        captured = pd.to_datetime(s.get("source_timestamp", pd.Series(dtype=str)), utc=True, errors="coerce")
-        strict = int((captured >= now - pd.Timedelta(hours=2)).sum()) if not captured.empty else 0
-        provisional = int((captured >= now - pd.Timedelta(hours=24)).sum()) if not captured.empty else 0
+        if not s.empty:
+            complete = (
+                s.get("buy_complete", pd.Series(False, index=s.index)).map(_truthy)
+                & s.get("sell_complete", pd.Series(False, index=s.index)).map(_truthy)
+            )
+            timestamps = pd.to_datetime(
+                s.loc[complete, "source_timestamp"], format="mixed", utc=True, errors="coerce"
+            ).dropna().drop_duplicates().sort_values()
+        else:
+            timestamps = pd.Series(dtype="datetime64[ns, UTC]")
+        strict_timestamps = timestamps.loc[
+            timestamps >= pd.Timestamp(now) - pd.Timedelta(hours=strict_window_hours)
+        ]
+        provisional_timestamps = timestamps.loc[
+            timestamps >= pd.Timestamp(now) - pd.Timedelta(hours=24)
+        ]
+        strict = int(len(strict_timestamps))
+        provisional = int(len(provisional_timestamps))
+        span_minutes = (
+            float((strict_timestamps.max() - strict_timestamps.min()).total_seconds() / 60.0)
+            if len(strict_timestamps) >= 2
+            else 0.0
+        )
+        cadence_ready = strict >= minimum_samples and span_minutes >= minimum_span_minutes
         funding_complete = bool(not f.empty and f.get("funding_status", pd.Series(dtype=str)).eq("COMPLETE").all())
         blockers = []
         if not funding_complete:
             blockers.append("funding_incomplete")
-        if strict < 12:
+        if strict < minimum_samples:
             blockers.append("strict_l2_sample_target_not_met")
+        elif span_minutes < minimum_span_minutes:
+            blockers.append("strict_l2_observation_span_not_met")
         rows.append(
             {
                 "asset": asset,
@@ -324,7 +485,11 @@ def build_cost_collection_status(
                 "funding_complete": funding_complete,
                 "strict_l2_samples": strict,
                 "provisional_l2_samples": provisional,
-                "latest_l2_at": captured.max().isoformat() if not captured.empty and pd.notna(captured.max()) else "",
+                "strict_l2_span_minutes": span_minutes,
+                "strict_l2_cadence_ready": cadence_ready,
+                "minimum_strict_l2_samples": minimum_samples,
+                "minimum_strict_l2_span_minutes": minimum_span_minutes,
+                "latest_l2_at": timestamps.max().isoformat() if not timestamps.empty else "",
                 "collection_status": "READY" if not blockers else "COLLECTING",
                 "blocker": ";".join(blockers),
                 "next_action": "continue_2h_l2_and_funding_collection" if blockers else "maintain_rolling_collection",
@@ -455,6 +620,7 @@ def build_corrective_data_evidence(
     market = build_hyperliquid_market_manifest(root=root, now=now)
     source_attacks = build_external_source_contract_attacks(root=root, now=now)
     history = build_history_remediation(root=root)
+    candidates = build_l2_capture_candidate_set(root=root)
     collection = build_cost_collection_status(root=root, now=now)
     costs = build_pair_cost_stress_surfaces(root=root)
     cost_attacks = run_cost_evidence_attacks(root=root, now=now)
@@ -464,6 +630,7 @@ def build_corrective_data_evidence(
         "external_source_contract_results": root / "reports" / "red_team" / "external_source_contract_results.csv",
         "history_remediation_queue": Path(history["queue"]),
         "history_coverage": Path(history["coverage"]),
+        "l2_capture_candidates": Path(candidates["path"]),
         "cost_collection_status": Path(collection["status_path"]),
         "pair_cost_models": Path(costs["models"]),
         "cost_stress": Path(costs["stress"]),
@@ -479,6 +646,9 @@ def build_corrective_data_evidence(
             "mapping_passes": market["mapping_passes"],
             "history_ready_pairs": history["ready"],
             "history_queued_pairs": history["queued"],
+            "history_deferred_pairs": history["deferred"],
+            "history_structurally_blocked_pairs": history["structurally_blocked"],
+            "l2_capture_eligible_pairs": candidates["eligible_pairs"],
             "cost_collection_ready_assets": collection["ready_assets"],
             "cost_collection_collecting_assets": collection["collecting_assets"],
             "strict_cost_ready_pairs": costs["strict_ready_pairs"],
@@ -512,6 +682,15 @@ def _read_csv(path: Path) -> pd.DataFrame:
         return pd.read_csv(path)
     except pd.errors.EmptyDataError:
         return pd.DataFrame()
+
+
+def _cost_gate_policy(root: Path) -> dict[str, Any]:
+    path = root / "config" / "acceptance_policy_manifest.json"
+    if not path.is_file():
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    gates = payload.get("cost_gates", {}) if isinstance(payload, dict) else {}
+    return gates if isinstance(gates, dict) else {}
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:

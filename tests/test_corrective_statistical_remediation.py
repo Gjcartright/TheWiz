@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import pandas as pd
 
-from quant_platform.orchestration.corrective_statistical_remediation import _jaccard, _missing_proof
+from quant_platform.orchestration.corrective_statistical_remediation import (
+    _jaccard,
+    _missing_proof,
+    _missing_proofs,
+)
 
 
 def test_trade_overlap_clusters_exact_duplicates():
@@ -23,3 +27,7 @@ def test_missing_proof_order_is_fail_closed():
         }
     )
     assert _missing_proof(row) == "strict_observed_cost_calibration"
+    assert _missing_proofs(row) == [
+        "strict_observed_cost_calibration",
+        "vendor_formula_parity",
+    ]

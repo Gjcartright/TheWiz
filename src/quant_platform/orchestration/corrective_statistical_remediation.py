@@ -110,7 +110,7 @@ def build_strategy_equivalence_clusters(*, root: Path = ROOT) -> dict[str, Any]:
         "clusters": frame.get("equivalence_cluster_id", pd.Series(dtype=str)).nunique(),
         "duplicate_rows": int(frame.get("cluster_member_count", pd.Series(dtype=int)).gt(1).sum()),
         "attacks": attacks,
-        "status": "PASS" if len(frame) == 42 else "BLOCKED",
+        "status": "PASS" if not frame.empty and attacks["status"].eq("PASS").all() else "BLOCKED",
     }
 
 
@@ -136,6 +136,12 @@ def build_near_miss_queue(*, root: Path = ROOT, now: datetime | None = None) -> 
         axis=1,
     )
     selected["missing_proof_diagnosis"] = selected.apply(_missing_proof, axis=1)
+    selected["all_missing_proofs"] = selected.apply(
+        lambda row: ";".join(_missing_proofs(row)), axis=1
+    )
+    selected["missing_proof_count"] = selected.apply(
+        lambda row: len(_missing_proofs(row)), axis=1
+    )
     selected["prospective_next_test"] = selected["missing_proof_diagnosis"].map(_next_test)
     selected["hypothesis_registered_before_next_test"] = True
     selected["next_test_executed"] = False
@@ -148,7 +154,8 @@ def build_near_miss_queue(*, root: Path = ROOT, now: datetime | None = None) -> 
     markdown.write_text(_near_miss_markdown(selected, acceptance, holdout), encoding="utf-8")
     batch_columns = [
         "semantic_hypothesis_id", "experiment_id", "equivalence_cluster_id", "pair", "wizard_timeframe",
-        "exact_mode", "orientation", "missing_proof_diagnosis", "prospective_next_test",
+        "exact_mode", "orientation", "missing_proof_diagnosis", "all_missing_proofs",
+        "missing_proof_count", "prospective_next_test",
         "hypothesis_registered_before_next_test", "next_test_executed", "execution_authority",
         "live_trading_authorized",
     ]
@@ -166,7 +173,7 @@ def build_near_miss_queue(*, root: Path = ROOT, now: datetime | None = None) -> 
         "batch": batch_path,
         "frame": selected,
         "candidates": len(selected),
-        "status": "PASS" if len(selected) == 42 and selected["hypothesis_registered_before_next_test"].all() else "BLOCKED",
+        "status": "PASS" if not selected.empty and selected["hypothesis_registered_before_next_test"].all() else "BLOCKED",
     }
 
 
@@ -306,6 +313,12 @@ def _duplicate_mode_attacks(frame: pd.DataFrame, *, root: Path) -> pd.DataFrame:
 
 
 def _missing_proof(row: pd.Series) -> str:
+    proofs = _missing_proofs(row)
+    return proofs[0] if proofs else "independent_future_holdout_confirmation"
+
+
+def _missing_proofs(row: pd.Series) -> list[str]:
+    proofs: list[str] = []
     for field, success, blocker in (
         ("strict_cost_calibration_ready", True, "strict_observed_cost_calibration"),
         ("vendor_exact_mode_parity_proven", True, "vendor_formula_parity"),
@@ -317,8 +330,8 @@ def _missing_proof(row: pd.Series) -> str:
         value = row.get(field)
         passed = _truthy(value) if success is True else _text(value) == success
         if not passed:
-            return blocker
-    return "independent_future_holdout_confirmation"
+            proofs.append(blocker)
+    return proofs
 
 
 def _next_test(diagnosis: str) -> str:

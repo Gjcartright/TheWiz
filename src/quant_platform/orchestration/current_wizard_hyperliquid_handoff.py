@@ -623,6 +623,12 @@ def _build_validation(
     expected_experiments = expected_pairs * len(EXACT_MODES) * len(ORIENTATIONS)
     blocked_vendor = pair_status[~pair_status["current_vendor_pair_detail_complete"]]
     blocked_mapping = pair_status[~pair_status["hyperliquid_pair_ready"]]
+    pilot_pair = _text(pilot.get("pair_group_key"))
+    pilot_pair_on_current_board = bool(
+        pilot_pair
+        and queue["pair_group_key"].astype(str).eq(pilot_pair).any()
+        and pilot.get("pilot_complete", False)
+    )
     checks = [
         (
             "every_current_pair_group_accounted",
@@ -662,10 +668,13 @@ def _build_validation(
             f"history_rows={len(pair_history_queue)} expected={expected_pairs}",
         ),
         (
-            "api_pilot_overlay_preserved",
+            "api_pilot_overlay_applied_when_pair_present",
             int(pair_status["api_schema_pilot_pair"].sum())
-            == (1 if pilot.get("pilot_complete", False) else 0),
-            f"pilot_pairs={int(pair_status['api_schema_pilot_pair'].sum())}",
+            == (1 if pilot_pair_on_current_board else 0),
+            (
+                f"pilot_pairs={int(pair_status['api_schema_pilot_pair'].sum())} "
+                f"pilot_pair_on_current_board={pilot_pair_on_current_board}"
+            ),
         ),
         (
             "no_discovery_prefilter",

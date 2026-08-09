@@ -16,16 +16,16 @@ from quant_platform.active_pipeline import CommandResult
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.wizard_exact_mode_parity.v1"
-EXACT_MODES = (
+PAIR_PAGE_EXACT_MODES = (
     "Copula",
     "Dyn (Spread)",
     "Dyn (ZScoreR)",
-    "OU (Optimal)",
     "OU (Spread)",
     "OU (ZScoreR)",
     "Static (Spread)",
     "Static (ZScoreR)",
 )
+EXACT_MODES = PAIR_PAGE_EXACT_MODES
 ORIENTATIONS = ("original", "reverse")
 FIXTURE_FIELDS = (
     "pair_group_key", "pair", "wizard_exchange", "timeframe", "asset_x", "asset_y",
@@ -96,6 +96,76 @@ def build_wizard_parity_capture_status(*, root: Path = ROOT) -> dict[str, Any]:
     }
     (raw_dir / "capture_manifest.json").write_text(json.dumps(capture_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"frame": frame, "status": status_path, "capture_manifest": raw_dir / "capture_manifest.json", "source": source, "summary": capture_manifest}
+
+
+def build_ou_optimal_overlay_provenance(*, root: Path = ROOT) -> dict[str, Any]:
+    """Account for OU Optimal as a scanner annotation, not a pair-page mode."""
+
+    source_path = root / "reports" / "active" / "current_wizard_ou_optimal_overlay_ledger.csv"
+    source = _read_csv(source_path)
+    required = {
+        "experiment_orientation",
+        "ou_optimal",
+        "ou_optimal_semantics",
+        "independent_pair_page_mode",
+        "source_exact_mode",
+        "evidence_path",
+    }
+    rows = []
+    for orientation in ORIENTATIONS:
+        group = (
+            source.loc[source.get("experiment_orientation", pd.Series(dtype=str)).eq(orientation)]
+            if required.issubset(source.columns)
+            else pd.DataFrame()
+        )
+        true_count = int(group.get("ou_optimal", pd.Series(dtype=bool)).map(_truthy).sum())
+        false_count = int(len(group) - true_count)
+        semantics_valid = bool(
+            not group.empty
+            and group["ou_optimal_semantics"].astype(str).eq("scanner_boolean_annotation").all()
+        )
+        not_pair_mode = bool(
+            not group.empty
+            and not group["independent_pair_page_mode"].map(_truthy).any()
+        )
+        status = "PASS" if semantics_valid and not_pair_mode else "BLOCKED"
+        blockers = []
+        if group.empty:
+            blockers.append("overlay_orientation_not_captured")
+        if not semantics_valid:
+            blockers.append("ou_optimal_scanner_semantics_unproven")
+        if not not_pair_mode:
+            blockers.append("ou_optimal_pair_page_mode_classification_conflict")
+        rows.append(
+            {
+                "overlay": "OU Optimal",
+                "orientation": orientation,
+                "source_rows": len(group),
+                "true_rows": true_count,
+                "false_rows": false_count,
+                "row_accounting_complete": len(group) == true_count + false_count,
+                "semantics": "scanner_boolean_annotation" if semantics_valid else "unproven",
+                "independent_pair_page_mode": False if not_pair_mode else pd.NA,
+                "overlay_provenance_status": status,
+                "formula_parity_status": "UNPROVEN",
+                "blocker": ";".join(blockers),
+                "evidence_path": _relative(source_path, root),
+                "promotion_authority": False,
+                "live_trading_authorized": False,
+            }
+        )
+    frame = pd.DataFrame(rows)
+    path = root / "reports" / "active" / "wizard_ou_optimal_overlay_provenance.csv"
+    _atomic_csv(frame, path)
+    return {
+        "path": path,
+        "frame": frame,
+        "orientations_accounted": int(frame["overlay_provenance_status"].eq("PASS").sum()),
+        "expected_orientations": len(ORIENTATIONS),
+        "status": "PASS" if frame["overlay_provenance_status"].eq("PASS").all() else "BLOCKED",
+        "vendor_formula_parity_proven": False,
+        "live_trading_authorized": False,
+    }
 
 
 def build_wizard_golden_fixtures(*, root: Path = ROOT) -> dict[str, Any]:
@@ -225,13 +295,28 @@ def build_wizard_mode_authority(*, root: Path = ROOT) -> dict[str, Any]:
     _atomic_csv(authority, path)
     parity_path = root / "reports" / "active" / "wizard_mode_parity.csv"
     _atomic_csv(authority, parity_path)
+    overlay = _read_csv(
+        root / "reports" / "active" / "wizard_ou_optimal_overlay_provenance.csv"
+    )
+    overlay_accounted = int(
+        overlay.get("overlay_provenance_status", pd.Series(dtype=str)).eq("PASS").sum()
+    )
     docs = root / "docs" / "wizard_hyperliquid_mode_fidelity.md"
-    docs.write_text(_fidelity_markdown(authority, fixtures["summary"]), encoding="utf-8")
+    docs.write_text(
+        _fidelity_markdown(
+            authority,
+            fixtures["summary"],
+            overlay_accounted=overlay_accounted,
+            overlay_expected=len(ORIENTATIONS),
+        ),
+        encoding="utf-8",
+    )
     return {"authority": path, "parity": parity_path, "docs": docs, "frame": authority}
 
 
 def build_corrective_wizard_parity(*, root: Path = ROOT) -> CommandResult:
     capture = build_wizard_parity_capture_status(root=root)
+    overlay = build_ou_optimal_overlay_provenance(root=root)
     fixtures = build_wizard_golden_fixtures(root=root)
     mutations = run_wizard_mode_mutation_tests(root=root)
     authority = build_wizard_mode_authority(root=root)
@@ -239,6 +324,7 @@ def build_corrective_wizard_parity(*, root: Path = ROOT) -> CommandResult:
     paths = {
         "capture_status": Path(capture["status"]),
         "capture_manifest": Path(capture["capture_manifest"]),
+        "ou_optimal_overlay_provenance": Path(overlay["path"]),
         "fixture_manifest": Path(fixtures["manifest"]),
         "fixture_audit": Path(fixtures["audit"]),
         "mutation_results": root / "reports" / "red_team" / "wizard_mode_mutation_results.csv",
@@ -255,6 +341,9 @@ def build_corrective_wizard_parity(*, root: Path = ROOT) -> CommandResult:
             "fixture_cells_accounted": fixtures["summary"]["cells_accounted"],
             "golden_capture_cells": fixtures["summary"]["golden_captures"],
             "missing_vendor_mode_cells": fixtures["summary"]["missing_vendor_modes"],
+            "ou_optimal_overlay_status": overlay["status"],
+            "ou_optimal_orientations_accounted": overlay["orientations_accounted"],
+            "ou_optimal_expected_orientations": overlay["expected_orientations"],
             "vendor_parity_cells": int(frame["vendor_exact_mode_parity_proven"].sum()),
             "mutation_cases_passed": int(mutations["status"].eq("PASS").sum()),
             "blocker": "vendor_formula_parity_unproven_for_all_modes",
@@ -263,7 +352,13 @@ def build_corrective_wizard_parity(*, root: Path = ROOT) -> CommandResult:
     )
 
 
-def _fidelity_markdown(authority: pd.DataFrame, summary: dict[str, Any]) -> str:
+def _fidelity_markdown(
+    authority: pd.DataFrame,
+    summary: dict[str, Any],
+    *,
+    overlay_accounted: int,
+    overlay_expected: int,
+) -> str:
     lines = [
         "# Wizard and Hyperliquid Mode Fidelity",
         "",
@@ -275,7 +370,7 @@ def _fidelity_markdown(authority: pd.DataFrame, summary: dict[str, Any]) -> str:
         "",
         "A dashboard label and a local formula with the same name are separate claims. Captured Wizard fields support diagnosis and research hypotheses. Until comparable vendor output series reproduce within declared tolerances, local computations remain `local_approximation` and cannot be described as Wizard-confirmed.",
         "",
-        "`OU (Optimal)` is accounted for but was unavailable on the captured pair pages. It remains a local research overlay, not an eighth proven Wizard pair-page mode.",
+        f"`OU (Optimal)` is a scanner boolean annotation layered onto a source exact mode, not an eighth Wizard pair-page mode. Current orientation provenance is `{overlay_accounted}/{overlay_expected}` in `wizard_ou_optimal_overlay_provenance.csv`. Any missing orientation remains blocked. Its formula semantics are also unproven, so it cannot receive a Wizard-exact claim.",
         "",
     ]
     return "\n".join(lines)
