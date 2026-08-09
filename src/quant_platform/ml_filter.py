@@ -51,6 +51,10 @@ ML_DATASET_COLUMNS = [
     "realized_return",
     "gross_trade_return",
     "trade_cost_drag",
+    "max_adverse_excursion",
+    "max_favorable_excursion",
+    "return_aggregation",
+    "return_unit",
     "entry_zscore",
     "entry_abs_zscore",
     "zscore_change_1",
@@ -107,6 +111,10 @@ NON_FEATURE_COLUMNS = {
     RETURN_COLUMN,
     "gross_trade_return",
     "trade_cost_drag",
+    "max_adverse_excursion",
+    "max_favorable_excursion",
+    "return_aggregation",
+    "return_unit",
     "entry_timestamp",
     "exit_timestamp",
     "entry_bar_index",
@@ -593,8 +601,10 @@ def _candidate_rows_for_signal(
         segment = detailed.iloc[entry_pos : exit_pos + 1]
         entry_row = detailed.iloc[entry_pos]
         trade_id = f"{pair}|{strategy.id}|{pd.Timestamp(entry_row['timestamp']).isoformat()}|{ordinal}"
-        realized_return = float(segment["net_return"].sum())
-        gross_return = float(segment["gross_return"].sum())
+        net_path = _compounded_return_path(segment["net_return"])
+        gross_path = _compounded_return_path(segment["gross_return"])
+        realized_return = float(net_path.iloc[-1]) if not net_path.empty else 0.0
+        gross_return = float(gross_path.iloc[-1]) if not gross_path.empty else 0.0
         row = {
             "trade_id": trade_id,
             "pair": pair,
@@ -612,11 +622,23 @@ def _candidate_rows_for_signal(
             "label_profitable": int(realized_return > 0.0),
             "realized_return": realized_return,
             "gross_trade_return": gross_return,
-            "trade_cost_drag": float(segment["cost_drag"].sum()),
+            "trade_cost_drag": max(gross_return - realized_return, 0.0),
+            "max_adverse_excursion": min(float(net_path.min()), 0.0) if not net_path.empty else 0.0,
+            "max_favorable_excursion": max(float(net_path.max()), 0.0) if not net_path.empty else 0.0,
+            "return_aggregation": "compounded_bar_returns_zero_floor",
+            "return_unit": "fraction_of_equity",
         }
         row.update(_entry_feature_row(detailed, entry_pos))
         rows.append(row)
     return rows
+
+
+def _compounded_return_path(returns: pd.Series) -> pd.Series:
+    values = pd.to_numeric(returns, errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    # A fractional equity return cannot continue below zero. Any single-bar loss
+    # at or below -100% therefore produces a terminal -100% path.
+    factors = (1.0 + values).clip(lower=0.0)
+    return factors.cumprod() - 1.0
 
 
 def _normalize_timeframe(value: object) -> str:

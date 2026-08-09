@@ -189,6 +189,13 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
     leakage = _read_csv(leakage_path)
     future = int(leakage.get("uses_future_data", pd.Series(False, index=leakage.index)).map(_truthy).sum())
     hindsight = int(leakage.get("uses_dashboard_hindsight", pd.Series(False, index=leakage.index)).map(_truthy).sum())
+    audit_blockers = int(leakage.get("leakage_blocker", pd.Series("", index=leakage.index)).fillna("").astype(str).str.strip().ne("").sum())
+    returns = pd.to_numeric(leakage.get("profit_after_cost", pd.Series(float("nan"), index=leakage.index)), errors="coerce")
+    invalid_returns = int((returns.isna() | returns.lt(-1.0 - 1e-9)).sum())
+    units = leakage.get("return_unit", pd.Series("", index=leakage.index)).fillna("").astype(str)
+    invalid_return_units = int(units.ne("fraction_of_equity").sum())
+    aggregations = leakage.get("return_aggregation", pd.Series("", index=leakage.index)).fillna("").astype(str)
+    compounded_rows = int(aggregations.eq("compounded_bar_returns_zero_floor").sum())
     invalid_time = 0
     if not leakage.empty and {"feature_timestamp", "label_timestamp"}.issubset(leakage.columns):
         feature = pd.to_datetime(leakage["feature_timestamp"], utc=True, errors="coerce")
@@ -200,7 +207,11 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "future_feature_rows": future,
         "dashboard_hindsight_rows": hindsight,
         "invalid_feature_label_time_rows": invalid_time,
-        "status": "PASS" if not any((future, hindsight, invalid_time)) and not leakage.empty else "BLOCKED",
+        "dataset_audit_blocker_rows": audit_blockers,
+        "invalid_fractional_return_rows": invalid_returns,
+        "invalid_return_unit_rows": invalid_return_units,
+        "compounded_return_rows": compounded_rows,
+        "status": "PASS" if not any((future, hindsight, invalid_time, audit_blockers, invalid_returns, invalid_return_units)) and not leakage.empty else "BLOCKED",
         "training_authority": "backtest_research_only",
         "testnet_order_authority": False,
         "live_trading_authorized": False,
@@ -216,7 +227,21 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
     acceptance_path = root / "reports" / "ml" / "model_gated_acceptance.csv"
     metrics = _read_json(metrics_path)
     acceptance = _read_csv(acceptance_path)
+    rl_acceptance_path = root / "reports" / "rl" / "rl_acceptance_report.csv"
+    rl_split_path = root / "reports" / "rl" / "rl_split_audit.csv"
+    rl_acceptance = _read_csv(rl_acceptance_path)
+    rl_split = _read_csv(rl_split_path)
     accepted = bool(metrics.get("accepted", False)) and bool(not acceptance.empty and acceptance.get("accepted", pd.Series(False)).map(_truthy).all())
+    rl_accepted = bool(
+        not rl_acceptance.empty
+        and rl_acceptance.get("accepted", pd.Series(False, index=rl_acceptance.index)).map(_truthy).all()
+        and rl_acceptance.get("out_of_sample_evidence", pd.Series(False, index=rl_acceptance.index)).map(_truthy).all()
+    )
+    rl_split_ready = bool(
+        not rl_split.empty
+        and rl_split.get("status", pd.Series("", index=rl_split.index)).astype(str).eq("ready").all()
+        and rl_split.get("global_label_purge", pd.Series(False, index=rl_split.index)).map(_truthy).all()
+    )
     take_rate = _finite(metrics.get("median_take_rate"))
     monotonic = bool(metrics.get("score_buckets_monotonic", False))
     blockers = []
@@ -226,7 +251,12 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
         blockers.append("model_take_rate_below_minimum")
     if not monotonic:
         blockers.append("score_buckets_not_monotonic")
+    if not rl_split_ready:
+        blockers.append("rl_global_label_purge_split_not_ready")
+    if not rl_accepted:
+        blockers.append("rl_out_of_sample_acceptance_not_met")
     blockers.append("realized_testnet_sample_not_available")
+    rl_row = rl_acceptance.iloc[0] if not rl_acceptance.empty else pd.Series(dtype=object)
     status = {
         "schema_version": SCHEMA_VERSION,
         "generated_at_utc": _as_utc(now).isoformat(),
@@ -236,13 +266,22 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
         "median_take_rate": take_rate if math.isfinite(take_rate) else None,
         "minimum_take_rate": 0.10,
         "score_buckets_monotonic": monotonic,
+        "rl_out_of_sample_accepted": rl_accepted,
+        "rl_global_label_purge_ready": rl_split_ready,
+        "rl_validation_passed": _truthy(rl_row.get("validation_passed", False)),
+        "rl_held_out_test_passed": _truthy(rl_row.get("held_out_test_passed", False)),
+        "rl_validation_gate_failures": str(rl_row.get("validation_gate_failures", "")),
+        "rl_held_out_test_gate_failures": str(rl_row.get("held_out_test_gate_failures", "")),
         "realized_testnet_sample_sufficient": False,
         "model_authority": "RESEARCH_ONLY",
         "quantization_authorized": False,
         "testnet_order_authority": False,
         "live_trading_authorized": False,
         "blockers": blockers,
-        "evidence_path": f"{_relative(metrics_path, root)};{_relative(acceptance_path, root)}",
+        "evidence_path": (
+            f"{_relative(metrics_path, root)};{_relative(acceptance_path, root)};"
+            f"{_relative(rl_acceptance_path, root)};{_relative(rl_split_path, root)}"
+        ),
     }
     path = root / "reports" / "active" / "model_authority_status.json"
     _atomic_json(status, path)
@@ -269,6 +308,10 @@ def build_corrective_agent_governance(*, root: Path = ROOT, now: datetime | None
             "label_rows_audited": labels["summary"]["rows_audited"],
             "model_authority": model["summary"]["model_authority"],
             "model_blockers": model["summary"]["blockers"],
+            "rl_out_of_sample_accepted": model["summary"]["rl_out_of_sample_accepted"],
+            "rl_global_label_purge_ready": model["summary"]["rl_global_label_purge_ready"],
+            "rl_validation_passed": model["summary"]["rl_validation_passed"],
+            "rl_held_out_test_passed": model["summary"]["rl_held_out_test_passed"],
             "testnet_order_authority": False,
             "live_trading_authorized": False,
         },

@@ -5,6 +5,7 @@ import pandas as pd
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration.corrective_program import (
     TASK_STATUS,
+    _next_strict_cost_action,
     _write_seven_stage_checkpoint,
 )
 
@@ -62,3 +63,15 @@ def test_seven_stage_checkpoint_never_grants_order_authority(tmp_path):
     assert not frame["live_trading_authorized"].astype(bool).any()
     assert frame.loc[frame["stage"].eq(1), "evidence_progress"].iloc[0] == "1/7"
     assert md_path.exists()
+
+
+def test_strict_cost_action_requires_new_candidate_after_l2_window():
+    assert _next_strict_cost_action(
+        {"strict_cost_ready_pairs": 0, "cost_collection_ready_assets": 2}
+    ) == (
+        "refresh_wizard_candidate_after_completed_l2_window_then_rematerialize_"
+        "point_in_time_cost_evidence"
+    )
+    assert _next_strict_cost_action(
+        {"strict_cost_ready_pairs": 0, "cost_collection_ready_assets": 0}
+    ).startswith("l2_scheduler_collects")

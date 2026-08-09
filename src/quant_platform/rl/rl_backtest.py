@@ -46,6 +46,7 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
         "acceptance_report": reports / "rl_acceptance_report.csv",
         "blocked_actions": reports / "rl_blocked_actions.csv",
         "leakage_audit": reports / "rl_leakage_audit.csv",
+        "split_audit": reports / "rl_split_audit.csv",
         "copula_dashboard_join_audit": reports / "rl_copula_dashboard_join_audit.csv",
         "feature_schema": models / "feature_schema.json",
         "dashboard_research_status": dashboard / "rl_research_status.csv",
@@ -73,26 +74,45 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
     if blocker:
         blocked = _blocked_frame(blocker, pair_id)
         training = pd.DataFrame([{"status": "blocked", "blocker": blocker, "live_enabled": False, "rows": len(dataset)}])
-        evaluation = pd.DataFrame(columns=["variant", "trades", "take_rate", "profit_factor", "sharpe", "max_drawdown", "total_return"])
+        evaluation = pd.DataFrame(columns=["variant", "evaluation_split", "trades", "take_rate", "profit_factor", "sharpe", "max_drawdown", "total_return"])
         acceptance = rl_acceptance_report(evaluation)
         simulated = simulate_strategy_returns(dataset, {})
+        per_trade_log = simulated["frame"]
+        split_audit = pd.DataFrame(
+            [{"split": "all", "status": "blocked", "blocker": blocker, "retained_rows": 0, "global_label_purge": True}]
+        )
     else:
+        # Imported lazily to avoid a module cycle: the learning agent uses this simulator.
+        from quant_platform.rl.rl_learning_agent import _chronological_rl_partitions
+
         feature_source = dataset.drop(columns=leaked, errors="ignore")
         features = build_rl_feature_frame(feature_source)
-        raw_returns = _return_column(dataset)
-        policy_plan = _build_policy(dataset)
-        simulated = simulate_strategy_returns(dataset, policy_plan)
-        rl_rows = simulated["frame"] if isinstance(simulated["frame"], pd.DataFrame) else pd.DataFrame()
-        rl_mask = simulated.get("active_mask", pd.Series(dtype=bool))
-        if not isinstance(rl_mask, pd.Series) or rl_mask.empty:
-            rl_mask = pd.Series([False] * len(rl_rows), index=rl_rows.index) if not rl_rows.empty else pd.Series(dtype=bool)
-        evaluation = pd.DataFrame(
-            [
-                return_summary("non_rl_baseline", dataset, raw_returns, len(dataset)),
-                return_summary("safe_rl_policy", rl_rows.loc[rl_mask], simulated["returns"], len(dataset)),
-            ]
-        )
+        ordered, partitions, split_audit = _chronological_rl_partitions(dataset)
+        split_ready = bool(not split_audit.empty and split_audit["status"].eq("ready").all())
+        calibration = partitions.get("train", pd.DataFrame()) if split_ready else ordered
+        policy_plan = _build_policy(calibration)
+        evaluation_rows: list[dict[str, object]] = []
+        per_trade_frames: list[pd.DataFrame] = []
+        splits = (("validation", "validation"), ("test", "held_out_test")) if split_ready else (("diagnostic", "diagnostic_full_sample"),)
+        for source_split, evaluation_split in splits:
+            source = partitions.get(source_split, pd.DataFrame()) if split_ready else ordered
+            split_simulated = simulate_strategy_returns(source, policy_plan)
+            rl_rows = split_simulated["frame"] if isinstance(split_simulated["frame"], pd.DataFrame) else pd.DataFrame()
+            rl_rows["evaluation_split"] = evaluation_split
+            per_trade_frames.append(rl_rows)
+            rl_mask = split_simulated.get("active_mask", pd.Series(dtype=bool))
+            if not isinstance(rl_mask, pd.Series) or rl_mask.empty:
+                rl_mask = pd.Series([False] * len(rl_rows), index=rl_rows.index) if not rl_rows.empty else pd.Series(dtype=bool)
+            baseline = return_summary("non_rl_baseline", source, _return_column(source), len(source))
+            policy_summary = return_summary("safe_rl_policy", rl_rows.loc[rl_mask], split_simulated["returns"], len(source))
+            baseline["evaluation_split"] = evaluation_split
+            policy_summary["evaluation_split"] = evaluation_split
+            evaluation_rows.extend([baseline, policy_summary])
+        evaluation = pd.DataFrame(evaluation_rows)
         acceptance = rl_acceptance_report(evaluation)
+        simulated = simulate_strategy_returns(calibration, policy_plan)
+        per_trade_log = pd.concat(per_trade_frames, ignore_index=True) if per_trade_frames else simulated["frame"]
+        split_blocker = "" if split_ready else str(split_audit.get("blocker", pd.Series(["rl_chronological_split_not_ready"])).iloc[0])
         training = pd.DataFrame(
             [
                 {
@@ -102,20 +122,33 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
                     "rows": len(dataset),
                     "features": features.shape[1],
                     "policy": policy_plan["policy_name"],
+                    "policy_calibration_split": "globally_purged_train" if split_ready else "diagnostic_full_sample",
+                    "split_ready": split_ready,
+                    "split_blocker": split_blocker,
+                    "train_rows": int(len(partitions.get("train", pd.DataFrame()))) if split_ready else 0,
+                    "validation_rows": int(len(partitions.get("validation", pd.DataFrame()))) if split_ready else 0,
+                    "held_out_test_rows": int(len(partitions.get("test", pd.DataFrame()))) if split_ready else 0,
                     "copula_dashboard_attached": int(join_statuses.get("attached", 0)),
                     "copula_dashboard_stale": int(join_statuses.get("stale_snapshot", 0)),
                 }
             ]
         )
-        blocked = _blocked_frame("rl_live_use_blocked", pair_id)
+        blocked = _blocked_frame(str(acceptance.get("blocker", pd.Series(["rl_live_use_blocked"])).iloc[0]) or "rl_live_use_blocked", pair_id)
 
+    leakage_audit["global_label_purge"] = bool(
+        not split_audit.empty and split_audit.get("global_label_purge", pd.Series([False])).fillna(False).astype(bool).all()
+    )
+    leakage_audit["split_status"] = (
+        "ready" if not split_audit.empty and split_audit.get("status", pd.Series(dtype=str)).eq("ready").all() else "blocked"
+    )
+    leakage_audit["split_evidence_path"] = str(paths["split_audit"])
     training.to_csv(paths["training_report"], index=False)
     evaluation.to_csv(paths["evaluation_report"], index=False)
-    per_trade_log = simulated["frame"]
     per_trade_log.to_csv(paths["execution_backtest"], index=False)
     acceptance.to_csv(paths["acceptance_report"], index=False)
     blocked.to_csv(paths["blocked_actions"], index=False)
     leakage_audit.to_csv(paths["leakage_audit"], index=False)
+    split_audit.to_csv(paths["split_audit"], index=False)
     copula_join_audit.to_csv(paths["copula_dashboard_join_audit"], index=False)
     training.to_csv(paths["dashboard_research_status"], index=False)
     acceptance.to_csv(paths["dashboard_acceptance"], index=False)
@@ -126,7 +159,7 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
 
 
 def _return_column(frame: pd.DataFrame) -> pd.Series:
-    for column in ["profit_after_cost", "trade_return", "return", "returns"]:
+    for column in ["profit_after_cost", "realized_return", "trade_return", "return", "returns"]:
         if column in frame.columns:
             return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
     return pd.Series(0.0, index=frame.index)
@@ -178,39 +211,46 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
     take_profit_pct = max(float(policy.get("take_profit_pct", 0.12) or 0.12), 0.0)
     max_trade_drawdown_pct = max(float(policy.get("max_trade_drawdown_pct", stop_loss_pct) or stop_loss_pct), 0.0)
     session_loss_cap_pct = max(float(policy.get("session_loss_cap_pct", 0.15) or 0.15), 0.0)
-    max_hold_ref = _to_numeric(data["trade_bars"]).quantile(0.75) if not data.empty else 0
-    max_hold = float(max_hold_ref if pd.notna(max_hold_ref) and max_hold_ref > 0 else 1.0)
     z_cap = float(zscores.quantile(0.95) or 1.0) or 1.0
+    position_fraction = min(max(float(policy.get("max_position_fraction", 1.0) or 1.0), 0.0), 1.0)
+    hold_cap_pct = min(max(float(policy.get("hold_cap_pct", 1.0) or 1.0), 0.01), 1.0)
+    volatility_penalty_weight = min(
+        max(float(policy.get("volatility_penalty_weight", 0.35) or 0.35), 0.0),
+        1.0,
+    )
 
     strength_pct = (zscores / z_cap).clip(0.0, 1.0)
     proposed_hold = (data["hold_bars"] * (0.25 + 0.65 * strength_pct)).round().astype(float)
     proposed_hold = proposed_hold.where(proposed_hold > 0, 1)
-    if max_hold > 0:
-        proposed_hold = proposed_hold.clip(lower=float(policy.get("min_hold_bars", 1)), upper=max_hold)
-    else:
-        proposed_hold = proposed_hold.clip(lower=float(policy.get("min_hold_bars", 1)))
-    active = (zscores >= entry_threshold)
+    per_trade_hold_cap = (data["trade_bars"].clip(lower=1) * hold_cap_pct).apply(math.ceil).clip(lower=1)
+    min_hold = max(float(policy.get("min_hold_bars", 1) or 1), 1.0)
+    per_trade_min_hold = np.minimum(per_trade_hold_cap, min_hold)
+    proposed_hold = np.minimum(np.maximum(proposed_hold, per_trade_min_hold), per_trade_hold_cap)
+    threshold_active = zscores >= entry_threshold
     volatility_gate = _to_numeric(data.get("realized_volatility_percentile", pd.Series(0.0, index=data.index)).fillna(0.0)).fillna(0.0)
-    vol_penalty = 1.0 - (volatility_gate.clip(0.0, 1.0) * 0.35)
+    vol_penalty = 1.0 - (volatility_gate.clip(0.0, 1.0) * volatility_penalty_weight)
     proposed_hold = (proposed_hold * vol_penalty).round().astype(int).clip(lower=1)
     # only hold for part of the trade horizon; "held_fraction" simulates early exits
     held_fraction = (proposed_hold / data["trade_bars"].replace(0, 1)).clip(0.0, 1.0)
-    costs = _to_numeric(data.get("trade_cost_drag", pd.Series(0.0, index=data.index))).fillna(0.0).astype(float)
-    side_multiplier = np.where(data["entry_side"].str.startswith("short"), -1.0, 1.0)
-    simulated = data["base_return"] * held_fraction * side_multiplier - costs * (held_fraction * 0.25)
-    simulated[~active] = 0.0
+    # profit_after_cost/realized_return already reflects strategy direction and costs.
+    # Prorating that net outcome is conservative research proxying, not bar-path replay.
+    simulated = data["base_return"] * held_fraction * position_fraction
+    simulated[~threshold_active] = 0.0
     max_adverse = _to_numeric(data.get("max_adverse_excursion", pd.Series(0.0, index=data.index))).fillna(0.0).abs()
     max_favorable = _to_numeric(data.get("max_favorable_excursion", pd.Series(0.0, index=data.index))).fillna(0.0).abs()
-    stop_triggered = active & (max_adverse >= stop_loss_pct)
-    profit_triggered = active & (max_favorable >= take_profit_pct)
-    risk_cap_triggered = active & (max_adverse >= max_trade_drawdown_pct)
-    simulated = simulated.clip(lower=-stop_loss_pct, upper=take_profit_pct)
-    simulated[stop_triggered] = -stop_loss_pct
-    simulated[profit_triggered] = np.minimum(simulated[profit_triggered], take_profit_pct)
-    session_equity = (1.0 + simulated.where(active, 0.0)).cumprod()
+    stop_triggered = threshold_active & (max_adverse >= stop_loss_pct)
+    profit_triggered = threshold_active & ~stop_triggered & (max_favorable >= take_profit_pct)
+    risk_cap_triggered = threshold_active & (max_adverse >= max_trade_drawdown_pct)
+    simulated = simulated.clip(
+        lower=-stop_loss_pct * position_fraction,
+        upper=take_profit_pct * position_fraction,
+    )
+    simulated[stop_triggered] = -stop_loss_pct * position_fraction
+    simulated[profit_triggered] = take_profit_pct * position_fraction
+    session_equity = (1.0 + simulated.where(threshold_active, 0.0)).cumprod()
     session_drawdown = ((session_equity.cummax() - session_equity) / session_equity.cummax().replace(0, np.nan)).fillna(0.0)
     session_blocked = session_drawdown > session_loss_cap_pct
-    active = active & ~session_blocked
+    active = threshold_active & ~session_blocked
     simulated[session_blocked] = 0.0
     active_mask = pd.Series(active, index=data.index)
     exit_reason = pd.Series("threshold_exit", index=data.index, dtype="object")
@@ -237,10 +277,19 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
             "base_return": data["base_return"],
             "simulated_return": simulated,
             "policy_name": policy.get("policy_name", "simulated_quantile_hold_policy"),
-            "simulation_reason": active.map(lambda on: "entered" if on else "below_entry_threshold"),
+            "simulation_reason": np.select(
+                [session_blocked, ~threshold_active],
+                ["session_loss_cap", "below_entry_threshold"],
+                default="entered",
+            ),
             "exit_reason": exit_reason,
             "stop_triggered": stop_triggered,
             "risk_cap_triggered": risk_cap_triggered | session_blocked,
+            "return_basis": "net_after_cost_strategy_return",
+            "cost_treatment": "no_second_cost_charge;proportional_net_return_proxy",
+            "position_fraction": position_fraction,
+            "hold_cap_pct": hold_cap_pct,
+            "volatility_penalty_weight": volatility_penalty_weight,
         }
     )
     return {

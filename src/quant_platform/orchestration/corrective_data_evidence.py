@@ -284,12 +284,21 @@ def build_history_remediation(
     history_status = coverage.get(
         "history_status", pd.Series("", index=coverage.index)
     ).astype(str)
+    history_blocker = coverage.get(
+        "history_blocker", pd.Series("", index=coverage.index)
+    ).fillna("").astype(str)
+    insufficient_asset_age = history_blocker.str.contains(
+        "insufficient_point_in_time_history", regex=False
+    )
     coverage["history_coverage_class"] = "STRUCTURALLY_BLOCKED"
     coverage.loc[history_status.eq("DEFERRED_NOT_SELECTED"), "history_coverage_class"] = (
         "DEFERRED_NOT_SELECTED"
     )
     coverage.loc[selected & ~coverage["aligned_history_ready"], "history_coverage_class"] = (
         "ACTIVE_REMEDIATION"
+    )
+    coverage.loc[selected & insufficient_asset_age, "history_coverage_class"] = (
+        "INSUFFICIENT_ASSET_AGE"
     )
     coverage.loc[coverage["aligned_history_ready"], "history_coverage_class"] = "READY"
     coverage["promotion_authority"] = False
@@ -313,6 +322,9 @@ def build_history_remediation(
         ),
         "structurally_blocked": int(
             coverage["history_coverage_class"].eq("STRUCTURALLY_BLOCKED").sum()
+        ),
+        "insufficient_asset_age": int(
+            coverage["history_coverage_class"].eq("INSUFFICIENT_ASSET_AGE").sum()
         ),
         "status": "PASS" if not coverage.empty else "BLOCKED",
         "live_trading_authorized": False,
@@ -648,6 +660,9 @@ def build_corrective_data_evidence(
             "history_queued_pairs": history["queued"],
             "history_deferred_pairs": history["deferred"],
             "history_structurally_blocked_pairs": history["structurally_blocked"],
+            "history_insufficient_asset_age_pairs": history[
+                "insufficient_asset_age"
+            ],
             "l2_capture_eligible_pairs": candidates["eligible_pairs"],
             "cost_collection_ready_assets": collection["ready_assets"],
             "cost_collection_collecting_assets": collection["collecting_assets"],

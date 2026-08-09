@@ -124,6 +124,21 @@ def complete_corrective_plan(*, root: Path = ROOT, now: datetime | None = None) 
     phase_path = root / "reports" / "active" / "corrective_plan_phase_status.csv"
     _atomic_csv(phase_frame, phase_path)
     final_receipt = _read_json(root / "reports" / "active" / "final_1x_survivor_receipt.json")
+    daily_cycles = int(phases["daily_cadence"].summary.get("consecutive_complete_cycles", 0) or 0)
+    strict_cost_ready_pairs = int(venue.get("strict_cost_ready_pairs", 0) or 0)
+    strict_l2_ready_assets = int(venue.get("cost_collection_ready_assets", 0) or 0)
+    primary_blockers = [
+        (
+            "strict_pair_cost_requires_post_window_candidate_refresh"
+            if strict_cost_ready_pairs == 0 and strict_l2_ready_assets > 0
+            else "strict_pair_cost_evidence_missing"
+        ),
+        "vendor_formula_parity_unproven",
+        "independent_breadth_one_of_three",
+        f"daily_cadence_{daily_cycles}_of_seven",
+        "model_incremental_edge_not_accepted",
+        "realized_testnet_sample_absent",
+    ]
     completion = {
         "schema_version": SCHEMA_VERSION,
         "generated_at_utc": now.isoformat(),
@@ -139,15 +154,11 @@ def complete_corrective_plan(*, root: Path = ROOT, now: datetime | None = None) 
         "orders_submitted_by_corrective_program": 0,
         "testnet_order_authority": False,
         "live_trading_authorized": False,
-        "primary_blockers": [
-            "strict_pair_cost_evidence_missing",
-            "vendor_formula_parity_unproven",
-            "independent_breadth_one_of_three",
-            "daily_cadence_one_of_seven",
-            "model_incremental_edge_not_accepted",
-            "realized_testnet_sample_absent",
-        ],
-        "next_automatic_action": "l2_scheduler_collects_strict_cost_evidence_every_10_minutes_and_daily_research_scheduler_collects_next_calendar_day_evidence_at_0615_local",
+        "primary_blockers": primary_blockers,
+        "next_automatic_action": (
+            _next_strict_cost_action(venue)
+            + ";daily_research_scheduler_collects_next_calendar_day_evidence_at_0615_local"
+        ),
         "evidence_path": "reports/active/corrective_execution_plan.csv;reports/active/corrective_plan_phase_status.csv;reports/active/final_1x_survivor_receipt.json",
         "current_l2_candidate_pairs": int(final_l2_candidates["candidate_pairs"]),
         "current_l2_eligible_pairs": int(final_l2_candidates["eligible_pairs"]),
@@ -188,6 +199,16 @@ def _write_seven_stage_checkpoint(
     daily = phases["daily_cadence"].summary
     learning = phases["agent_learning_governance"].summary
     release = phases["conditional_release_gates"].summary
+    strict_cost_next_action = _next_strict_cost_action(venue)
+    strict_cost_blocker = (
+        "strict_pair_cost_requires_post_window_candidate_refresh"
+        if strict_cost_next_action.startswith("refresh_wizard_candidate")
+        else (
+            "strict_pair_cost_evidence_missing"
+            if int(venue.get("strict_cost_ready_pairs", 0)) == 0
+            else ""
+        )
+    )
     rows = [
         {
             "stage": 1,
@@ -205,10 +226,11 @@ def _write_seven_stage_checkpoint(
             "evidence_progress": (
                 f"history_ready={int(venue.get('history_ready_pairs', 0))};"
                 f"history_active_remediation={int(venue.get('history_queued_pairs', 0))};"
+                f"history_insufficient_asset_age={int(venue.get('history_insufficient_asset_age_pairs', 0))};"
                 f"strict_cost_ready_pairs={int(venue.get('strict_cost_ready_pairs', 0))}"
             ),
-            "blocker": "strict_pair_cost_evidence_missing" if int(venue.get("strict_cost_ready_pairs", 0)) == 0 else "",
-            "next_action": "l2_scheduler_collects_every_10_minutes",
+            "blocker": strict_cost_blocker,
+            "next_action": strict_cost_next_action,
             "evidence_path": "reports/active/hyperliquid_history_coverage.csv;reports/active/hyperliquid_cost_collection_status.csv",
         },
         {
@@ -242,10 +264,18 @@ def _write_seven_stage_checkpoint(
             "stage": 5,
             "objective": "leakage_safe_ml_and_rl_out_of_sample_acceptance",
             "status": "PASS" if str(learning.get("model_authority", "RESEARCH_ONLY")) != "RESEARCH_ONLY" else "BLOCKED",
-            "evidence_progress": f"model_authority={str(learning.get('model_authority', 'RESEARCH_ONLY'))}",
+            "evidence_progress": (
+                f"model_authority={str(learning.get('model_authority', 'RESEARCH_ONLY'))};"
+                f"rl_global_purge={bool(learning.get('rl_global_label_purge_ready', False))};"
+                f"rl_validation={bool(learning.get('rl_validation_passed', False))};"
+                f"rl_held_out_test={bool(learning.get('rl_held_out_test_passed', False))}"
+            ),
             "blocker": ";".join(str(value) for value in learning.get("model_blockers", learning.get("blockers", []))),
             "next_action": "retain_research_only_until_incremental_edge_and_monotonicity_pass",
-            "evidence_path": "reports/active/model_authority_status.json;reports/active/learning_label_audit.json",
+            "evidence_path": (
+                "reports/active/model_authority_status.json;reports/active/learning_label_audit.json;"
+                "reports/rl/rl_acceptance_report.csv;reports/rl/rl_split_audit.csv"
+            ),
         },
         {
             "stage": 6,
@@ -279,6 +309,16 @@ def _write_seven_stage_checkpoint(
         encoding="utf-8",
     )
     return csv_path, md_path
+
+
+def _next_strict_cost_action(venue: dict[str, Any]) -> str:
+    strict_pairs = int(venue.get("strict_cost_ready_pairs", 0) or 0)
+    ready_assets = int(venue.get("cost_collection_ready_assets", 0) or 0)
+    if strict_pairs > 0:
+        return "maintain_rolling_l2_collection_and_monitor_freshness"
+    if ready_assets > 0:
+        return "refresh_wizard_candidate_after_completed_l2_window_then_rematerialize_point_in_time_cost_evidence"
+    return "l2_scheduler_collects_every_10_minutes_until_strict_window_is_complete"
 
 
 def _completion_markdown(completion: dict[str, Any], plan: pd.DataFrame, phases: pd.DataFrame) -> str:

@@ -879,6 +879,10 @@ def test_trade_dataset_writes_leakage_audit_and_required_labels():
     assert {"good_trade", "profit_after_cost", "max_adverse_excursion", "max_favorable_excursion", "hold_bars", "exit_reason"}.issubset(dataset.columns)
     assert {"uses_future_data", "uses_dashboard_hindsight", "feature_completeness_score", "leakage_blocker", "evidence_path"}.issubset(audit.columns)
     assert not audit["uses_future_data"].astype(bool).any()
+    assert dataset["profit_after_cost"].ge(-1.0).all()
+    assert dataset["return_aggregation"].eq("compounded_bar_returns_zero_floor").all()
+    assert dataset["return_unit"].eq("fraction_of_equity").all()
+    assert audit["leakage_blocker"].fillna("").eq("").all()
 
 
 def test_system_check_reports_active_artifacts():

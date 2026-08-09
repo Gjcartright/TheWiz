@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from itertools import product
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
@@ -47,6 +49,7 @@ def run_rl_learning_cycle(
     path_agent = agents / "rl_learning_agent_experiments.csv"
     path_log = root / "data" / "agent_memory" / "rl_learning_agent.jsonl"
     path_copula_audit = reports / "rl_learning_copula_dashboard_join_audit.csv"
+    path_split_audit = reports / "rl_learning_split_audit.csv"
     copula_join_audit.to_csv(path_copula_audit, index=False)
 
     if dataset.empty:
@@ -72,6 +75,7 @@ def run_rl_learning_cycle(
         pd.DataFrame(columns=_learning_backtest_columns()).to_csv(path_backtest, index=False)
         pd.DataFrame(columns=_learning_idea_columns()).to_csv(path_learning_ideas, index=False)
         pd.DataFrame(columns=_learning_agent_columns()).to_csv(path_agent, index=False)
+        pd.DataFrame(columns=_split_audit_columns()).to_csv(path_split_audit, index=False)
         path_best.write_text("{}", encoding="utf-8")
         _append_cycle_memory(path_log, cycle_id, "blocked", "missing_trade_dataset", pair_id)
         return CommandResult(
@@ -82,24 +86,47 @@ def run_rl_learning_cycle(
                 "learning_ideas": path_learning_ideas,
                 "agent_experiments": path_agent,
                 "copula_dashboard_join_audit": path_copula_audit,
+                "split_audit": path_split_audit,
             },
             summary={"cycle_id": cycle_id, "status": "blocked", "policy_count": 0},
         )
 
+    ordered_dataset, partitions, split_audit = _chronological_rl_partitions(dataset)
+    split_audit.to_csv(path_split_audit, index=False)
+    split_ready = bool(not split_audit.empty and split_audit["status"].eq("ready").all())
+    split_blocker = "" if split_ready else _first_nonempty(split_audit.get("blocker", pd.Series(dtype=str)))
+    validation = partitions.get("validation", pd.DataFrame()) if split_ready else ordered_dataset
+    test = partitions.get("test", pd.DataFrame()) if split_ready else pd.DataFrame()
+    evaluation_split = "validation" if split_ready else "diagnostic_full_sample"
+
     policy_grid = _policy_grid(min(policy_candidates, 20))
+    policies_by_name = {str(policy["policy_name"]): policy for policy in policy_grid}
     evaluation_rows: list[dict[str, object]] = []
     per_policy_logs: list[pd.DataFrame] = []
+    baseline_validation = return_summary(
+        "validation_baseline",
+        validation,
+        _return_series(validation),
+        len(validation),
+    )
 
     for policy in policy_grid:
-        simulated = simulate_strategy_returns(dataset, policy)
+        simulated = simulate_strategy_returns(validation, policy)
         per_policy_log = simulated["frame"]
         per_policy_log = _add_policy_columns(per_policy_log, policy, cycle_id)
+        per_policy_log["evaluation_split"] = evaluation_split
         per_policy_logs.append(per_policy_log)
         entered_mask = per_policy_log.get("simulation_reason", pd.Series([""] * len(per_policy_log))).eq("entered")
-        summary = return_summary(policy["policy_name"], per_policy_log.loc[entered_mask], simulated["returns"], len(dataset))
+        summary = return_summary(policy["policy_name"], per_policy_log.loc[entered_mask], simulated["returns"], len(validation))
         summary["pair_id"] = pair_id
         summary["cycle_id"] = cycle_id
         summary["policy_name"] = policy["policy_name"]
+        summary["evaluation_split"] = evaluation_split
+        summary["split_ready"] = split_ready
+        summary["split_blocker"] = split_blocker
+        summary["training_rows"] = int(len(partitions.get("train", pd.DataFrame())))
+        summary["validation_rows"] = int(len(validation))
+        summary["test_rows"] = int(len(test))
         summary["entry_threshold"] = policy.get("entry_threshold", "")
         summary["max_position_fraction"] = policy.get("max_position_fraction", "")
         summary["volatility_penalty_weight"] = policy.get("volatility_penalty_weight", "")
@@ -110,29 +137,72 @@ def run_rl_learning_cycle(
         summary["session_loss_cap_pct"] = policy.get("session_loss_cap_pct", "")
         summary["top_pairs_entered"] = _top_pairs_entered(per_policy_log, entered_mask)
         summary["winner"] = 0
+        summary.update(_policy_gate_outcomes(summary, baseline_validation, len(validation), prefix="validation"))
+        summary["status"] = "blocked"
+        summary["live_enabled"] = False
         evaluation_rows.append(summary)
-
-    backtest_log = pd.concat(per_policy_logs, ignore_index=True) if per_policy_logs else pd.DataFrame(columns=_learning_backtest_columns())
-    backtest_log = _coerce_numeric_cols(backtest_log)
 
     backtests = pd.DataFrame(evaluation_rows)
     if backtests.empty:
         backtests = pd.DataFrame(columns=_learning_backtest_columns())
 
-    best_row = backtests.sort_values("profit_factor", ascending=False).head(1)
+    best_row = _select_policy_candidate(backtests)
     if best_row.empty:
         best_payload: dict[str, object] = {"status": "blocked", "blocker": "no_candidate_generated", "cycle_id": cycle_id}
     else:
         top = best_row.iloc[0]
         backtests.loc[backtests.index == top.name, "winner"] = 1
         best_payload = top.to_dict()
-        best_payload["status"] = "ready"
-        best_payload["blocker"] = ""
+        selected_policy = policies_by_name[str(top.get("policy_name", ""))]
+        test_gate_passed = False
+        test_log = pd.DataFrame()
+        if split_ready and not test.empty:
+            simulated_test = simulate_strategy_returns(test, selected_policy)
+            test_log = _add_policy_columns(simulated_test["frame"], selected_policy, cycle_id)
+            test_log["evaluation_split"] = "held_out_test"
+            entered_test = test_log.get("simulation_reason", pd.Series([""] * len(test_log))).eq("entered")
+            test_summary = return_summary(
+                str(selected_policy["policy_name"]),
+                test_log.loc[entered_test],
+                simulated_test["returns"],
+                len(test),
+            )
+            baseline_test = return_summary("test_baseline", test, _return_series(test), len(test))
+            test_gates = _policy_gate_outcomes(test_summary, baseline_test, len(test), prefix="test")
+            test_gate_passed = bool(test_gates["test_eligible"])
+            for key, value in test_summary.items():
+                if key != "variant":
+                    best_payload[f"test_{key}"] = value
+            best_payload.update(test_gates)
+            best_payload.update(
+                {
+                    "test_baseline_profit_factor": baseline_test["profit_factor"],
+                    "test_baseline_sharpe": baseline_test["sharpe"],
+                    "test_baseline_max_drawdown": baseline_test["max_drawdown"],
+                }
+            )
+            per_policy_logs.append(test_log)
+
+        validation_passed = bool(top.get("validation_eligible", False)) and split_ready
+        oos_validated = validation_passed and test_gate_passed
+        best_payload["policy_selection_status"] = "OOS_VALIDATED" if oos_validated else "REJECTED"
+        best_payload["status"] = "research_only" if oos_validated else "blocked"
+        best_payload["blocker"] = "rl_live_use_blocked" if oos_validated else (
+            split_blocker or "validation_or_held_out_test_gates_not_met"
+        )
+        best_payload["live_enabled"] = False
         best_payload["created_at"] = _now()
+        backtests.loc[backtests.index == top.name, "status"] = best_payload["status"]
+        backtests.loc[backtests.index == top.name, "policy_selection_status"] = best_payload["policy_selection_status"]
+        backtests.loc[backtests.index == top.name, "blocker"] = best_payload["blocker"]
+        for key, value in best_payload.items():
+            if str(key).startswith("test_"):
+                backtests.loc[backtests.index == top.name, key] = value
     best_payload.setdefault("created_at", _now())
 
+    backtest_log = pd.concat(per_policy_logs, ignore_index=True) if per_policy_logs else pd.DataFrame(columns=_learning_backtest_columns())
+    backtest_log = _coerce_numeric_cols(backtest_log)
     backtests["created_at"] = backtests.get("created_at", pd.Series(dtype=object)).fillna(_now())
-    best_payload_path = {"cycle_id": cycle_id, "status": best_payload.get("status", "blocked"), "policy": best_payload.get("policy_name", "")}
     _write_json(path_best, best_payload)
 
     ideas = _build_learning_ideas(backtest_log, best_payload)
@@ -150,6 +220,10 @@ def run_rl_learning_cycle(
                 "winner_profit_factor": float(best_payload.get("profit_factor", 0.0) or 0.0),
                 "status": best_payload.get("status", "blocked"),
                 "blocker": best_payload.get("blocker", ""),
+                "policy_selection_status": best_payload.get("policy_selection_status", "REJECTED"),
+                "oos_test_passed": bool(best_payload.get("test_eligible", False)),
+                "split_ready": split_ready,
+                "live_enabled": False,
                 "generated_at": _now(),
                 "copula_dashboard_attached": int(copula_join_audit.get("join_status", pd.Series(dtype=str)).eq("attached").sum()),
                 "copula_dashboard_stale": int(copula_join_audit.get("join_status", pd.Series(dtype=str)).eq("stale_snapshot").sum()),
@@ -160,10 +234,16 @@ def run_rl_learning_cycle(
     _append_cycle_memory(
         path_log,
         cycle_id,
-        "passed" if str(best_payload.get("status", "blocked")) == "ready" else "failed",
+        "passed" if str(best_payload.get("policy_selection_status", "")) == "OOS_VALIDATED" else "failed",
         str(best_payload.get("blocker", "")) if str(best_payload.get("status", "")) != "ready" else "",
         pair_id,
-        extra={"winner_policy": best_payload.get("policy_name", ""), "best_profit_factor": best_payload.get("profit_factor", 0.0)},
+        extra={
+            "winner_policy": best_payload.get("policy_name", ""),
+            "best_profit_factor": best_payload.get("profit_factor", 0.0),
+            "policy_selection_status": best_payload.get("policy_selection_status", "REJECTED"),
+            "split_ready": split_ready,
+            "live_enabled": False,
+        },
     )
 
     return CommandResult(
@@ -174,6 +254,7 @@ def run_rl_learning_cycle(
             "learning_ideas": path_learning_ideas,
             "agent_experiments": path_agent,
             "copula_dashboard_join_audit": path_copula_audit,
+            "split_audit": path_split_audit,
         },
         summary={
             "cycle_id": cycle_id,
@@ -185,44 +266,253 @@ def run_rl_learning_cycle(
     )
 
 
+def _chronological_rl_partitions(
+    frame: pd.DataFrame,
+    *,
+    train_fraction: float = 0.60,
+    validation_fraction: float = 0.20,
+    minimum_rows: tuple[int, int, int] = (50, 30, 30),
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame], pd.DataFrame]:
+    ordered = frame.copy()
+    entry_column = next((name for name in ("feature_timestamp", "entry_timestamp") if name in ordered.columns), "")
+    label_column = next((name for name in ("label_timestamp", "exit_timestamp") if name in ordered.columns), "")
+    if not entry_column or not label_column:
+        audit = _blocked_split_audit("missing_entry_or_label_timestamp")
+        return ordered, {}, audit
+
+    ordered["_rl_entry_time"] = pd.to_datetime(ordered[entry_column], utc=True, errors="coerce", format="mixed")
+    ordered["_rl_label_time"] = pd.to_datetime(ordered[label_column], utc=True, errors="coerce", format="mixed")
+    valid = ordered["_rl_entry_time"].notna() & ordered["_rl_label_time"].notna()
+    valid &= ordered["_rl_entry_time"].lt(ordered["_rl_label_time"])
+    if not bool(valid.all()):
+        audit = _blocked_split_audit(
+            "invalid_or_noncausal_entry_label_timestamps",
+            source_rows=len(ordered),
+            invalid_rows=int((~valid).sum()),
+        )
+        return ordered, {}, audit
+
+    ordered = ordered.sort_values(["_rl_entry_time", "_rl_label_time"]).reset_index(drop=True)
+    unique_entries = pd.Index(ordered["_rl_entry_time"].drop_duplicates().sort_values())
+    if len(unique_entries) < 5:
+        audit = _blocked_split_audit(
+            "insufficient_unique_entry_timestamps_for_three_way_split",
+            source_rows=len(ordered),
+            unique_entry_timestamps=len(unique_entries),
+        )
+        return ordered, {}, audit
+
+    train_boundary_index = min(max(1, int(len(unique_entries) * train_fraction)), len(unique_entries) - 2)
+    test_boundary_index = min(
+        max(train_boundary_index + 1, int(len(unique_entries) * (train_fraction + validation_fraction))),
+        len(unique_entries) - 1,
+    )
+    validation_start = unique_entries[train_boundary_index]
+    test_start = unique_entries[test_boundary_index]
+
+    raw_masks = {
+        "train": ordered["_rl_entry_time"].lt(validation_start),
+        "validation": ordered["_rl_entry_time"].ge(validation_start) & ordered["_rl_entry_time"].lt(test_start),
+        "test": ordered["_rl_entry_time"].ge(test_start),
+    }
+    retained_masks = {
+        "train": raw_masks["train"] & ordered["_rl_label_time"].lt(validation_start),
+        "validation": raw_masks["validation"] & ordered["_rl_label_time"].lt(test_start),
+        "test": raw_masks["test"],
+    }
+    partitions = {
+        name: ordered.loc[mask].drop(columns=["_rl_entry_time", "_rl_label_time"]).reset_index(drop=True)
+        for name, mask in retained_masks.items()
+    }
+
+    counts = {name: len(partitions[name]) for name in ("train", "validation", "test")}
+    blockers = [
+        f"insufficient_{name}_rows_after_global_label_purge:{counts[name]}<{minimum}"
+        for name, minimum in zip(("train", "validation", "test"), minimum_rows)
+        if counts[name] < minimum
+    ]
+    status = "ready" if not blockers else "blocked"
+    blocker = ";".join(blockers)
+    rows: list[dict[str, object]] = []
+    for name in ("train", "validation", "test"):
+        retained = retained_masks[name]
+        split_entries = ordered.loc[retained, "_rl_entry_time"]
+        split_labels = ordered.loc[retained, "_rl_label_time"]
+        rows.append(
+            {
+                "split": name,
+                "status": status,
+                "blocker": blocker,
+                "source_rows": int(len(ordered)),
+                "raw_split_rows": int(raw_masks[name].sum()),
+                "retained_rows": int(retained.sum()),
+                "purged_overlap_rows": int(raw_masks[name].sum() - retained.sum()),
+                "unique_entry_timestamps": int(split_entries.nunique()),
+                "entry_start": split_entries.min().isoformat() if not split_entries.empty else "",
+                "entry_end": split_entries.max().isoformat() if not split_entries.empty else "",
+                "label_end_max": split_labels.max().isoformat() if not split_labels.empty else "",
+                "validation_start": validation_start.isoformat(),
+                "test_start": test_start.isoformat(),
+                "pair_count": int(partitions[name].get("pair", pd.Series(dtype=str)).astype(str).nunique()),
+                "timeframe_count": int(partitions[name].get("timeframe", pd.Series(dtype=str)).astype(str).nunique()),
+                "global_label_purge": True,
+                "selection_use": "policy_selection" if name == "validation" else ("untouched_evaluation" if name == "test" else "diagnostic_only"),
+            }
+        )
+    return ordered.drop(columns=["_rl_entry_time", "_rl_label_time"]), partitions, pd.DataFrame(rows)
+
+
+def _blocked_split_audit(blocker: str, **values: object) -> pd.DataFrame:
+    rows = []
+    for name in ("train", "validation", "test"):
+        row = {
+            "split": name,
+            "status": "blocked",
+            "blocker": blocker,
+            "source_rows": int(values.get("source_rows", 0) or 0),
+            "raw_split_rows": 0,
+            "retained_rows": 0,
+            "purged_overlap_rows": 0,
+            "unique_entry_timestamps": int(values.get("unique_entry_timestamps", 0) or 0),
+            "entry_start": "",
+            "entry_end": "",
+            "label_end_max": "",
+            "validation_start": "",
+            "test_start": "",
+            "pair_count": 0,
+            "timeframe_count": 0,
+            "global_label_purge": True,
+            "selection_use": "blocked",
+            "invalid_rows": int(values.get("invalid_rows", 0) or 0),
+        }
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def _return_series(frame: pd.DataFrame) -> pd.Series:
+    for column in ("profit_after_cost", "realized_return", "trade_return", "return", "returns"):
+        if column in frame.columns:
+            return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
+    return pd.Series(0.0, index=frame.index)
+
+
+def _policy_gate_outcomes(
+    summary: dict[str, object],
+    baseline: dict[str, object],
+    total_rows: int,
+    *,
+    prefix: str,
+) -> dict[str, object]:
+    minimum_trades = max(20, int(np.ceil(max(total_rows, 1) * 0.25)))
+    checks = {
+        "profit_factor_improves": float(summary.get("profit_factor", 0.0) or 0.0) > float(baseline.get("profit_factor", 0.0) or 0.0),
+        "drawdown_not_worse": float(summary.get("max_drawdown", 1.0) or 1.0) <= float(baseline.get("max_drawdown", 1.0) or 1.0),
+        "sharpe_not_materially_worse": float(summary.get("sharpe", 0.0) or 0.0) >= float(baseline.get("sharpe", 0.0) or 0.0) - 0.25,
+        "minimum_trades": int(summary.get("trades", 0) or 0) >= minimum_trades,
+        "minimum_take_rate": float(summary.get("take_rate", 0.0) or 0.0) >= 0.05,
+        "pair_concentration": float(summary.get("pair_concentration", 1.0) or 1.0) <= 0.65,
+        "timeframe_concentration": float(summary.get("timeframe_concentration", 1.0) or 1.0) <= 0.65,
+    }
+    failed = [name for name, passed in checks.items() if not passed]
+    output: dict[str, object] = {
+        f"{prefix}_eligible": not failed,
+        f"{prefix}_gate_count": int(sum(checks.values())),
+        f"{prefix}_gate_failures": ";".join(failed),
+        f"{prefix}_minimum_trades": minimum_trades,
+        f"{prefix}_baseline_profit_factor": baseline.get("profit_factor", 0.0),
+        f"{prefix}_baseline_sharpe": baseline.get("sharpe", 0.0),
+        f"{prefix}_baseline_max_drawdown": baseline.get("max_drawdown", 0.0),
+    }
+    output.update({f"{prefix}_gate_{name}": bool(passed) for name, passed in checks.items()})
+    return output
+
+
+def _select_policy_candidate(backtests: pd.DataFrame) -> pd.DataFrame:
+    if backtests.empty:
+        return backtests.head(0)
+    ranked = backtests.copy()
+    ranked["_eligible_rank"] = ranked.get("validation_eligible", False).fillna(False).astype(bool).astype(int)
+    ranked["_gate_rank"] = pd.to_numeric(ranked.get("validation_gate_count", 0), errors="coerce").fillna(0)
+    ranked["_pf_rank"] = pd.to_numeric(ranked.get("profit_factor", 0.0), errors="coerce").replace([np.inf, -np.inf], 10.0).fillna(0.0).clip(upper=10.0)
+    ranked["_sharpe_rank"] = pd.to_numeric(ranked.get("sharpe", 0.0), errors="coerce").fillna(0.0)
+    ranked["_drawdown_rank"] = pd.to_numeric(ranked.get("max_drawdown", 1.0), errors="coerce").fillna(1.0)
+    ranked["_trades_rank"] = pd.to_numeric(ranked.get("trades", 0), errors="coerce").fillna(0)
+    ranked = ranked.sort_values(
+        ["_eligible_rank", "_gate_rank", "_pf_rank", "_sharpe_rank", "_drawdown_rank", "_trades_rank", "policy_name"],
+        ascending=[False, False, False, False, True, False, True],
+    )
+    return backtests.loc[[ranked.index[0]]]
+
+
+def _first_nonempty(series: pd.Series) -> str:
+    values = series.fillna("").astype(str)
+    values = values[values.str.strip().ne("")]
+    return values.iloc[0] if not values.empty else "rl_chronological_split_not_ready"
+
+
 def _policy_grid(max_policies: int) -> list[dict[str, object]]:
     thresholds = [0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
     hold_caps = [0.15, 0.30, 0.45]
     volatility_weights = [0.15, 0.25, 0.35]
     stop_losses = [0.03, 0.05, 0.07]
     session_caps = [0.10, 0.15]
+    dimensions = [thresholds, hold_caps, volatility_weights, stop_losses, session_caps]
+    index_combinations = list(product(*(range(len(values)) for values in dimensions)))
+    target_count = min(max_policies, len(index_combinations))
+    threshold_seeds = [
+        (
+            index,
+            index % len(hold_caps),
+            (index // 2) % len(volatility_weights),
+            (index * 2) % len(stop_losses),
+            index % len(session_caps),
+        )
+        for index in range(len(thresholds))
+    ]
+    selected = threshold_seeds[:target_count]
+    while len(selected) < target_count:
+        remaining = [combo for combo in index_combinations if combo not in selected]
+        best = max(
+            remaining,
+            key=lambda combo: (
+                min(_normalized_grid_distance(combo, chosen, dimensions) for chosen in selected),
+                combo,
+            ),
+        )
+        selected.append(best)
+
     rows = []
-    policy_id = 1
-    for threshold in thresholds:
-        for hold_cap in hold_caps:
-            for vol in volatility_weights:
-                for stop_loss in stop_losses:
-                    for session_cap in session_caps:
-                        if len(rows) >= max_policies:
-                            break
-                        rows.append(
-                            {
-                                "policy_name": f"learning_policy_{policy_id:03d}",
-                                "entry_threshold": float(threshold),
-                                "max_position_fraction": 1.0,
-                                "volatility_penalty_weight": float(vol),
-                                "hold_cap_pct": float(hold_cap),
-                                "stop_loss_pct": float(stop_loss),
-                                "take_profit_pct": float(max(stop_loss * 2.0, 0.08)),
-                                "max_trade_drawdown_pct": float(max(stop_loss * 1.25, stop_loss)),
-                                "session_loss_cap_pct": float(session_cap),
-                            }
-                        )
-                        policy_id += 1
-                    if len(rows) >= max_policies:
-                        break
-                if len(rows) >= max_policies:
-                    break
-            if len(rows) >= max_policies:
-                break
-        if len(rows) >= max_policies:
-            break
+    for policy_id, indexes in enumerate(selected, start=1):
+        threshold, hold_cap, vol, stop_loss, session_cap = (
+            dimensions[position][index] for position, index in enumerate(indexes)
+        )
+        rows.append(
+            {
+                "policy_name": f"learning_policy_{policy_id:03d}",
+                "entry_threshold": float(threshold),
+                "max_position_fraction": 1.0,
+                "volatility_penalty_weight": float(vol),
+                "hold_cap_pct": float(hold_cap),
+                "stop_loss_pct": float(stop_loss),
+                "take_profit_pct": float(max(stop_loss * 2.0, 0.08)),
+                "max_trade_drawdown_pct": float(max(stop_loss * 1.25, stop_loss)),
+                "session_loss_cap_pct": float(session_cap),
+            }
+        )
     return rows
+
+
+def _normalized_grid_distance(
+    left: tuple[int, ...],
+    right: tuple[int, ...],
+    dimensions: list[list[float]],
+) -> float:
+    return float(
+        sum(
+            ((left[index] - right[index]) / max(len(dimensions[index]) - 1, 1)) ** 2
+            for index in range(len(dimensions))
+        )
+    )
 
 
 def _add_policy_columns(frame: pd.DataFrame, policy: dict[str, object], cycle_id: str) -> pd.DataFrame:
@@ -256,6 +546,10 @@ def _build_learning_ideas(log: pd.DataFrame, best_payload: dict[str, object]) ->
     candidate = log[log.get("policy_name") == winner] if "policy_name" in log.columns else log.iloc[0:0]
     if candidate.empty:
         candidate = log
+    if "evaluation_split" in candidate.columns:
+        validation_only = candidate[candidate["evaluation_split"].astype(str).isin({"validation", "diagnostic_full_sample"})]
+        if not validation_only.empty:
+            candidate = validation_only
     candidate = candidate[candidate.get("simulation_reason", "") == "entered"].copy() if "simulation_reason" in candidate.columns else candidate
     if candidate.empty:
         return pd.DataFrame(columns=cols)
@@ -278,6 +572,9 @@ def _build_learning_ideas(log: pd.DataFrame, best_payload: dict[str, object]) ->
             "idea_type": "rl_learning_cycle_entry",
             "cycle_id": candidate.get("policy_cycle_id", pd.Series([_now()] * len(candidate), index=candidate.index)),
             "policy": winner,
+            "authority": "research_only" if best_payload.get("policy_selection_status") == "OOS_VALIDATED" else "blocked_research_hypothesis",
+            "evidence_split": candidate.get("evaluation_split", pd.Series(["diagnostic_full_sample"] * len(candidate), index=candidate.index)),
+            "blocker": str(best_payload.get("blocker", "")),
             "generated_at": _now(),
         }
     )
@@ -352,12 +649,51 @@ def _learning_idea_columns() -> list[str]:
         "idea_type",
         "cycle_id",
         "policy",
+        "authority",
+        "evidence_split",
+        "blocker",
         "generated_at",
     ]
 
 
 def _learning_agent_columns() -> list[str]:
-    return ["cycle_id", "pair_filter", "candidate_policies", "winner_policy", "winner_profit_factor", "status", "blocker", "generated_at"]
+    return [
+        "cycle_id",
+        "pair_filter",
+        "candidate_policies",
+        "winner_policy",
+        "winner_profit_factor",
+        "status",
+        "blocker",
+        "policy_selection_status",
+        "oos_test_passed",
+        "split_ready",
+        "live_enabled",
+        "generated_at",
+    ]
+
+
+def _split_audit_columns() -> list[str]:
+    return [
+        "split",
+        "status",
+        "blocker",
+        "source_rows",
+        "raw_split_rows",
+        "retained_rows",
+        "purged_overlap_rows",
+        "unique_entry_timestamps",
+        "entry_start",
+        "entry_end",
+        "label_end_max",
+        "validation_start",
+        "test_start",
+        "pair_count",
+        "timeframe_count",
+        "global_label_purge",
+        "selection_use",
+        "invalid_rows",
+    ]
 
 
 def _append_cycle_memory(

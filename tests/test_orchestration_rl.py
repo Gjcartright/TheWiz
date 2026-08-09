@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -13,9 +15,15 @@ from quant_platform.rl.features import build_rl_feature_frame
 from quant_platform.rl.pair_trading_env import PairTradingEnv
 from quant_platform.rl.quantization import export_rl_policy
 from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
-from quant_platform.rl.rl_learning_agent import run_magicka_learning_cycle, run_sequential_thinking_magicka
+from quant_platform.rl.rl_learning_agent import (
+    _chronological_rl_partitions,
+    _policy_grid,
+    run_magicka_learning_cycle,
+    run_sequential_thinking_magicka,
+)
 from quant_platform.rl.brain_cycle import build_brain_readiness_report, run_brain_cycle
-from quant_platform.rl.rl_backtest import run_rl_research
+from quant_platform.rl.rl_acceptance import rl_acceptance_report
+from quant_platform.rl.rl_backtest import run_rl_research, simulate_strategy_returns
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
 
@@ -563,6 +571,157 @@ def test_magicka_learning_cycle_runs_and_writes_artifacts(tmp_path):
     assert {"policy_name", "pair", "idea_type", "generated_at", "exit_reason", "stop_triggered"}.issubset(set(ideas.columns))
     assert {"stop_loss_pct", "session_loss_cap_pct"}.issubset(set(summary.columns))
     assert not agent_frame.empty
+
+
+def test_rl_policy_grid_covers_every_parameter_axis_before_expansion():
+    policies = _policy_grid(12)
+
+    assert len(policies) == 12
+    assert {policy["entry_threshold"] for policy in policies} == {0.55, 0.60, 0.65, 0.70, 0.75, 0.80}
+    assert {policy["hold_cap_pct"] for policy in policies} == {0.15, 0.30, 0.45}
+    assert {policy["volatility_penalty_weight"] for policy in policies} == {0.15, 0.25, 0.35}
+    assert {policy["stop_loss_pct"] for policy in policies} == {0.03, 0.05, 0.07}
+    assert {policy["session_loss_cap_pct"] for policy in policies} == {0.10, 0.15}
+
+
+def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign_flip():
+    frame = pd.DataFrame(
+        [
+            {
+                "trade_id": "T1",
+                "pair": "BTC-USD/ETH-USD",
+                "profit_after_cost": 0.10,
+                "trade_cost_drag": 0.20,
+                "entry_abs_zscore": 2.0,
+                "trade_bars": 10,
+                "hold_bars": 10,
+                "signal_side": "short_spread",
+                "max_adverse_excursion": 0.0,
+                "max_favorable_excursion": 0.0,
+                "timeframe": "1h",
+            }
+        ]
+    )
+    policy = {
+        "policy_name": "mechanics_check",
+        "entry_threshold": 1.0,
+        "hold_cap_pct": 1.0,
+        "volatility_penalty_weight": 0.0,
+        "min_hold_bars": 10,
+        "stop_loss_pct": 0.50,
+        "take_profit_pct": 0.50,
+        "max_trade_drawdown_pct": 0.50,
+        "session_loss_cap_pct": 1.0,
+    }
+
+    result = simulate_strategy_returns(frame, policy)
+
+    assert result["returns"].iloc[0] == pytest.approx(0.10)
+    assert result["frame"].iloc[0]["return_basis"] == "net_after_cost_strategy_return"
+    assert "no_second_cost_charge" in result["frame"].iloc[0]["cost_treatment"]
+
+
+def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
+    full_sample_only = pd.DataFrame(
+        [
+            {
+                "variant": "non_rl_baseline",
+                "trades": 100,
+                "take_rate": 1.0,
+                "profit_factor": 1.0,
+                "sharpe": 0.5,
+                "max_drawdown": 0.20,
+                "pair_concentration": 0.5,
+                "timeframe_concentration": 0.5,
+            },
+            {
+                "variant": "safe_rl_policy",
+                "trades": 50,
+                "take_rate": 0.5,
+                "profit_factor": 2.0,
+                "sharpe": 1.0,
+                "max_drawdown": 0.10,
+                "pair_concentration": 0.5,
+                "timeframe_concentration": 0.5,
+            },
+        ]
+    )
+    rejected = rl_acceptance_report(full_sample_only)
+
+    assert not bool(rejected.iloc[0]["accepted"])
+    assert rejected.iloc[0]["blocker"] == "missing_rl_out_of_sample_evidence"
+
+    oos = pd.concat(
+        [
+            full_sample_only.assign(evaluation_split="validation"),
+            full_sample_only.assign(evaluation_split="held_out_test"),
+        ],
+        ignore_index=True,
+    )
+    accepted = rl_acceptance_report(oos)
+
+    assert bool(accepted.iloc[0]["accepted"])
+    assert bool(accepted.iloc[0]["validation_passed"])
+    assert bool(accepted.iloc[0]["held_out_test_passed"])
+
+
+def test_rl_chronological_split_globally_purges_overlapping_labels():
+    entry_times = pd.date_range("2025-01-01", periods=200, freq="D", tz="UTC")
+    label_times = entry_times + pd.Timedelta(hours=1)
+    label_times = pd.Series(label_times)
+    label_times.iloc[110:120] = entry_times[130]
+    frame = pd.DataFrame(
+        {
+            "pair": [f"P{index % 5}-USD/Q{index % 7}-USD" for index in range(200)],
+            "timeframe": ["1h" if index % 2 else "4h" for index in range(200)],
+            "feature_timestamp": entry_times,
+            "label_timestamp": label_times,
+            "profit_after_cost": [0.01 if index % 3 else -0.01 for index in range(200)],
+        }
+    )
+
+    _, partitions, audit = _chronological_rl_partitions(frame)
+
+    assert audit["status"].eq("ready").all()
+    assert int(audit.loc[audit["split"] == "train", "purged_overlap_rows"].iloc[0]) == 10
+    validation_start = pd.Timestamp(audit.loc[audit["split"] == "train", "validation_start"].iloc[0])
+    assert pd.to_datetime(partitions["train"]["label_timestamp"], utc=True).lt(validation_start).all()
+
+
+def test_magicka_oos_selection_rejects_single_pair_and_timeframe_concentration(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    data_ml.mkdir(parents=True)
+    entry_times = pd.date_range("2025-01-01", periods=200, freq="D", tz="UTC")
+    pd.DataFrame(
+        {
+            "pair": ["BTC-USD/ETH-USD"] * 200,
+            "trade_id": [f"T{index}" for index in range(200)],
+            "profit_after_cost": [0.03 if index % 3 else -0.01 for index in range(200)],
+            "entry_abs_zscore": [0.5 + (index % 20) / 10 for index in range(200)],
+            "trade_bars": [10] * 200,
+            "hold_bars": [8] * 200,
+            "strategy_name": ["Static Spread"] * 200,
+            "timeframe": ["1h"] * 200,
+            "signal_side": ["long_spread"] * 200,
+            "max_adverse_excursion": [0.01] * 200,
+            "max_favorable_excursion": [0.04] * 200,
+            "feature_timestamp": entry_times,
+            "label_timestamp": entry_times + pd.Timedelta(hours=1),
+        }
+    ).to_csv(data_ml / "trade_training_dataset.csv", index=False)
+
+    result = run_magicka_learning_cycle(root=tmp_path, policy_candidates=12)
+    summary = pd.read_csv(result.paths["summary"])
+    split_audit = pd.read_csv(result.paths["split_audit"])
+    best = json.loads(result.paths["best_policy"].read_text(encoding="utf-8"))
+
+    assert split_audit["status"].eq("ready").all()
+    assert summary["winner"].eq(1).sum() == 1
+    assert best["policy_selection_status"] == "REJECTED"
+    assert best["status"] == "blocked"
+    assert best["live_enabled"] is False
+    assert "pair_concentration" in best["validation_gate_failures"]
+    assert "timeframe_concentration" in best["validation_gate_failures"]
 
 
 def test_rl_learning_cycle_marks_stop_loss_when_risk_limit_hit(tmp_path):

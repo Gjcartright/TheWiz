@@ -156,6 +156,13 @@ def test_history_remediation_excludes_intentionally_deferred_and_structural_rows
                 "selected_for_materialization": False,
                 "history_status": "BLOCKED_HANDOFF_REQUEST",
             },
+            {
+                **common,
+                "pair_group_key": "d",
+                "selected_for_materialization": True,
+                "history_status": "BLOCKED",
+                "history_blocker": "insufficient_point_in_time_history",
+            },
         ]
     ).to_csv(active / "current_wizard_hyperliquid_pair_history_results.csv", index=False)
 
@@ -166,9 +173,11 @@ def test_history_remediation_excludes_intentionally_deferred_and_structural_rows
     assert result["queued"] == 1
     assert result["deferred"] == 1
     assert result["structurally_blocked"] == 1
+    assert result["insufficient_asset_age"] == 1
     assert queue["pair_group_key"].tolist() == ["a"]
     assert set(coverage["history_coverage_class"]) == {
         "ACTIVE_REMEDIATION",
         "DEFERRED_NOT_SELECTED",
         "STRUCTURALLY_BLOCKED",
+        "INSUFFICIENT_ASSET_AGE",
     }

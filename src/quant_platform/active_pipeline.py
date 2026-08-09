@@ -4775,8 +4775,16 @@ def _harden_trade_dataset(frame: pd.DataFrame) -> pd.DataFrame:
     hardened = frame.copy()
     hardened["good_trade"] = hardened.get(TARGET_COLUMN, 0)
     hardened["profit_after_cost"] = hardened.get(RETURN_COLUMN, 0.0)
-    hardened["max_adverse_excursion"] = np.minimum(hardened["profit_after_cost"].astype(float), 0.0)
-    hardened["max_favorable_excursion"] = np.maximum(hardened["profit_after_cost"].astype(float), 0.0)
+    fallback_adverse = pd.Series(np.minimum(hardened["profit_after_cost"].astype(float), 0.0), index=hardened.index)
+    fallback_favorable = pd.Series(np.maximum(hardened["profit_after_cost"].astype(float), 0.0), index=hardened.index)
+    hardened["max_adverse_excursion"] = pd.to_numeric(
+        hardened.get("max_adverse_excursion", fallback_adverse), errors="coerce"
+    ).fillna(fallback_adverse)
+    hardened["max_favorable_excursion"] = pd.to_numeric(
+        hardened.get("max_favorable_excursion", fallback_favorable), errors="coerce"
+    ).fillna(fallback_favorable)
+    hardened["return_aggregation"] = hardened.get("return_aggregation", "legacy_terminal_return")
+    hardened["return_unit"] = hardened.get("return_unit", "fraction_of_equity")
     hardened["hold_bars"] = hardened.get("trade_bars", 0)
     hardened["exit_reason"] = "strategy_exit"
     hardened["feature_timestamp"] = hardened.get("entry_timestamp", "")
@@ -4896,12 +4904,19 @@ def _ensure_trade_dataset_inputs(frame: pd.DataFrame) -> pd.DataFrame:
 def _leakage_audit(frame: pd.DataFrame) -> pd.DataFrame:
     entry = pd.to_datetime(frame.get("feature_timestamp", pd.Series(dtype=str)), utc=True, errors="coerce", format="mixed")
     label = pd.to_datetime(frame.get("label_timestamp", pd.Series(dtype=str)), utc=True, errors="coerce", format="mixed")
+    returns = pd.to_numeric(frame.get("profit_after_cost", pd.Series(np.nan, index=frame.index)), errors="coerce")
     uses_future = entry.notna() & label.notna() & (entry >= label)
     invalid_entry = entry.isna() | ~entry.dt.year.between(2009, pd.Timestamp.now(tz="UTC").year + 1)
     invalid_label = label.isna() | ~label.dt.year.between(2009, pd.Timestamp.now(tz="UTC").year + 1)
+    invalid_return = returns.isna() | ~np.isfinite(returns) | returns.lt(-1.0 - 1e-9)
     blocker = np.select(
-        [invalid_entry, invalid_label, uses_future],
-        ["invalid_or_missing_feature_timestamp", "invalid_or_missing_label_timestamp", "feature_timestamp_not_before_label_timestamp"],
+        [invalid_entry, invalid_label, uses_future, invalid_return],
+        [
+            "invalid_or_missing_feature_timestamp",
+            "invalid_or_missing_label_timestamp",
+            "feature_timestamp_not_before_label_timestamp",
+            "invalid_fractional_equity_return_below_minus_one",
+        ],
         default="",
     )
     return pd.DataFrame(
@@ -4912,6 +4927,9 @@ def _leakage_audit(frame: pd.DataFrame) -> pd.DataFrame:
             "uses_future_data": uses_future,
             "uses_dashboard_hindsight": frame.get("uses_dashboard_hindsight", False),
             "feature_completeness_score": frame.get("feature_completeness_score", 0.0),
+            "profit_after_cost": returns,
+            "return_aggregation": frame.get("return_aggregation", ""),
+            "return_unit": frame.get("return_unit", ""),
             "leakage_blocker": blocker,
             "evidence_path": frame.get("evidence_path", ""),
         }

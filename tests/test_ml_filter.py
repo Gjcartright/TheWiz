@@ -4,9 +4,11 @@ import pickle
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from quant_platform.experiments import PairDataset
 from quant_platform.ml_filter import (
+    _compounded_return_path,
     _model_selection_score,
     _purged_pair_aware_splits,
     _select_probability_threshold,
@@ -146,6 +148,18 @@ def test_build_trade_filter_dataset_creates_candidate_entry_rows():
     assert {"trade_id", "entry_timestamp", "exit_timestamp", "label_profitable", "realized_return"}.issubset(frame.columns)
     assert frame["entry_timestamp"].lt(frame["exit_timestamp"]).all()
     assert set(frame["signal_side"]).issubset({"long_spread", "short_spread"})
+    assert frame["realized_return"].ge(-1.0).all()
+    assert frame["max_adverse_excursion"].ge(-1.0).all()
+    assert frame["return_aggregation"].eq("compounded_bar_returns_zero_floor").all()
+    assert frame["return_unit"].eq("fraction_of_equity").all()
+
+
+def test_trade_return_path_compounds_fractional_bar_returns_and_floors_bankruptcy():
+    path = _compounded_return_path(pd.Series([0.10, -0.10]))
+    bankrupt = _compounded_return_path(pd.Series([0.05, -1.20, 0.50]))
+
+    assert path.iloc[-1] == pytest.approx(-0.01)
+    assert bankrupt.iloc[-1] == pytest.approx(-1.0)
 
 
 def test_build_trade_filter_dataset_rejects_integer_bar_indexes_as_timestamps():
