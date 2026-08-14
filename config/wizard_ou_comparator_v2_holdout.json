@@ -1,0 +1,127 @@
+{
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "derivation_bindings": [
+    {
+      "exact_mode": "OU (Spread)",
+      "orientation": "original",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/ada_algo_1d_ou_spread_original_request.json",
+      "request_sha256": "431e666f983865cf080ac83f18da5a26882877db11d14b3898cb90d2d804eaf2",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/ada_algo_1d_ou_spread_original_response.json",
+      "response_sha256": "7bac78aa8d0e010d79976d5d6bafc0e631a65b19ebd589f650cb1fec1b3f2b33"
+    },
+    {
+      "exact_mode": "OU (Spread)",
+      "orientation": "reverse",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/algo_ada_1d_ou_spread_reverse_request.json",
+      "request_sha256": "74be5be089b204062db92189aa20a7e46bffc0197b95af203798b7ba5e0e6c92",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/algo_ada_1d_ou_spread_reverse_response.json",
+      "response_sha256": "39c34470ddce891f2b0e972d97da66281a9a31e6019288ba8857e6fb53b13b36"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "orientation": "original",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/ada_algo_1d_ou_zscorer_original_request.json",
+      "request_sha256": "b19523e08109d58e2a704714113de39ece5c520498dfd3635de8367e20c1b631",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/ada_algo_1d_ou_zscorer_original_response.json",
+      "response_sha256": "bc6516478416a2c124c92a5f67f8da2b8a412145453b0f8eac6cc053c60ccf51"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "orientation": "reverse",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/algo_ada_1d_ou_zscorer_reverse_request.json",
+      "request_sha256": "e0d1931c7b30904e306e857bc7626fa6e25c0dec27dddeb49ac0e0375f55a3fb",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/algo_ada_1d_ou_zscorer_reverse_response.json",
+      "response_sha256": "923f81e1637496452ce514634e6214a6b1a1636c4bb3187e0a61fb0a86cc3e53"
+    }
+  ],
+  "derivation_cohort": {
+    "pair_group_id": "wpair_a857c606d53e9206f2d1",
+    "required_exact_modes": [
+      "OU (Spread)",
+      "OU (ZScoreR)"
+    ],
+    "required_mode_orientation_cells": 4,
+    "required_orientations": [
+      "original",
+      "reverse"
+    ]
+  },
+  "holdout_cohort": {
+    "pair_group_id": "wpair_4feb406df129644896e3",
+    "required_exact_modes": [
+      "OU (Spread)",
+      "OU (ZScoreR)"
+    ],
+    "required_mode_orientation_cells": 4,
+    "required_orientations": [
+      "original",
+      "reverse"
+    ]
+  },
+  "implementation": {
+    "displayed_half_life": "-ln(2)/ln(phi), phi_from_ar1_with_intercept_on_spread",
+    "generation": 2,
+    "hedge_ratio_objective": "minimize_zero_mean_ar1_one_step_residual_mean_square",
+    "input_transform": "divide_each_leg_by_its_first_observation",
+    "optimizer": "deterministic_513_point_bracket_then_bounded_scalar_refinement",
+    "source_sha256": "32c915b5293e20ea81c12d446a7aa53dab9034f48c2fdffece6050521f32b38f",
+    "spread": "normalized_y-beta*normalized_x_without_centering"
+  },
+  "live_trading_authorized": false,
+  "proof_ledger_path": "reports/active/hyperliquid_wizard_vendor_mode_proofs.csv",
+  "registered_after_vendor_capture_but_before_holdout_raw_series_inspection": true,
+  "research_only": true,
+  "schema_version": "thewiz.wizard_ou_v2_blind_holdout.v1",
+  "sealed_holdout_bindings": [
+    {
+      "exact_mode": "OU (Spread)",
+      "orientation": "original",
+      "proof_observations": 320,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/hbar_xlm_1d_ou_spread_original_request.json",
+      "request_sha256": "7f58b69f48f991966d4106c58bf0a4df2318151993c081fb89afa418e9bb73b7",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/hbar_xlm_1d_ou_spread_original_response.json",
+      "response_sha256": "0ca561cc4fbaacbdab5f2d4e91c3fdc8fc6b75a61a4f1821bb483282836aa344"
+    },
+    {
+      "exact_mode": "OU (Spread)",
+      "orientation": "reverse",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/xlm_hbar_1d_ou_spread_reverse_request.json",
+      "request_sha256": "2426fab795325dacb94a62b2dd83b6ffe1c294ff5860de894e7de471d460a9e0",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/xlm_hbar_1d_ou_spread_reverse_response.json",
+      "response_sha256": "17acd4b6ada160b18f1e4fffeae307d2ead296cb4452486bd5a2c40f3eed231e"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "orientation": "original",
+      "proof_observations": 320,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/hbar_xlm_1d_ou_zscorer_original_request.json",
+      "request_sha256": "8ff2f949fb30358fd02290619d9f2d12f8115032cab12a70e94507d126205c7d",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/hbar_xlm_1d_ou_zscorer_original_response.json",
+      "response_sha256": "8c6754aafe3c91c496bf5729f83576a2e8c7cf159605823aa6f2ea5389b3fd0a"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "orientation": "reverse",
+      "proof_observations": 360,
+      "request_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/xlm_hbar_1d_ou_zscorer_reverse_request.json",
+      "request_sha256": "d4e857da494522a753404feb3182a9c851832edcc1174643cde37caaea52e9fe",
+      "response_path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-11_000318/xlm_hbar_1d_ou_zscorer_reverse_response.json",
+      "response_sha256": "d9a5fc643b3e4e63d2394f8e729d6d90fae9d5046b85d81899b6b72b736db008"
+    }
+  ],
+  "status": "PREREGISTERED_BLINDED",
+  "testnet_order_authority": false,
+  "tolerances": {
+    "half_life_abs": 0.001,
+    "hedge_ratio_abs": 1e-06,
+    "spread_max_abs": 1e-06,
+    "zscore_max_abs": 1e-06,
+    "zscore_roll_max_abs": 1e-06
+  }
+}

@@ -21,8 +21,9 @@ ROOT_INCLUDES = {
     "README.md",
     "project_objective.md",
     "pyproject.toml",
+    "uv.lock",
 }
-INCLUDE_PREFIXES = ("src/quant_platform/", "tests/", "config/", "docs/")
+INCLUDE_PREFIXES = ("src/quant_platform/", "tests/", "config/", "docs/", ".github/")
 SCRIPT_KEYWORDS = (
     "wizard",
     "hyperliquid",
@@ -35,11 +36,13 @@ SCRIPT_KEYWORDS = (
     "apify",
     "funding",
     "corrective",
+    "recovery",
 )
 EXCLUDE_PREFIXES = (
     ".venv312/",
     ".venv/",
     ".venv311/",
+    ".venv313/",
     "data/",
     "reports/",
     "runs/",
@@ -72,12 +75,8 @@ def _git(*args: str, text: bool = True) -> str | bytes:
 
 
 def _worktree_entries() -> list[tuple[str, str]]:
-    cached_status = Path("/tmp/thewiz_corrective_status.bin")
-    if cached_status.exists():
-        raw = cached_status.read_bytes()
-    else:
-        raw = _git("status", "--porcelain=v1", "-z", "-uall", text=False)
-        assert isinstance(raw, bytes)
+    raw = _git("status", "--porcelain=v1", "-z", "-uall", text=False)
+    assert isinstance(raw, bytes)
     parts = raw.decode("utf-8", "surrogateescape").split("\0")
     entries: list[tuple[str, str]] = []
     index = 0
@@ -208,9 +207,10 @@ def main() -> int:
         disposition = str(row["disposition"])
         counts[disposition] = counts.get(disposition, 0) + 1
 
+    created_at = datetime.now(timezone.utc)
     manifest = {
-        "run_id": "corrective_baseline_20260809T034347Z",
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "run_id": f"corrective_baseline_{created_at.strftime('%Y%m%dT%H%M%SZ')}",
+        "created_at_utc": created_at.isoformat(),
         "root": str(ROOT),
         "git_head": str(_git("rev-parse", "HEAD")).strip(),
         "git_branch": str(_git("branch", "--show-current")).strip(),

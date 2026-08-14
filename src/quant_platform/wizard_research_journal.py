@@ -211,6 +211,14 @@ def _clean_num(value: object) -> float | None:
         return None
 
 
+def _first_num(*values: object) -> float | None:
+    for value in values:
+        cleaned = _clean_num(value)
+        if cleaned is not None:
+            return cleaned
+    return None
+
+
 def _clean_bool(value: object) -> bool | None:
     if value is None:
         return None
@@ -957,12 +965,20 @@ def _build_detail_records(
                 ),
                 "hurst_top": _clean_num(source_row.get("hurst_top")),
                 "half_life_top": _clean_num(source_row.get("half_life_top")),
-                "correlation_top": _clean_num(source_row.get("correlation_top")),
+                "correlation_top": _first_num(
+                    source_row.get("correlation_top"),
+                    source_row.get("pearson"),
+                    source_row.get("corr_copula"),
+                ),
                 "hedge_ratio_top": _clean_num(source_row.get("hedge_ratio_top")),
                 "lt_beta": _clean_num(source_row.get("lt_beta")),
                 "max_drawdown_top": _clean_num(source_row.get("max_drawdown_top")),
-                "return_total_top": _clean_num(source_row.get("return_total_top")),
-                "sharpe_top": _clean_num(source_row.get("sharpe_top")),
+                "return_total_top": _first_num(
+                    source_row.get("return_total_top"),
+                    source_row.get("returns_total_pct"),
+                    source_row.get("returns_total"),
+                ),
+                "sharpe_top": _first_num(source_row.get("sharpe_top"), source_row.get("sharpe")),
                 "chart_left_mode": _clean_text(source_row.get("chart_left_mode")),
                 "chart_left_latest_x_value": _clean_num(source_row.get("chart_left_latest_x_value")),
                 "chart_left_latest_y_value": _clean_num(source_row.get("chart_left_latest_y_value")),
@@ -1004,16 +1020,13 @@ def _build_detail_records(
                 "capital_weighting_asset": _clean_text(source_row.get("capital_weighting_asset")),
                 "sharpe_detail": _clean_num(source_row.get("sharpe")),
                 "sortino_detail": _clean_num(source_row.get("sortino_detail")),
-                "sharpe_top": _clean_num(source_row.get("sharpe")),
                 "net_return_detail": _clean_num(source_row.get("returns_total")),
                 "annualized_return_detail": _clean_num(source_row.get("returns_total_pct")),
                 "mean_period_return_detail": _clean_num(source_row.get("mean_period_return_detail")),
                 "win_rate": _clean_num(source_row.get("win_rate")),
-                "return_total_top": _clean_num(source_row.get("returns_total_pct")),
                 "sharpe": _clean_num(source_row.get("sharpe")),
                 "return_total": _clean_num(source_row.get("returns_total_pct")),
-                "correlation_value": _clean_num(source_row.get("corr_copula") or source_row.get("pearson")),
-                "correlation_top": _clean_num(source_row.get("corr_copula") or source_row.get("pearson")),
+                "correlation_value": _first_num(source_row.get("corr_copula"), source_row.get("pearson")),
                 "closed_trades": _clean_num(source_row.get("closed_trades")),
                 "max_drawdown_detail": _clean_num(source_row.get("max_drawdown_detail")),
                 "var_99_detail": _clean_num(source_row.get("var_99_detail")),

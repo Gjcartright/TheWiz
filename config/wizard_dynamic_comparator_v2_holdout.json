@@ -1,0 +1,79 @@
+{
+  "schema_version": "thewiz.wizard_dynamic_comparator_holdout.v2",
+  "registered_at_utc": "2026-08-10T00:08:00Z",
+  "candidate_generation": 2,
+  "candidate_status": "FROZEN_AWAITING_DISJOINT_HOLDOUT",
+  "derivation_cohort": {
+    "pair_group_id": "wpair_a857c606d53e9206f2d1",
+    "pair": "ADA-ALGO",
+    "use_for_acceptance": false,
+    "exact_reconstruction_observed": true,
+    "largest_observed_max_abs_error": 1.092459456231154e-13
+  },
+  "holdout_cohort": {
+    "pair_group_id": "wpair_4feb406df129644896e3",
+    "pair": "HBAR-XLM",
+    "required_exact_modes": [
+      "Dyn (Spread)",
+      "Dyn (ZScoreR)"
+    ],
+    "required_orientations": [
+      "original",
+      "reverse"
+    ],
+    "required_mode_orientation_cells": 4,
+    "vendor_responses_at_registration": 0
+  },
+  "formula": {
+    "input_transform": "vendor_history_spread_stats.log_used_selects_log_or_level",
+    "state": [
+      "beta",
+      "intercept"
+    ],
+    "initial_state": [
+      0.0,
+      0.0
+    ],
+    "initial_covariance": "identity_2",
+    "transition_covariance": "1e-5_times_identity_2",
+    "observation_variance": 1.0,
+    "residual": "post_update_y_minus_beta_x_minus_intercept",
+    "warmup": "first_30_residuals_set_to_zero",
+    "zscore": "full_sample_mean_and_sample_std_ddof_1",
+    "rolling_zscore": "captured_roll_w_mean_and_sample_std_ddof_1_warmup_zero"
+  },
+  "implementation": {
+    "module": "quant_platform.wizard_hyperliquid_mode_proof",
+    "function": "_kalman_dynamic_spread_candidate_v2_holdout",
+    "source_sha256": "5ee018f4c0c32033907aa2dcc65b2707dd9a3a5589f8eae2628de800d5f5af51"
+  },
+  "acceptance": {
+    "max_abs_error_tolerance": 1e-9,
+    "all_holdout_cells_required": true,
+    "spread_zscore_and_rolling_zscore_required": true,
+    "threshold_changes_after_holdout_response_allowed": false,
+    "same_derivation_cohort_cannot_validate": true
+  },
+  "derivation_evidence": [
+    {
+      "path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-10_000008/ada_algo_1d_dyn_spread_original_response.json",
+      "sha256": "7c069a33a186c85bd304d680505835f393d8152081e22b6ed0b2dc9b4d1c8950"
+    },
+    {
+      "path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-10_000008/ada_algo_1d_dyn_zscorer_original_response.json",
+      "sha256": "a6aab376964e83afbb34625c6e745b7929a62ee0e2f486eae991000387aeac89"
+    },
+    {
+      "path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-10_000008/algo_ada_1d_dyn_spread_reverse_response.json",
+      "sha256": "990ac9a305f337435fabed21d673efd09ef100b4f3233469778e71309d41971f"
+    },
+    {
+      "path": "data/raw/crypto_wizards_custom_series_proofs/2026-08-10_000008/algo_ada_1d_dyn_zscorer_reverse_response.json",
+      "sha256": "7621b21051990b9edfc792306dc906274536a182fc16f8e8036d362d6050e0a4"
+    }
+  ],
+  "research_only": true,
+  "candidate_promotion_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

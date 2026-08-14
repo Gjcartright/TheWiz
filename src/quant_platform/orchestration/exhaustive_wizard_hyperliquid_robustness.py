@@ -114,7 +114,7 @@ def run_exhaustive_wizard_hyperliquid_robustness(
     modes = _read_csv(input_paths["mode_ledger"])
     pair_costs = _read_csv(input_paths["pair_cost_evidence"])
     _require_unique(statuses, "experiment_id")
-    _require_unique(candidates, "experiment_id")
+    _require_unique(candidates, "experiment_id", allow_empty=True)
     _require_unique(pair_costs, "pair_group_id")
 
     run_id = _text(walkforward_manifest.get("run_id"))
@@ -166,7 +166,13 @@ def run_exhaustive_wizard_hyperliquid_robustness(
         "snapshot_summary_md": snapshot_dir / "summary.md",
     }
 
-    mode_lookup = _unique_mode_rows(modes)
+    active_pair_group_ids = {_text(value) for value in statuses["pair_group_id"]}
+    if "" in active_pair_group_ids:
+        raise ValueError("Robustness status identity missing pair_group_id")
+    mode_lookup = _unique_mode_rows(
+        modes,
+        allowed_pair_group_ids=active_pair_group_ids,
+    )
     pair_lookup = _row_lookup(pair_costs, "pair_group_id")
     selected = candidates.loc[
         candidates["walkforward_status"].eq("PASS_RESEARCH_WALK_FORWARD")
@@ -406,9 +412,36 @@ def run_exhaustive_wizard_hyperliquid_robustness(
         statuses
     ):
         raise ValueError("Robustness failed complete experiment accounting")
-    candidate_frame = pd.DataFrame(candidate_rows)
-    scenario_frame = pd.DataFrame(scenario_rows)
-    fold_frame = pd.DataFrame(fold_rows)
+    robustness_status_defaults = {
+        "scenarios_complete": 0,
+        "parameter_positive_ratio": "",
+        "parameter_pass_ratio": "",
+        "worst_parameter_drawdown": "",
+        "research_robustness_status": "NOT_EVALUATED",
+        "research_robustness_blocker": "prior_walk_forward_gate_not_passed",
+        "promotion_readiness": "BLOCKED",
+        "promotion_blocker": "prior_walk_forward_gate_not_passed",
+    }
+    for column, default in robustness_status_defaults.items():
+        status_frame[column] = status_frame.get(
+            column,
+            pd.Series(index=status_frame.index, dtype=object),
+        ).fillna(default)
+    candidate_frame = (
+        pd.DataFrame(candidate_rows)
+        if candidate_rows
+        else status_frame.iloc[0:0].copy()
+    )
+    scenario_frame = (
+        pd.DataFrame(scenario_rows)
+        if scenario_rows
+        else pd.DataFrame(columns=["experiment_id", "scenario", "category"])
+    )
+    fold_frame = (
+        pd.DataFrame(fold_rows)
+        if fold_rows
+        else pd.DataFrame(columns=["experiment_id", "scenario", "fold_number"])
+    )
     for frame, active_path, snapshot_path in (
         (status_frame, paths["status"], paths["snapshot_status"]),
         (candidate_frame, paths["candidates"], paths["snapshot_candidates"]),
@@ -676,7 +709,14 @@ def _row_lookup(frame: pd.DataFrame, key: str) -> dict[str, object]:
     return {_text(getattr(row, key)): row for row in frame.itertuples()}
 
 
-def _require_unique(frame: pd.DataFrame, key: str) -> None:
+def _require_unique(
+    frame: pd.DataFrame,
+    key: str,
+    *,
+    allow_empty: bool = False,
+) -> None:
+    if frame.empty and allow_empty:
+        return
     if frame.empty or key not in frame.columns or frame[key].astype(str).duplicated().any():
         raise ValueError(f"Expected non-empty unique {key} rows")
 

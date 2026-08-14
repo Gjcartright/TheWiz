@@ -1,21 +1,82 @@
 from __future__ import annotations
 
+import fcntl
 import json
 
 from eth_account import Account
 
 from quant_platform.execution import OrderIntent, hyperliquid_testnet_order_preflight_status
 from quant_platform.hyperliquid_testnet import (
-    _approval_intent_blockers,
     HyperliquidPairExecutionResult,
     HyperliquidTestnetConfig,
     HyperliquidTestnetOrderAdapter,
     HyperliquidTestnetPairAdapter,
     HyperliquidTestnetPairExecutor,
+    _approval_intent_blockers,
+    _exit_price_band_blockers,
+    _signed_approval_blockers,
     hyperliquid_testnet_margin_snapshot,
     write_hyperliquid_testnet_margin_snapshot,
     write_hyperliquid_testnet_preflight_report,
 )
+
+
+def test_default_executor_gate_rejects_pass_without_explicit_testnet_authority(monkeypatch):
+    from quant_platform.orchestration import hyperliquid_learning_and_risk
+
+    monkeypatch.setattr(
+        hyperliquid_learning_and_risk,
+        "validate_testnet_smoke_approval",
+        lambda **kwargs: {
+            "status": "PASS",
+            "blockers": [],
+            "execution_allowed": False,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+    config, _ = _test_config(
+        submit_orders=True,
+        order_approval_id="authority-missing",
+    )
+
+    assert _signed_approval_blockers("authority-missing", config) == [
+        "hyperliquid_testnet_explicit_order_authority_not_granted"
+    ]
+
+
+def test_default_executor_requests_exit_scoped_authority_for_risk_reduction(
+    monkeypatch,
+):
+    from quant_platform.orchestration import hyperliquid_learning_and_risk
+
+    scopes = []
+
+    def validate(**kwargs):
+        scopes.append(kwargs["validation_scope"])
+        return {
+            "status": "PASS",
+            "blockers": [],
+            "execution_allowed": True,
+            "testnet_order_authority": True,
+            "authority_scope": kwargs["validation_scope"],
+            "live_trading_authorized": False,
+        }
+
+    monkeypatch.setattr(
+        hyperliquid_learning_and_risk,
+        "validate_testnet_smoke_approval",
+        validate,
+    )
+    config, _ = _test_config(
+        submit_orders=True,
+        order_approval_id="exit-scope",
+    )
+
+    assert _signed_approval_blockers(
+        "exit-scope", config, validation_scope="exit"
+    ) == []
+    assert scopes == ["exit"]
 
 
 class _Response:
@@ -90,9 +151,7 @@ class _FakeExchange:
         self.leverage_updates = []
 
     def update_leverage(self, leverage, coin, is_cross=True):
-        self.leverage_updates.append(
-            {"leverage": leverage, "coin": coin, "is_cross": is_cross}
-        )
+        self.leverage_updates.append({"leverage": leverage, "coin": coin, "is_cross": is_cross})
         return {"status": "ok"}
 
     def bulk_orders(self, requests):
@@ -197,8 +256,7 @@ class _CustomMetaSession(_RoleSession):
 def _positions(**sizes):
     return {
         "assetPositions": [
-            {"position": {"coin": coin, "szi": str(size)}}
-            for coin, size in sizes.items()
+            {"position": {"coin": coin, "szi": str(size)}} for coin, size in sizes.items()
         ]
     }
 
@@ -265,10 +323,30 @@ def _pair_intents():
     )
 
 
+def _pair_exit_intents():
+    return (
+        OrderIntent(
+            market="BTC-USD",
+            side="SELL",
+            size=0.00016,
+            limit_price=64_000.0,
+            reduce_only=True,
+        ),
+        OrderIntent(
+            market="ETH-USD",
+            side="BUY",
+            size=0.0034,
+            limit_price=3_000.0,
+            reduce_only=True,
+        ),
+    )
+
+
 def _approval_payload():
     return {
-        "approval_version": "hyperliquid-testnet-smoke-v4",
+        "approval_version": "hyperliquid-testnet-smoke-v10",
         "max_total_notional_usd": 25.0,
+        "maximum_exit_slippage_bps": 50.0,
         "legs": [
             {
                 "market": "BTC",
@@ -288,7 +366,7 @@ def _approval_payload():
             "opposite_side": True,
             "market_scope": "approved_entry_markets",
             "maximum_size": "approved_entry_size_per_leg",
-            "maximum_total_notional_usd": 25.0,
+            "entry_notional_cap_not_reapplied_to_exit": True,
         },
     }
 
@@ -342,9 +420,54 @@ def test_runtime_intents_must_match_signed_entry_and_exit_policy():
     )
 
     malformed = dict(approval)
-    malformed["max_total_notional_usd"] = "not-a-number"
-    assert "hyperliquid_runtime_exit_notional_exceeds_approval" in (
+    malformed["maximum_exit_slippage_bps"] = "not-a-number"
+    assert "hyperliquid_runtime_exit_slippage_policy_invalid" in (
         _approval_intent_blockers(malformed, valid_exit)
+    )
+
+    appreciated_exit = (
+        OrderIntent(
+            market="BTC-USD",
+            side="SELL",
+            size=0.00016,
+            limit_price=100_000.0,
+            reduce_only=True,
+        ),
+        valid_exit[1],
+    )
+    assert _approval_intent_blockers(approval, appreciated_exit) == []
+
+
+def test_reduce_only_exit_price_must_be_marketable_and_inside_signed_band():
+    valid = _pair_exit_intents()
+    mids = {"BTC": 64_000.0, "ETH": 3_000.0}
+    too_wide = (
+        OrderIntent(
+            market="BTC-USD",
+            side="SELL",
+            size=0.00016,
+            limit_price=63_000.0,
+            reduce_only=True,
+        ),
+        valid[1],
+    )
+    not_marketable = (
+        OrderIntent(
+            market="BTC-USD",
+            side="SELL",
+            size=0.00016,
+            limit_price=64_100.0,
+            reduce_only=True,
+        ),
+        valid[1],
+    )
+
+    assert _exit_price_band_blockers(valid, mids, 50.0) == []
+    assert "hyperliquid_runtime_exit_price_below_slippage_band:0" in (
+        _exit_price_band_blockers(too_wide, mids, 50.0)
+    )
+    assert "hyperliquid_runtime_exit_limit_not_marketable:0" in (
+        _exit_price_band_blockers(not_marketable, mids, 50.0)
     )
 
 
@@ -364,8 +487,32 @@ def test_no_order_preflight_verifies_authorized_agent_and_local_signature():
     assert result["agent_key_matches_address"] is True
     assert result["local_signature_created"] is True
     assert result["blockers"] == ""
+    assert result["order_submission_performed"] is False
+    assert result["testnet_order_authority"] is False
+    assert result["live_trading_authorized"] is False
     assert secret not in str(result)
     assert session.requests[0]["json"] == {"type": "userRole", "user": config.agent_address}
+
+
+def test_no_order_preflight_never_grants_submit_readiness_from_environment_toggle():
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="not-validated-by-read-only-preflight",
+    )
+    executor = HyperliquidTestnetPairExecutor(
+        session=_RoleSession(config.master_address or ""),
+        keychain_reader=lambda service, account: secret,
+    )
+
+    result = executor.no_order_preflight(config)
+
+    assert result["ready_for_no_order_preflight"] is True
+    assert result["submit_orders_enabled"] is True
+    assert result["ready_for_testnet_submit"] is False
+    assert result["order_submission_performed"] is False
+    assert result["testnet_order_authority"] is False
+    assert result["live_trading_authorized"] is False
+    assert result["next_action"] == "create_a_runtime_only_order_approval_before_any_two_leg_submission"
 
 
 def test_preflight_report_never_contains_agent_private_key(tmp_path):
@@ -377,7 +524,9 @@ def test_preflight_report_never_contains_agent_private_key(tmp_path):
         keychain_reader=lambda service, account: secret,
     )
 
-    markdown = (tmp_path / "reports" / "active" / "hyperliquid_testnet_preflight.md").read_text(encoding="utf-8")
+    markdown = (tmp_path / "reports" / "active" / "hyperliquid_testnet_preflight.md").read_text(
+        encoding="utf-8"
+    )
     assert bool(frame.iloc[0]["ready_for_no_order_preflight"]) is True
     assert secret not in markdown
 
@@ -394,7 +543,10 @@ def test_margin_snapshot_is_read_only_and_computes_buffer(tmp_path):
     assert result["margin_utilization"] == 0.25
     assert result["spot_usdc_usd"] == 75.0
     assert result["open_positions"] == 1
-    assert session.requests[0]["json"] == {"type": "clearinghouseState", "user": config.master_address}
+    assert session.requests[0]["json"] == {
+        "type": "clearinghouseState",
+        "user": config.master_address,
+    }
     assert frame.iloc[0]["status"] == "READY"
     assert (tmp_path / "reports" / "active" / "hyperliquid_testnet_margin_snapshot.md").exists()
 
@@ -468,6 +620,169 @@ def test_pair_executor_refuses_runtime_id_rejected_by_signed_approval_gate():
     assert result.reason == "runtime_hyperliquid_order_approval_id_mismatch"
     assert exchange.requests == []
     assert result.order_submission_performed is False
+
+
+def test_real_exchange_path_requires_durable_execution_state_before_any_io():
+    config, _ = _test_config(
+        submit_orders=True,
+        order_approval_id="real-path-no-journal",
+    )
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("missing durable state must block before I/O")
+
+    executor = HyperliquidTestnetPairExecutor(
+        keychain_reader=forbidden,
+    )
+
+    result = executor.submit_pair(_pair_intents(), config)
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "hyperliquid_real_exchange_requires_durable_execution_state"
+    assert result.order_submission_performed is False
+
+
+def test_real_exchange_path_forbids_custom_approval_validator_before_any_io(
+    tmp_path,
+):
+    config, _ = _test_config(
+        submit_orders=True,
+        order_approval_id="real-path-custom-validator",
+    )
+    touched = False
+
+    def validator(approval_id, settings):
+        nonlocal touched
+        touched = True
+        return []
+
+    executor = HyperliquidTestnetPairExecutor(
+        approval_validator=validator,
+        state_path=tmp_path / "execution_state.json",
+    )
+
+    result = executor.submit_pair(_pair_intents(), config)
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "hyperliquid_real_exchange_custom_approval_validator_forbidden"
+    assert touched is False
+    assert result.order_submission_performed is False
+
+
+def test_existing_os_lock_blocks_pair_submission_before_validation_or_key_access(
+    tmp_path,
+):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="locked-one-run-approval",
+    )
+    state_path = tmp_path / "execution_state.json"
+    lock_path = state_path.with_suffix(state_path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    touched = False
+
+    def forbidden(*args, **kwargs):
+        nonlocal touched
+        touched = True
+        raise AssertionError("locked executor must not validate or read a key")
+
+    exchange = _FakeExchange()
+    executor = HyperliquidTestnetPairExecutor(
+        session=_RoleSession(config.master_address or ""),
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=forbidden,
+        state_path=state_path,
+    )
+    with lock_path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            result = executor.submit_pair(_pair_intents(), config)
+            recovery = executor.recover_incomplete_pair(config)
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "hyperliquid_testnet_pair_executor_lock_present"
+    assert recovery.status == "pair_recovery_blocked"
+    assert recovery.reason == "hyperliquid_testnet_pair_executor_lock_present"
+    assert touched is False
+    assert exchange.requests == []
+    assert not state_path.exists()
+
+
+def test_approval_is_revalidated_immediately_before_submission_preparation(
+    tmp_path,
+):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="approval-drift-during-preflight",
+    )
+    calls = 0
+
+    def validator(approval_id, settings):
+        nonlocal calls
+        calls += 1
+        return [] if calls == 1 else ["testnet_smoke_approval_changed_during_preflight"]
+
+    exchange = _FakeExchange()
+    state_path = tmp_path / "execution_state.json"
+    executor = HyperliquidTestnetPairExecutor(
+        session=_RoleSession(config.master_address or ""),
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=validator,
+        state_path=state_path,
+    )
+
+    result = executor.submit_pair(_pair_intents(), config)
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "testnet_smoke_approval_changed_during_preflight"
+    assert calls == 2
+    assert exchange.requests == []
+    assert exchange.leverage_updates == []
+    assert not state_path.exists()
+
+
+def test_approval_is_revalidated_after_leverage_but_before_bulk_submission(
+    tmp_path,
+):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="approval-drift-after-leverage",
+    )
+    calls = 0
+
+    def validator(approval_id, settings):
+        nonlocal calls
+        calls += 1
+        return (
+            []
+            if calls < 3
+            else ["testnet_smoke_approval_changed_before_bulk_submission"]
+        )
+
+    exchange = _FakeExchange()
+    state_path = tmp_path / "execution_state.json"
+    executor = HyperliquidTestnetPairExecutor(
+        session=_RoleSession(config.master_address or ""),
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=validator,
+        state_path=state_path,
+    )
+
+    result = executor.submit_pair(_pair_intents(), config)
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "testnet_smoke_approval_changed_before_bulk_submission"
+    assert calls == 3
+    assert len(exchange.leverage_updates) == 2
+    assert exchange.requests == []
+    assert state["phase"] == "PRE_SUBMISSION_FAILED"
+    assert state["entry_submit_attempted"] is False
 
 
 def test_pair_executor_uses_one_bulk_action_after_all_guardrails_pass():
@@ -692,9 +1007,7 @@ def test_pair_executor_reconciles_unconfirmed_response_without_retrying_entry():
 
     assert result.status == "pair_recovered_flat"
     assert len(exchange.requests) == 1
-    assert exchange.cancel_requests == [
-        [{"coin": "BTC", "oid": 901}, {"coin": "ETH", "oid": 902}]
-    ]
+    assert exchange.cancel_requests == [[{"coin": "BTC", "oid": 901}, {"coin": "ETH", "oid": 902}]]
     assert result.recovery_actions[0] == "block_duplicate_entry_retry"
 
 
@@ -781,6 +1094,109 @@ def test_pair_executor_blocks_duplicate_entry_for_consumed_one_run_approval(tmp_
     assert state["duplicate_entry_blocked_at_utc"]
 
 
+def test_pair_executor_requires_journaled_entry_before_reduce_only_exit(tmp_path):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="testnet-smoke-exit-without-entry",
+    )
+    exchange = _FakeExchange()
+    executor = HyperliquidTestnetPairExecutor(
+        session=_RoleSession(config.master_address or ""),
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=lambda approval_id, settings: [],
+        state_path=tmp_path / "execution_state.json",
+    )
+
+    result = executor.submit_pair(_pair_exit_intents(), config)
+
+    assert result.status == "pair_blocked"
+    assert result.reason == "hyperliquid_exit_entry_state_missing"
+    assert result.order_submission_performed is False
+    assert exchange.requests == []
+
+
+def test_pair_executor_submits_one_ioc_reduce_only_exit_and_blocks_replay(tmp_path):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="testnet-smoke-journaled-exit",
+    )
+    state_path = tmp_path / "execution_state.json"
+    exchange = _FakeExchange()
+    session = _SequencedAccountSession(
+        config.master_address or "",
+        states=[_positions(BTC=0.00016, ETH=-0.0034)],
+        open_orders=[[]],
+    )
+    executor = HyperliquidTestnetPairExecutor(
+        session=session,
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=lambda approval_id, settings: [],
+        state_path=state_path,
+    )
+    entry_state = executor._new_execution_state(_pair_intents(), config)
+    entry_state["phase"] = "AWAITING_EXCHANGE_CONFIRMATION"
+    entry_state["entry_submit_attempted"] = True
+    executor._persist_execution_state(entry_state)
+
+    result = executor.submit_pair(_pair_exit_intents(), config)
+    replay = executor.submit_pair(_pair_exit_intents(), config)
+
+    assert result.status == "pair_submitted"
+    assert result.order_submission_performed is True
+    assert len(exchange.requests) == 1
+    assert all(
+        request["reduce_only"] is True
+        and request["order_type"] == {"limit": {"tif": "Ioc"}}
+        for request in exchange.requests[0]
+    )
+    assert replay.status == "pair_blocked"
+    assert replay.reason == "hyperliquid_duplicate_exit_submission_blocked"
+
+
+def test_pair_executor_blocks_exit_that_does_not_reduce_current_position(tmp_path):
+    config, secret = _test_config(
+        submit_orders=True,
+        order_approval_id="testnet-smoke-wrong-way-exit",
+    )
+    state_path = tmp_path / "execution_state.json"
+    exchange = _FakeExchange()
+    session = _SequencedAccountSession(
+        config.master_address or "",
+        states=[_positions(BTC=0.00016, ETH=-0.0034)],
+        open_orders=[[]],
+    )
+    executor = HyperliquidTestnetPairExecutor(
+        session=session,
+        keychain_reader=lambda service, account: secret,
+        exchange_factory=lambda wallet, settings: exchange,
+        approval_validator=lambda approval_id, settings: [],
+        state_path=state_path,
+    )
+    entry_state = executor._new_execution_state(_pair_intents(), config)
+    entry_state["phase"] = "AWAITING_EXCHANGE_CONFIRMATION"
+    entry_state["entry_submit_attempted"] = True
+    executor._persist_execution_state(entry_state)
+    wrong_way = (
+        OrderIntent(
+            market="BTC-USD",
+            side="BUY",
+            size=0.00016,
+            limit_price=64_000.0,
+            reduce_only=True,
+        ),
+        _pair_exit_intents()[1],
+    )
+
+    result = executor.submit_pair(wrong_way, config)
+
+    assert result.status == "pair_blocked"
+    assert "hyperliquid_exit_side_not_risk_reducing:BTC" in result.reason
+    assert result.order_submission_performed is False
+    assert exchange.requests == []
+
+
 def test_pair_executor_recovers_journaled_restart_without_entry_retry(tmp_path):
     config, secret = _test_config(
         submit_orders=True,
@@ -795,9 +1211,7 @@ def test_pair_executor_recovers_journaled_restart_without_entry_retry(tmp_path):
     )
 
     def expired_entry_approval_must_not_be_revalidated(approval_id, settings):
-        raise AssertionError(
-            "restart recovery must not revalidate expired entry approval"
-        )
+        raise AssertionError("restart recovery must not revalidate expired entry approval")
 
     executor = HyperliquidTestnetPairExecutor(
         session=session,

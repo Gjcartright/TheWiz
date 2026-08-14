@@ -1,20 +1,36 @@
 from __future__ import annotations
 
-from pathlib import Path
+import hashlib
+import json
 import re
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
 from quant_platform import active_pipeline as active_pipeline_module
-
 from quant_platform.active_pipeline import (
     _canonical_hyperliquid_state_rows,
+    _active_layer_state_row,
     _command_center_markdown,
     _configured_env_key_present,
     _data_health_rows,
-    _venue_route_state_row,
+    _filter_predictions_to_model,
+    _filter_predictions_to_untouched_evaluation,
+    _filter_shortlist_to_visible_dydx_markets,
+    _global_label_purge_proven,
+    _model_gain_concentration,
+    _model_authority_state_row,
+    _model_pair_concentration,
+    _model_selection_isolation_proven,
+    _normalize_registered_history_features,
+    _score_bucket_report,
+    _select_hyperliquid_training_datasets,
+    _trade_gate_metrics,
+    _training_threshold_calibration_proven,
+    _seven_stage_state_rows,
     _venue_lane_test_rows,
+    _venue_route_state_row,
     _wizard_pair_metrics,
     archive_from_index,
     build_artifact_index,
@@ -29,9 +45,480 @@ from quant_platform.active_pipeline import (
     focused_paper_validation_rows,
     model_gate_pair_support_report,
     paper_candidate_shortlist_rows,
-    _filter_shortlist_to_visible_dydx_markets,
+    promote_trade_dataset,
     system_check,
 )
+from quant_platform.experiments import PairDataset
+
+
+def test_trade_gate_diagnostics_are_scoped_to_selected_model_only():
+    summary = pd.DataFrame(
+        [
+            {
+                "model_name": "selected",
+                "promising": True,
+                "selection_score": 10.0,
+                "profit_factor_delta": 0.5,
+                "sharpe_delta": 0.5,
+                "selection_isolation_scheme": (
+                    "chronological_model_selection_then_untouched_evaluation_v1"
+                ),
+                "selection_folds": 1,
+                "untouched_evaluation_folds": 2,
+                "evaluation_scheme": (
+                    "globally_purged_embargoed_pair_aware_timestamp_groups_v2"
+                ),
+                "evaluation_median_filtered_profit_factor": 1.5,
+                "evaluation_median_filtered_sharpe": 1.0,
+                "evaluation_worst_filtered_drawdown": 0.2,
+                "evaluation_profit_factor_delta": 0.5,
+                "evaluation_sharpe_delta": 0.5,
+                "evaluation_drawdown_delta": -0.1,
+                "evaluation_median_take_rate": 0.2,
+                "evaluation_total_filtered_trades": 30,
+            },
+            {
+                "model_name": "rejected",
+                "promising": False,
+                "selection_score": 0.0,
+                "profit_factor_delta": -0.5,
+                "sharpe_delta": -0.5,
+            },
+        ]
+    )
+    predictions = pd.DataFrame(
+        [
+            {
+                "trade_id": f"selected-{index}",
+                "model_name": "selected",
+                "pair": "A-B",
+                "probability_profitable": probability,
+                "realized_return": realized_return,
+                "shadow_take": probability >= 0.7,
+                "split_scheme": (
+                    "globally_purged_embargoed_pair_aware_timestamp_groups_v2"
+                ),
+                "global_label_purge": True,
+                "global_label_overlap_rows_after_purge": 0,
+                "test_start": "2026-02-01T00:00:00+00:00",
+                "train_label_end_max": "2026-01-31T23:00:00+00:00",
+                "selection_phase": (
+                    "model_selection"
+                    if index == 0
+                    else "untouched_evaluation"
+                ),
+                "selection_isolation_scheme": (
+                    "chronological_model_selection_then_untouched_evaluation_v1"
+                ),
+                "selection_evaluation_boundary_scheme": (
+                    "label_complete_chronology_gap_v1"
+                ),
+                "chronology_gap_folds": "",
+                "selection_label_end_boundary": (
+                    pd.Timestamp("2026-01-01 01:00", tz="UTC").isoformat()
+                ),
+                "untouched_evaluation_start_boundary": (
+                    pd.Timestamp("2026-01-02", tz="UTC").isoformat()
+                ),
+                "fold": index,
+                "entry_timestamp": (
+                    pd.Timestamp("2026-01-01", tz="UTC")
+                    + pd.Timedelta(days=index)
+                ).isoformat(),
+                "exit_timestamp": (
+                    pd.Timestamp("2026-01-01", tz="UTC")
+                    + pd.Timedelta(days=index, hours=1)
+                ).isoformat(),
+            }
+            for index, (probability, realized_return) in enumerate(
+                [(0.2, -0.03), (0.6, 0.01), (0.8, 0.04)]
+            )
+        ]
+        + [
+            {
+                "trade_id": f"rejected-{index}",
+                "model_name": "rejected",
+                "pair": "X-Y",
+                "probability_profitable": probability,
+                "realized_return": realized_return,
+                "shadow_take": probability >= 0.7,
+                "split_scheme": (
+                    "globally_purged_embargoed_pair_aware_timestamp_groups_v2"
+                ),
+                "global_label_purge": True,
+                "global_label_overlap_rows_after_purge": 0,
+                "test_start": "2026-02-01T00:00:00+00:00",
+                "train_label_end_max": "2026-01-31T23:00:00+00:00",
+                "selection_phase": (
+                    "model_selection"
+                    if index == 0
+                    else "untouched_evaluation"
+                ),
+                "selection_isolation_scheme": (
+                    "chronological_model_selection_then_untouched_evaluation_v1"
+                ),
+                "selection_evaluation_boundary_scheme": (
+                    "label_complete_chronology_gap_v1"
+                ),
+                "chronology_gap_folds": "",
+                "selection_label_end_boundary": (
+                    pd.Timestamp("2026-01-01 01:00", tz="UTC").isoformat()
+                ),
+                "untouched_evaluation_start_boundary": (
+                    pd.Timestamp("2026-01-02", tz="UTC").isoformat()
+                ),
+                "fold": index,
+                "entry_timestamp": (
+                    pd.Timestamp("2026-01-01", tz="UTC")
+                    + pd.Timedelta(days=index)
+                ).isoformat(),
+                "exit_timestamp": (
+                    pd.Timestamp("2026-01-01", tz="UTC")
+                    + pd.Timedelta(days=index, hours=1)
+                ).isoformat(),
+            }
+            for index, (probability, realized_return) in enumerate(
+                [(0.2, 0.04), (0.6, 0.01), (0.8, -0.03)]
+            )
+        ]
+    )
+
+    metrics = _trade_gate_metrics(summary, predictions)
+    selected_model = _filter_predictions_to_model(
+        predictions, metrics["best_model"]
+    )
+    selected = _filter_predictions_to_untouched_evaluation(selected_model)
+    buckets = _score_bucket_report(selected)
+    concentration = _model_pair_concentration(selected)
+
+    assert metrics["best_model"] == "selected"
+    assert metrics["model_winner_replayed"] is True
+    assert metrics["selection_candidate_eligible"] is False
+    assert "selection_candidate_eligible" in metrics["failing_checks"]
+    assert metrics["accepted"] is False
+    assert metrics["score_buckets_monotonic"] is True
+    assert metrics["diagnostic_prediction_rows"] == 2
+    assert metrics["all_model_prediction_rows"] == 6
+    assert buckets["rows"].sum() == 2
+    assert buckets["model_name"].eq("selected").all()
+    assert concentration["pair"].tolist() == ["A-B"]
+    assert concentration["model_name"].eq("selected").all()
+    assert _global_label_purge_proven(selected) is True
+    assert _model_selection_isolation_proven(selected_model) is True
+    missing_boundary = selected_model.drop(
+        columns=["selection_evaluation_boundary_scheme"]
+    )
+    assert _model_selection_isolation_proven(missing_boundary) is False
+    tampered_boundary = selected_model.copy()
+    tampered_boundary["untouched_evaluation_start_boundary"] = (
+        "2026-01-01T00:30:00+00:00"
+    )
+    assert _model_selection_isolation_proven(tampered_boundary) is False
+    assert _training_threshold_calibration_proven(selected_model) is False
+
+    calibrated = selected_model.assign(
+        threshold_calibration_scheme="training_only_minimum_participation_v1",
+        minimum_training_take_rate=0.10,
+        training_take_rate_at_threshold=0.10,
+        training_take_rate_floor_pass=True,
+    )
+    assert _training_threshold_calibration_proven(calibrated) is True
+    calibrated.loc[calibrated.index[0], "training_take_rate_at_threshold"] = 0.01
+    assert _training_threshold_calibration_proven(calibrated) is False
+
+    low_participation = summary.copy()
+    low_participation.loc[
+        low_participation["model_name"].eq("selected"),
+        "evaluation_median_take_rate",
+    ] = 0.075
+    low_participation_metrics = _trade_gate_metrics(
+        low_participation, predictions
+    )
+    assert "take_rate_min" in low_participation_metrics["failing_checks"]
+
+
+def test_global_label_purge_proof_fails_on_overlapping_training_label():
+    predictions = pd.DataFrame(
+        [
+            {
+                "split_scheme": (
+                    "globally_purged_embargoed_pair_aware_timestamp_groups_v2"
+                ),
+                "global_label_purge": True,
+                "global_label_overlap_rows_after_purge": 0,
+                "test_start": "2026-02-01T00:00:00+00:00",
+                "train_label_end_max": "2026-02-01T00:01:00+00:00",
+            }
+        ]
+    )
+
+    assert _global_label_purge_proven(predictions) is False
+
+
+def test_missing_selected_model_predictions_fail_closed():
+    predictions = pd.DataFrame(
+        [{"model_name": "other", "probability_profitable": 0.9}]
+    )
+
+    filtered = _filter_predictions_to_model(predictions, "missing")
+
+    assert filtered.empty
+
+
+def test_model_gain_concentration_exposes_pair_and_timeframe_dominance():
+    predictions = pd.DataFrame(
+        [
+            {
+                "model_name": "selected",
+                "pair": pair,
+                "timeframe": timeframe,
+                "regime": "range",
+                "strategy_name": "zscore",
+                "realized_return": value,
+                "shadow_take": True,
+            }
+            for pair, timeframe, value in [
+                ("A-B", "1d", 0.80),
+                ("A-B", "1d", 0.10),
+                ("C-D", "1h", 0.10),
+            ]
+        ]
+    )
+
+    report = _model_gain_concentration(predictions)
+    pair_top = report[report["dimension"].eq("pair")].iloc[0]
+    timeframe_top = report[report["dimension"].eq("timeframe")].iloc[0]
+
+    assert pair_top["value"] == "A-B"
+    assert pair_top["share_of_positive_returns"] == pytest.approx(0.9)
+    assert timeframe_top["value"] == "1d"
+    assert timeframe_top["share_of_positive_returns"] == pytest.approx(0.9)
+
+
+def test_training_dataset_selects_one_deepest_hyperliquid_history_per_cell():
+    def dataset(rows, venue, source):
+        return PairDataset(
+            "ETH-PYTH",
+            pd.DataFrame(
+                {
+                    "timestamp": pd.date_range(
+                        "2026-01-01", periods=rows, freq="h", tz="UTC"
+                    ),
+                    "exchange": venue,
+                    "interval": "1h",
+                    "source_path": source,
+                }
+            ),
+        )
+
+    selected, audit = _select_hyperliquid_training_datasets(
+        [
+            dataset(20, "hyperliquid", "short.json"),
+            dataset(50, "hyperliquid", "deep.json"),
+            dataset(100, "dydx", "other-venue.json"),
+        ]
+    )
+
+    assert len(selected) == 1
+    assert len(selected[0].frame) == 50
+    assert audit["selection_status"].eq("SELECTED_CANONICAL").sum() == 1
+    assert audit["selection_status"].eq("REJECTED_OVERLAPPING_HISTORY").sum() == 1
+    assert audit["selection_status"].eq("REJECTED_OUTSIDE_TARGET_VENUE").sum() == 1
+    assert not audit["testnet_order_authority"].any()
+
+
+def test_registered_history_feature_normalization_keeps_provenance():
+    frame = pd.DataFrame(
+        {
+            "math_v2_half_life": [12.0, None],
+            "research_proxy_half_life": [20.0, 30.0],
+            "research_proxy_ecm_x": [-0.2, -0.1],
+        }
+    )
+
+    normalized = _normalize_registered_history_features(frame)
+
+    assert normalized["half_life"].tolist() == [12.0, 30.0]
+    assert normalized["half_life_feature_source"].tolist() == [
+        "math_v2_half_life",
+        "research_proxy_half_life",
+    ]
+    assert normalized["ecm_x_feature_source"].eq(
+        "research_proxy_ecm_x"
+    ).all()
+
+
+def test_trade_dataset_promotion_preserves_prior_dataset_and_verifies_hashes(
+    tmp_path,
+):
+    data_ml = tmp_path / "data" / "ml"
+    reports = tmp_path / "reports" / "ml"
+    build = data_ml / "dataset_builds" / "tradedataset-test"
+    build.mkdir(parents=True)
+    reports.mkdir(parents=True)
+    prior = data_ml / "trade_training_dataset.csv"
+    pd.DataFrame([{"trade_id": "old", "source_venue": "hyperliquid"}]).to_csv(
+        prior, index=False
+    )
+    artifacts = {
+        "dataset": build / "trade_training_dataset.csv",
+        "leakage_audit": build / "leakage_audit.csv",
+        "source_selection": build / "trade_dataset_source_selection.csv",
+        "history_registry_audit": build
+        / "trade_dataset_history_registry_audit.csv",
+        "summary": build / "trade_dataset_summary.csv",
+    }
+    pd.DataFrame(
+        [
+            {
+                "trade_id": "new",
+                "source_venue": "hyperliquid",
+                "pair": "ETH-PYTH",
+                "exact_mode": "Copula",
+            }
+        ]
+    ).to_csv(artifacts["dataset"], index=False)
+    pd.DataFrame([{"trade_id": "new", "leakage_blocker": ""}]).to_csv(
+        artifacts["leakage_audit"], index=False
+    )
+    pd.DataFrame(
+        [
+            {
+                "selection_status": "SELECTED_CANONICAL",
+                "strict_observed_cost_ready": True,
+            }
+        ]
+    ).to_csv(
+        artifacts["source_selection"], index=False
+    )
+    pd.DataFrame([{"registry_status": "HASH_VERIFIED_READY"}]).to_csv(
+        artifacts["history_registry_audit"], index=False
+    )
+    pd.DataFrame([{"rows": 1}]).to_csv(artifacts["summary"], index=False)
+    execution_receipt = build / "registered_execution_receipt.json"
+    execution_receipt.write_text(
+        json.dumps({"execution_id": "registered-execution-1"}), encoding="utf-8"
+    )
+
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    pointer = {
+        "status": "VALIDATED_CANDIDATE",
+        "dataset_id": "tradedataset-test",
+        "dataset_path": str(artifacts["dataset"].relative_to(tmp_path)),
+        "leakage_audit_path": str(
+            artifacts["leakage_audit"].relative_to(tmp_path)
+        ),
+        "source_selection_path": str(
+            artifacts["source_selection"].relative_to(tmp_path)
+        ),
+        "history_registry_audit_path": str(
+            artifacts["history_registry_audit"].relative_to(tmp_path)
+        ),
+        "summary_path": str(artifacts["summary"].relative_to(tmp_path)),
+        "parquet_path": "",
+        "dataset_sha256": digest(artifacts["dataset"]),
+        "leakage_audit_sha256": digest(artifacts["leakage_audit"]),
+        "source_selection_sha256": digest(artifacts["source_selection"]),
+        "history_registry_audit_sha256": digest(
+            artifacts["history_registry_audit"]
+        ),
+        "exact_modes": ["Copula"],
+        "strict_cost_history_intersections": 1,
+        "research_acceptance_blockers": [],
+        "registered_contract_id": "registered-contract-1",
+        "registered_execution_id": "registered-execution-1",
+        "registered_execution_receipt_path": str(
+            execution_receipt.relative_to(tmp_path)
+        ),
+        "registered_execution_receipt_sha256": digest(execution_receipt),
+        "source_family_sha256": "a" * 64,
+        "exact_mode_parity_sha256": "b" * 64,
+        "full_family_accounted": True,
+        "causal_entry_features_proven": True,
+        "strict_cost_coverage_complete": True,
+        "cost_model_scope": "pair_specific_strict_observed_costs",
+    }
+    pointer_path = data_ml / "candidate_trade_dataset.json"
+    pointer_path.write_text(json.dumps(pointer), encoding="utf-8")
+
+    result = promote_trade_dataset(root=tmp_path)
+    active = json.loads(result.paths["active_pointer"].read_text(encoding="utf-8"))
+
+    assert active["dataset_id"] == "tradedataset-test"
+    assert active["model_retraining_required"] is True
+    assert pd.read_csv(result.paths["dataset_csv"])["trade_id"].tolist() == ["new"]
+    superseded = tmp_path / active["superseded_dataset_receipt"]
+    assert superseded.is_file()
+    preserved = pd.read_csv(superseded.parent / "trade_training_dataset.csv")
+    assert preserved["trade_id"].tolist() == ["old"]
+
+
+def test_trade_dataset_promotion_honors_declared_research_blockers(tmp_path):
+    data_ml = tmp_path / "data" / "ml"
+    reports = tmp_path / "reports" / "ml"
+    build = data_ml / "dataset_builds" / "tradedataset-blocked"
+    build.mkdir(parents=True)
+    reports.mkdir(parents=True)
+    dataset = build / "trade_training_dataset.csv"
+    audit = build / "leakage_audit.csv"
+    selection = build / "trade_dataset_source_selection.csv"
+    registry = build / "trade_dataset_history_registry_audit.csv"
+    summary = build / "trade_dataset_summary.csv"
+    pd.DataFrame(
+        [
+            {
+                "trade_id": "trade-1",
+                "source_venue": "hyperliquid",
+                "pair": "ETH-PYTH",
+                "exact_mode": "Copula",
+            }
+        ]
+    ).to_csv(dataset, index=False)
+    pd.DataFrame([{"trade_id": "trade-1", "leakage_blocker": ""}]).to_csv(
+        audit, index=False
+    )
+    pd.DataFrame(
+        [
+            {
+                "selection_status": "SELECTED_CANONICAL",
+                "strict_observed_cost_ready": True,
+            }
+        ]
+    ).to_csv(selection, index=False)
+    pd.DataFrame([{"registry_status": "HASH_VERIFIED_READY"}]).to_csv(
+        registry, index=False
+    )
+    pd.DataFrame([{"rows": 1}]).to_csv(summary, index=False)
+
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    pointer = {
+        "status": "VALIDATED_CANDIDATE",
+        "dataset_id": "tradedataset-blocked",
+        "dataset_path": str(dataset.relative_to(tmp_path)),
+        "leakage_audit_path": str(audit.relative_to(tmp_path)),
+        "source_selection_path": str(selection.relative_to(tmp_path)),
+        "history_registry_audit_path": str(registry.relative_to(tmp_path)),
+        "summary_path": str(summary.relative_to(tmp_path)),
+        "parquet_path": "",
+        "dataset_sha256": digest(dataset),
+        "leakage_audit_sha256": digest(audit),
+        "source_selection_sha256": digest(selection),
+        "history_registry_audit_sha256": digest(registry),
+        "exact_modes": ["Copula"],
+        "strict_cost_history_intersections": 1,
+        "research_acceptance_blockers": [
+            "registered_exact_mode_lineage_missing"
+        ],
+    }
+    pointer_path = data_ml / "candidate_trade_dataset.json"
+    pointer_path.write_text(json.dumps(pointer), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="registered_exact_mode_lineage_missing"):
+        promote_trade_dataset(root=tmp_path)
 
 
 def test_canonical_current_state_uses_decision_and_audit_truth(tmp_path):
@@ -88,20 +575,157 @@ def test_canonical_current_state_scopes_bandit_blockers_away_from_supervised_stu
     assert rows["student_learning"]["ready"] is True
 
 
-def test_artifact_index_classifies_without_moving_files():
-    result = build_artifact_index()
+def test_artifact_index_classifies_without_moving_files(tmp_path):
+    (tmp_path / "src" / "quant_platform").mkdir(parents=True)
+    (tmp_path / "src" / "quant_platform" / "cli.py").write_text("", encoding="utf-8")
+    (tmp_path / "data" / "raw").mkdir(parents=True)
+    (tmp_path / "data" / "raw" / "evidence.csv").write_text("value\n1\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# Test repository\n", encoding="utf-8")
+    (tmp_path / ".venv" / "lib").mkdir(parents=True)
+    (tmp_path / ".venv" / "lib" / "dependency.py").write_text("", encoding="utf-8")
+    (tmp_path / "node_modules" / "package").mkdir(parents=True)
+    (tmp_path / "node_modules" / "package" / "index.js").write_text("", encoding="utf-8")
+    (tmp_path / ".pytest_cache").mkdir()
+    (tmp_path / ".pytest_cache" / "README.md").write_text("", encoding="utf-8")
+    (tmp_path / ".venv313" / "lib").mkdir(parents=True)
+    (tmp_path / ".venv313" / "lib" / "dependency.py").write_text("", encoding="utf-8")
+    (tmp_path / "pytest-of-user" / "case").mkdir(parents=True)
+    (tmp_path / "pytest-of-user" / "case" / "evidence.csv").write_text("", encoding="utf-8")
+    (tmp_path / "data" / "research").mkdir(parents=True)
+    (tmp_path / "data" / "research" / "receipt.json").write_text("{}", encoding="utf-8")
+    (tmp_path / ".DS_Store").write_text("", encoding="utf-8")
 
+    result = build_artifact_index(root=tmp_path)
+
+    assert all(path.is_relative_to(tmp_path) for path in result.paths.values())
     frame = pd.read_csv(result.paths["artifact_index"])
 
     assert not frame.empty
     assert {"active", "historical_evidence", "do_not_move"}.issubset(set(frame["status"]))
     assert Path("src/quant_platform/cli.py").as_posix() in set(frame["path"])
     assert Path("README.md").as_posix() in set(frame["path"])
+    assert not frame["path"].str.startswith(
+        (".venv/", ".venv313/", "node_modules/", ".pytest_cache/", "pytest-of-user/")
+    ).any()
+    assert ".DS_Store" not in set(frame["path"])
+    research_row = frame.loc[frame["path"].eq("data/research/receipt.json")].iloc[0]
+    assert research_row["status"] == "historical_evidence"
 
 
-def test_pair_universe_separates_discovery_from_acceptance_and_blocks_vendor_only_promote():
-    result = build_pair_universe()
+def test_active_layer_state_rejects_polluted_artifact_index(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "path": ".venv/lib/dependency.py",
+                "artifact_type": "py",
+                "status": "unknown",
+                "source_system": "unknown",
+                "created_or_modified_at": "2026-08-11T00:00:00Z",
+                "used_by_active_pipeline": False,
+                "evidence_value": "none",
+                "safe_to_archive_later": False,
+                "reason": "unclassified",
+                "notes": "",
+            }
+        ]
+    ).to_csv(active / "artifact_index.csv", index=False)
 
+    row = _active_layer_state_row(tmp_path)
+
+    assert row["ready"] is False
+    assert "generated_dependency_paths:1" in row["blocker"]
+
+
+def test_model_state_uses_authority_instead_of_artifact_existence(tmp_path):
+    active = tmp_path / "reports" / "active"
+    model_dir = tmp_path / "models" / "trade_gate"
+    active.mkdir(parents=True)
+    model_dir.mkdir(parents=True)
+    (model_dir / "model.pkl").write_bytes(b"research model")
+    (active / "model_authority_status.json").write_text(
+        json.dumps(
+            {
+                "model_authority": "RESEARCH_ONLY",
+                "out_of_sample_incremental_edge_accepted": False,
+                "score_buckets_monotonic": False,
+                "rl_out_of_sample_accepted": False,
+                "blockers": ["model_incremental_edge_not_accepted"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    row = _model_authority_state_row(tmp_path)
+
+    assert row["ready"] is False
+    assert row["status"] == "RESEARCH_ONLY"
+    assert row["blocker"] == "model_incremental_edge_not_accepted"
+    assert "artifact_exists=True" in row["detail"]
+
+
+def test_seven_stage_state_rows_preserve_canonical_gate_status(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "stage": 1,
+                "objective": "daily receipts",
+                "status": "IN_PROGRESS",
+                "evidence_progress": "2/7",
+                "blocker": "five_days_missing",
+                "next_action": "wait_for_next_daily_receipt",
+            },
+            {
+                "stage": 2,
+                "objective": "cost evidence",
+                "status": "PASS",
+                "evidence_progress": "ready",
+                "blocker": "",
+                "next_action": "monitor",
+            },
+        ]
+    ).to_csv(active / "seven_stage_goal_checkpoint.csv", index=False)
+
+    rows = {row["area"]: row for row in _seven_stage_state_rows(tmp_path)}
+
+    assert rows["seven_stage_1"]["ready"] is False
+    assert rows["seven_stage_1"]["status"] == "IN_PROGRESS"
+    assert rows["seven_stage_1"]["blocker"] == "five_days_missing"
+    assert rows["seven_stage_2"]["ready"] is True
+    assert rows["seven_stage_2"]["status"] == "PASS"
+
+
+def test_pair_universe_separates_discovery_from_acceptance_and_blocks_vendor_only_promote(
+    tmp_path,
+):
+    processed = tmp_path / "data" / "processed"
+    processed.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETHUSDT/FIDAUSDT",
+                "asset_x": "ETHUSDT",
+                "asset_y": "FIDAUSDT",
+                "exchange": "binance",
+                "exact_mode": "Copula",
+                "mode_valid": True,
+                "sharpe": 2.4,
+                "returns_total": 0.3,
+                "source_authority": "discovery_only",
+                "source_timestamp": "2026-08-05T16:00:00Z",
+                "source_fresh": True,
+                "source_health": "healthy",
+                "evidence_path": "data/processed/wizard_evidence.csv",
+            }
+        ]
+    ).to_csv(processed / "wizard_evidence.csv", index=False)
+
+    result = build_pair_universe(root=tmp_path)
+
+    assert all(path.is_relative_to(tmp_path) for path in result.paths.values())
     frame = pd.read_csv(result.paths["pair_universe"])
 
     assert not frame.empty
@@ -240,8 +864,27 @@ def test_pair_universe_routes_fresh_wizard_candidate_to_its_research_venue(tmp_p
     assert "wizard_discovery_only_needs_pair_detail_and_local_replay" in row["missing_data_reason"]
 
 
-def test_market_venue_context_keeps_sources_authority_aware():
-    result = build_market_venue_context()
+def test_market_venue_context_keeps_sources_authority_aware(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "asset": "BTC",
+                "venue": "dydx",
+                "seen_or_tradable": True,
+                "execution_decision": "dydx_execution_ok",
+                "source": "parseforge/dydx-markets-scraper",
+                "reported_24h_volume": 1_000_000,
+                "reported_open_interest_native": 100,
+                "reported_open_interest_usd": 500_000,
+                "funding_rate": 0.0001,
+                "liquidity_bucket": "deep",
+            }
+        ]
+    ).to_csv(active / "multi_exchange_liquidity_test_2026-06-25.csv", index=False)
+
+    result = build_market_venue_context(root=tmp_path)
 
     frame = pd.read_csv(result.paths["market_venue_context"])
     lanes = pd.read_csv(result.paths["venue_lanes"])
@@ -870,8 +1513,79 @@ def test_multi_venue_history_readiness_prefers_current_wizard_shortlist(tmp_path
     assert frame.iloc[0]["candidate_source_kind"] == "current_wizard_shortlist"
 
 
-def test_trade_dataset_writes_leakage_audit_and_required_labels():
-    result = build_trade_dataset()
+def test_trade_dataset_writes_leakage_audit_and_required_labels(
+    tmp_path, monkeypatch
+):
+    source = PairDataset(
+        "ETH-PYTH",
+        pd.DataFrame(
+            {
+                "timestamp": pd.date_range(
+                    "2026-01-01", periods=20, freq="h", tz="UTC"
+                ),
+                "exchange": "hyperliquid",
+                "timeframe": "1h",
+                "source_path": "data/raw/pair_details/eth_pyth.json",
+                "spread": range(20),
+                "zscore": 0.0,
+            }
+        ),
+    )
+    registry_audit = pd.DataFrame(
+        [{"registry_status": "HASH_VERIFIED_READY", "blocker": ""}]
+    )
+    trade_row = pd.DataFrame(
+        [
+            {
+                "trade_id": "trade-1",
+                "pair": "ETH-PYTH",
+                "timeframe": "1h",
+                "source_venue": "hyperliquid",
+                "source_path": "data/raw/pair_details/eth_pyth.json",
+                "exact_mode": "OU Spread",
+                "orientation": "x_on_y",
+                "strategy_id": 1,
+                "strategy_name": "zscore",
+                "family": "mean_reversion",
+                "entry_timestamp": "2026-01-01T01:00:00+00:00",
+                "exit_timestamp": "2026-01-01T02:00:00+00:00",
+                "trade_bars": 2,
+                "label_profitable": 1,
+                "realized_return": 0.01,
+                "max_adverse_excursion": -0.002,
+                "max_favorable_excursion": 0.012,
+                "return_aggregation": "compounded_bar_returns_zero_floor",
+                "return_unit": "fraction_of_equity",
+            }
+        ]
+    )
+    monkeypatch.setattr(
+        active_pipeline_module,
+        "_registered_hyperliquid_training_datasets",
+        lambda _root: ([source], registry_audit),
+    )
+    monkeypatch.setattr(
+        active_pipeline_module,
+        "build_trade_filter_dataset",
+        lambda _datasets: trade_row,
+    )
+    monkeypatch.setattr(
+        active_pipeline_module,
+        "classify_regimes",
+        lambda frame, _config: frame.assign(regime="range"),
+    )
+    from quant_platform import three_brain_system
+
+    monkeypatch.setattr(
+        three_brain_system, "build_shared_outcome_memory", lambda root: None
+    )
+    monkeypatch.setattr(
+        three_brain_system,
+        "build_native_outcome_feature_memory",
+        lambda root: None,
+    )
+
+    result = build_trade_dataset(root=tmp_path)
 
     dataset = pd.read_csv(result.paths["dataset_csv"])
     audit = pd.read_csv(result.paths["leakage_audit"])
@@ -885,9 +1599,13 @@ def test_trade_dataset_writes_leakage_audit_and_required_labels():
     assert audit["leakage_blocker"].fillna("").eq("").all()
 
 
-def test_system_check_reports_active_artifacts():
-    result = system_check()
+def test_system_check_reports_active_artifacts(tmp_path):
+    for folder in ["data/raw", "data/processed", "reports", "src/quant_platform"]:
+        (tmp_path / folder).mkdir(parents=True, exist_ok=True)
 
+    result = system_check(root=tmp_path)
+
+    assert all(path.is_relative_to(tmp_path) for path in result.paths.values())
     frame = pd.read_csv(result.paths["system_check"])
 
     assert not frame.empty
@@ -902,9 +1620,53 @@ def test_system_check_reports_active_artifacts():
     assert "storage:off_volume_archive_destination" in set(frame["check"])
     assert "storage:verified_archive_copy" in set(frame["check"])
     assert "storage:archive_release_dry_run" in set(frame["check"])
+    assert "scheduler:live_runtime_contract" in set(frame["check"])
     assert "hyperliquid_testnet:deterministic_lifecycle_protocol" in set(
         frame["check"]
     )
+
+
+def test_system_check_accepts_only_zero_authority_scheduler_runtime_receipt(
+    tmp_path,
+):
+    for folder in ["data/raw", "data/processed", "reports/active", "src/quant_platform"]:
+        (tmp_path / folder).mkdir(parents=True, exist_ok=True)
+    runtime_path = tmp_path / "reports" / "active" / "scheduler_runtime_readiness.json"
+    payload = {
+        "status": "PASS_SCHEDULER_RUNTIME_READY",
+        "agents_ready": 3,
+        "agents_expected": 3,
+        "checks_passed": 61,
+        "checks_total": 61,
+        "operational_warnings": ["system_volume_free_space_low"],
+        "blockers": [],
+        "candidate_promotion_authority": False,
+        "order_submission_included": False,
+        "orders_submitted": 0,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    runtime_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = system_check(root=tmp_path)
+    frame = pd.read_csv(result.paths["system_check"])
+    row = frame.loc[frame["check"].eq("scheduler:live_runtime_contract")].iloc[0]
+
+    assert bool(row["ready"])
+    assert row["status"] == "ready_with_operational_warnings"
+    assert pd.isna(row["blocker"])
+
+    runtime_path.write_text(
+        json.dumps({**payload, "testnet_order_authority": True}),
+        encoding="utf-8",
+    )
+    blocked = system_check(root=tmp_path)
+    blocked_frame = pd.read_csv(blocked.paths["system_check"])
+    blocked_row = blocked_frame.loc[
+        blocked_frame["check"].eq("scheduler:live_runtime_contract")
+    ].iloc[0]
+    assert not bool(blocked_row["ready"])
+    assert "scheduler_runtime_authority_not_zero" in blocked_row["blocker"]
 
 
 def test_configured_env_key_presence_is_consistent_without_loading_secret(
@@ -976,10 +1738,92 @@ def test_export_trade_gate_blocks_without_model_acceptance(tmp_path, monkeypatch
     assert "model_gated_backtest_not_accepted" in report
 
 
-def test_dashboard_rows_include_reason_blocker_freshness_and_evidence():
-    build_pair_universe()
-    result = build_command_dashboard()
+def test_dashboard_rows_include_reason_blocker_freshness_and_evidence(tmp_path):
+    build_pair_universe(root=tmp_path)
+    active = tmp_path / "reports" / "active"
+    pd.DataFrame(
+        [
+            {
+                "exact_mode": "OU ZScoreR",
+                "history_match_status": "MATCHED",
+                "acceptance_eligible": False,
+                "paper_or_execution_eligible": False,
+                "evidence_path": "fixture://wizard-mode-comparison",
+            }
+        ]
+    ).to_csv(active / "wizard_mode_comparison.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "cost_case": "observed",
+                "execution_risk_bps": 0.0,
+                "scenario_status": "RESEARCH_ONLY",
+                "acceptance_eligible": False,
+                "paper_or_execution_eligible": False,
+                "evidence_path": "fixture://wizard-cost-sensitivity",
+            }
+        ]
+    ).to_csv(active / "wizard_exploratory_cost_sensitivity.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "exact_mode": "Copula",
+                "source_fresh": True,
+                "candidate_source_kind": "wizard_discovery",
+                "readiness_status": "RESEARCH_ONLY",
+            }
+        ]
+    ).to_csv(active / "multi_venue_history_readiness.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "history_status": "MISSING",
+                "wizard_settings_status": "CAPTURE_REQUIRED",
+                "research_execution_status": "RESEARCH_ONLY",
+                "next_action": "capture_history",
+            }
+        ]
+    ).to_csv(active / "binance_spot_pair_readiness.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "ETH-PYTH",
+                "status": "collecting",
+                "minimum_samples": 11,
+                "model_required_samples": 12,
+                "projected_captures_to_calibration": 1,
+                "projected_calibration_at": "2026-08-11T00:00:00Z",
+            }
+        ]
+    ).to_csv(active / "hyperliquid_evidence_cadence.csv", index=False)
+    (active / "current_wizard_ou_optimal_overlay_manifest.json").write_text(
+        json.dumps(
+            {
+                "scanner_overlay": "ou_optimal",
+                "source_rows_accounted": 2,
+                "ou_optimal_true_rows": 1,
+                "ou_optimal_false_rows": 1,
+                "promotion_authority": False,
+                "live_trading_authorized": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (active / "exhaustive_wizard_hyperliquid_run_manifest.json").write_text(
+        json.dumps({"run_id": "fixture-run", "source_rows": 1, "pair_groups": 1}),
+        encoding="utf-8",
+    )
+    (active / "exhaustive_wizard_api_refresh_manifest.json").write_text(
+        json.dumps({"refresh_id": "fixture-refresh", "api_source_rows": 1}),
+        encoding="utf-8",
+    )
+    (active / "current_wizard_hyperliquid_handoff_manifest.json").write_text(
+        json.dumps({"handoff_id": "fixture-handoff", "pair_groups": 1}),
+        encoding="utf-8",
+    )
+    result = build_command_dashboard(root=tmp_path, refresh_profile="monitor")
 
+    assert all(path.is_relative_to(tmp_path) for path in result.paths.values())
     live = pd.read_csv(result.paths["live_signals"])
     wizard_discovery = pd.read_csv(result.paths["wizard_discovery"])
     wizard_shortlist = pd.read_csv(result.paths["wizard_discovery_shortlist"])
@@ -1802,10 +2646,13 @@ def test_focused_paper_validation_uses_model_gate_anchor_action_for_strong_suppo
     assert "preserve strong pair-specific model support" in str(focused.iloc[0]["next_action"])
 
 
-def test_archive_dry_run_writes_manifest_and_moves_nothing():
-    build_artifact_index()
-    result = archive_from_index(dry_run=True)
+def test_archive_dry_run_writes_manifest_and_moves_nothing(tmp_path):
+    (tmp_path / "work").mkdir(parents=True)
+    (tmp_path / "work" / "scratch.log").write_text("scratch\n", encoding="utf-8")
+    build_artifact_index(root=tmp_path)
+    result = archive_from_index(dry_run=True, root=tmp_path)
 
+    assert all(path.is_relative_to(tmp_path) for path in result.paths.values())
     frame = pd.read_csv(result.paths["archive_manifest"])
 
     assert "planned_action" in frame.columns

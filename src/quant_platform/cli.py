@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
-from itertools import combinations
-from datetime import datetime, timedelta, timezone
-from dataclasses import asdict, replace
 import json
 import os
-from pathlib import Path
 import re
-import subprocess
 import shutil
+import subprocess
 import time
+from contextlib import contextmanager
+from dataclasses import asdict, replace
+from datetime import UTC, datetime, timedelta
+from hashlib import sha256
+from itertools import combinations
+from pathlib import Path
 from urllib.parse import urlparse
 
 import numpy as np
@@ -27,27 +28,28 @@ from quant_platform.active_pipeline import (
     build_market_venue_context,
     build_multi_venue_history_readiness,
     build_pair_universe,
-    focused_paper_validation_rows,
-    paper_candidate_shortlist_rows,
     build_trade_dataset,
     build_venue_lane_test_plan,
     build_venue_route_scorecard,
     current_state,
     export_trade_gate_model,
+    focused_paper_validation_rows,
+    paper_candidate_shortlist_rows,
+    promote_trade_dataset,
     run_model_gated_backtest,
     system_check,
     train_trade_gate,
-)
-from quant_platform.apify_sources import (
-    infer_apify_venue,
-    parse_apify_sources_from_mcp_url,
-    refresh_apify_sources,
 )
 from quant_platform.api_extraction import (
     CryptoWizardsExtractor,
     CryptoWizardsFetchError,
     CryptoWizardsLiveConfig,
     parse_endpoint_specs,
+)
+from quant_platform.apify_sources import (
+    infer_apify_venue,
+    parse_apify_sources_from_mcp_url,
+    refresh_apify_sources,
 )
 from quant_platform.backtest import CostModel, backtest_pair, backtest_two_leg_spread
 from quant_platform.binance_spot import (
@@ -61,6 +63,9 @@ from quant_platform.binance_testnet import (
     binance_testnet_preflight,
 )
 from quant_platform.crypto_wizards_catalog import endpoint_rows
+from quant_platform.crypto_wizards_dashboard_capture import (
+    ingest_exhaustive_wizard_dashboard_captures,
+)
 from quant_platform.crypto_wizards_history import (
     CryptoWizardsHistoryRequest,
     crawl_prescanned_backtest_histories,
@@ -69,177 +74,60 @@ from quant_platform.crypto_wizards_history import (
     write_backtest_pair_payload,
     write_zscores_pair_payload,
 )
+from quant_platform.crypto_wizards_scanner import load_scanner_rows, write_scanner_reports
 from quant_platform.crypto_wizards_sweep import (
     restore_complete_wizard_sweep_from_raw,
     run_wizard_discovery_sweep,
 )
-from quant_platform.crypto_wizards_dashboard_capture import (
-    ingest_exhaustive_wizard_dashboard_captures,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
-    build_exhaustive_wizard_hyperliquid_run,
-    build_exhaustive_wizard_hyperliquid_mapping_refresh,
-)
-from quant_platform.orchestration.exhaustive_wizard_api_refresh import (
-    build_exhaustive_wizard_api_refresh_delta,
-)
-from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
-    run_wizard_pair_detail_api_pilot,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_handoff import (
-    build_current_wizard_hyperliquid_handoff,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
-    materialize_current_wizard_hyperliquid_history,
-    run_current_wizard_hyperliquid_canonical_replay,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
-    materialize_current_wizard_hyperliquid_cost_evidence,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
-    run_current_wizard_hyperliquid_observed_cost_replay,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
-    run_current_wizard_hyperliquid_walkforward,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_regimes import (
-    build_current_wizard_hyperliquid_regime_attribution,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_robustness import (
-    run_current_wizard_hyperliquid_robustness,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_concentration import (
-    build_current_wizard_hyperliquid_concentration,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
-    build_current_wizard_hyperliquid_failure_attribution,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
-    build_current_wizard_hyperliquid_leverage_surface,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
-    build_current_wizard_hyperliquid_learning_ledger,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
-    validate_current_wizard_hyperliquid_chain,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
-    build_current_wizard_hyperliquid_operating_cadence,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
-    run_current_wizard_hyperliquid_daily_pipeline,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_completion_audit import (
-    build_current_wizard_hyperliquid_completion_audit,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
-    build_current_wizard_hyperliquid_storage_reclamation_plan,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_archive import (
-    stage_current_wizard_hyperliquid_archive_copy,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_archive_release import (
-    build_current_wizard_hyperliquid_archive_release_dry_run,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_testnet_protocol import (
-    validate_current_wizard_hyperliquid_testnet_protocol,
-)
-from quant_platform.orchestration.current_wizard_ou_optimal_overlay import (
-    build_current_wizard_ou_optimal_overlay,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_replay import (
-    build_exhaustive_wizard_hyperliquid_replay_preflight,
-    materialize_exhaustive_wizard_hyperliquid_history,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
-    run_exhaustive_wizard_hyperliquid_canonical_replay,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_evidence import (
-    materialize_exhaustive_hyperliquid_funding_evidence,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_bridge import (
-    build_exhaustive_wizard_hyperliquid_cost_evidence,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_observed_cost_replay import (
-    run_exhaustive_wizard_hyperliquid_observed_cost_replay,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward import (
-    run_exhaustive_wizard_hyperliquid_walkforward,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
-    build_exhaustive_wizard_hyperliquid_regime_attribution,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_robustness import (
-    run_exhaustive_wizard_hyperliquid_robustness,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_concentration import (
-    build_exhaustive_wizard_hyperliquid_concentration,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_leverage import (
-    build_exhaustive_wizard_hyperliquid_leverage_surface,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_learning import (
-    build_exhaustive_wizard_hyperliquid_learning_ledger,
-)
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_validation import (
-    run_exhaustive_wizard_hyperliquid_validation,
-)
-from quant_platform.wizard_pair_detail_ui_bundle import (
-    ingest_wizard_pair_detail_ui_bundles,
-)
-from quant_platform.wizard_control_plane import build_wizard_control_plane
-from quant_platform.crypto_wizards_scanner import load_scanner_rows, write_scanner_reports
 from quant_platform.dydx_candles import (
     archive_dydx_candles,
     backfill_provisional_pair_history_features,
-    build_pair_history_from_windowed_candles,
     build_pair_history_from_candles,
+    build_pair_history_from_windowed_candles,
     dydx_two_leg_request_rows,
     import_dydx_candle_bundle,
     load_loose_candle_payload,
 )
+from quant_platform.env import load_env_file
 from quant_platform.execution import (
-    _lookup_dashboard_trade_snapshot,
     DydxNetworkConfig,
     OrderIntent,
     SpreadOrderPlan,
+    _lookup_dashboard_trade_snapshot,
     append_paper_outcome_record,
     append_paper_trading_record,
     block_paper_plan_for_execution_config,
-    build_execution_venue,
     build_dydx_indexer_adapter,
     build_dydx_order_client_adapter,
+    build_execution_venue,
     build_research_gated_paper_plan,
-    dydx_readiness_report,
-    validate_dydx_order_client_adapter,
     build_venue_order_client_adapter,
-    validate_venue_order_client_adapter,
-    venue_has_paper_adapter,
+    dydx_execution_compatibility_snapshot,
+    dydx_readiness_report,
+    effective_dydx_account_state_snapshot,
+    hyperliquid_testnet_order_preflight_status,
+    normalize_venue_name,
     paper_trading_record,
     refresh_current_paper_watch_positions,
-    refresh_live_paper_trade_monitor,
-    refresh_paper_trade_price_journal,
-    refresh_paper_trade_decision_report,
-    submit_paper_plan,
-    PaperDydxExecution,
-    normalize_venue_name,
-    dydx_account_state_snapshot,
-    effective_dydx_account_state_snapshot,
-    dydx_execution_compatibility_snapshot,
     refresh_dydx_execution_compatibility_table,
-    refresh_injective_execution_compatibility_table,
-    refresh_injective_mirror_candidate_queue,
-    refresh_injective_spot_first_candidate_shortlist,
-    refresh_injective_spot_supported_pair_universe,
     refresh_gmx_execution_compatibility_table,
     refresh_gmx_testnet_candidate_shortlist,
     refresh_gmx_testnet_market_inventory,
     refresh_hyperliquid_execution_compatibility_table,
-    hyperliquid_testnet_order_preflight_status,
     refresh_hyperliquid_testnet_candidate_shortlist,
     refresh_hyperliquid_testnet_market_inventory,
+    refresh_injective_execution_compatibility_table,
+    refresh_injective_mirror_candidate_queue,
+    refresh_injective_spot_first_candidate_shortlist,
+    refresh_injective_spot_supported_pair_universe,
+    refresh_live_paper_trade_monitor,
     refresh_non_eth_route_submit_queue,
-    write_browser_account_state_override,
+    refresh_paper_trade_decision_report,
+    refresh_paper_trade_price_journal,
+    submit_paper_plan,
+    validate_dydx_order_client_adapter,
+    validate_venue_order_client_adapter,
+    venue_has_paper_adapter,
 )
 from quant_platform.experiments import (
     AcceptanceGate,
@@ -248,7 +136,6 @@ from quant_platform.experiments import (
     PairDataset,
     strategy_acceptance_report,
 )
-from quant_platform.env import load_env_file
 from quant_platform.family_matrix import run_family_matrix
 from quant_platform.field_registry import field_rows
 from quant_platform.fixture_ingestion import (
@@ -269,48 +156,22 @@ from quant_platform.hyperliquid import (
     DEFAULT_SLIPPAGE_CALIBRATION_CADENCE_MINUTES,
     DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES,
     DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS,
-    build_hyperliquid_lane_report,
     build_hyperliquid_evidence_cadence,
-    build_hyperliquid_pair_history,
+    build_hyperliquid_lane_report,
     build_hyperliquid_pair_cost_model,
+    build_hyperliquid_pair_history,
     build_hyperliquid_research_bundle,
     fetch_hyperliquid_candles,
-    refresh_hyperliquid_funding_history,
     refresh_hyperliquid_execution_cost_snapshot,
+    refresh_hyperliquid_funding_history,
     refresh_hyperliquid_market_context,
 )
-from quant_platform.wizard_hyperliquid_bridge import build_hyperliquid_wizard_hypothesis_queue
-from quant_platform.wizard_hyperliquid_mode_proof import run_hyperliquid_wizard_mode_proofs
 from quant_platform.hyperliquid_testnet import (
     HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON,
     HyperliquidTestnetConfig,
     HyperliquidTestnetPairExecutor,
     write_hyperliquid_testnet_margin_snapshot,
     write_hyperliquid_testnet_preflight_report,
-)
-from quant_platform.orchestration.hyperliquid_research_cycle import run_hyperliquid_research_cycle
-from quant_platform.orchestration.corrective_governance import build_corrective_governance
-from quant_platform.orchestration.corrective_data_evidence import build_corrective_data_evidence
-from quant_platform.orchestration.corrective_wizard_parity import build_corrective_wizard_parity
-from quant_platform.orchestration.corrective_statistical_remediation import build_corrective_statistical_remediation
-from quant_platform.orchestration.corrective_agent_governance import build_corrective_agent_governance
-from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
-from quant_platform.orchestration.corrective_l2_scheduler import (
-    install_corrective_l2_launch_agent,
-    run_corrective_l2_capture,
-)
-from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
-from quant_platform.orchestration.corrective_program import complete_corrective_plan
-from quant_platform.orchestration.hyperliquid_research_validation import (
-    build_hyperliquid_auxiliary_timeframe_validation,
-)
-from quant_platform.orchestration.hyperliquid_learning_and_risk import (
-    build_testnet_lifecycle_gate,
-    sign_testnet_smoke_approval,
-    write_testnet_smoke_approval_template,
-)
-from quant_platform.orchestration.hyperliquid_testnet_lifecycle_evidence import (
-    capture_hyperliquid_testnet_lifecycle_evidence,
 )
 from quant_platform.meta_learning import (
     JsonlTradeStore,
@@ -319,75 +180,284 @@ from quant_platform.meta_learning import (
 )
 from quant_platform.ml_filter import (
     build_trade_filter_dataset,
-    shadow_trade_filter_predictions,
     shadow_model_branch_comparison,
+    shadow_trade_filter_predictions,
     train_trade_filter_walkforward,
 )
-from quant_platform.pair_market_utils import normalize_dydx_market, pair_markets_from_pair
-from quant_platform.pair_detail_ingestion import (
-    ECM_FIELD_SOURCE,
-    datasets_from_pair_detail_snapshots,
-    extract_history_rows,
-    load_pair_detail_snapshots,
-    pair_detail_capture_audit,
-    pair_detail_capture_checklist,
-    PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS,
-    PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS,
-    PAIR_DETAIL_QUALITY_COLUMNS,
-    pair_detail_history_coverage,
-    pair_detail_quality_report,
-    pair_detail_payload_capture_audit,
-    pair_detail_payload_capture_checklist,
-    pair_detail_payload_history_coverage,
-    snapshot_from_payload,
-    write_pair_detail_reports,
-)
-from quant_platform.research_quantization import quantize_family_matrix
-from quant_platform.research_ingestion import (
-    build_research_source_registry,
-    ingest_research_source,
-    research_source_audit,
-)
-from quant_platform.research_extract_ccxt import extract_research_knowledge
-from quant_platform.research_extract_udemy import extract_udemy_research, refresh_udemy_research
-from quant_platform.research_extract_youtube import extract_youtube_research
-from quant_platform.research_knowledge_store import (
-    build_research_knowledge_store,
-    research_knowledge_summary,
-)
-from quant_platform.youtube_brain import (
-    build_youtube_brain,
-    build_youtube_brain_dashboard,
-    build_youtube_pair_hypotheses,
-    refresh_youtube_collection,
-    refresh_youtube_outcome_memory,
-    run_youtube_brain_cycle,
-)
-from quant_platform.youtube_caption_insights import build_youtube_caption_insights
-from quant_platform.youtube_channel_research import run_hudson_thames_youtube_research
-from quant_platform.youtube_hypothesis_validation import run_youtube_hypothesis_validation
-from quant_platform.regimes import RegimeConfig, classify_regimes, write_regime_dataset_report
 from quant_platform.orchestration import run_langgraph_agent_workflow, run_orchestrator
+from quant_platform.orchestration.corrective_agent_governance import (
+    build_corrective_agent_governance,
+)
+from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
+from quant_platform.orchestration.corrective_data_evidence import build_corrective_data_evidence
+from quant_platform.orchestration.corrective_governance import build_corrective_governance
+from quant_platform.orchestration.corrective_l2_scheduler import (
+    install_corrective_l2_launch_agent,
+    run_corrective_l2_capture,
+)
+from quant_platform.orchestration.corrective_live_canary import _policy_id
+from quant_platform.orchestration.corrective_live_canary_execution import (
+    run_live_canary_executor,
+)
+from quant_platform.orchestration.corrective_live_canary_executor import (
+    build_live_canary_executor_preflight,
+)
+from quant_platform.orchestration.corrective_live_parity_capture import (
+    capture_live_input_parity_evidence,
+)
+from quant_platform.orchestration.corrective_program import complete_corrective_plan
+from quant_platform.orchestration.corrective_registered_learning_protocol import (
+    build_registered_stage5_protocol,
+)
+from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
+from quant_platform.orchestration.corrective_scheduler_runtime_readiness import (
+    build_corrective_scheduler_runtime_readiness,
+)
+from quant_platform.orchestration.corrective_stage4_handoff_readiness import (
+    build_corrective_stage4_handoff_readiness,
+)
+from quant_platform.orchestration.corrective_statistical_remediation import (
+    build_corrective_statistical_remediation,
+)
+from quant_platform.orchestration.corrective_testnet_collateral_transfer import (
+    build_testnet_collateral_transfer_preflight,
+    run_testnet_collateral_transfer,
+)
+from quant_platform.orchestration.corrective_testnet_pair_execution import (
+    build_testnet_pair_execution_preflight,
+    run_testnet_pair_execution,
+)
+from quant_platform.orchestration.corrective_wizard_capture_manifest import (
+    build_corrective_wizard_capture_manifest,
+    validate_ou_v4_capture_manifest_contract,
+    validate_ou_v5_capture_manifest_contract,
+)
+from quant_platform.orchestration.corrective_wizard_capture_reconciliation import (
+    reconcile_corrective_wizard_capture_manifest,
+)
+from quant_platform.orchestration.corrective_wizard_comparator_review_control import (
+    build_corrective_wizard_comparator_review_control,
+)
+from quant_platform.orchestration.corrective_wizard_copula_behavioral import (
+    register_copula_behavioral_v2,
+    run_current_copula_behavioral_proofs,
+)
+from quant_platform.orchestration.corrective_wizard_dynamic_holdout import (
+    build_dynamic_v2_reviewed_activation,
+)
+from quant_platform.orchestration.corrective_wizard_dynamic_supreme_review import (
+    build_dynamic_v2_supreme_review,
+)
+from quant_platform.orchestration.corrective_wizard_ou_holdout import (
+    build_ou_v3_reviewed_activation,
+    evaluate_ou_v2_blind_holdout,
+    register_ou_trend_selector_v1_holdout,
+    run_ou_v3_prospective_holdout,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v4_failure_attribution import (
+    build_ou_v4_failure_attribution,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v4_holdout import (
+    register_ou_v4_prospective_holdout,
+    run_ou_v4_prospective_holdout,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v4_supreme_review import (
+    build_ou_v4_supreme_review,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v5_failure_attribution import (
+    build_ou_v5_failure_attribution,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v5_holdout import (
+    register_ou_v5_prospective_holdout,
+    run_ou_v5_prospective_holdout,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v5_supreme_review import (
+    build_ou_v5_supreme_review,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v6_holdout import (
+    register_ou_v6_prospective_holdout,
+)
+from quant_platform.orchestration.corrective_wizard_ou_v6_supreme_review import (
+    build_ou_v6_supreme_review,
+)
+from quant_platform.orchestration.corrective_wizard_parity import build_corrective_wizard_parity
+from quant_platform.orchestration.corrective_wizard_reset_readiness import (
+    build_corrective_wizard_reset_readiness,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_archive import (
+    stage_current_wizard_hyperliquid_archive_copy,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_archive_release import (
+    build_current_wizard_hyperliquid_archive_release_dry_run,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
+    build_current_wizard_hyperliquid_operating_cadence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_completion_audit import (
+    build_current_wizard_hyperliquid_completion_audit,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_concentration import (
+    build_current_wizard_hyperliquid_concentration,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
+    materialize_current_wizard_hyperliquid_cost_evidence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
+    run_current_wizard_hyperliquid_daily_pipeline,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
+    build_current_wizard_hyperliquid_failure_attribution,
+    build_current_wizard_hyperliquid_failure_routing_index,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_handoff import (
+    build_current_wizard_hyperliquid_handoff,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
+    build_current_wizard_hyperliquid_learning_ledger,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
+    build_current_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
+    run_current_wizard_hyperliquid_observed_cost_replay,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_regimes import (
+    build_current_wizard_hyperliquid_regime_attribution,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
+    materialize_current_wizard_hyperliquid_history,
+    run_current_wizard_hyperliquid_canonical_replay,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_robustness import (
+    run_current_wizard_hyperliquid_robustness,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
+    build_current_wizard_hyperliquid_storage_reclamation_plan,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_testnet_protocol import (
+    validate_current_wizard_hyperliquid_testnet_protocol,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
+    validate_current_wizard_hyperliquid_chain,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
+    run_current_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.current_wizard_ou_optimal_overlay import (
+    build_current_wizard_ou_optimal_overlay,
+)
+from quant_platform.orchestration.exhaustive_wizard_api_refresh import (
+    build_exhaustive_wizard_api_refresh_delta,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
+    run_exhaustive_wizard_hyperliquid_canonical_replay,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_concentration import (
+    build_exhaustive_wizard_hyperliquid_concentration,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_bridge import (
+    build_exhaustive_wizard_hyperliquid_cost_evidence,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_evidence import (
+    materialize_exhaustive_hyperliquid_funding_evidence,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_learning import (
+    build_exhaustive_wizard_hyperliquid_learning_ledger,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_leverage import (
+    build_exhaustive_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_observed_cost_replay import (
+    run_exhaustive_wizard_hyperliquid_observed_cost_replay,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
+    build_exhaustive_wizard_hyperliquid_regime_attribution,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_replay import (
+    build_exhaustive_wizard_hyperliquid_replay_preflight,
+    materialize_exhaustive_wizard_hyperliquid_history,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_robustness import (
+    run_exhaustive_wizard_hyperliquid_robustness,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
+    build_exhaustive_wizard_hyperliquid_mapping_refresh,
+    build_exhaustive_wizard_hyperliquid_run,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_validation import (
+    run_exhaustive_wizard_hyperliquid_validation,
+)
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward import (
+    run_exhaustive_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.hyperliquid_learning_and_risk import (
+    build_testnet_lifecycle_gate,
+    sign_testnet_smoke_approval,
+    write_testnet_smoke_approval_template,
+)
+from quant_platform.orchestration.hyperliquid_research_cycle import run_hyperliquid_research_cycle
+from quant_platform.orchestration.hyperliquid_research_validation import (
+    build_hyperliquid_auxiliary_timeframe_validation,
+)
+from quant_platform.orchestration.hyperliquid_testnet_lifecycle_evidence import (
+    capture_hyperliquid_testnet_lifecycle_evidence,
+)
 from quant_platform.orchestration.interactive_mixtape_graph import (
     build_interactive_mixtape_solution,
 )
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
+from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
+    run_wizard_pair_detail_api_pilot,
+)
+from quant_platform.pair_detail_ingestion import (
+    ECM_FIELD_SOURCE,
+    PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS,
+    PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS,
+    PAIR_DETAIL_QUALITY_COLUMNS,
+    datasets_from_pair_detail_snapshots,
+    extract_history_rows,
+    load_or_refresh_pair_detail_evidence_cache,
+    load_pair_detail_snapshots,
+    pair_detail_capture_audit,
+    pair_detail_capture_checklist,
+    pair_detail_history_coverage,
+    pair_detail_payload_capture_audit,
+    pair_detail_payload_capture_checklist,
+    pair_detail_payload_history_coverage,
+    pair_detail_quality_report,
+    snapshot_from_payload,
+    write_pair_detail_reports,
+)
+from quant_platform.pair_market_utils import normalize_dydx_market, pair_markets_from_pair
+from quant_platform.regimes import RegimeConfig, classify_regimes, write_regime_dataset_report
+from quant_platform.research_extract_ccxt import extract_research_knowledge
+from quant_platform.research_extract_udemy import extract_udemy_research, refresh_udemy_research
+from quant_platform.research_extract_youtube import extract_youtube_research
+from quant_platform.research_ingestion import (
+    build_research_source_registry,
+    ingest_research_source,
+    research_source_audit,
+)
+from quant_platform.research_knowledge_store import (
+    build_research_knowledge_store,
+    research_knowledge_summary,
+)
+from quant_platform.research_quantization import quantize_family_matrix
 from quant_platform.rl import (
     base_rl_paper_handoff_report,
     build_brain_readiness_report,
     evaluate_base_rl,
     export_rl_policy,
-    run_augmented_rl,
     refresh_base_rl_feedback,
+    run_augmented_rl,
     run_base_rl,
     run_brain_cycle,
     run_magicka_learning_cycle,
-    run_sequential_thinking_magicka,
     run_rl_idea_scout,
-    run_rl_learning_cycle,
     run_rl_research,
+    run_sequential_thinking_magicka,
 )
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 from quant_platform.strategies import STRATEGIES, strategy_rows, zscore_signal
@@ -399,6 +469,8 @@ from quant_platform.trade_timing import (
     write_trade_timing_template,
 )
 from quant_platform.v2_run import build_v2_preflight_run, publish_v2_run_status, validate_v2_run
+from quant_platform.wizard_control_plane import build_wizard_control_plane
+from quant_platform.wizard_credit_budget import build_wizard_credit_budget_contract
 from quant_platform.wizard_evidence import (
     build_wizard_diagnostic_confirmation,
     build_wizard_discovery_triage,
@@ -415,21 +487,53 @@ from quant_platform.wizard_evidence import (
     build_wizard_research_pack,
     import_wizard_pair_settings_capture,
 )
+from quant_platform.wizard_hyperliquid_bridge import build_hyperliquid_wizard_hypothesis_queue
+from quant_platform.wizard_hyperliquid_mode_proof import (
+    build_exhaustive_wizard_mode_proof_queue,
+    refresh_activated_dynamic_v2_proofs,
+    refresh_activated_ou_v3_proofs,
+    refresh_activated_ou_v4_proofs,
+    refresh_activated_ou_v5_proofs,
+    refresh_activated_ou_v6_proofs,
+    run_hyperliquid_wizard_mode_proofs,
+)
 from quant_platform.wizard_local_verification import (
     build_wizard_local_verification_batch,
     verify_wizard_local_mode,
 )
 from quant_platform.wizard_mode_comparison import build_wizard_mode_comparison
+from quant_platform.wizard_ou_v4_comparator_activation import (
+    build_reviewed_ou_v4_activation,
+)
+from quant_platform.wizard_ou_v5_comparator_activation import (
+    build_reviewed_ou_v5_activation,
+)
+from quant_platform.wizard_ou_v6_comparator_activation import (
+    build_reviewed_ou_v6_activation,
+)
+from quant_platform.wizard_pair_detail_ui_bundle import (
+    ingest_wizard_pair_detail_ui_bundles,
+)
 from quant_platform.wizard_research_journal import build_wizard_research_journal
 from quant_platform.yahoo_crypto import (
     backfill_yahoo_crypto_funding,
     build_yahoo_crypto_lane_report,
     build_yahoo_crypto_pair_history,
     fetch_yahoo_crypto_candles,
-    refresh_yahoo_research_candidates,
     refresh_yahoo_crypto_pair_history,
+    refresh_yahoo_research_candidates,
 )
-
+from quant_platform.youtube_brain import (
+    build_youtube_brain,
+    build_youtube_brain_dashboard,
+    build_youtube_pair_hypotheses,
+    refresh_youtube_collection,
+    refresh_youtube_outcome_memory,
+    run_youtube_brain_cycle,
+)
+from quant_platform.youtube_caption_insights import build_youtube_caption_insights
+from quant_platform.youtube_channel_research import run_hudson_thames_youtube_research
+from quant_platform.youtube_hypothesis_validation import run_youtube_hypothesis_validation
 
 ROOT = Path(__file__).resolve().parents[2]
 SWEEP_MODES = ("light", "deep", "paid")
@@ -576,8 +680,8 @@ def _native_acceptance_bridge_row(reports: Path) -> dict[str, object] | None:
         "acceptance_reason": "passed" if production_eligible else "passing_pairs<2",
         "preferred_reason": "passed" if not preferred_failures else ";".join(preferred_failures),
         "research_reason": "passed" if passing_pairs >= 1 else "research_passing_pairs<1",
-        "evaluated_runs": int(len(merged)),
-        "passing_runs": int(len(passing)),
+        "evaluated_runs": len(merged),
+        "passing_runs": len(passing),
         "pairs_tested": pairs_tested,
         "passing_pairs": passing_pairs,
         "research_pairs_tested": pairs_tested,
@@ -2519,12 +2623,16 @@ def print_shadow_ml_trade_filter(
     funding_path: Path | None = None,
     model_path: Path | None = None,
     output_path: Path | None = None,
+    model_sha256: str = "",
 ) -> None:
     dataset = _load_ml_trade_filter_dataset(input_dir, funding_path)
     artifact = model_path or ROOT / "reports" / "ml_trade_filter" / "ml_trade_filter_best_model.pkl"
     output = output_path or ROOT / "reports" / "ml_trade_filter_shadow_predictions.csv"
     path = shadow_trade_filter_predictions(
-        dataset, model_artifact_path=artifact, output_path=output
+        dataset,
+        model_artifact_path=artifact,
+        output_path=output,
+        expected_model_sha256=model_sha256,
     )
     frame = pd.read_csv(path)
     print(frame.head(20).to_string(index=False))
@@ -2893,7 +3001,7 @@ def family_failure_attribution_report(
             {
                 "family": family,
                 "best_strategy": best.get("strategy_name", ""),
-                "strategies_in_family": int(len(group)),
+                "strategies_in_family": len(group),
                 "evaluated_runs_best_strategy": int(
                     pd.to_numeric(pd.Series([best.get("evaluated_runs")]), errors="coerce")
                     .fillna(0)
@@ -3664,7 +3772,7 @@ def funded_research_spine(
         _write_csv_atomic(frame, output)
         return frame
     ready_pairs = int(coverage.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum())
-    total_pairs = int(len(coverage))
+    total_pairs = len(coverage)
     blocked_pairs = [
         str(row.get("pair", ""))
         for _, row in coverage.iterrows()
@@ -3708,7 +3816,7 @@ def funded_research_spine(
     refreshed_ready_pairs = int(
         refreshed_coverage.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
     )
-    refreshed_total_pairs = int(len(refreshed_coverage))
+    refreshed_total_pairs = len(refreshed_coverage)
     rows.append(
         _spine_row(
             step="research_spine",
@@ -4889,8 +4997,8 @@ def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.D
                 "family": family,
                 "diagnosis": diagnosis,
                 "next_action": _strategy_failure_next_action(diagnosis),
-                "evaluated_runs": int(len(evaluated)),
-                "skipped_runs": int(len(skipped)),
+                "evaluated_runs": len(evaluated),
+                "skipped_runs": len(skipped),
                 "pairs_tested": pair_count,
                 "eligible_runs": eligible,
                 "total_trades": total_trades,
@@ -5427,7 +5535,7 @@ def dydx_long_history_plan_report(
     left, right, resolved_pair_id = _resolve_long_history_pair(
         pair=pair, asset_x=asset_x, asset_y=asset_y, pair_id=pair_id
     )
-    end_time = _parse_iso_datetime(to_iso) if to_iso else datetime.now(timezone.utc)
+    end_time = _parse_iso_datetime(to_iso) if to_iso else datetime.now(UTC)
     step = _resolution_timedelta(resolution) * limit
     requested_indexer_base = _indexer_base_with_scheme(indexer_base, indexer_scheme)
     rows: list[dict[str, object]] = []
@@ -6317,7 +6425,7 @@ def _paper_execution_preflight_report(
         venue_cost_aligned_pairs = int(
             venue_preflight.get("cost_model_aligned", pd.Series(dtype=bool)).map(_coerce_bool).sum()
         )
-        venue_rows = int(len(venue_preflight))
+        venue_rows = len(venue_preflight)
         venue_cost_model_ready = venue_cost_aligned_pairs > 0
         venue_evidence = f"paper_venue_preflight_rows={venue_rows};cost_model_aligned_pairs={venue_cost_aligned_pairs}"
         if not venue_cost_model_ready:
@@ -6545,7 +6653,7 @@ def refresh_execution_truth_surfaces(root: Path = ROOT) -> dict[str, str]:
         )
         if not injective_compatibility.empty
         else "0",
-        "gmx_testnet_markets": str(int(len(gmx_inventory))) if not gmx_inventory.empty else "0",
+        "gmx_testnet_markets": str(len(gmx_inventory)) if not gmx_inventory.empty else "0",
         "gmx_mirrorable_pairs": str(
             int(
                 gmx_compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool))
@@ -6962,7 +7070,7 @@ def run_research_sweep(
     reports.mkdir(parents=True, exist_ok=True)
     output_path = reports / "research_sweep_status.csv"
     summary_path = reports / "research_sweep_summary.json"
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     rows: list[dict[str, object]] = []
 
     current = current_state()
@@ -7190,7 +7298,7 @@ def run_research_sweep(
         "run_id": f"research_sweep_{mode}_{timestamp}",
         "completed_steps": int((frame["status"] == "completed").sum()),
         "skipped_steps": int((frame["status"] == "skipped").sum()),
-        "blocked_gates": int(len(blocked)),
+        "blocked_gates": len(blocked),
         "paper_trading_ready": paper_gate_ready,
         "next_action": "paper trading lane is ready"
         if paper_gate_ready
@@ -7386,7 +7494,7 @@ def print_gap_analysis_checklist(run_dir: Path | None = None) -> tuple[Path, Pat
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "gap_analysis")
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"gap_analysis_{timestamp}"
 
     gap_frame = priority_gap_test_report()
@@ -7522,7 +7630,7 @@ def print_pre_mortem_checklist(
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "pre_mortem")
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"pre_mortem_{timestamp}"
 
     readiness = readiness if readiness is not None else priority_readiness_report()
@@ -7696,7 +7804,7 @@ def print_post_mortem_checklist(
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "post_mortem")
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"post_mortem_{timestamp}"
 
     previous_path = reports / "post_mortem" / "latest_post_mortem.csv"
@@ -7884,7 +7992,7 @@ def print_red_team_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "red_team")
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"red_team_{timestamp}"
 
     gap_frame = priority_gap_test_report()
@@ -8060,7 +8168,7 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
     reports.mkdir(parents=True, exist_ok=True)
     output_dir = run_dir or (reports / "supreme_team")
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H%M%SZ")
     run_id = f"supreme_team_{timestamp}"
 
     gap_csv, _ = print_gap_analysis_checklist()
@@ -8123,6 +8231,65 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
         ],
         ignore_index=True,
     )
+    seven_stage_path = reports / "active" / "seven_stage_goal_checkpoint.csv"
+    seven_stage = _read_csv_or_empty(seven_stage_path)
+    expected_stages = {str(value) for value in range(1, 8)}
+    if (
+        not seven_stage.empty
+        and {"stage", "objective", "status", "evidence_progress", "blocker", "next_action"}
+        <= set(seven_stage.columns)
+        and set(seven_stage["stage"].astype(str)) == expected_stages
+        and not seven_stage["stage"].astype(str).duplicated().any()
+        and set(seven_stage["status"].astype(str)) <= {"PASS", "IN_PROGRESS", "BLOCKED"}
+    ):
+        legacy_current_state = (
+            all_checkpoints.get("priority", pd.Series(dtype=str))
+            .fillna("")
+            .astype(str)
+            .str.startswith("CS")
+        )
+        all_checkpoints = all_checkpoints.loc[~legacy_current_state].copy()
+        canonical_rows: list[dict[str, object]] = []
+        severity_by_stage = {
+            "1": "medium",
+            "2": "critical",
+            "3": "critical",
+            "4": "critical",
+            "5": "high",
+            "6": "high",
+            "7": "high",
+        }
+        for _, stage_row in seven_stage.sort_values(
+            "stage", key=lambda values: values.astype(int)
+        ).iterrows():
+            stage = str(stage_row["stage"])
+            passed = str(stage_row["status"]) == "PASS"
+            canonical_rows.append(
+                {
+                    "run_id": run_id,
+                    "timestamp_utc": timestamp,
+                    "source_checkpoint": "seven_stage",
+                    "source_run_id": "",
+                    "priority": f"S{stage}",
+                    "area": f"seven_stage_{stage}_{stage_row['objective']}",
+                    "status": "pass" if passed else "gap",
+                    "severity": "none" if passed else severity_by_stage[stage],
+                    "gap": ""
+                    if passed
+                    else str(stage_row.get("blocker", "") or stage_row["status"]),
+                    "current_evidence": str(stage_row.get("evidence_progress", "") or ""),
+                    "required_proof": f"stage_{stage}_pass_with_immutable_evidence",
+                    "source_report": str(seven_stage_path),
+                    "source_row": f"stage_{stage}",
+                    "next_action": str(stage_row.get("next_action", "") or ""),
+                    "done": passed,
+                }
+            )
+        all_checkpoints = pd.concat(
+            [all_checkpoints, pd.DataFrame(canonical_rows)],
+            ignore_index=True,
+            sort=False,
+        )
 
     def _severity_rank(value: object) -> int:
         return {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 4, "": 5}.get(
@@ -8208,6 +8375,7 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
         f"- pre_mortem_checklist_csv: {pm_csv}",
         f"- post_mortem_checklist_csv: {post_csv}",
         f"- red_team_checklist_csv: {rt_csv}",
+        f"- seven_stage_checkpoint_csv: {seven_stage_path}",
         "",
         "## Supreme Team Next Actions",
     ]
@@ -8479,15 +8647,21 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     )
 
     pair_detail_dir = ROOT / "data" / "raw" / "pair_details"
-    history_rows = pair_detail_history_coverage(pair_detail_dir) if pair_detail_dir.exists() else []
+    pair_detail_cache_status = "NO_SOURCE_DIRECTORY"
+    if pair_detail_dir.exists():
+        pair_detail_evidence = load_or_refresh_pair_detail_evidence_cache(
+            pair_detail_dir,
+            reports,
+        )
+        history_rows = list(pair_detail_evidence["history_rows"])
+        quality_rows = list(pair_detail_evidence["quality_rows"])
+        pair_detail_cache_status = str(pair_detail_evidence["cache_status"])
+    else:
+        history_rows = []
+        quality_rows = []
     experiment_ready = [row for row in history_rows if bool(row.get("experiment_ready"))]
     ecm_ready = [row for row in history_rows if bool(row.get("ecm_history_ready"))]
     two_leg_ready = [row for row in history_rows if bool(row.get("two_leg_execution_ready"))]
-    quality_rows = pair_detail_quality_report(pair_detail_dir) if pair_detail_dir.exists() else []
-    _write_csv_atomic(
-        pd.DataFrame(quality_rows, columns=PAIR_DETAIL_QUALITY_COLUMNS),
-        reports / "pair_detail_quality_report.csv",
-    )
     research_usable = [row for row in quality_rows if bool(row.get("research_usable"))]
     execution_usable = [row for row in quality_rows if bool(row.get("execution_usable"))]
     rows.append(
@@ -8495,7 +8669,10 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
             priority="P1",
             gate="pair_detail_history",
             ready=bool(experiment_ready and ecm_ready),
-            evidence=f"snapshots={len(history_rows)};experiment_ready={len(experiment_ready)};ecm_ready={len(ecm_ready)}",
+            evidence=(
+                f"snapshots={len(history_rows)};experiment_ready={len(experiment_ready)};"
+                f"ecm_ready={len(ecm_ready)};cache={pair_detail_cache_status}"
+            ),
             blocker=""
             if experiment_ready and ecm_ready
             else "missing_spread_zscore_or_ecm_history",
@@ -8526,7 +8703,8 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
             evidence=(
                 f"snapshots={len(quality_rows)};"
                 f"research_usable={len(research_usable)};"
-                f"execution_usable={len(execution_usable)}"
+                f"execution_usable={len(execution_usable)};"
+                f"cache={pair_detail_cache_status}"
             ),
             blocker="" if research_usable else "no_research_usable_pair_detail_history",
             next_action="run strategy research on quality-accepted histories"
@@ -9198,7 +9376,7 @@ def append_learning_outcome(
         raise SystemExit("append-learning-outcome requires --pair")
     strategy = next((spec for spec in STRATEGIES if spec.id == strategy_id), None)
     strategy_name = strategy.name if strategy is not None else f"strategy_{strategy_id}"
-    timestamp = pd.Timestamp.utcnow().to_pydatetime()
+    timestamp = pd.Timestamp.now(tz="UTC").to_pydatetime()
     record = TradeRecord(
         trade_id=trade_id or f"{pair}-{strategy_id}-{timestamp.isoformat()}",
         timestamp=timestamp,
@@ -9664,7 +9842,7 @@ def _funding_preflight_status(
         }
     ready_values = coverage["ready"].fillna(False).astype(bool)
     ready_pairs = int(ready_values.sum())
-    total_pairs = int(len(coverage))
+    total_pairs = len(coverage)
     blocked = coverage[~ready_values]
     blocked_pairs = ";".join(
         str(pair) for pair in blocked.get("pair", pd.Series(dtype=str)).dropna().unique()
@@ -10434,12 +10612,12 @@ def _parse_iso_datetime(value: str) -> datetime:
         text = text[:-1] + "+00:00"
     parsed = datetime.fromisoformat(text)
     if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _format_iso_z(value: datetime) -> str:
-    return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return value.astimezone(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _resolution_timedelta(resolution: str) -> timedelta:
@@ -10522,7 +10700,7 @@ def _csv_row_count(path: Path) -> int:
     if not path.exists():
         return 0
     try:
-        return int(len(pd.read_csv(path)))
+        return len(pd.read_csv(path))
     except (pd.errors.EmptyDataError, OSError, UnicodeDecodeError):
         return 0
 
@@ -10603,10 +10781,8 @@ def build_paper_plan_from_cli(
 
 def _venue_asset_key(value: str) -> str:
     text = str(value or "").replace("/", "-").upper().strip()
-    if text.endswith("-USD"):
-        text = text[:-4]
-    if text.endswith("_USD"):
-        text = text[:-4]
+    text = text.removesuffix("-USD")
+    text = text.removesuffix("_USD")
     return text
 
 
@@ -11032,6 +11208,206 @@ def refresh_augmented_research(root: Path = ROOT) -> CommandResult:
     )
 
 
+def _ou_v4_manual_capture_blockers(
+    *, root: Path, now: datetime | None = None
+) -> tuple[list[str], Path | None]:
+    """Require the governed frozen manifest before manual OU-v4 execution."""
+
+    status_path = root / "reports/active/corrective_wizard_next_capture_manifest.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return ["wizard_capture_manifest_status_missing_or_invalid"], None
+
+    blockers: list[str] = []
+    if status.get("schema_version") != "thewiz.corrective_wizard_next_capture_manifest.v1":
+        blockers.append("wizard_capture_manifest_status_schema_invalid")
+    if status.get("status") != "PASS" or status.get("blockers") not in ([], None):
+        blockers.append("wizard_capture_manifest_status_not_passed")
+
+    manifest_id = str(status.get("manifest_id", "")).strip()
+    relative = str(status.get("immutable_manifest_path", "")).strip()
+    relative_path = Path(relative)
+    manifest_path: Path | None = None
+    if (
+        not manifest_id
+        or not relative
+        or relative_path.is_absolute()
+        or ".." in relative_path.parts
+    ):
+        blockers.append("wizard_capture_manifest_identity_or_path_invalid")
+    else:
+        candidate = (root / relative_path).resolve()
+        expected_root = (root / "data/research/wizard_capture_manifests").resolve()
+        try:
+            candidate.relative_to(expected_root)
+        except ValueError:
+            blockers.append("wizard_capture_manifest_path_outside_immutable_root")
+        else:
+            manifest_path = candidate
+
+    manifest: dict[str, object] = {}
+    if manifest_path is None or not manifest_path.is_file():
+        blockers.append("wizard_capture_manifest_immutable_receipt_missing")
+    else:
+        supplied_hash = str(status.get("immutable_manifest_sha256", "")).strip()
+        observed_hash = sha256(manifest_path.read_bytes()).hexdigest()
+        if supplied_hash != observed_hash:
+            blockers.append("wizard_capture_manifest_immutable_hash_mismatch")
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            blockers.append("wizard_capture_manifest_immutable_receipt_invalid")
+
+    calls = manifest.get("calls") if isinstance(manifest, dict) else None
+    ou_calls = (
+        [row for row in calls if isinstance(row, dict) and row.get("lane") == "ou_v4_holdout"]
+        if isinstance(calls, list)
+        else []
+    )
+    if (
+        manifest.get("manifest_id") != manifest_id
+        or not isinstance(calls, list)
+        or len(calls) != 8
+        or len(ou_calls) != 8
+        or int(manifest.get("pending_calls", -1) or -1) != 8
+        or int(manifest.get("planned_credits", -1) or -1) != 16
+        or sum(int(row.get("credit_cost", 0) or 0) for row in ou_calls) != 16
+    ):
+        blockers.append("wizard_capture_manifest_not_exact_frozen_ou_v4_cohort")
+    semantic_binding = validate_ou_v4_capture_manifest_contract(
+        root=root,
+        manifest=manifest if isinstance(manifest, dict) else {},
+    )
+    if semantic_binding.get("status") != "PASS":
+        blockers.extend(str(value) for value in semantic_binding.get("blockers", []))
+
+    eligible_at = pd.to_datetime(
+        status.get("next_external_attempt_eligible_at"), utc=True, errors="coerce"
+    )
+    timestamp = pd.Timestamp(now or datetime.now(UTC))
+    if pd.isna(eligible_at):
+        blockers.append("wizard_capture_manifest_eligibility_time_invalid")
+    elif timestamp < eligible_at:
+        blockers.append("wizard_capture_manifest_not_yet_eligible")
+    return list(dict.fromkeys(blockers)), manifest_path
+
+
+def _ou_v5_manual_capture_blockers(
+    *, root: Path, now: datetime | None = None
+) -> tuple[list[str], Path | None]:
+    """Require the governed frozen manifest before manual OU-v5 execution."""
+
+    status_path = root / "reports/active/corrective_wizard_next_capture_manifest.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return ["wizard_capture_manifest_status_missing_or_invalid"], None
+
+    blockers: list[str] = []
+    if status.get("schema_version") != "thewiz.corrective_wizard_next_capture_manifest.v1":
+        blockers.append("wizard_capture_manifest_status_schema_invalid")
+    if status.get("status") != "PASS" or status.get("blockers") not in ([], None):
+        blockers.append("wizard_capture_manifest_status_not_passed")
+
+    manifest_id = str(status.get("manifest_id", "")).strip()
+    relative = str(status.get("immutable_manifest_path", "")).strip()
+    relative_path = Path(relative)
+    manifest_path: Path | None = None
+    if (
+        not manifest_id
+        or not relative
+        or relative_path.is_absolute()
+        or ".." in relative_path.parts
+    ):
+        blockers.append("wizard_capture_manifest_identity_or_path_invalid")
+    else:
+        candidate = (root / relative_path).resolve()
+        expected_root = (root / "data/research/wizard_capture_manifests").resolve()
+        try:
+            candidate.relative_to(expected_root)
+        except ValueError:
+            blockers.append("wizard_capture_manifest_path_outside_immutable_root")
+        else:
+            manifest_path = candidate
+
+    manifest: dict[str, object] = {}
+    if manifest_path is None or not manifest_path.is_file():
+        blockers.append("wizard_capture_manifest_immutable_receipt_missing")
+    else:
+        supplied_hash = str(status.get("immutable_manifest_sha256", "")).strip()
+        observed_hash = sha256(manifest_path.read_bytes()).hexdigest()
+        if supplied_hash != observed_hash:
+            blockers.append("wizard_capture_manifest_immutable_hash_mismatch")
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            blockers.append("wizard_capture_manifest_immutable_receipt_invalid")
+
+    calls = manifest.get("calls") if isinstance(manifest, dict) else None
+    ou_calls = (
+        [row for row in calls if isinstance(row, dict) and row.get("lane") == "ou_v5_holdout"]
+        if isinstance(calls, list)
+        else []
+    )
+    if (
+        manifest.get("manifest_id") != manifest_id
+        or not isinstance(calls, list)
+        or len(calls) != 8
+        or len(ou_calls) != 8
+        or int(manifest.get("pending_calls", -1) or -1) != 8
+        or int(manifest.get("planned_credits", -1) or -1) != 16
+        or sum(int(row.get("credit_cost", 0) or 0) for row in ou_calls) != 16
+    ):
+        blockers.append("wizard_capture_manifest_not_exact_frozen_ou_v5_cohort")
+    semantic_binding = validate_ou_v5_capture_manifest_contract(
+        root=root,
+        manifest=manifest if isinstance(manifest, dict) else {},
+    )
+    if semantic_binding.get("status") != "PASS":
+        blockers.extend(str(value) for value in semantic_binding.get("blockers", []))
+
+    eligible_at = pd.to_datetime(
+        status.get("next_external_attempt_eligible_at"), utc=True, errors="coerce"
+    )
+    timestamp = pd.Timestamp(now or datetime.now(UTC))
+    if pd.isna(eligible_at):
+        blockers.append("wizard_capture_manifest_eligibility_time_invalid")
+    elif timestamp < eligible_at:
+        blockers.append("wizard_capture_manifest_not_yet_eligible")
+    return list(dict.fromkeys(blockers)), manifest_path
+
+
+def _blocked_direct_wizard_external_execution(
+    *,
+    command: str,
+    blockers: list[str] | None = None,
+    evidence_path: Path | None = None,
+) -> CommandResult:
+    """Keep every chargeable Wizard call inside the shared proof scheduler."""
+
+    all_blockers = list(blockers or [])
+    all_blockers.append("shared_credit_proof_scheduler_required")
+    paths = {"capture_manifest": evidence_path} if evidence_path is not None else {}
+    return CommandResult(
+        paths=paths,
+        summary={
+            "status": "BLOCKED_SHARED_CREDIT_ORCHESTRATION",
+            "command": command,
+            "blockers": list(dict.fromkeys(all_blockers)),
+            "calls_made": 0,
+            "responses_captured": 0,
+            "credits_attempted": 0,
+            "external_requests": 0,
+            "research_only": True,
+            "candidate_promotion_authority": False,
+            "order_submission_included": False,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -11041,17 +11417,50 @@ def main() -> None:
             "build-corrective-governance",
             "build-corrective-data-evidence",
             "build-corrective-wizard-parity",
+            "review-wizard-dynamic-v2",
+            "build-wizard-dynamic-v2-supreme-review",
+            "build-wizard-ou-v4-supreme-review",
+            "build-wizard-ou-v5-supreme-review",
+            "build-wizard-ou-v6-supreme-review",
+            "build-wizard-ou-v4-failure-attribution",
+            "build-wizard-ou-v5-failure-attribution",
+            "evaluate-wizard-ou-v2-holdout",
+            "register-wizard-ou-trend-selector-v1",
+            "build-wizard-credit-budget",
+            "build-wizard-next-capture-manifest",
+            "build-wizard-reset-readiness",
+            "build-scheduler-runtime-readiness",
+            "build-wizard-comparator-review-control",
+            "build-stage4-handoff-readiness",
+            "reconcile-wizard-capture-manifest",
+            "run-wizard-ou-v3-holdout",
+            "review-wizard-ou-v3",
+            "register-wizard-ou-v4-holdout",
+            "run-wizard-ou-v4-holdout",
+            "register-wizard-ou-v5-holdout",
+            "run-wizard-ou-v5-holdout",
+            "register-wizard-ou-v6-holdout",
+            "review-wizard-ou-v4",
+            "review-wizard-ou-v5",
+            "review-wizard-ou-v6",
+            "register-wizard-copula-v2",
+            "run-wizard-copula-proof",
             "build-corrective-statistical-remediation",
             "build-corrective-daily-cadence",
             "run-corrective-l2-capture",
             "install-corrective-l2-cadence",
             "build-corrective-agent-governance",
+            "register-stage5-protocol",
             "build-corrective-release-gates",
+            "capture-live-input-parity-evidence",
+            "build-live-canary-executor-preflight",
+            "run-live-canary-executor",
             "complete-corrective-plan",
             "build-artifact-index",
             "current-state",
             "build-pair-universe",
             "build-trade-dataset",
+            "promote-trade-dataset",
             "train-trade-gate",
             "run-model-gated-backtest",
             "export-trade-gate-model",
@@ -11130,6 +11539,7 @@ def main() -> None:
             "run-current-wizard-hyperliquid-robustness",
             "build-current-wizard-hyperliquid-concentration",
             "build-current-wizard-hyperliquid-failure-attribution",
+            "build-current-wizard-hyperliquid-failure-routing-index",
             "build-current-wizard-hyperliquid-leverage-surface",
             "build-current-wizard-hyperliquid-learning-ledger",
             "validate-current-wizard-hyperliquid-chain",
@@ -11167,6 +11577,7 @@ def main() -> None:
             "build-hyperliquid-pair-history",
             "build-hyperliquid-research-bundle",
             "build-hyperliquid-wizard-hypothesis-queue",
+            "build-exhaustive-wizard-mode-proof-queue",
             "run-hyperliquid-wizard-mode-proofs",
             "build-hyperliquid-pair-cost-model",
             "build-hyperliquid-evidence-cadence",
@@ -11174,6 +11585,10 @@ def main() -> None:
             "hyperliquid-testnet-market-inventory",
             "hyperliquid-testnet-preflight",
             "hyperliquid-testnet-margin-snapshot",
+            "hyperliquid-testnet-collateral-transfer-preflight",
+            "run-hyperliquid-testnet-collateral-transfer",
+            "hyperliquid-testnet-pair-execution-preflight",
+            "run-hyperliquid-testnet-pair-execution",
             "hyperliquid-testnet-smoke-approval-template",
             "build-hyperliquid-testnet-lifecycle-gate",
             "capture-hyperliquid-testnet-lifecycle-evidence",
@@ -11308,6 +11723,47 @@ def main() -> None:
     )
     parser.add_argument("--input-dir", type=Path, default=None)
     parser.add_argument("--run-id", default=None, help="Immutable V2 run identifier.")
+    parser.add_argument(
+        "--execute-live-canary",
+        action="store_true",
+        help="Explicitly request the one-use live canary path; absent means status-only.",
+    )
+    parser.add_argument(
+        "--recover-live-canary",
+        action="store_true",
+        help="Recover an already-reserved live canary without retrying its entry.",
+    )
+    parser.add_argument("--authorization-sha256", default="")
+    parser.add_argument("--approval-id", default="")
+    parser.add_argument("--live-canary-acknowledgement", default="")
+    parser.add_argument(
+        "--execute-testnet-collateral-transfer",
+        action="store_true",
+        help=(
+            "Explicitly request the one-use Testnet spot-to-perp collateral "
+            "transfer; absent means status-only."
+        ),
+    )
+    parser.add_argument("--transfer-preflight-id", default="")
+    parser.add_argument("--transfer-approval-id", default="")
+    parser.add_argument("--transfer-amount-usd", type=float, default=25.0)
+    parser.add_argument("--testnet-collateral-transfer-acknowledgement", default="")
+    parser.add_argument(
+        "--testnet-pair-action",
+        choices=("entry", "exit"),
+        default="entry",
+        help="Exact governed Hyperliquid Testnet pair action.",
+    )
+    parser.add_argument("--testnet-pair-preflight-id", default="")
+    parser.add_argument(
+        "--execute-hyperliquid-testnet-pair",
+        action="store_true",
+        help=(
+            "Explicitly request one sealed Hyperliquid Testnet pair action; "
+            "absent means status-only."
+        ),
+    )
+    parser.add_argument("--testnet-pair-acknowledgement", default="")
     parser.add_argument("--queue-path", type=Path, default=None)
     parser.add_argument(
         "--candidate-path",
@@ -11466,6 +11922,132 @@ def main() -> None:
         action="store_true",
         help="Request a bounded Crypto Wizards custom-series proof. It also requires QPA_ENABLE_WIZARD_CUSTOM_SERIES_PROOF=true.",
     )
+    parser.add_argument(
+        "--apply-dynamic-v2",
+        action="store_true",
+        help=(
+            "Explicitly apply the reviewed, research-only Dynamic-v2 comparator; "
+            "without this flag the command is preflight-only."
+        ),
+    )
+    parser.add_argument(
+        "--dynamic-v2-reviewer",
+        default="",
+        help="Reviewer identity required for explicit Dynamic-v2 activation.",
+    )
+    parser.add_argument(
+        "--dynamic-v2-review-note",
+        default="",
+        help="Substantive review note required for explicit Dynamic-v2 activation.",
+    )
+    parser.add_argument(
+        "--dynamic-v2-review-packet-id",
+        default="",
+        help="Exact immutable Dynamic-v2 review packet ID required for activation.",
+    )
+    parser.add_argument(
+        "--apply-ou-v3",
+        action="store_true",
+        help=(
+            "Explicitly apply the reviewed, research-only OU-v3 comparator; "
+            "without this flag the command is preflight-only."
+        ),
+    )
+    parser.add_argument(
+        "--ou-v3-reviewer",
+        default="",
+        help="Reviewer identity required for explicit OU-v3 activation.",
+    )
+    parser.add_argument(
+        "--ou-v3-review-note",
+        default="",
+        help="Substantive review note required for explicit OU-v3 activation.",
+    )
+    parser.add_argument(
+        "--ou-v3-review-packet-id",
+        default="",
+        help="Exact immutable OU-v3 review packet ID required for activation.",
+    )
+    parser.add_argument(
+        "--apply-ou-v4",
+        action="store_true",
+        help=(
+            "Explicitly apply the reviewed, research-only OU-v4 comparator; "
+            "without this flag the command is preflight-only."
+        ),
+    )
+    parser.add_argument(
+        "--ou-v4-reviewer",
+        default="",
+        help="Reviewer identity required for explicit OU-v4 activation.",
+    )
+    parser.add_argument(
+        "--ou-v4-review-note",
+        default="",
+        help="Substantive review note required for explicit OU-v4 activation.",
+    )
+    parser.add_argument(
+        "--ou-v4-review-packet-id",
+        default="",
+        help="Exact immutable OU-v4 review packet ID required for activation.",
+    )
+    parser.add_argument(
+        "--apply-ou-v5",
+        action="store_true",
+        help=(
+            "Explicitly apply the reviewed, research-only OU-v5 comparator; "
+            "without this flag the command is preflight-only."
+        ),
+    )
+    parser.add_argument(
+        "--ou-v5-reviewer",
+        default="",
+        help="Reviewer identity required for explicit OU-v5 activation.",
+    )
+    parser.add_argument(
+        "--ou-v5-review-note",
+        default="",
+        help="Substantive review note required for explicit OU-v5 activation.",
+    )
+    parser.add_argument(
+        "--ou-v5-review-packet-id",
+        default="",
+        help="Exact immutable OU-v5 review packet ID required for activation.",
+    )
+    parser.add_argument(
+        "--apply-ou-v6",
+        action="store_true",
+        help=(
+            "Explicitly apply the reviewed, research-only terminal OU-v6 comparator; "
+            "without this flag the command is preflight-only."
+        ),
+    )
+    parser.add_argument(
+        "--ou-v6-reviewer",
+        default="",
+        help="Reviewer identity required for explicit OU-v6 activation.",
+    )
+    parser.add_argument(
+        "--ou-v6-review-note",
+        default="",
+        help="Substantive review note required for explicit OU-v6 activation.",
+    )
+    parser.add_argument(
+        "--ou-v6-review-packet-id",
+        default="",
+        help="Exact immutable terminal OU-v6 review packet ID required for activation.",
+    )
+    parser.add_argument(
+        "--wizard-proof-queue-source",
+        choices=("hypothesis", "exact-mode-parity"),
+        default="hypothesis",
+        help="Use the score-gated hypothesis queue or the unfiltered exact-mode parity queue.",
+    )
+    parser.add_argument(
+        "--pair-group-id",
+        default=None,
+        help="Optional exact pair-group identity for the Wizard mode parity queue.",
+    )
     parser.add_argument("--range", dest="lookback_range", default="max")
     parser.add_argument(
         "--run-research",
@@ -11553,6 +12135,11 @@ def main() -> None:
         help="Explicit one-run approval identifier required by the copy-only archive stage.",
     )
     parser.add_argument("--model-path", type=Path, default=None)
+    parser.add_argument(
+        "--model-sha256",
+        default="",
+        help="Expected SHA-256 required before loading a shadow model artifact.",
+    )
     parser.add_argument("--market", default=None)
     parser.add_argument(
         "--venue",
@@ -11697,6 +12284,419 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "review-wizard-dynamic-v2":
+        activation = build_dynamic_v2_reviewed_activation(
+            root=ROOT,
+            apply=args.apply_dynamic_v2,
+            reviewer=args.dynamic_v2_reviewer,
+            review_note=args.dynamic_v2_review_note,
+            review_packet_id=args.dynamic_v2_review_packet_id,
+        )
+        refresh = None
+        if (
+            args.apply_dynamic_v2
+            and activation.summary.get("status") == "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            refresh = refresh_activated_dynamic_v2_proofs(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "activation": activation.summary,
+                    "proof_refresh": refresh.summary if refresh is not None else None,
+                    "paths": {
+                        **{key: str(value) for key, value in activation.paths.items()},
+                        **(
+                            {f"refresh_{key}": str(value) for key, value in refresh.paths.items()}
+                            if refresh is not None
+                            else {}
+                        ),
+                    },
+                },
+                indent=2,
+            )
+        )
+        if (
+            args.apply_dynamic_v2
+            and activation.summary.get("status") != "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            raise SystemExit(2)
+    elif args.command == "build-wizard-dynamic-v2-supreme-review":
+        result = build_dynamic_v2_supreme_review(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-ou-v4-supreme-review":
+        result = build_ou_v4_supreme_review(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-ou-v5-supreme-review":
+        result = build_ou_v5_supreme_review(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-ou-v6-supreme-review":
+        result = build_ou_v6_supreme_review(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-ou-v4-failure-attribution":
+        result = build_ou_v4_failure_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-ou-v5-failure-attribution":
+        result = build_ou_v5_failure_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "evaluate-wizard-ou-v2-holdout":
+        result = evaluate_ou_v2_blind_holdout(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "register-wizard-ou-trend-selector-v1":
+        result = register_ou_trend_selector_v1_holdout(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-next-capture-manifest":
+        result = build_corrective_wizard_capture_manifest(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-credit-budget":
+        result = build_wizard_credit_budget_contract(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "reconcile-wizard-capture-manifest":
+        result = reconcile_corrective_wizard_capture_manifest(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-wizard-ou-v3-holdout":
+        result = (
+            _blocked_direct_wizard_external_execution(command=args.command)
+            if args.execute_wizard_proof
+            else run_ou_v3_prospective_holdout(root=ROOT, execute=False)
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "register-wizard-ou-v4-holdout":
+        result = register_ou_v4_prospective_holdout(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "register-wizard-ou-v5-holdout":
+        result = register_ou_v5_prospective_holdout(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "register-wizard-ou-v6-holdout":
+        result = register_ou_v6_prospective_holdout(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-wizard-ou-v4-holdout":
+        blockers, manifest_path = (
+            _ou_v4_manual_capture_blockers(root=ROOT) if args.execute_wizard_proof else ([], None)
+        )
+        result = (
+            _blocked_direct_wizard_external_execution(
+                command=args.command,
+                blockers=blockers,
+                evidence_path=manifest_path,
+            )
+            if args.execute_wizard_proof
+            else run_ou_v4_prospective_holdout(
+                root=ROOT,
+                execute=False,
+            )
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-wizard-ou-v5-holdout":
+        blockers, manifest_path = (
+            _ou_v5_manual_capture_blockers(root=ROOT) if args.execute_wizard_proof else ([], None)
+        )
+        result = (
+            _blocked_direct_wizard_external_execution(
+                command=args.command,
+                blockers=blockers,
+                evidence_path=manifest_path,
+            )
+            if args.execute_wizard_proof
+            else run_ou_v5_prospective_holdout(
+                root=ROOT,
+                execute=False,
+            )
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "review-wizard-ou-v3":
+        activation = build_ou_v3_reviewed_activation(
+            root=ROOT,
+            apply=args.apply_ou_v3,
+            reviewer=args.ou_v3_reviewer,
+            review_note=args.ou_v3_review_note,
+            review_packet_id=args.ou_v3_review_packet_id,
+        )
+        refresh = None
+        if (
+            args.apply_ou_v3
+            and activation.summary.get("status") == "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            refresh = refresh_activated_ou_v3_proofs(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "activation": activation.summary,
+                    "proof_refresh": refresh.summary if refresh is not None else None,
+                    "paths": {
+                        **{key: str(value) for key, value in activation.paths.items()},
+                        **(
+                            {f"refresh_{key}": str(value) for key, value in refresh.paths.items()}
+                            if refresh is not None
+                            else {}
+                        ),
+                    },
+                },
+                indent=2,
+            )
+        )
+        if (
+            args.apply_ou_v3
+            and activation.summary.get("status") != "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            raise SystemExit(2)
+    elif args.command == "review-wizard-ou-v4":
+        activation = build_reviewed_ou_v4_activation(
+            root=ROOT,
+            apply=args.apply_ou_v4,
+            reviewer=args.ou_v4_reviewer,
+            review_note=args.ou_v4_review_note,
+            review_packet_id=args.ou_v4_review_packet_id,
+        )
+        refresh = None
+        if (
+            args.apply_ou_v4
+            and activation.summary.get("status") == "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            refresh = refresh_activated_ou_v4_proofs(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "activation": activation.summary,
+                    "proof_refresh": (refresh.summary if refresh is not None else None),
+                    "paths": {
+                        **{key: str(value) for key, value in activation.paths.items()},
+                        **(
+                            {f"refresh_{key}": str(value) for key, value in refresh.paths.items()}
+                            if refresh is not None
+                            else {}
+                        ),
+                    },
+                },
+                indent=2,
+            )
+        )
+        if (
+            args.apply_ou_v4
+            and activation.summary.get("status") != "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            raise SystemExit(2)
+    elif args.command == "review-wizard-ou-v5":
+        activation = build_reviewed_ou_v5_activation(
+            root=ROOT,
+            apply=args.apply_ou_v5,
+            reviewer=args.ou_v5_reviewer,
+            review_note=args.ou_v5_review_note,
+            review_packet_id=args.ou_v5_review_packet_id,
+        )
+        refresh = None
+        if (
+            args.apply_ou_v5
+            and activation.summary.get("status") == "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            refresh = refresh_activated_ou_v5_proofs(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "activation": activation.summary,
+                    "proof_refresh": refresh.summary if refresh is not None else None,
+                    "paths": {
+                        **{key: str(value) for key, value in activation.paths.items()},
+                        **(
+                            {f"refresh_{key}": str(value) for key, value in refresh.paths.items()}
+                            if refresh is not None
+                            else {}
+                        ),
+                    },
+                },
+                indent=2,
+            )
+        )
+        if (
+            args.apply_ou_v5
+            and activation.summary.get("status") != "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            raise SystemExit(2)
+    elif args.command == "review-wizard-ou-v6":
+        activation = build_reviewed_ou_v6_activation(
+            root=ROOT,
+            apply=args.apply_ou_v6,
+            reviewer=args.ou_v6_reviewer,
+            review_note=args.ou_v6_review_note,
+            review_packet_id=args.ou_v6_review_packet_id,
+        )
+        refresh = None
+        if (
+            args.apply_ou_v6
+            and activation.summary.get("status") == "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            refresh = refresh_activated_ou_v6_proofs(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "activation": activation.summary,
+                    "proof_refresh": refresh.summary if refresh is not None else None,
+                    "paths": {
+                        **{key: str(value) for key, value in activation.paths.items()},
+                        **(
+                            {f"refresh_{key}": str(value) for key, value in refresh.paths.items()}
+                            if refresh is not None
+                            else {}
+                        ),
+                    },
+                },
+                indent=2,
+            )
+        )
+        if (
+            args.apply_ou_v6
+            and activation.summary.get("status") != "APPLIED_RESEARCH_COMPARATOR_ONLY"
+        ):
+            raise SystemExit(2)
+    elif args.command == "register-wizard-copula-v2":
+        result = register_copula_behavioral_v2(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-wizard-copula-proof":
+        result = (
+            _blocked_direct_wizard_external_execution(command=args.command)
+            if args.execute_wizard_proof
+            else run_current_copula_behavioral_proofs(root=ROOT, execute=False)
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-corrective-statistical-remediation":
         result = build_corrective_statistical_remediation(root=ROOT)
         print(
@@ -11732,6 +12732,46 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "register-stage5-protocol":
+        result = build_registered_stage5_protocol(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-reset-readiness":
+        result = build_corrective_wizard_reset_readiness(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-scheduler-runtime-readiness":
+        result = build_corrective_scheduler_runtime_readiness(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-comparator-review-control":
+        result = build_corrective_wizard_comparator_review_control(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-stage4-handoff-readiness":
+        result = build_corrective_stage4_handoff_readiness(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
     elif args.command == "build-corrective-release-gates":
         result = build_corrective_release_gates(root=ROOT)
         print(
@@ -11740,6 +12780,30 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "capture-live-input-parity-evidence":
+        result = capture_live_input_parity_evidence(root=ROOT)
+        print(json.dumps(result, indent=2, default=str))
+    elif args.command == "build-live-canary-executor-preflight":
+        candidate_path = ROOT / "reports" / "active" / "testnet_candidate_receipt.json"
+        policy_path = ROOT / "config" / "live_canary_policy.json"
+        candidate = json.loads(candidate_path.read_text()) if candidate_path.is_file() else {}
+        policy = json.loads(policy_path.read_text()) if policy_path.is_file() else {}
+        result = build_live_canary_executor_preflight(
+            root=ROOT,
+            candidate=candidate,
+            policy_id=_policy_id(policy),
+        )
+        print(json.dumps({"preflight": str(result)}, indent=2))
+    elif args.command == "run-live-canary-executor":
+        result = run_live_canary_executor(
+            root=ROOT,
+            execute=bool(args.execute_live_canary),
+            recover_only=bool(args.recover_live_canary),
+            authorization_sha256=str(args.authorization_sha256 or ""),
+            approval_id=str(args.approval_id or ""),
+            acknowledgement=str(args.live_canary_acknowledgement or ""),
+        )
+        print(json.dumps(result.as_dict(), indent=2))
     elif args.command == "complete-corrective-plan":
         result = complete_corrective_plan(root=ROOT)
         print(
@@ -11905,11 +12969,36 @@ def main() -> None:
                 indent=2,
             )
         )
-    elif args.command == "run-hyperliquid-wizard-mode-proofs":
-        result = run_hyperliquid_wizard_mode_proofs(
+    elif args.command == "build-exhaustive-wizard-mode-proof-queue":
+        result = build_exhaustive_wizard_mode_proof_queue(
             root=ROOT,
-            max_pairs=args.max_pairs,
-            execute=args.execute_wizard_proof,
+            pair_group_id=args.pair_group_id,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-hyperliquid-wizard-mode-proofs":
+        proof_queue_path = None
+        if args.wizard_proof_queue_source == "exact-mode-parity":
+            proof_queue = build_exhaustive_wizard_mode_proof_queue(
+                root=ROOT,
+                pair_group_id=args.pair_group_id,
+            )
+            proof_queue_path = proof_queue.paths["queue"]
+        proof_kwargs = {
+            "root": ROOT,
+            "max_pairs": args.max_pairs,
+            "execute": args.execute_wizard_proof,
+        }
+        if proof_queue_path is not None:
+            proof_kwargs["queue_path"] = proof_queue_path
+        result = (
+            _blocked_direct_wizard_external_execution(command=args.command)
+            if args.execute_wizard_proof
+            else run_hyperliquid_wizard_mode_proofs(**proof_kwargs)
         )
         print(
             json.dumps(
@@ -11954,8 +13043,47 @@ def main() -> None:
     elif args.command == "hyperliquid-testnet-market-inventory":
         frame = refresh_hyperliquid_testnet_market_inventory(root=ROOT)
         output = ROOT / "reports" / "active" / "hyperliquid_testnet_market_inventory.csv"
-        print(frame.to_string(index=False))
-        print(f"hyperliquid_testnet_market_inventory: {output}")
+        checked = pd.to_datetime(
+            frame.get("checked_at_utc", pd.Series(dtype=str)), utc=True, errors="coerce"
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": {
+                        "schema_version": "hyperliquid_testnet_market_inventory.v1",
+                        "rows": len(frame),
+                        "tradable_perps": int(
+                            frame.get("tradable_perp", pd.Series(False, index=frame.index))
+                            .fillna(False)
+                            .astype(str)
+                            .str.strip()
+                            .str.lower()
+                            .isin({"1", "true", "yes", "y", "pass", "ready"})
+                            .sum()
+                        ),
+                        "fetch_blocked_rows": int(
+                            frame.get("fetch_blocker", pd.Series("", index=frame.index))
+                            .fillna("")
+                            .astype(str)
+                            .str.strip()
+                            .ne("")
+                            .sum()
+                        ),
+                        "checked_at_min_utc": (
+                            checked.min().isoformat() if checked.notna().any() else ""
+                        ),
+                        "checked_at_max_utc": (
+                            checked.max().isoformat() if checked.notna().any() else ""
+                        ),
+                        "order_submission_included": False,
+                        "testnet_order_authority": False,
+                        "live_trading_authorized": False,
+                    },
+                    "paths": {"inventory": str(output)},
+                },
+                indent=2,
+            )
+        )
     elif args.command == "hyperliquid-testnet-preflight":
         frame = write_hyperliquid_testnet_preflight_report(
             root=ROOT, config=HyperliquidTestnetConfig.paper_testnet_from_env()
@@ -11970,6 +13098,88 @@ def main() -> None:
         output = ROOT / "reports" / "active" / "hyperliquid_testnet_margin_snapshot.csv"
         print(frame.to_string(index=False))
         print(f"hyperliquid_testnet_margin_snapshot: {output}")
+    elif args.command == "hyperliquid-testnet-collateral-transfer-preflight":
+        result = build_testnet_collateral_transfer_preflight(
+            root=ROOT,
+            config=HyperliquidTestnetConfig.paper_testnet_from_env(),
+            approval_id=str(args.transfer_approval_id or ""),
+            amount_usd=float(args.transfer_amount_usd),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "run-hyperliquid-testnet-collateral-transfer":
+        result = run_testnet_collateral_transfer(
+            root=ROOT,
+            config=HyperliquidTestnetConfig.paper_testnet_from_env(),
+            preflight_id=str(args.transfer_preflight_id or ""),
+            approval_id=str(args.transfer_approval_id or ""),
+            amount_usd=float(args.transfer_amount_usd),
+            acknowledgement=str(args.testnet_collateral_transfer_acknowledgement or ""),
+            execute=bool(args.execute_testnet_collateral_transfer),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "hyperliquid-testnet-pair-execution-preflight":
+        if not str(args.order_approval_id or "").strip():
+            raise SystemExit(
+                "hyperliquid-testnet-pair-execution-preflight requires --order-approval-id"
+            )
+        result = build_testnet_pair_execution_preflight(
+            root=ROOT,
+            action=str(args.testnet_pair_action),
+            approval_id=str(args.order_approval_id).strip(),
+            config=HyperliquidTestnetConfig.paper_testnet_from_env(),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+                default=str,
+            )
+        )
+    elif args.command == "run-hyperliquid-testnet-pair-execution":
+        if not str(args.order_approval_id or "").strip():
+            raise SystemExit("run-hyperliquid-testnet-pair-execution requires --order-approval-id")
+        if not str(args.testnet_pair_preflight_id or "").strip():
+            raise SystemExit(
+                "run-hyperliquid-testnet-pair-execution requires --testnet-pair-preflight-id"
+            )
+        result = run_testnet_pair_execution(
+            root=ROOT,
+            action=str(args.testnet_pair_action),
+            preflight_id=str(args.testnet_pair_preflight_id).strip(),
+            approval_id=str(args.order_approval_id).strip(),
+            acknowledgement=str(args.testnet_pair_acknowledgement or ""),
+            execute=bool(args.execute_hyperliquid_testnet_pair),
+            config=HyperliquidTestnetConfig.paper_testnet_from_env(),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+                default=str,
+            )
+        )
     elif args.command == "hyperliquid-testnet-smoke-approval-template":
         result = write_testnet_smoke_approval_template(root=ROOT)
         print(
@@ -12016,9 +13226,7 @@ def main() -> None:
         )
     elif args.command == "hyperliquid-testnet-recover-pair-state":
         if not str(args.order_approval_id or "").strip():
-            raise SystemExit(
-                "hyperliquid-testnet-recover-pair-state requires --order-approval-id"
-            )
+            raise SystemExit("hyperliquid-testnet-recover-pair-state requires --order-approval-id")
         config = replace(
             HyperliquidTestnetConfig.paper_testnet_from_env(),
             order_approval_id=str(args.order_approval_id).strip(),
@@ -12258,6 +13466,14 @@ def main() -> None:
         )
     elif args.command == "build-trade-dataset":
         result = build_trade_dataset(input_dir=args.input_dir, funding_path=args.funding_path)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "promote-trade-dataset":
+        result = promote_trade_dataset(candidate_pointer_path=args.input_dir)
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
@@ -12920,9 +14136,7 @@ def main() -> None:
         )
     elif args.command == "run-wizard-pair-detail-api-pilot":
         wizard_detail_endpoints = tuple(
-            value.strip()
-            for value in args.wizard_detail_endpoints.split(",")
-            if value.strip()
+            value.strip() for value in args.wizard_detail_endpoints.split(",") if value.strip()
         )
         result = run_wizard_pair_detail_api_pilot(
             root=ROOT,
@@ -12955,9 +14169,7 @@ def main() -> None:
         )
     elif args.command == "materialize-current-wizard-hyperliquid-history":
         selected_pair_keys = tuple(
-            value.strip()
-            for value in args.current_pair_group_keys.split(",")
-            if value.strip()
+            value.strip() for value in args.current_pair_group_keys.split(",") if value.strip()
         )
         result = materialize_current_wizard_hyperliquid_history(
             root=ROOT,
@@ -12986,9 +14198,7 @@ def main() -> None:
         )
     elif args.command == "materialize-current-wizard-hyperliquid-cost-evidence":
         selected_pair_keys = tuple(
-            value.strip()
-            for value in args.current_pair_group_keys.split(",")
-            if value.strip()
+            value.strip() for value in args.current_pair_group_keys.split(",") if value.strip()
         )
         result = materialize_current_wizard_hyperliquid_cost_evidence(
             root=ROOT,
@@ -13060,6 +14270,17 @@ def main() -> None:
         )
     elif args.command == "build-current-wizard-hyperliquid-failure-attribution":
         result = build_current_wizard_hyperliquid_failure_attribution(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-failure-routing-index":
+        result = build_current_wizard_hyperliquid_failure_routing_index(root=ROOT)
         print(
             json.dumps(
                 {
@@ -13907,6 +15128,7 @@ def main() -> None:
             funding_path=args.funding_path,
             model_path=args.model_path,
             output_path=args.output_path,
+            model_sha256=args.model_sha256,
         )
     elif args.command == "compare-ml-shadow-models":
         print_compare_ml_shadow_models(

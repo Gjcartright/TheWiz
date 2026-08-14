@@ -404,6 +404,17 @@ def build_exhaustive_wizard_hyperliquid_leverage_surface(
         statuses
     ):
         raise ValueError("Leverage surface failed complete experiment accounting")
+    leverage_status_defaults = {
+        "ready_for_testnet_1x_lifecycle": False,
+        "acceptance_status": "BLOCKED",
+        "acceptance_reason": "prior_concentration_gate_not_passed",
+        "acceptance_eligible": False,
+    }
+    for column, default in leverage_status_defaults.items():
+        status_frame[column] = status_frame.get(
+            column,
+            pd.Series(index=status_frame.index, dtype=object),
+        ).fillna(default)
 
     paths = {
         "status": active / "exhaustive_wizard_hyperliquid_leverage_status.csv",

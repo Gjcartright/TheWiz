@@ -1,0 +1,119 @@
+{
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "derivation_evidence": [
+    {
+      "path": "reports/active/wizard_ou_v2_holdout_status.json",
+      "sha256": "4645d2ebf00a18ad555a83865402ce485e08a83f7e68b9fb4bf0df5914c927cb"
+    },
+    {
+      "path": "reports/active/wizard_ou_v2_holdout_evaluation.csv",
+      "sha256": "14c8e9e9de30323aeeb6ef225a33e5ed2a0cf52c8648d8d90d7ade0c94594a4e"
+    }
+  ],
+  "holdout_bindings": [
+    {
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-15T00:00:00Z",
+      "last_timestamp": "2026-08-09T00:00:00Z",
+      "orientation": "original",
+      "pair": "BTC-ETH",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v3_holdout/requests/btc_eth_spread_request.json",
+      "request_sha256": "27bda7cd0c02bec52e98ca36ae9fd4e35a292d58ccfde4a8d6d6984a897d6432",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v3_holdout/responses/btc_eth_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-15T00:00:00Z",
+      "last_timestamp": "2026-08-09T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "ETH-BTC",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v3_holdout/requests/eth_btc_spread_request.json",
+      "request_sha256": "e60717b9c37d0f6f703dce281d1e7e774a6b67cf12a1cbb986c1ff8e9816624a",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v3_holdout/responses/eth_btc_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-15T00:00:00Z",
+      "last_timestamp": "2026-08-09T00:00:00Z",
+      "orientation": "original",
+      "pair": "BTC-ETH",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v3_holdout/requests/btc_eth_zscoreroll_request.json",
+      "request_sha256": "a1e6c1c320c0b1243368ec1b36b29805f392e6d3332f869abeb57a03d3c7de2f",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v3_holdout/responses/btc_eth_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-15T00:00:00Z",
+      "last_timestamp": "2026-08-09T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "ETH-BTC",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v3_holdout/requests/eth_btc_zscoreroll_request.json",
+      "request_sha256": "83f44d9635e11661f255bde79fe22ce0bb7c9579325900e7dd4c905326e3fe4f",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v3_holdout/responses/eth_btc_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    }
+  ],
+  "hypothesis": {
+    "derivation_cohorts": [
+      "wpair_a857c606d53e9206f2d1",
+      "wpair_4feb406df129644896e3"
+    ],
+    "holdout_is_disjoint": true,
+    "holdout_pair": "BTC-ETH",
+    "observed_branch_rule": "coint_eg.inc_trend=true uses zero_mean_ar1_profile; coint_eg.inc_trend=false uses intercept_ar1_profile"
+  },
+  "implementation": {
+    "generation": 3,
+    "input_transform": "divide_each_leg_by_its_first_observation",
+    "point_in_time_note": "local walk-forward use requires an independently matched local trend selector",
+    "source_sha256": "010d9d41699386e2da4b42f2c6b67aaa1bb41dd7f7d902450b68c0d8f41489a4",
+    "spread": "normalized_y-beta*normalized_x_without_centering",
+    "trend_selector_source": "vendor_coint_eg.inc_trend_for_formula_provenance"
+  },
+  "live_trading_authorized": false,
+  "research_only": true,
+  "schema_version": "thewiz.wizard_ou_v3_prospective_holdout.v1",
+  "source_candles": [
+    {
+      "asset": "BTC",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_42f1d0835347a819409d/cwhandoff_6ed1842867bdb5342374/history_runs/cwhistoryrun_20260809T112207668978Z_aa2faebe/assets/BTC_1d_candles.json",
+      "sha256": "5eefec2799043fcfd94634ebbc679f9eeb94409f83e7e1ce02289f71146528a1"
+    },
+    {
+      "asset": "ETH",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_42f1d0835347a819409d/cwhandoff_6ed1842867bdb5342374/history_runs/cwhistoryrun_20260809T112207668978Z_aa2faebe/assets/ETH_1d_candles.json",
+      "sha256": "483891cb8b7ba5a2cfa808b0ab110c29275bc2d5f11c6762596709240eb811ec"
+    }
+  ],
+  "status": "PREREGISTERED_WAITING_VENDOR_RESPONSES",
+  "testnet_order_authority": false,
+  "threshold_changes_after_vendor_response_allowed": false,
+  "tolerances": {
+    "half_life_abs": 0.001,
+    "hedge_ratio_abs": 1e-06,
+    "spread_max_abs": 1e-06,
+    "zscore_max_abs": 1e-06,
+    "zscore_roll_max_abs": 1e-06
+  },
+  "vendor_responses_at_registration": 0
+}

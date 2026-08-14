@@ -10,6 +10,48 @@ from quant_platform.wizard_pair_detail_ui_bundle import (
 )
 
 
+def _auth_observation(route_kind: str = "pair_detail") -> dict[str, object]:
+    pair = route_kind == "pair_detail"
+    url = (
+        "https://cryptowizards.net/wizards/zscore/pair/2?origin=scanner"
+        if pair
+        else "https://cryptowizards.net/wizards/zscore/scanner"
+    )
+    return {
+        "schema_version": "wizard_browser_auth_observation.v1",
+        "captured_at": "2026-08-07T19:00:00Z",
+        "requested_url": url,
+        "requested_url_source": "capture_argument",
+        "final_url": url,
+        "route_kind": route_kind,
+        "member_navigation_targets": [
+            "https://cryptowizards.net/wizards/account",
+            "https://cryptowizards.net/wizards/zscore/scanner",
+            "https://cryptowizards.net/wizards/zscore/trades",
+        ],
+        "protected_content_markers": (
+            [
+                "pair_mode_selector",
+                "timeframe_selector",
+                "ordered_asset_inputs",
+                "rendered_asset_labels",
+            ]
+            if pair
+            else [
+                "scanner_filter_controls",
+                "scanner_strategy_control",
+                "scanner_exchange_control",
+                "scanner_results_surface",
+            ]
+        ),
+        "sign_in_form_present": False,
+        "verification_form_present": False,
+        "public_marketing_shell_present": False,
+        "browser_storage_accessed": False,
+        "no_credentials_or_browser_storage_captured": True,
+    }
+
+
 def _mode_capture(mode: str, value: str) -> dict[str, object]:
     zscore = "ZScoreR" in mode
     inputs = [
@@ -110,10 +152,11 @@ CVaR (at 99%):-0.9%
 def _bundle() -> dict[str, object]:
     values = ["3-1", "3-2", "1-1", "1-2", "2-1", "2-2", "1-3"]
     return {
-        "schema_version": "wizard_pair_detail_ui_bundle.v1",
+        "schema_version": "wizard_pair_detail_ui_bundle.v2",
         "capture_run_id": "pilot",
         "capture_method": "authenticated_browser_ui",
         "no_credentials_or_browser_storage_captured": True,
+        "browser_auth_observation": _auth_observation(),
         "page_route": "https://cryptowizards.net/wizards/zscore/pair/2?origin=scanner",
         "scanner_context": {"exchange": "coinbase", "interval": "hourly"},
         "modes_not_available_on_pair_page": ["OU (Optimal)"],
@@ -194,7 +237,11 @@ def test_ingest_accounts_for_all_modes_and_orientations(tmp_path):
     captured = ledger[ledger["capture_status"].eq("CAPTURED")]
     assert captured["pair_group_key"].eq("coinbase|hourly|DOT|ZRO").all()
     assert captured["johansen_state"].eq("CORRELATED_SIGNAL").all()
+    assert captured["johansen_cointegrated"].all()
     assert captured["engle_granger_state"].eq("NO_COLOR_SIGNAL").all()
+    assert not captured["engle_granger_cointegrated"].any()
+    assert not captured["engle_granger_includes_trend"].any()
+    assert captured["metric_accounting_state"].eq("CLOSED_TRADES_PRESENT").all()
     assert captured["u1_given_u2"].eq(0.523).all()
     assert captured["wizard_cost_semantics_status"].eq("UNVERIFIED_FOR_LOCAL_PARITY").all()
     assert not captured["live_trading_authorized"].any()
@@ -202,6 +249,88 @@ def test_ingest_accounts_for_all_modes_and_orientations(tmp_path):
     assert progress.loc[progress["pair_group_key"].eq("coinbase|hourly|BTC|ETH"), "capture_status"].item() == "NOT_CAPTURED"
     assert result.paths["snapshot_mode_ledger"].exists()
     assert len(pd.read_csv(result.paths["snapshot_mode_ledger"])) == 16
+
+
+def test_legacy_self_asserted_auth_capture_is_retained_but_not_counted(tmp_path):
+    _write_queue(tmp_path)
+    raw = tmp_path / "data" / "raw" / "crypto_wizards" / "dashboard_pair_details"
+    raw.mkdir(parents=True)
+    bundle = _bundle()
+    bundle["schema_version"] = "wizard_pair_detail_ui_bundle.v1"
+    bundle.pop("browser_auth_observation")
+    (raw / "legacy.json").write_text(json.dumps(bundle), encoding="utf-8")
+
+    result = ingest_wizard_pair_detail_ui_bundles(root=tmp_path)
+    ledger = pd.read_csv(result.paths["mode_ledger"])
+    progress = pd.read_csv(result.paths["capture_progress"])
+
+    assert ledger["capture_status"].eq("AUTH_UNPROVEN_CAPTURE").sum() == 7
+    assert not ledger["authenticated_capture_authority"].fillna(False).any()
+    assert progress.loc[
+        progress["pair_group_key"].eq("coinbase|hourly|DOT|ZRO"), "capture_status"
+    ].item() == "AUTHENTICATION_UNPROVEN"
+    assert result.summary["captured_cells"] == 0
+
+
+def test_route_unavailable_claim_without_auth_proof_is_not_terminal(tmp_path):
+    _write_queue(tmp_path)
+    raw = tmp_path / "captures"
+    raw.mkdir()
+    payload = {
+        "schema_version": "wizard_pair_detail_route_unavailable.v1",
+        "capture_run_id": "unproven-route",
+        "capture_method": "authenticated_browser_ui",
+        "no_credentials_or_browser_storage_captured": True,
+        "observed_at": "2026-08-08T01:45:45Z",
+        "route_attempt_url": "https://cryptowizards.net/wizards/zscore/scanner",
+        "route_status": "PAIR_ROUTE_NOT_AVAILABLE",
+        "route_blocker": "wizard_custom_analysis_no_data",
+        "ui_message": "No data found",
+        "scanner_context": {
+            "exchange": "coinbase",
+            "interval": "hourly",
+            "asset_x_raw": "DOT-USD",
+            "asset_y_raw": "ZRO-USD",
+        },
+    }
+    (raw / "unproven.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    result = ingest_wizard_pair_detail_ui_bundles(root=tmp_path, input_dir=raw)
+    ledger = pd.read_csv(result.paths["mode_ledger"])
+    progress = pd.read_csv(result.paths["capture_progress"])
+
+    assert ledger["capture_status"].eq("AUTH_UNPROVEN_ROUTE_UNAVAILABLE_CLAIM").all()
+    assert progress.loc[
+        progress["pair_group_key"].eq("coinbase|hourly|DOT|ZRO"), "capture_status"
+    ].item() == "AUTHENTICATION_UNPROVEN"
+    assert result.summary["pair_groups_route_unavailable"] == 0
+
+
+def test_pair_bundle_blocks_ambiguous_performance_and_visible_garch_failure(tmp_path):
+    _write_queue(tmp_path)
+    raw = tmp_path / "captures"
+    raw.mkdir()
+    bundle = _bundle()
+    for capture in bundle["mode_captures"]:
+        capture["bodyText"] = (
+            capture["bodyText"]
+            .replace("closed trades:1", "closed trades:0")
+            + "\nMissing GARCH Data\n"
+        )
+    (raw / "quality_blocked.json").write_text(json.dumps(bundle), encoding="utf-8")
+
+    result = ingest_wizard_pair_detail_ui_bundles(root=tmp_path, input_dir=raw)
+    ledger = pd.read_csv(result.paths["mode_ledger"], keep_default_na=False)
+    captured = ledger[ledger["capture_status"].eq("CAPTURED")]
+
+    assert captured["metric_accounting_state"].eq(
+        "AMBIGUOUS_OPEN_OR_MARK_TO_MARKET"
+    ).all()
+    assert captured["metric_accounting_blocker"].eq(
+        "nonzero_performance_with_zero_closed_trades"
+    ).all()
+    assert captured["pair_page_data_quality_state"].eq("MISSING_GARCH_DATA").all()
+    assert captured["pair_page_data_quality_blocker"].eq("missing_garch_data").all()
 
 
 def test_missing_original_mode_is_reported_not_dropped(tmp_path):
@@ -259,6 +388,7 @@ def test_explicit_wizard_route_unavailable_accounts_for_every_planned_cell(tmp_p
         "capture_run_id": "route-unavailable-test",
         "capture_method": "authenticated_browser_ui",
         "no_credentials_or_browser_storage_captured": True,
+        "browser_auth_observation": _auth_observation("scanner"),
         "observed_at": "2026-08-08T01:45:45Z",
         "route_attempt_url": "https://cryptowizards.net/wizards/zscore/scanner",
         "route_status": "PAIR_ROUTE_NOT_AVAILABLE",

@@ -1,0 +1,259 @@
+{
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "derivation_evidence": [
+    {
+      "path": "reports/active/wizard_ou_v5_derivation.csv",
+      "sha256": "7814b58f7b9d2a3282b94557ec28bb80bb95f4e67d556aee91bd6646f2bc2e04"
+    },
+    {
+      "path": "data/research/wizard_ou_v4_failure_attributions/ouv4failure_2b4e0c0287d22ea85a2f.json",
+      "sha256": "661228e46f3f760ef0abe725e8ef462fda73bdb6d0fd19b88d3d6363ef6147ca"
+    }
+  ],
+  "derivation_summary": {
+    "independent_orientations": 10,
+    "profile_branch_rows_passed": 10,
+    "transform_rows_passed": 10,
+    "v4_holdout_reuse_allowed": false,
+    "v4_rows_are_derivation_only": true
+  },
+  "holdout_bindings": [
+    {
+      "asset_x": "SOL",
+      "asset_y": "BNB",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "original",
+      "pair": "SOL-BNB",
+      "pair_group": "SOL-BNB",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/sol_bnb_1d_spread_request.json",
+      "request_sha256": "128325d48c079d3583078c17e38028f1301c951a0bcea4f3edde34f6c0a3b9ed",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/sol_bnb_1d_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "BNB",
+      "asset_y": "SOL",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "BNB-SOL",
+      "pair_group": "SOL-BNB",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/bnb_sol_1d_spread_request.json",
+      "request_sha256": "7de4c0b7ca67adedbe6c37c64791a55dd28b27a33d13299c8460103d2acefad8",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/bnb_sol_1d_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "SOL",
+      "asset_y": "BNB",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "original",
+      "pair": "SOL-BNB",
+      "pair_group": "SOL-BNB",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/sol_bnb_1d_zscoreroll_request.json",
+      "request_sha256": "ab61ae2500bb17fbb9b1a96a1dbf8287ba5a71a5d3e8f67cd04a91a7b52cb275",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/sol_bnb_1d_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "BNB",
+      "asset_y": "SOL",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "BNB-SOL",
+      "pair_group": "SOL-BNB",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/bnb_sol_1d_zscoreroll_request.json",
+      "request_sha256": "bb5b98270c02b6da31425789d4c9ed7f13daa2292e72aff453442118e734b44e",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/bnb_sol_1d_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "DOGE",
+      "asset_y": "FET",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "original",
+      "pair": "DOGE-FET",
+      "pair_group": "DOGE-FET",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/doge_fet_1h_spread_request.json",
+      "request_sha256": "930eaf0573f9fc6c66740f6a3a8f27657d2692af9f48e57653403368ca913029",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/doge_fet_1h_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "FET",
+      "asset_y": "DOGE",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "reverse",
+      "pair": "FET-DOGE",
+      "pair_group": "DOGE-FET",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/fet_doge_1h_spread_request.json",
+      "request_sha256": "346a6bf5cb004130c9f6d289e3a32708242c922c1c7cc7f33a42ac9a4bf46718",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/fet_doge_1h_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "DOGE",
+      "asset_y": "FET",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "original",
+      "pair": "DOGE-FET",
+      "pair_group": "DOGE-FET",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/doge_fet_1h_zscoreroll_request.json",
+      "request_sha256": "a96e9d9bb6eae65517052b0c099dd242b14216819cb2a274fb37a670e2b0ca47",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/doge_fet_1h_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "FET",
+      "asset_y": "DOGE",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "reverse",
+      "pair": "FET-DOGE",
+      "pair_group": "DOGE-FET",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v5_holdout/requests/fet_doge_1h_zscoreroll_request.json",
+      "request_sha256": "4c8ad67d0e137451144b6e02e49bd1702d464981d45f92144b5ed2f6290b39be",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v5_holdout/responses/fet_doge_1h_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    }
+  ],
+  "holdout_predictions": {
+    "cells": 8,
+    "independent_orientations": 4,
+    "path": "reports/active/wizard_ou_v5_predictions.csv",
+    "sha256": "152f4a297d95cf2151296b14b69636f9706ec0dd5527e2dcd394aead9a884c3d",
+    "vendor_responses_at_registration": 0
+  },
+  "hypothesis": {
+    "holdout_is_asset_and_pair_disjoint": true,
+    "holdout_pair_groups": [
+      "DOGE-FET",
+      "SOL-BNB"
+    ],
+    "independent_orientation_count": 4,
+    "predicted_profile_branches": [
+      "intercept",
+      "zero_mean"
+    ],
+    "predicted_transform_states": [
+      "level",
+      "log"
+    ],
+    "predicted_trend_states": [
+      false,
+      true
+    ],
+    "profile_branch_rule": "intercept_if_ar1_intercept_exceeds_frozen_threshold",
+    "profile_intercept_threshold": 0.002708231033833809,
+    "profile_threshold_is_fragile": true,
+    "profile_training_separation": 2.1083662643322024e-05,
+    "spread_and_zscorer_are_duplicate_formula_views": true,
+    "transform_rule": "log_if_both_series_medians_are_at_least_one",
+    "transform_scale_sensitive": true,
+    "transform_threshold": 1.0,
+    "trend_is_diagnostic_not_formula_switch": true,
+    "trend_rule": "minimum_aic_across_level_log_x_constant_trend"
+  },
+  "implementation": {
+    "automatic_activation": false,
+    "generation": 5,
+    "point_in_time_inputs": "registered request close series only",
+    "source_sha256": "3fcbef82e7ad0702f1daf3b32ee1b87fe20552278c8a92540ab335b12bdc82dd",
+    "vendor_response_used_for_holdout_selection": false
+  },
+  "live_trading_authorized": false,
+  "research_only": true,
+  "schema_version": "thewiz.wizard_ou_v5_prospective_holdout.v1",
+  "source_candles": [
+    {
+      "asset": "SOL",
+      "interval": "1d",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/SOL_1d_candles.json",
+      "sha256": "6361d8bb5551c80054dc07049c368bb648b7cc895fe9cc6e8d23474d1bb819a8"
+    },
+    {
+      "asset": "BNB",
+      "interval": "1d",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/BNB_1d_candles.json",
+      "sha256": "43afbf1b045219b7f94f76f96c3745a868ff40819e6c5a197b2a68e5943eef0b"
+    },
+    {
+      "asset": "DOGE",
+      "interval": "1h",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/DOGE_1h_candles.json",
+      "sha256": "fddd61c5443011d0a20685446d761b05045b73fd69249ec79587a057cf0f7360"
+    },
+    {
+      "asset": "FET",
+      "interval": "1h",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/FET_1h_candles.json",
+      "sha256": "cb8c8efb48860df2743922c266ea52427eab796ace61564d1a676c7e63d35b6d"
+    }
+  ],
+  "status": "PREREGISTERED_WAITING_VENDOR_RESPONSES",
+  "testnet_order_authority": false,
+  "threshold_changes_after_vendor_response_allowed": false,
+  "tolerances": {
+    "half_life_abs": 0.001,
+    "hedge_ratio_abs": 1e-06,
+    "spread_max_abs": 1e-06,
+    "zscore_max_abs": 1e-06,
+    "zscore_roll_max_abs": 1e-06
+  },
+  "vendor_responses_at_registration": 0
+}

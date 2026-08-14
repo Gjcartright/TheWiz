@@ -6,9 +6,51 @@ from quant_platform.wizard_research_journal import (
     _apply_stationarity_and_copula_interpretation,
     _attach_wizard_configuration_lineage,
     _build_copula_detail_capture_queue,
+    _build_detail_records,
     _build_strategy_mode_capture_queue,
     _build_two_hour_copula_report,
 )
+
+
+def test_detail_records_preserve_top_metrics_separately_from_detail_metrics(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "interval": "Daily",
+                "exact_mode": "Static Spread",
+                "correlation_top": 0.81,
+                "pearson": 0.72,
+                "corr_copula": 0.63,
+                "return_total_top": 28.0,
+                "returns_total": 0.19,
+                "returns_total_pct": 19.0,
+                "sharpe_top": 2.4,
+                "sharpe": 1.8,
+            }
+        ]
+    ).to_csv(active / "crypto_wizards_pair_page_capture.csv", index=False)
+
+    detail = _build_detail_records(
+        [],
+        tmp_path,
+        pd.DataFrame(),
+        {},
+        {},
+        {},
+        {},
+        {},
+    )
+    row = detail.loc[detail["timeframe"].eq("Daily")].iloc[0]
+
+    assert row["correlation_top"] == 0.81
+    assert row["correlation_value"] == 0.63
+    assert row["return_total_top"] == 28.0
+    assert row["annualized_return_detail"] == 19.0
+    assert row["sharpe_top"] == 2.4
+    assert row["sharpe_detail"] == 1.8
 
 
 def test_journal_lineage_joins_exact_mode_configuration_without_inventing_old_hashes(tmp_path):

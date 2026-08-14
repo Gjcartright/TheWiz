@@ -11,6 +11,7 @@ Example:
 
   await __CW_CAPTURE_PAIR_UI_BUNDLE__({
     orientation: "reverse",
+    requestedUrl: "https://cryptowizards.net/wizards/zscore/pair/2",
     scannerContext: {
       exchange: "binance",
       interval: "daily",
@@ -39,6 +40,104 @@ Example:
   const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
   const upper = (value) => String(value || "").trim().toUpperCase();
   const lower = (value) => String(value || "").trim().toLowerCase();
+  const redactText = (value) => String(value || "")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[REDACTED_EMAIL]")
+    .replace(/\b(?:sk|pk|api)[-_][A-Za-z0-9_-]{16,}\b/g, "[REDACTED_TOKEN]")
+    .replace(/\b0x[a-fA-F0-9]{64}\b/g, "[REDACTED_PRIVATE_VALUE]");
+
+  const safeInputValue = (element) => {
+    const sensitive = ["password", "email", "hidden"].includes(lower(element.type))
+      || ["current-password", "new-password", "one-time-code"].includes(
+        lower(element.autocomplete),
+      );
+    return sensitive ? "[REDACTED]" : redactText(element.value);
+  };
+
+  const memberNavigationTargets = () => Array.from(document.querySelectorAll("a[href]"))
+    .map((anchor) => {
+      try {
+        const url = new URL(anchor.href, location.href);
+        return url.protocol === "https:" && /^(www\.)?cryptowizards\.net$/i.test(url.hostname)
+          && url.pathname.startsWith("/wizards/")
+          ? url.href
+          : "";
+      } catch (_) {
+        return "";
+      }
+    })
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index);
+
+  const authFormSignals = () => {
+    const formsText = lower(Array.from(document.querySelectorAll("form"))
+      .map((form) => form.innerText || "")
+      .join(" "));
+    return {
+      signIn: Boolean(document.querySelector('input[type="password"]'))
+        || (/\b(sign in|log in)\b/.test(formsText)
+          && Boolean(document.querySelector('input[type="email"], input[name*="email" i]'))),
+      verification: Boolean(document.querySelector('input[autocomplete="one-time-code"]'))
+        || /\b(verification code|security code|one-time code)\b/.test(formsText),
+    };
+  };
+
+  const browserAuthObservation = (requestedUrl) => {
+    const memberTargets = memberNavigationTargets();
+    const forms = authFormSignals();
+    const modeValues = Array.from(document.querySelector(MODE_SELECTOR)?.options || [])
+      .map((option) => option.value);
+    const rendered = renderedAssetOrder();
+    const contentMarkers = [];
+    if (MODES.every((mode) => modeValues.includes(mode.value))) contentMarkers.push("pair_mode_selector");
+    if (document.querySelector(TIMEFRAME_SELECTOR)) contentMarkers.push("timeframe_selector");
+    if (document.querySelectorAll("input").length >= 2) contentMarkers.push("ordered_asset_inputs");
+    if (rendered.every(Boolean)) contentMarkers.push("rendered_asset_labels");
+    return {
+      schema_version: "wizard_browser_auth_observation.v1",
+      captured_at: new Date().toISOString(),
+      requested_url: requestedUrl || location.href,
+      requested_url_source: requestedUrl ? "capture_argument" : "current_location_fallback",
+      final_url: location.href,
+      route_kind: "pair_detail",
+      member_navigation_targets: memberTargets,
+      protected_content_markers: contentMarkers,
+      sign_in_form_present: forms.signIn,
+      verification_form_present: forms.verification,
+      public_marketing_shell_present: !location.pathname.startsWith("/wizards/"),
+      browser_storage_accessed: false,
+      no_credentials_or_browser_storage_captured: true,
+    };
+  };
+
+  const requireAuthenticatedPairRoute = (observation) => {
+    const required = [
+      "pair_mode_selector",
+      "timeframe_selector",
+      "ordered_asset_inputs",
+      "rendered_asset_labels",
+    ];
+    const accountPresent = observation.member_navigation_targets.some((value) => {
+      try {
+        return new URL(value).pathname.replace(/\/$/, "") === "/wizards/account";
+      } catch (_) {
+        return false;
+      }
+    });
+    const failures = {
+      explicit_requested_url: observation.requested_url_source === "capture_argument",
+      protected_pair_route: /^\/wizards\/zscore\/pair\/[^/]+\/?$/.test(location.pathname),
+      member_navigation: observation.member_navigation_targets.length >= 2,
+      account_navigation: accountPresent,
+      route_controls: required.every((value) => observation.protected_content_markers.includes(value)),
+      no_sign_in_form: !observation.sign_in_form_present,
+      no_verification_form: !observation.verification_form_present,
+      no_public_shell: !observation.public_marketing_shell_present,
+    };
+    if (!Object.values(failures).every(Boolean)) {
+      console.table(failures);
+      throw new Error(`Authenticated pair-route proof failed: ${JSON.stringify(failures)}`);
+    }
+  };
 
   const setSelect = async (selector, value, waitMilliseconds) => {
     const select = document.querySelector(selector);
@@ -104,7 +203,7 @@ Example:
   const captureState = () => {
     const selects = Array.from(document.querySelectorAll("select")).map((element, index) => ({
       index,
-      value: element.value,
+      value: safeInputValue(element),
       selectedText: element.options[element.selectedIndex]?.text || "",
       options: Array.from(element.options).map((option) => ({
         value: option.value,
@@ -120,7 +219,7 @@ Example:
       min: element.min || "",
       max: element.max || "",
       step: element.step || "",
-      context: (element.parentElement?.innerText || "").trim().slice(0, 240),
+      context: redactText((element.parentElement?.innerText || "").trim()).slice(0, 240),
     }));
     const stationarity = Array.from(document.querySelectorAll("div"))
       .filter((element) => ["coint Jn", "coint EG"].includes((element.innerText || "").trim())
@@ -145,7 +244,7 @@ Example:
       capturedAt: new Date().toISOString(),
       url: location.href,
       title: document.title,
-      bodyText: (document.body?.innerText || "").trim(),
+      bodyText: redactText((document.body?.innerText || "").trim()),
       selects,
       inputs,
       stationarity,
@@ -201,11 +300,14 @@ Example:
     scannerContext,
     orientation = "original",
     scannerEvidencePath = "",
+    requestedUrl = "",
     download = true,
     filename = "",
   }) => {
     orientation = lower(orientation);
     await setSelect(TIMEFRAME_SELECTOR, lower(scannerContext.interval), 1200);
+    const authObservation = browserAuthObservation(requestedUrl);
+    requireAuthenticatedPairRoute(authObservation);
     const initialProof = orientationStatus({ scannerContext, orientation });
     if (!initialProof.valid) {
       console.table(initialProof.checks);
@@ -214,7 +316,7 @@ Example:
 
     const timestamp = new Date().toISOString();
     const bundle = {
-      schema_version: "wizard_pair_detail_ui_bundle.v1",
+      schema_version: "wizard_pair_detail_ui_bundle.v2",
       capture_method: "authenticated_browser_ui",
       source_authority: "crypto_wizards_dashboard",
       route_identity_policy: "session_local_route_evidence_only",
@@ -228,6 +330,7 @@ Example:
       capture_run_id: `wizard_pair_${orientation}_${timestamp.replace(/[-:.]/g, "")}`,
       captured_at: timestamp,
       no_credentials_or_browser_storage_captured: true,
+      browser_auth_observation: authObservation,
       page_route: location.href,
       scanner_evidence_path: scannerEvidencePath,
       scanner_context: scannerContext,

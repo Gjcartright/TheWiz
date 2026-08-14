@@ -3075,6 +3075,10 @@ def _paper_route_followup_action(row: pd.Series | dict[str, object]) -> str:
         return "advance_global_paper_handoff_then_recheck_candidate"
     if paper_status == "global_gate_blocked":
         return "clear_global_gate_then_recheck_candidate"
+    if paper_status == "blocked":
+        return "clear_paper_route_blocker_then_recheck_candidate"
+    if paper_status:
+        return "recheck_candidate_against_current_paper_route"
     return ""
 
 
@@ -3095,9 +3099,6 @@ def _paper_route_followup_context(root: Path, paper_gate_blocker: str) -> tuple[
             f"execution_preflight_blocker={_text(paper_row.get('blocker', ''))}",
         )
     return "", ""
-    if paper_status == "blocked":
-        return "clear_paper_route_blocker_then_recheck_candidate"
-    return "recheck_candidate_against_current_paper_route"
 
 
 def _strategy_acceptance_followup(root: Path) -> tuple[str, str, str]:

@@ -513,8 +513,7 @@ def _endpoint_params(endpoint: str, config: dict[str, object]) -> dict[str, obje
                 "exit_level": exit_level,
                 "x_weighting": 0.5,
                 "slippage_rate": 0.0005,
-                "commission_rate": 0.0005,
-                "stop_loss_rate": 0.10,
+                "commission_rate": 0.001,
             }
         )
     return params

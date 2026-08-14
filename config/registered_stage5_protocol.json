@@ -1,0 +1,112 @@
+{
+  "schema_version": "thewiz.registered_stage5_protocol_config.v1",
+  "protocol_version": "2026-08-14.1",
+  "thresholds_changed_after_results": false,
+  "protocol_contract": {
+    "cohort": "immutable_accepted_registered_stage4_full_family_strict_cost_trades",
+    "features": "entry_time_causal_no_dashboard_hindsight",
+    "supervised": {
+      "candidate_families": [
+        "logistic_regression",
+        "regularized_random_forest",
+        "boosted_tree_with_deterministic_fallback"
+      ],
+      "walkforward_splits": 5,
+      "minimum_train_rows": 100,
+      "embargo_periods": 1,
+      "selection_scheme": "chronological_model_selection_then_untouched_evaluation_v1",
+      "global_split_scheme": "globally_purged_embargoed_pair_aware_timestamp_groups_v2",
+      "prediction_membership": "exact_registered_row_fold_phase_v1",
+      "threshold_calibration": "training_only_minimum_participation_v1",
+      "threshold_grid": {
+        "start": 0.5,
+        "stop_inclusive": 0.8,
+        "step": 0.05
+      },
+      "minimum_training_take_rate": 0.1,
+      "minimum_oos_take_rate": 0.1,
+      "model_selection_uses_untouched_evaluation": false,
+      "score_bucket_monotonicity_required": true,
+      "selection_concentration_dimensions": [
+        "pair",
+        "timeframe",
+        "regime"
+      ],
+      "pair_regime_timeframe_concentration_required": true
+    },
+    "reinforcement_learning": {
+      "policy": "simulated_quantile_hold_policy",
+      "entry_threshold_quantile": 0.7,
+      "calibration_split": "globally_purged_train",
+      "validation_split": "policy_selection",
+      "test_split": "untouched_evaluation",
+      "train_fraction": 0.6,
+      "validation_fraction": 0.2,
+      "minimum_rows": [
+        50,
+        30,
+        30
+      ],
+      "minimum_take_rate": 0.1,
+      "positive_validation_after_cost_return_required": true,
+      "positive_test_after_cost_return_required": true,
+      "pair_regime_timeframe_concentration_required": true
+    },
+    "selection_rule": "both_supervised_and_rl_oos_gates_must_pass_without_trade_count_collapse",
+    "failed_run_action": "research_only_no_quantization_no_testnet_candidate"
+  },
+  "source_contracts": [
+    {
+      "role": "agent_learning_governance",
+      "path": "src/quant_platform/orchestration/corrective_agent_governance.py"
+    },
+    {
+      "role": "registered_learning_orchestrator",
+      "path": "src/quant_platform/orchestration/corrective_registered_learning.py"
+    },
+    {
+      "role": "registered_stage4_contract",
+      "path": "src/quant_platform/orchestration/corrective_registered_rerun.py"
+    },
+    {
+      "role": "registered_stage4_execution_validator",
+      "path": "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+    },
+    {
+      "role": "dataset_and_model_gate_pipeline",
+      "path": "src/quant_platform/active_pipeline.py"
+    },
+    {
+      "role": "exact_mode_schema",
+      "path": "src/quant_platform/wizard_mode_replay.py"
+    },
+    {
+      "role": "model_training_and_selection",
+      "path": "src/quant_platform/ml_filter.py"
+    },
+    {
+      "role": "registered_stage5_protocol_registry",
+      "path": "src/quant_platform/orchestration/corrective_registered_learning_protocol.py"
+    },
+    {
+      "role": "rl_feature_construction",
+      "path": "src/quant_platform/rl/features.py"
+    },
+    {
+      "role": "rl_research_and_execution_simulator",
+      "path": "src/quant_platform/rl/rl_backtest.py"
+    },
+    {
+      "role": "rl_acceptance",
+      "path": "src/quant_platform/rl/rl_acceptance.py"
+    },
+    {
+      "role": "rl_chronological_partitioning",
+      "path": "src/quant_platform/rl/rl_learning_agent.py"
+    }
+  ],
+  "promotion_authority": false,
+  "testnet_candidate_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

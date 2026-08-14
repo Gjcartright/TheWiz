@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -17,9 +17,18 @@ from quant_platform.orchestration.snapshot_lineage import (
     verified_snapshot_reference,
 )
 
-
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_failure_attribution.v1"
+ROUTING_SCHEMA_VERSION = "current_wizard_hyperliquid_failure_attribution_routes.v1"
+
+L2_ROUTING_COLUMNS = (
+    "experiment_id",
+    "pair_group_key",
+    "pair",
+    "asset_x",
+    "asset_y",
+    "overall_research_rank",
+)
 
 INPUT_FILENAMES = {
     "matrix": "current_wizard_hyperliquid_experiment_matrix.csv",
@@ -245,7 +254,119 @@ def build_current_wizard_hyperliquid_failure_attribution(
         path.write_text(manifest_text, encoding="utf-8")
     for path in (paths["summary_md"], paths["snapshot_summary_md"]):
         path.write_text(summary_text, encoding="utf-8")
+    routing = build_current_wizard_hyperliquid_failure_routing_index(
+        root=root,
+        routes=attribution.loc[:, list(L2_ROUTING_COLUMNS)].copy(),
+    )
+    paths["route_index"] = routing.paths["route_index"]
+    paths["route_manifest"] = routing.paths["route_manifest"]
+    paths["immutable_route_index"] = routing.paths["immutable_route_index"]
+    paths["immutable_route_manifest"] = routing.paths["immutable_route_manifest"]
     return CommandResult(paths=paths, summary=summary)
+
+
+def build_current_wizard_hyperliquid_failure_routing_index(
+    *,
+    root: Path = ROOT,
+    routes: pd.DataFrame | None = None,
+) -> CommandResult:
+    """Publish a compact immutable L2 route index without mutating research lineage."""
+
+    active = root / "reports" / "active"
+    source_manifest_path = (
+        active / "current_wizard_hyperliquid_failure_attribution_manifest.json"
+    )
+    source_manifest = _read_json(source_manifest_path)
+    source_id = _text(source_manifest.get("failure_attribution_id"))
+    artifacts = source_manifest.get("artifacts", {})
+    if not source_id or not isinstance(artifacts, dict):
+        raise ValueError("Current failure-attribution manifest is incomplete")
+    source_active_path = root / _text(artifacts.get("attribution"))
+    source_snapshot_path = root / _text(artifacts.get("snapshot_attribution"))
+    if not source_active_path.is_file() or not source_snapshot_path.is_file():
+        raise FileNotFoundError("Current failure-attribution evidence is missing")
+    source_active_hash = _file_hash(source_active_path)
+    source_snapshot_hash = _file_hash(source_snapshot_path)
+    if source_active_hash != source_snapshot_hash:
+        raise ValueError("Current failure-attribution active/snapshot mismatch")
+    if routes is None:
+        routes = pd.read_csv(
+            source_snapshot_path,
+            usecols=list(L2_ROUTING_COLUMNS),
+            keep_default_na=False,
+        )
+    missing = set(L2_ROUTING_COLUMNS) - set(routes.columns)
+    if missing:
+        raise ValueError(
+            "Failure-attribution routing columns missing: " + ",".join(sorted(missing))
+        )
+    routes = routes.loc[:, list(L2_ROUTING_COLUMNS)].copy()
+    experiment_ids = routes["experiment_id"].astype(str)
+    expected_rows = int(source_manifest.get("experiments_accounted", -1))
+    expected_unique = int(source_manifest.get("unique_experiment_ids", -1))
+    if (
+        routes.empty
+        or experiment_ids.eq("").any()
+        or experiment_ids.duplicated().any()
+        or len(routes) != expected_rows
+        or experiment_ids.nunique() != expected_unique
+    ):
+        raise ValueError("Failure-attribution routing identity is incomplete")
+    route_bytes = routes.to_csv(index=False).encode("utf-8")
+    route_hash = sha256(route_bytes).hexdigest()
+    source_manifest_hash = _file_hash(source_manifest_path)
+    material = {
+        "schema_version": ROUTING_SCHEMA_VERSION,
+        "source_failure_attribution_id": source_id,
+        "source_manifest_sha256": source_manifest_hash,
+        "source_attribution_sha256": source_active_hash,
+        "route_index_sha256": route_hash,
+        "route_index_rows": len(routes),
+        "route_index_unique_experiment_ids": int(experiment_ids.nunique()),
+    }
+    route_id = "cwroutes_" + sha256(
+        _canonical_json(material).encode("utf-8")
+    ).hexdigest()[:20]
+    immutable_dir = (
+        root / "data" / "research" / "wizard_failure_attribution_routes" / route_id
+    )
+    immutable_route_path = immutable_dir / "routing_index.csv"
+    immutable_manifest_path = immutable_dir / "manifest.json"
+    active_route_path = (
+        active / "current_wizard_hyperliquid_failure_attribution_routes.csv"
+    )
+    active_manifest_path = (
+        active / "current_wizard_hyperliquid_failure_attribution_routes_manifest.json"
+    )
+    payload = {
+        **material,
+        "route_id": route_id,
+        "source_manifest_path": _relative(source_manifest_path, root),
+        "source_active_attribution_path": _relative(source_active_path, root),
+        "source_snapshot_attribution_path": _relative(source_snapshot_path, root),
+        "source_as_of": _text(source_manifest.get("as_of")),
+        "active_route_index_path": _relative(active_route_path, root),
+        "immutable_route_index_path": _relative(immutable_route_path, root),
+        "immutable_route_manifest_path": _relative(immutable_manifest_path, root),
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    manifest_bytes = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode(
+        "utf-8"
+    )
+    _write_or_validate_immutable_bytes(route_bytes, immutable_route_path)
+    _write_or_validate_immutable_bytes(manifest_bytes, immutable_manifest_path)
+    _atomic_write_bytes(route_bytes, active_route_path)
+    _atomic_write_bytes(manifest_bytes, active_manifest_path)
+    return CommandResult(
+        paths={
+            "route_index": active_route_path,
+            "route_manifest": active_manifest_path,
+            "immutable_route_index": immutable_route_path,
+            "immutable_route_manifest": immutable_manifest_path,
+        },
+        summary=payload,
+    )
 
 
 def _attribution_row(
@@ -942,6 +1063,24 @@ def _relative(path: Path, root: Path) -> str:
 
 def _file_hash(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
+
+
+def _write_or_validate_immutable_bytes(payload: bytes, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_file():
+        if path.read_bytes() != payload:
+            raise ValueError(f"Immutable routing artifact mismatch: {path}")
+        return
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
+
+
+def _atomic_write_bytes(payload: bytes, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
 
 
 def _canonical_json(value: object) -> str:

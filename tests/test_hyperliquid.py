@@ -434,6 +434,79 @@ def test_hyperliquid_snapshot_model_includes_books_returned_after_request_start(
     assert result.summary["model_as_of"] == book_timestamp.isoformat()
 
 
+def test_explicit_cost_capture_retains_other_pair_models(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "asset_x": "BTC",
+                "asset_y": "ETH",
+                "both_legs_testnet_perp": True,
+            },
+            {
+                "pair": "SOL-USD-HYPE-USD",
+                "asset_x": "SOL",
+                "asset_y": "HYPE",
+                "both_legs_testnet_perp": True,
+            },
+        ]
+    ).to_csv(active / "hyperliquid_execution_market_compatibility.csv", index=False)
+    first_candidates = tmp_path / "first_candidates.csv"
+    second_candidates = tmp_path / "second_candidates.csv"
+    pd.DataFrame(
+        [{"pair": "BTC-USD-ETH-USD", "asset_x": "BTC", "asset_y": "ETH"}]
+    ).to_csv(first_candidates, index=False)
+    pd.DataFrame(
+        [{"pair": "SOL-USD-HYPE-USD", "asset_x": "SOL", "asset_y": "HYPE"}]
+    ).to_csv(second_candidates, index=False)
+    start = datetime(2026, 8, 5, 12, 0, tzinfo=timezone.utc)
+
+    def book(coin: str, timestamp: datetime, bid: str, ask: str) -> dict[str, object]:
+        return {
+            "coin": coin,
+            "time": int(timestamp.timestamp() * 1000),
+            "levels": [[{"px": bid, "sz": "1000"}], [{"px": ask, "sz": "1000"}]],
+        }
+
+    refresh_hyperliquid_execution_cost_snapshot(
+        root=tmp_path,
+        max_pairs=1,
+        notionals=(1000.0,),
+        captured_at=start,
+        book_payloads={
+            "BTC": book("BTC", start, "99", "101"),
+            "ETH": book("ETH", start, "49", "51"),
+        },
+        candidate_path=first_candidates,
+        min_samples=2,
+        window_hours=2,
+    )
+    result = refresh_hyperliquid_execution_cost_snapshot(
+        root=tmp_path,
+        max_pairs=1,
+        notionals=(1000.0,),
+        captured_at=start + timedelta(minutes=5),
+        book_payloads={
+            "SOL": book("SOL", start + timedelta(minutes=5), "19", "21"),
+            "HYPE": book("HYPE", start + timedelta(minutes=5), "9", "11"),
+        },
+        candidate_path=second_candidates,
+        min_samples=2,
+        window_hours=2,
+    )
+
+    model = pd.read_csv(result.paths["hyperliquid_pair_cost_model"])
+    by_pair = model.set_index("pair")
+    assert set(by_pair.index) == {"BTC-USD-ETH-USD", "SOL-USD-HYPE-USD"}
+    assert by_pair.loc["BTC-USD-ETH-USD", "slippage_samples_x"] == 1
+    assert by_pair.loc["BTC-USD-ETH-USD", "slippage_samples_y"] == 1
+    assert by_pair.loc["SOL-USD-HYPE-USD", "slippage_samples_x"] == 1
+    assert by_pair.loc["SOL-USD-HYPE-USD", "slippage_samples_y"] == 1
+    assert not bool(by_pair["slippage_model_ready"].any())
+
+
 def test_explicit_mainnet_candidate_is_kept_when_testnet_is_missing_and_failed_discovery_is_filtered(tmp_path):
     active = tmp_path / "reports" / "active"
     processed = tmp_path / "data" / "processed"

@@ -1,0 +1,14 @@
+{
+  "schema_version": "thewiz.wizard_surface_inventory_readiness.v2",
+  "enforced": true,
+  "api_endpoint_count": 14,
+  "dashboard_surface_count": 29,
+  "missing_integration_count": 28,
+  "capture_opportunity_count": 21,
+  "browser_api_parity_surface_count": 12,
+  "optimization_dimension_count": 17,
+  "point_in_time_policy": "dashboard_and_vendor_backtest_fields_are_discovery_only_until_causal_local_replay",
+  "candidate_promotion_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

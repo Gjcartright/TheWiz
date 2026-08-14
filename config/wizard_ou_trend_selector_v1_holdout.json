@@ -1,0 +1,48 @@
+{
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "derivation": {
+    "cells": 8,
+    "independent_series_orientations": 4,
+    "matched_cells": 8,
+    "path": "reports/active/wizard_ou_trend_selector_v1_derivation.csv",
+    "sha256": "7d958c1bef044e2ed7349fca67ef113326310a2382c02b930b088c8afbed79dc"
+  },
+  "holdout_predictions": {
+    "cells": 4,
+    "independent_series_orientations": 2,
+    "path": "reports/active/wizard_ou_trend_selector_v1_predictions.csv",
+    "sha256": "0ce0ab0fdfd6c646227e9d09c26452b7827b1443a041df683f677036bad35c82",
+    "vendor_responses_at_registration": 0
+  },
+  "live_trading_authorized": false,
+  "research_only": true,
+  "schema_version": "thewiz.wizard_ou_trend_selector.v1",
+  "selector": {
+    "adf_autolag": null,
+    "adf_maxlag": 2,
+    "candidate_branches": {
+      "constant": "intercept_ar1_profile_spread_then_adf_c",
+      "trend": "zero_mean_ar1_profile_spread_then_adf_ct"
+    },
+    "criterion": "aic",
+    "generation": 1,
+    "point_in_time_inputs": "registered_request_series_only",
+    "rule": "inc_trend=true only when trend_aic<constant_aic",
+    "source_sha256": "fabdbc1e0999ebda21c49ccc0cd4f6ebfc9e1c8ebd0194a5ed23ea0fa9fd1da9",
+    "tie_breaker": "constant_branch",
+    "uses_vendor_response": false
+  },
+  "source_contracts": [
+    {
+      "path": "config/wizard_ou_comparator_v2_holdout.json",
+      "sha256": "a65c83f731ab8c8aa0efdc4b608d9dcedd05b5d7d9bbbd9f7a97faab09b1cebf"
+    },
+    {
+      "path": "config/wizard_ou_comparator_v3_holdout.json",
+      "sha256": "9054a0d1641ff8496895f5b51ba5e60f603c44db693e6103d3dbd445dae0b941"
+    }
+  ],
+  "status": "PREREGISTERED_WAITING_VENDOR_RESPONSES",
+  "testnet_order_authority": false
+}

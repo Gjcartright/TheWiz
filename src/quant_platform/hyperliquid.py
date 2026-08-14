@@ -962,6 +962,34 @@ def build_hyperliquid_pair_cost_model(
         max_pairs=max_pairs,
         candidate_path=Path(candidate_path) if candidate_path else None,
     )
+    output = root / "reports" / "active" / "hyperliquid_pair_cost_model.csv"
+    if candidate_path is not None:
+        existing = _read_csv(output)
+        selected_keys = {
+            _pair_key(candidate.get("asset_x"), candidate.get("asset_y"))
+            for candidate in candidates
+        }
+        for record in existing.to_dict("records"):
+            key = _pair_key(record.get("asset_x"), record.get("asset_y"))
+            if not key or key in selected_keys:
+                continue
+            candidates.append(
+                {
+                    "pair": str(record.get("pair", "") or ""),
+                    "asset_x": _coin(str(record.get("asset_x", ""))),
+                    "asset_y": _coin(str(record.get("asset_y", ""))),
+                    "candidate_source": "retained_existing_pair_cost_model",
+                    "evidence_path": ";".join(
+                        value
+                        for value in (
+                            _rel(output, root),
+                            str(record.get("evidence_path", "") or ""),
+                        )
+                        if value
+                    ),
+                }
+            )
+            selected_keys.add(key)
     samples_path = root / "data" / "processed" / "hyperliquid_l2_slippage_samples.csv"
     samples = _read_csv(samples_path)
     profile, profile_path = _hyperliquid_cost_profile(root)
@@ -983,7 +1011,6 @@ def build_hyperliquid_pair_cost_model(
     frame = pd.DataFrame(rows, columns=HYPERLIQUID_PAIR_COST_MODEL_COLUMNS)
     if not frame.empty:
         frame = frame.sort_values(["slippage_model_ready", "cost_model_ready", "pair"], ascending=[False, False, True]).reset_index(drop=True)
-    output = root / "reports" / "active" / "hyperliquid_pair_cost_model.csv"
     markdown = root / "reports" / "active" / "hyperliquid_pair_cost_model.md"
     _write_csv(frame, output)
     _write_text(markdown, _hyperliquid_pair_cost_model_markdown(frame))

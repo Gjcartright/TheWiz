@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from pathlib import Path
-from typing import Any, Iterable
 import json
 import re
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -12,7 +15,6 @@ import pandas as pd
 from quant_platform.derived_features import add_derived_beta_from_prices
 from quant_platform.experiments import PairDataset
 from quant_platform.fixture_ingestion import snake_case
-
 
 ECM_FIELD_SOURCE = {
     "ecm_x": "pair_detail:dependency_chart_option",
@@ -206,10 +208,46 @@ PAIR_DETAIL_QUALITY_COLUMNS = [
     "source_note",
 ]
 
+PAIR_DETAIL_HISTORY_COVERAGE_COLUMNS = [
+    "path",
+    "pair",
+    "has_history",
+    "history_rows",
+    "history_columns",
+    "effective_columns",
+    "experiment_ready",
+    "missing_for_baseline_backtest",
+    "ecm_history_ready",
+    "missing_for_ecm_backtest",
+    "two_leg_execution_ready",
+    "missing_for_two_leg_backtest",
+    "hedge_ratio_available",
+    "beta_available",
+    "funding_columns_available",
+    "execution_assumption_notes",
+]
+
 BASELINE_REQUIRED_FIELDS = {"spread", "zscore"}
 ECM_REQUIRED_FIELDS = {"ecm_x", "ecm_y", "ecm_strength"}
 TWO_LEG_REQUIRED_FIELDS = {"price_x", "price_y"}
 EXECUTION_ASSUMPTION_FIELDS = {"hedge_ratio", "beta", "funding_x_bps", "funding_y_bps"}
+PAIR_DETAIL_EVIDENCE_CACHE_SCHEMA = "thewiz.pair_detail_evidence_cache.v1"
+
+PAIR_DETAIL_HISTORY_BOOLEAN_FIELDS = {
+    "has_history",
+    "experiment_ready",
+    "ecm_history_ready",
+    "two_leg_execution_ready",
+    "hedge_ratio_available",
+    "beta_available",
+    "funding_columns_available",
+}
+
+PAIR_DETAIL_QUALITY_BOOLEAN_FIELDS = {
+    "research_usable",
+    "research_execution_usable",
+    "execution_usable",
+}
 
 
 @dataclass(frozen=True)
@@ -434,10 +472,12 @@ def write_pair_detail_reports(input_dir: str | Path, output_dir: str | Path) -> 
     checklist_path = output / "pair_detail_capture_checklist.csv"
     pd.DataFrame([snapshot.to_row() for snapshot in snapshots]).to_csv(snapshot_path, index=False)
     pd.DataFrame(pair_detail_field_rows(snapshots)).to_csv(fields_path, index=False)
-    pd.DataFrame(pair_detail_history_coverage(input_dir)).to_csv(history_path, index=False)
-    pd.DataFrame(pair_detail_quality_report(input_dir), columns=PAIR_DETAIL_QUALITY_COLUMNS).to_csv(
-        quality_path, index=False
+    evidence_cache = load_or_refresh_pair_detail_evidence_cache(
+        input_dir,
+        output,
     )
+    history_path = Path(evidence_cache["history_path"])
+    quality_path = Path(evidence_cache["quality_path"])
     pd.DataFrame(pair_detail_capture_audit(input_dir), columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS).to_csv(
         audit_path, index=False
     )
@@ -449,6 +489,7 @@ def write_pair_detail_reports(input_dir: str | Path, output_dir: str | Path) -> 
         "fields": fields_path,
         "history_coverage": history_path,
         "quality": quality_path,
+        "evidence_cache_manifest": Path(evidence_cache["manifest_path"]),
         "capture_audit": audit_path,
         "capture_checklist": checklist_path,
     }
@@ -479,6 +520,7 @@ def datasets_from_pair_detail_snapshots(input_dir: str | Path, *, require_resear
             continue
         seen_histories.add(history_identity)
         frame = pd.DataFrame(history)
+        frame["source_path"] = str(path)
         for column, value in snapshot.to_row().items():
             if column not in frame.columns and value is not None:
                 frame[column] = value
@@ -707,6 +749,217 @@ def pair_detail_payload_quality(payload: dict[str, Any], path: str | Path) -> di
         "quality_blockers": ";".join(blockers_for_output),
         "source_note": source_note,
     }
+
+
+def load_or_refresh_pair_detail_evidence_cache(
+    input_dir: str | Path,
+    output_dir: str | Path,
+) -> dict[str, object]:
+    """Load current pair-detail evidence or rebuild it with one source pass.
+
+    The source fingerprint uses relative path, size, modification time, and
+    change time. Report hashes and row counts are bound in the cache manifest,
+    so a source change or report mutation forces a complete rebuild.
+    """
+
+    source_root = Path(input_dir)
+    output = Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    history_path = output / "pair_detail_history_coverage.csv"
+    quality_path = output / "pair_detail_quality_report.csv"
+    manifest_path = output / "pair_detail_evidence_cache_manifest.json"
+    source_paths = _capture_paths(source_root)
+    source_entries = _pair_detail_source_entries(source_paths, source_root)
+    source_fingerprint = sha256(
+        json.dumps(source_entries, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+
+    manifest = _read_json_dict(manifest_path)
+    if _pair_detail_cache_valid(
+        manifest,
+        source_fingerprint=source_fingerprint,
+        source_count=len(source_paths),
+        history_path=history_path,
+        quality_path=quality_path,
+    ):
+        history_rows = _cached_report_rows(
+            history_path,
+            boolean_fields=PAIR_DETAIL_HISTORY_BOOLEAN_FIELDS,
+        )
+        quality_rows = _cached_report_rows(
+            quality_path,
+            boolean_fields=PAIR_DETAIL_QUALITY_BOOLEAN_FIELDS,
+        )
+        return {
+            "cache_status": "HIT",
+            "source_fingerprint": source_fingerprint,
+            "source_count": len(source_paths),
+            "history_rows": history_rows,
+            "quality_rows": quality_rows,
+            "history_path": history_path,
+            "quality_path": quality_path,
+            "manifest_path": manifest_path,
+        }
+
+    history_rows: list[dict[str, object]] = []
+    quality_rows: list[dict[str, object]] = []
+    for path in source_paths:
+        payload = load_pair_detail_payload(path)
+        history_rows.append(pair_detail_payload_history_coverage(payload, path))
+        quality_rows.append(pair_detail_payload_quality(payload, path))
+
+    _write_frame_atomic(
+        pd.DataFrame(history_rows, columns=PAIR_DETAIL_HISTORY_COVERAGE_COLUMNS),
+        history_path,
+    )
+    _write_frame_atomic(
+        pd.DataFrame(quality_rows, columns=PAIR_DETAIL_QUALITY_COLUMNS),
+        quality_path,
+    )
+    refreshed_manifest = {
+        "schema_version": PAIR_DETAIL_EVIDENCE_CACHE_SCHEMA,
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "source_root": str(source_root.resolve()),
+        "source_fingerprint": source_fingerprint,
+        "source_count": len(source_paths),
+        "source_bytes": sum(int(entry["size_bytes"]) for entry in source_entries),
+        "source_entries": source_entries,
+        "history_path": str(history_path),
+        "history_rows": len(history_rows),
+        "history_sha256": _path_sha256(history_path),
+        "quality_path": str(quality_path),
+        "quality_rows": len(quality_rows),
+        "quality_sha256": _path_sha256(quality_path),
+        "research_only": True,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    _write_json_atomic(refreshed_manifest, manifest_path)
+    return {
+        "cache_status": "REFRESHED",
+        "source_fingerprint": source_fingerprint,
+        "source_count": len(source_paths),
+        "history_rows": history_rows,
+        "quality_rows": quality_rows,
+        "history_path": history_path,
+        "quality_path": quality_path,
+        "manifest_path": manifest_path,
+    }
+
+
+def _pair_detail_source_entries(
+    paths: list[Path],
+    source_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    for path in paths:
+        stat = path.stat()
+        entries.append(
+            {
+                "path": path.relative_to(source_root).as_posix(),
+                "size_bytes": int(stat.st_size),
+                "mtime_ns": int(stat.st_mtime_ns),
+                "ctime_ns": int(stat.st_ctime_ns),
+            }
+        )
+    return entries
+
+
+def _pair_detail_cache_valid(
+    manifest: dict[str, object],
+    *,
+    source_fingerprint: str,
+    source_count: int,
+    history_path: Path,
+    quality_path: Path,
+) -> bool:
+    if manifest.get("schema_version") != PAIR_DETAIL_EVIDENCE_CACHE_SCHEMA:
+        return False
+    if manifest.get("source_fingerprint") != source_fingerprint:
+        return False
+    if _cache_integer(manifest.get("source_count")) != source_count:
+        return False
+    if not history_path.is_file() or not quality_path.is_file():
+        return False
+    if manifest.get("history_sha256") != _path_sha256(history_path):
+        return False
+    if manifest.get("quality_sha256") != _path_sha256(quality_path):
+        return False
+    try:
+        history_rows = len(
+            pd.read_csv(history_path, usecols=["path"], keep_default_na=False)
+        )
+        quality_rows = len(
+            pd.read_csv(quality_path, usecols=["path"], keep_default_na=False)
+        )
+    except (OSError, ValueError, pd.errors.ParserError):
+        return False
+    return (
+        history_rows == _cache_integer(manifest.get("history_rows")) == source_count
+        and quality_rows == _cache_integer(manifest.get("quality_rows")) == source_count
+    )
+
+
+def _cache_integer(value: object) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return -1
+
+
+def _cached_report_rows(
+    path: Path,
+    *,
+    boolean_fields: set[str],
+) -> list[dict[str, object]]:
+    frame = pd.read_csv(path, keep_default_na=False)
+    rows = frame.to_dict("records")
+    for row in rows:
+        for field in boolean_fields:
+            if field in row:
+                row[field] = _cached_boolean(row[field])
+    return rows
+
+
+def _cached_boolean(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes"}
+
+
+def _read_json_dict(path: Path) -> dict[str, object]:
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _path_sha256(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _write_frame_atomic(frame: pd.DataFrame, path: Path) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    frame.to_csv(temporary, index=False)
+    temporary.replace(path)
+
+
+def _write_json_atomic(payload: dict[str, object], path: Path) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    temporary.replace(path)
 
 
 def _pair_detail_quality_blockers(

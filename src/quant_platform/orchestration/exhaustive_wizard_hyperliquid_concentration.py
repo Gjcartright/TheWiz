@@ -279,6 +279,15 @@ def build_exhaustive_wizard_hyperliquid_concentration(
         statuses
     ):
         raise ValueError("Concentration failed complete experiment accounting")
+    concentration_status_defaults = {
+        "concentration_gate_pass": False,
+        "ready_for_leverage_gate": False,
+    }
+    for column, default in concentration_status_defaults.items():
+        status_frame[column] = status_frame.get(
+            column,
+            pd.Series(index=status_frame.index, dtype=object),
+        ).fillna(default)
 
     paths = {
         "status": active / "exhaustive_wizard_hyperliquid_concentration_status.csv",

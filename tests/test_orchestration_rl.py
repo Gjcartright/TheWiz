@@ -5,15 +5,21 @@ import json
 import pandas as pd
 import pytest
 
-from quant_platform.active_pipeline import build_command_dashboard
-from quant_platform.active_pipeline import CommandResult
+from quant_platform.active_pipeline import CommandResult, build_command_dashboard
 from quant_platform.orchestration import run_langgraph_agent_workflow, run_orchestrator
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
+from quant_platform.rl.brain_cycle import build_brain_readiness_report, run_brain_cycle
 from quant_platform.rl.features import build_rl_feature_frame
 from quant_platform.rl.pair_trading_env import PairTradingEnv
 from quant_platform.rl.quantization import export_rl_policy
+from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
+from quant_platform.rl.rl_backtest import (
+    _build_policy,
+    run_rl_research,
+    simulate_strategy_returns,
+)
 from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
 from quant_platform.rl.rl_learning_agent import (
     _chronological_rl_partitions,
@@ -21,9 +27,6 @@ from quant_platform.rl.rl_learning_agent import (
     run_magicka_learning_cycle,
     run_sequential_thinking_magicka,
 )
-from quant_platform.rl.brain_cycle import build_brain_readiness_report, run_brain_cycle
-from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
-from quant_platform.rl.rl_backtest import run_rl_research, simulate_strategy_returns
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
 
@@ -176,7 +179,7 @@ def test_orchestrator_assistant_records_rl_task_outcomes(tmp_path):
         ]
     ).to_csv(active / "multi_venue_history_readiness_2026-06-25.csv", index=False)
 
-    result = build_orchestrator_assistant(root=tmp_path)
+    build_orchestrator_assistant(root=tmp_path)
     lines_idea = (tmp_path / "data" / "agent_memory" / "rl_idea_agent.jsonl").read_text(encoding="utf-8").splitlines()
     lines_sim = (tmp_path / "data" / "agent_memory" / "rl_similarity_agent.jsonl").read_text(encoding="utf-8").splitlines()
 
@@ -408,8 +411,8 @@ def test_pair_trading_env_blocks_invalid_and_stale_actions():
     assert env.blocked_actions
 
 
-def test_rl_research_writes_research_only_reports():
-    result = run_rl_research(pair_id="")
+def test_rl_research_writes_research_only_reports(tmp_path):
+    result = run_rl_research(root=tmp_path, pair_id="")
 
     training = pd.read_csv(result.paths["training_report"])
     acceptance = pd.read_csv(result.paths["acceptance_report"])
@@ -421,9 +424,9 @@ def test_rl_research_writes_research_only_reports():
     assert not training["live_enabled"].astype(bool).any()
 
 
-def test_dashboard_includes_orchestrator_and_rl_views():
-    run_orchestrator(stage="rl", report_only=True)
-    result = build_command_dashboard()
+def test_dashboard_includes_orchestrator_and_rl_views(tmp_path):
+    run_orchestrator(stage="rl", report_only=True, root=tmp_path)
+    result = build_command_dashboard(root=tmp_path)
 
     assert "orchestrator_run_status" in result.paths
     assert "supreme_team_checkpoint" in result.paths
@@ -435,8 +438,8 @@ def test_dashboard_includes_orchestrator_and_rl_views():
     assert "brain_readiness_trend" in result.paths
 
 
-def test_orchestrator_all_runs_checkpoint_before_dashboard():
-    result = run_orchestrator(stage="all", report_only=True)
+def test_orchestrator_all_runs_checkpoint_before_dashboard(tmp_path):
+    result = run_orchestrator(stage="all", report_only=True, root=tmp_path)
     frame = pd.read_csv(result.paths["orchestrator_status"])
 
     stage_order = list(frame["stage"])
@@ -444,8 +447,8 @@ def test_orchestrator_all_runs_checkpoint_before_dashboard():
         assert stage_order.index("supreme_team_checkpoint") < stage_order.index("build_dashboard")
 
 
-def test_train_ppo_reports_dependency_status_without_live_enablement():
-    result = train_ppo_research_policy(pair_id="")
+def test_train_ppo_reports_dependency_status_without_live_enablement(tmp_path):
+    result = train_ppo_research_policy(root=tmp_path, pair_id="")
 
     dependency = pd.read_csv(result.paths["ppo_dependency_report"])
 
@@ -453,9 +456,9 @@ def test_train_ppo_reports_dependency_status_without_live_enablement():
     assert not dependency["live_enabled"].astype(bool).any()
 
 
-def test_export_rl_policy_blocks_until_acceptance_passes():
-    run_rl_research(pair_id="")
-    result = export_rl_policy()
+def test_export_rl_policy_blocks_until_acceptance_passes(tmp_path):
+    run_rl_research(root=tmp_path, pair_id="")
+    result = export_rl_policy(root=tmp_path)
 
     parity = pd.read_csv(result.paths["parity_csv"])
 
@@ -588,6 +591,19 @@ def test_rl_policy_grid_covers_every_parameter_axis_before_expansion():
     assert {policy["session_loss_cap_pct"] for policy in policies} == {0.10, 0.15}
 
 
+def test_rl_policy_calibration_does_not_use_realized_hold_duration():
+    short_labels = pd.DataFrame(
+        {"entry_abs_zscore": [1.0, 2.0, 3.0], "hold_bars": [1, 1, 1]}
+    )
+    long_labels = short_labels.assign(hold_bars=[100, 200, 300])
+
+    short_policy = _build_policy(short_labels)
+    long_policy = _build_policy(long_labels)
+
+    assert short_policy == long_policy
+    assert short_policy["target_hold_bars_by_timeframe"]["1d"] == 3
+
+
 def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign_flip():
     frame = pd.DataFrame(
         [
@@ -603,6 +619,19 @@ def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign
                 "max_adverse_excursion": 0.0,
                 "max_favorable_excursion": 0.0,
                 "timeframe": "1h",
+                "regime": "range",
+                "exact_mode": "OU (Optimal)",
+                "orientation": "reverse",
+                "experiment_id": "experiment-1",
+                "registered_contract_id": "contract-1",
+                "registered_execution_id": "execution-1",
+                "registered_semantic_hypothesis_id": "hypothesis-1",
+                "registered_hypothesis_outcome": "ACCEPTED_SURVIVOR",
+                "registered_candidate": True,
+                "accepted_stage4_survivor": True,
+                "feature_timestamp": "2026-08-01T00:00:00Z",
+                "entry_timestamp": "2026-08-01T01:00:00Z",
+                "exit_timestamp": "2026-08-01T02:00:00Z",
             }
         ]
     )
@@ -623,6 +652,12 @@ def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign
     assert result["returns"].iloc[0] == pytest.approx(0.10)
     assert result["frame"].iloc[0]["return_basis"] == "net_after_cost_strategy_return"
     assert "no_second_cost_charge" in result["frame"].iloc[0]["cost_treatment"]
+    assert result["frame"].iloc[0]["registered_semantic_hypothesis_id"] == (
+        "hypothesis-1"
+    )
+    assert result["frame"].iloc[0]["exact_mode"] == "OU (Optimal)"
+    assert result["frame"].iloc[0]["orientation"] == "reverse"
+    assert result["frame"].iloc[0]["accepted_stage4_survivor"]
 
 
 def test_rl_session_loss_cap_blocks_only_later_trades_and_resets_next_day():
@@ -675,6 +710,7 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
                 "take_rate": 1.0,
                 "profit_factor": 1.0,
                 "sharpe": 0.5,
+                "total_return": 0.05,
                 "max_drawdown": 0.20,
                 "pair_concentration": 0.5,
                 "timeframe_concentration": 0.5,
@@ -689,6 +725,7 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
                 "take_rate": 0.5,
                 "profit_factor": 2.0,
                 "sharpe": 1.0,
+                "total_return": 0.10,
                 "max_drawdown": 0.10,
                 "pair_concentration": 0.5,
                 "timeframe_concentration": 0.5,

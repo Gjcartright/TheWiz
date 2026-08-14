@@ -1,0 +1,58 @@
+{
+  "artifact_generation": 2,
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "frozen_checks": [
+    "two_repeat_responses_per_cell",
+    "exact_original_reverse_input_swap",
+    "copula_family_orientation_symmetry",
+    "conditional_probability_orientation_symmetry",
+    "immutable_request_response_and_cohort_hashes"
+  ],
+  "holdout_bindings": [
+    {
+      "orientation": "original",
+      "pair": "HBAR-XLM",
+      "pair_group_id": "wpair_4feb406df129644896e3:copula_v2",
+      "proof_observations": 320,
+      "request_path": "data/research/wizard_copula_v2/source_requests/wpair_4feb406df129644896e3_copula_v2_original.json",
+      "request_sha256": "6103741d12baa72a9ff942c0c9629dac32623a95f73b1a6ee9e4cee1a37dbf94",
+      "source_pair_group_id": "wpair_4feb406df129644896e3"
+    },
+    {
+      "orientation": "reverse",
+      "pair": "XLM-HBAR",
+      "pair_group_id": "wpair_4feb406df129644896e3:copula_v2",
+      "proof_observations": 320,
+      "request_path": "data/research/wizard_copula_v2/source_requests/wpair_4feb406df129644896e3_copula_v2_reverse.json",
+      "request_sha256": "542892bd82a313ca6f3837c6cca0becd632d35fdb58d96cd9ffe7bb6be0bc2b8",
+      "source_pair_group_id": "wpair_4feb406df129644896e3"
+    },
+    {
+      "orientation": "original",
+      "pair": "ADA-ALGO",
+      "pair_group_id": "wpair_a857c606d53e9206f2d1:copula_v2",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_copula_v2/source_requests/wpair_a857c606d53e9206f2d1_copula_v2_original.json",
+      "request_sha256": "4b32880c16b4a605f497b0631bf9cb446d0b49d94880514801cb4ba426123f2d",
+      "source_pair_group_id": "wpair_a857c606d53e9206f2d1"
+    },
+    {
+      "orientation": "reverse",
+      "pair": "ALGO-ADA",
+      "pair_group_id": "wpair_a857c606d53e9206f2d1:copula_v2",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_copula_v2/source_requests/wpair_a857c606d53e9206f2d1_copula_v2_reverse.json",
+      "request_sha256": "c9a122fdde1e2257865bb52b9026aa9473d7235be0b12b9dd834591b95e38810",
+      "source_pair_group_id": "wpair_a857c606d53e9206f2d1"
+    }
+  ],
+  "live_trading_authorized": false,
+  "normalization_rule": "canonical_original_last_n_then_reverse_exact_swap",
+  "research_only": true,
+  "schema_version": "thewiz.wizard_copula_behavioral_parity.v2",
+  "status": "PREREGISTERED_WAITING_VENDOR_RESPONSES",
+  "testnet_order_authority": false,
+  "threshold_changes_after_vendor_response_allowed": false,
+  "vendor_responses_at_registration": 0
+}

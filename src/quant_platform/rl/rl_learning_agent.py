@@ -375,6 +375,11 @@ def _chronological_rl_partitions(
                 "pair_count": int(partitions[name].get("pair", pd.Series(dtype=str)).astype(str).nunique()),
                 "timeframe_count": int(partitions[name].get("timeframe", pd.Series(dtype=str)).astype(str).nunique()),
                 "global_label_purge": True,
+                "train_fraction": float(train_fraction),
+                "validation_fraction": float(validation_fraction),
+                "minimum_rows_contract": ";".join(
+                    str(int(value)) for value in minimum_rows
+                ),
                 "selection_use": "policy_selection" if name == "validation" else ("untouched_evaluation" if name == "test" else "diagnostic_only"),
             }
         )

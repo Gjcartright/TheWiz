@@ -71,7 +71,7 @@ The primary evidence lane uses five purged, expanding daily folds. A separate fi
 
 Contextual-bandit evaluation additionally requires a behavior policy with logged nonzero probability for alternative actions. Deterministic replay propensities are valid supervised lineage but provide no counterfactual support, so they intentionally leave the bandit lane blocked. That block does not invalidate supervised shadow training. Offline RL remains blocked until genuine exploratory Testnet outcomes supply support.
 
-Model evaluation uses timestamp-grouped chronological folds. Training labels that overlap a test window on the same pair are purged, and a per-pair embargo removes the final training periods before each test window. The fold report records purged rows, pair coverage, timestamp coverage, and the maximum surviving training-label timestamp.
+Model evaluation uses timestamp-grouped chronological folds. Every training label that reaches or crosses the earliest test entry is purged globally, regardless of pair, and a per-pair embargo then removes the final surviving training periods before each test window. The fold and prediction evidence record the global purge result, pair coverage, timestamp coverage, test start, and maximum surviving training-label timestamp. Stage 5 fails closed unless every surviving training label ends before its fold's test window begins.
 
 Daily and auxiliary 4-hour strategy tests are controlled as one research family. Benjamini-Hochberg correction is applied across both lanes, while an idempotent alpha-spending registry charges only changed evidence families. Re-running identical evidence does not spend the budget again. Auxiliary results remain robustness evidence and never rewrite the Wizard-discovered primary timeframe.
 

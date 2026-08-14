@@ -1,0 +1,260 @@
+{
+  "automatic_activation": false,
+  "candidate_promotion_authority": false,
+  "derivation_evidence": [
+    {
+      "path": "reports/active/wizard_ou_v6_derivation.csv",
+      "sha256": "87e542193747bbd711a2f25cef80c13dce0a96308010750722c4b277862d4c8a"
+    },
+    {
+      "path": "data/research/wizard_ou_v5_failure_attributions/ouv5failure_6f05b1eb229ffd8f57e8.json",
+      "sha256": "1a84e4fb827db125969f99ffc6e119f9918a26ec03e1989ff5716e09fcaadd30"
+    }
+  ],
+  "derivation_summary": {
+    "independent_orientations": 14,
+    "profile_branch_rows_passed": 14,
+    "transform_rows_passed": 14,
+    "v5_holdout_reuse_allowed": false,
+    "v5_rows_are_consumed_derivation_only": true
+  },
+  "final_successor_iteration": true,
+  "holdout_bindings": [
+    {
+      "asset_x": "APT",
+      "asset_y": "ATOM",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "original",
+      "pair": "APT-ATOM",
+      "pair_group": "APT-ATOM",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/apt_atom_1d_spread_request.json",
+      "request_sha256": "4d80e03c6edb61fdf8988d78f7f7cfb79f1366d48dffd0f3b6d9828e6bd056d0",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/apt_atom_1d_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "ATOM",
+      "asset_y": "APT",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "ATOM-APT",
+      "pair_group": "APT-ATOM",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/atom_apt_1d_spread_request.json",
+      "request_sha256": "6617d60eb453fad0422d96b039adaf6826d8e523bf036232ec5757e6b90a6a6e",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/atom_apt_1d_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "APT",
+      "asset_y": "ATOM",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "original",
+      "pair": "APT-ATOM",
+      "pair_group": "APT-ATOM",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/apt_atom_1d_zscoreroll_request.json",
+      "request_sha256": "e503478093b0c4587f1694031e13838cb30f800a7eb7a3fd1f3ff04b9899ffc7",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/apt_atom_1d_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "ATOM",
+      "asset_y": "APT",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2025-08-18T00:00:00Z",
+      "interval": "1d",
+      "last_timestamp": "2026-08-12T00:00:00Z",
+      "orientation": "reverse",
+      "pair": "ATOM-APT",
+      "pair_group": "APT-ATOM",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/atom_apt_1d_zscoreroll_request.json",
+      "request_sha256": "d1ff634abe9a05927cc8901f82481743c057e5fdc0d3a562aeaa789b3b1f9ba1",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/atom_apt_1d_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "ARB",
+      "asset_y": "OP",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "original",
+      "pair": "ARB-OP",
+      "pair_group": "ARB-OP",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/arb_op_1h_spread_request.json",
+      "request_sha256": "2a1383b8b1fe6fecb8fd1770ba824e0a6c613811d096414319bd8021dd8d328b",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/arb_op_1h_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "OP",
+      "asset_y": "ARB",
+      "exact_mode": "OU (Spread)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "reverse",
+      "pair": "OP-ARB",
+      "pair_group": "ARB-OP",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/op_arb_1h_spread_request.json",
+      "request_sha256": "d483c438df2ea18bb056d502df90f59db3163226a609800e867b5aa46364be37",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/op_arb_1h_spread_response.json",
+      "spread_type": "Ou",
+      "strategy": "Spread"
+    },
+    {
+      "asset_x": "ARB",
+      "asset_y": "OP",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "original",
+      "pair": "ARB-OP",
+      "pair_group": "ARB-OP",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/arb_op_1h_zscoreroll_request.json",
+      "request_sha256": "04fbb620a726d8cbb1ea7c9894d8bbdfdf2d83283ccc3374f7cff2b806860d7c",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/arb_op_1h_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    },
+    {
+      "asset_x": "OP",
+      "asset_y": "ARB",
+      "exact_mode": "OU (ZScoreR)",
+      "first_timestamp": "2026-07-28T05:00:00Z",
+      "interval": "1h",
+      "last_timestamp": "2026-08-12T04:00:00Z",
+      "orientation": "reverse",
+      "pair": "OP-ARB",
+      "pair_group": "ARB-OP",
+      "proof_observations": 360,
+      "request_path": "data/research/wizard_ou_v6_holdout/requests/op_arb_1h_zscoreroll_request.json",
+      "request_sha256": "fd30f286eac97d6c3373044cd6d05409b759e47aa2c69755a7091d4f55a693a5",
+      "response_captured_at_registration": false,
+      "response_expected": true,
+      "response_path": "data/raw/wizard_ou_v6_holdout/responses/op_arb_1h_zscoreroll_response.json",
+      "spread_type": "Ou",
+      "strategy": "ZScoreRoll"
+    }
+  ],
+  "holdout_predictions": {
+    "cells": 8,
+    "independent_orientations": 4,
+    "path": "reports/active/wizard_ou_v6_predictions.csv",
+    "sha256": "20a1a0c37e9dad1cdb28e83544c04e8938001d3e2e41da5da142a82a6459e32b",
+    "vendor_responses_at_registration": 0
+  },
+  "hypothesis": {
+    "holdout_is_asset_and_pair_disjoint": true,
+    "holdout_pair_groups": [
+      "APT-ATOM",
+      "ARB-OP"
+    ],
+    "independent_orientation_count": 4,
+    "predicted_profile_branches": [
+      "intercept",
+      "zero_mean"
+    ],
+    "predicted_transform_states": [
+      "level",
+      "log"
+    ],
+    "predicted_trend_states": [
+      false,
+      true
+    ],
+    "profile_branch_rule": "intercept_if_series_1_median_below_series_2_median_and_ar1_intercept_positive_else_zero_mean",
+    "profile_branch_rule_is_fragile": true,
+    "profile_branch_scale_sensitive": true,
+    "spread_and_zscorer_are_duplicate_formula_views": true,
+    "transform_rule": "log_if_both_series_medians_are_at_least_one",
+    "transform_scale_sensitive": true,
+    "transform_threshold": 1.0,
+    "trend_is_diagnostic_not_formula_switch": true,
+    "trend_rule": "minimum_aic_across_level_log_x_constant_trend"
+  },
+  "hypothesis_changes_after_vendor_response_allowed": false,
+  "implementation": {
+    "automatic_activation": false,
+    "generation": 6,
+    "point_in_time_inputs": "registered request close series only",
+    "source_sha256": "1c5a88391aace6f5eba7203a63d1b211ebf6424a3358c0ebca5682df85101aae",
+    "vendor_response_used_for_holdout_selection": false
+  },
+  "live_trading_authorized": false,
+  "research_only": true,
+  "schema_version": "thewiz.wizard_ou_v6_prospective_holdout.v1",
+  "source_candles": [
+    {
+      "asset": "APT",
+      "interval": "1d",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/APT_1d_candles.json",
+      "sha256": "04a4a9eb5c25c7ee4339d03b6396f5107043cd775cefca506e9d1da3e0e5b9a0"
+    },
+    {
+      "asset": "ATOM",
+      "interval": "1d",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/ATOM_1d_candles.json",
+      "sha256": "05c5d17facbcd958b1afff2416ab4aba8c9d68cfd70feca1549eb24c9acff256"
+    },
+    {
+      "asset": "ARB",
+      "interval": "1h",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/ARB_1h_candles.json",
+      "sha256": "bafedd29c64249eae00a6d361ceac996415b15f555728e76eab0e1ee931c685e"
+    },
+    {
+      "asset": "OP",
+      "interval": "1h",
+      "path": "reports/snapshots/current_wizard_hyperliquid/ewapi_69a86274da721a941e36/cwhandoff_61dc9e76532abd99c502/history_runs/cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/OP_1h_candles.json",
+      "sha256": "3dadbc0e5b9e73819b69da712c73de1a5cf42fed77c27da11dde54a0411afd84"
+    }
+  ],
+  "status": "PREREGISTERED_WAITING_VENDOR_RESPONSES",
+  "successor_after_v6_failure_allowed": false,
+  "testnet_order_authority": false,
+  "tolerances": {
+    "half_life_abs": 0.001,
+    "hedge_ratio_abs": 1e-06,
+    "spread_max_abs": 1e-06,
+    "zscore_max_abs": 1e-06,
+    "zscore_roll_max_abs": 1e-06
+  },
+  "vendor_responses_at_registration": 0
+}

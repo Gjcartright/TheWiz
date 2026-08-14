@@ -1,7 +1,7 @@
 {
-  "schema_version": "thewiz.live_canary_policy.v1",
-  "policy_version": "2026-08-09.1",
-  "effective_at_utc": "2026-08-09T00:00:00Z",
+  "schema_version": "thewiz.live_canary_policy.v2",
+  "policy_version": "2026-08-10.1",
+  "effective_at_utc": "2026-08-10T00:00:00Z",
   "prerequisites": {
     "testnet_sample_sufficiency_pass": true,
     "supreme_team_testnet_checkpoint_pass": true,
@@ -13,6 +13,9 @@
   "canary": {
     "maximum_simultaneous_pairs": 1,
     "maximum_leverage": 1.0,
+    "maximum_total_notional_usd": 25.0,
+    "maximum_input_age_seconds": 60,
+    "maximum_snapshot_skew_seconds": 5,
     "notional_policy": "smallest_venue_valid_notional",
     "authorization_reuse_allowed": false,
     "automatic_repeat_allowed": false,
@@ -25,5 +28,7 @@
     "supreme_team_review_required": true,
     "new_explicit_authorization_required_for_any_next_order": true
   },
+  "authorized_signer_address": "",
+  "testnet_order_authority": false,
   "current_live_trading_authorized": false
 }

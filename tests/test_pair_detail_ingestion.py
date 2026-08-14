@@ -2,19 +2,20 @@ import json
 
 import pytest
 
+from quant_platform import pair_detail_ingestion
 from quant_platform.pair_detail_ingestion import (
     datasets_from_pair_detail_snapshots,
     extract_history_rows,
+    load_or_refresh_pair_detail_evidence_cache,
     pair_detail_capture_audit,
     pair_detail_capture_checklist,
     pair_detail_field_rows,
     pair_detail_history_coverage,
-    pair_detail_quality_report,
     pair_detail_payload_capture_checklist,
+    pair_detail_quality_report,
     parse_pair_detail_text,
     write_pair_detail_reports,
 )
-
 
 PAIR_DETAIL_TEXT = """Crypto Wizards
 BNB-USD STX-USD dyd
@@ -180,7 +181,7 @@ def test_extract_history_rows_accepts_parallel_series_payload():
     assert len(rows) == 3
 
 
-def test_extract_history_rows_accepts_har_response_content_text():
+def test_extract_history_rows_accepts_har_response_content_text_with_nested_history():
     payload = {
         "log": {
             "entries": [
@@ -503,7 +504,7 @@ def test_extract_history_rows_accepts_json_string_list_capture_value():
     ]
 
 
-def test_extract_history_rows_accepts_har_response_content_text():
+def test_extract_history_rows_accepts_har_response_content_text_with_parallel_series():
     payload = {
         "log": {
             "entries": [
@@ -1083,6 +1084,121 @@ def test_pair_detail_quality_allows_leading_zscore_warmup_but_blocks_interior_ga
     assert "zscore_nonfinite_after_warmup_above_1pct" in rows["CCC-USD-DDD-USD"]["quality_blockers"]
 
 
+def test_pair_detail_evidence_cache_parses_each_capture_once_and_reuses_reports(
+    tmp_path,
+    monkeypatch,
+):
+    source = tmp_path / "pair_details"
+    reports = tmp_path / "reports"
+    source.mkdir()
+    history = [
+        {
+            "timestamp": idx,
+            "spread": idx / 100,
+            "zscore": idx / 10,
+            "price_x": 100 + idx,
+            "price_y": 50 + idx,
+        }
+        for idx in range(90)
+    ]
+    for index, pair in enumerate(("AAA-BBB", "CCC-DDD"), start=1):
+        (source / f"pair_{index}.json").write_text(
+            json.dumps({"pair": pair, "interval": "5mins", "history": history}),
+            encoding="utf-8",
+        )
+
+    original_loader = pair_detail_ingestion.load_pair_detail_payload
+    calls: list[str] = []
+
+    def counting_loader(path):
+        calls.append(str(path))
+        return original_loader(path)
+
+    monkeypatch.setattr(
+        pair_detail_ingestion,
+        "load_pair_detail_payload",
+        counting_loader,
+    )
+
+    refreshed = load_or_refresh_pair_detail_evidence_cache(source, reports)
+    hit = load_or_refresh_pair_detail_evidence_cache(source, reports)
+
+    assert refreshed["cache_status"] == "REFRESHED"
+    assert hit["cache_status"] == "HIT"
+    assert len(calls) == 2
+    assert len(hit["history_rows"]) == 2
+    assert len(hit["quality_rows"]) == 2
+    assert hit["history_rows"][0]["has_history"] is True
+    assert hit["quality_rows"][0]["research_usable"] is True
+    manifest = json.loads((reports / "pair_detail_evidence_cache_manifest.json").read_text())
+    assert manifest["source_count"] == 2
+    assert manifest["history_rows"] == 2
+    assert manifest["quality_rows"] == 2
+    assert manifest["testnet_order_authority"] is False
+    assert manifest["live_trading_authorized"] is False
+
+
+def test_pair_detail_evidence_cache_invalidates_on_source_or_report_change(
+    tmp_path,
+    monkeypatch,
+):
+    source = tmp_path / "pair_details"
+    reports = tmp_path / "reports"
+    source.mkdir()
+    payload = {
+        "pair": "AAA-BBB",
+        "history": [{"spread": idx, "zscore": idx} for idx in range(90)],
+    }
+    capture = source / "pair.json"
+    capture.write_text(json.dumps(payload), encoding="utf-8")
+    load_or_refresh_pair_detail_evidence_cache(source, reports)
+
+    original_loader = pair_detail_ingestion.load_pair_detail_payload
+    calls: list[str] = []
+
+    def counting_loader(path):
+        calls.append(str(path))
+        return original_loader(path)
+
+    monkeypatch.setattr(
+        pair_detail_ingestion,
+        "load_pair_detail_payload",
+        counting_loader,
+    )
+    quality_path = reports / "pair_detail_quality_report.csv"
+    quality_path.write_text(
+        quality_path.read_text(encoding="utf-8") + "tampered\n",
+        encoding="utf-8",
+    )
+
+    report_refresh = load_or_refresh_pair_detail_evidence_cache(source, reports)
+    assert report_refresh["cache_status"] == "REFRESHED"
+    assert len(calls) == 1
+
+    payload["pair"] = "AAA-CCC"
+    capture.write_text(json.dumps(payload), encoding="utf-8")
+    source_refresh = load_or_refresh_pair_detail_evidence_cache(source, reports)
+
+    assert source_refresh["cache_status"] == "REFRESHED"
+    assert len(calls) == 2
+    assert source_refresh["quality_rows"][0]["pair"] == "AAA-CCC"
+
+
+def test_pair_detail_evidence_cache_reuses_an_empty_source_directory(tmp_path):
+    source = tmp_path / "pair_details"
+    reports = tmp_path / "reports"
+    source.mkdir()
+
+    refreshed = load_or_refresh_pair_detail_evidence_cache(source, reports)
+    hit = load_or_refresh_pair_detail_evidence_cache(source, reports)
+
+    assert refreshed["cache_status"] == "REFRESHED"
+    assert hit["cache_status"] == "HIT"
+    assert hit["source_count"] == 0
+    assert hit["history_rows"] == []
+    assert hit["quality_rows"] == []
+
+
 def test_write_pair_detail_reports(tmp_path):
     (tmp_path / "pair_1.json").write_text(json.dumps({"text": PAIR_DETAIL_TEXT, "url": "dashboard"}), encoding="utf-8")
 
@@ -1092,4 +1208,5 @@ def test_write_pair_detail_reports(tmp_path):
     assert paths["fields"].exists()
     assert paths["history_coverage"].exists()
     assert paths["quality"].exists()
+    assert paths["evidence_cache_manifest"].exists()
     assert paths["capture_audit"].exists()

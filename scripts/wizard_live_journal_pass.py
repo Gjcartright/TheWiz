@@ -10,6 +10,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from quant_platform.orchestration.corrective_wizard_browser_auth import (
+    validate_wizard_browser_auth_readiness,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVE = ROOT / "reports" / "active"
@@ -173,6 +177,7 @@ def _probe_routes(timestamp_utc: str, api_rows: list[dict]) -> list[dict]:
                 if "<title" in lower and "</title>" in lower:
                     title = body[lower.find("<title") : lower.find("</title>")].split(">", 1)[-1].strip()[:120]
                 signin = "signin" in response.geturl().lower() or "authentication/signin" in lower or "signin" in title.lower()
+                content_heuristic = "sharpe" in lower or "zscore" in lower or "cointegration" in lower
                 probes.append(
                     {
                         "route": route,
@@ -182,9 +187,15 @@ def _probe_routes(timestamp_utc: str, api_rows: list[dict]) -> list[dict]:
                         "content_type": response.headers.get("content-type", ""),
                         "final_url": response.geturl(),
                         "title": title,
-                        "visible_auth_signal": "signin_or_public_homepage" if signin else "dashboard_or_unknown",
-                        "authenticated_rows_exposed": (not signin) and ("sharpe" in lower or "zscore" in lower),
-                        "authenticated_pair_fields_exposed": (not signin) and ("pair" in lower and ("zscore" in lower or "cointegration" in lower)),
+                        "visible_auth_signal": (
+                            "signin_or_public_homepage"
+                            if signin
+                            else "uncredentialed_http_probe_no_auth_authority"
+                        ),
+                        "protected_content_heuristic_only": content_heuristic,
+                        "authenticated_rows_exposed": False,
+                        "authenticated_pair_fields_exposed": False,
+                        "authentication_authority": False,
                         "body_probe_chars": body[:2200],
                     }
                 )
@@ -448,9 +459,11 @@ def main() -> None:
 
     api_rows, fetch_status, raw_api_capture = _fetch_scanner(timestamp_slug)
     route_probes = _probe_routes(timestamp_utc, api_rows)
-    browser_auth_gated = any(probe.get("visible_auth_signal") == "signin_or_public_homepage" for probe in route_probes)
-    pair_fields_exposed = any(probe.get("authenticated_pair_fields_exposed") for probe in route_probes)
-    scanner_rows_exposed = any(probe.get("authenticated_rows_exposed") for probe in route_probes)
+    browser_auth_readiness = validate_wizard_browser_auth_readiness(root=ROOT, now=now)
+    browser_auth_gated = browser_auth_readiness.get("status") != "PASS"
+    proven_routes = set(browser_auth_readiness.get("route_kinds", []))
+    pair_fields_exposed = not browser_auth_gated and "pair_detail" in proven_routes
+    scanner_rows_exposed = not browser_auth_gated and "scanner" in proven_routes
     pair_detail_blocked = not pair_fields_exposed
 
     latest_capture = ACTIVE / "wizard_live_browser_capture_latest.json"
@@ -463,6 +476,7 @@ def main() -> None:
         "fetch_status": fetch_status,
         "raw_api_capture": str(raw_api_capture),
         "route_probes": route_probes,
+        "browser_auth_readiness": browser_auth_readiness,
         "browser_auth_gated": browser_auth_gated,
         "authenticated_scanner_rows_exposed": scanner_rows_exposed,
         "authenticated_pair_detail_fields_exposed": pair_fields_exposed,

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-MINIMUM_TAKE_RATE = 0.05
+MINIMUM_TAKE_RATE = 0.10
 MAXIMUM_CONCENTRATION = 0.65
 
 
@@ -28,6 +28,7 @@ def rl_acceptance_report(evaluation: pd.DataFrame) -> pd.DataFrame:
     blocker = "" if accepted else "rl_validation_or_held_out_test_gates_not_met"
     raw_row = test["raw_row"]
     rl_row = test["rl_row"]
+    validation_rl_row = validation["rl_row"]
     return pd.DataFrame(
         [
             {
@@ -35,6 +36,14 @@ def rl_acceptance_report(evaluation: pd.DataFrame) -> pd.DataFrame:
                 "blocker": blocker,
                 "raw_profit_factor": raw_row["profit_factor"],
                 "rl_profit_factor": rl_row["profit_factor"],
+                "raw_total_return": raw_row.get("total_return", np.nan),
+                "rl_total_return": rl_row.get("total_return", np.nan),
+                "validation_rl_total_return": validation_rl_row.get(
+                    "total_return", np.nan
+                ),
+                "held_out_test_rl_total_return": rl_row.get(
+                    "total_return", np.nan
+                ),
                 "raw_drawdown": raw_row["max_drawdown"],
                 "rl_drawdown": rl_row["max_drawdown"],
                 "rl_trades": rl_row["trades"],
@@ -65,8 +74,14 @@ def _split_gate(evaluation: pd.DataFrame, split: str) -> dict[str, object]:
         return {"missing": True, "accepted": False, "gate_failures": "missing_baseline_or_rl_variant"}
     raw_row = raw.iloc[0]
     rl_row = rl.iloc[0]
+    rl_total_return = pd.to_numeric(
+        pd.Series([rl_row.get("total_return", np.nan)]), errors="coerce"
+    ).iloc[0]
     checks = {
         "profit_factor_improves": rl_row["profit_factor"] > raw_row["profit_factor"],
+        "positive_after_cost_return": bool(
+            np.isfinite(rl_total_return) and rl_total_return > 0.0
+        ),
         "drawdown_not_worse": rl_row["max_drawdown"] <= raw_row["max_drawdown"],
         "sharpe_not_materially_worse": rl_row["sharpe"] >= raw_row["sharpe"] - 0.25,
         "minimum_trades": rl_row["trades"] >= minimum_trade_count(raw_row["trades"]),

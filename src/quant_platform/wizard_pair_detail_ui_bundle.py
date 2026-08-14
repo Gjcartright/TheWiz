@@ -17,12 +17,16 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_wizard_browser_auth import (
+    validate_wizard_browser_auth_observation,
+)
 from quant_platform.pair_detail_ingestion import parse_pair_detail_text
 from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "wizard_pair_detail_ui_ledger.v1"
-BUNDLE_SCHEMA_VERSION = "wizard_pair_detail_ui_bundle.v1"
+BUNDLE_SCHEMA_VERSION = "wizard_pair_detail_ui_bundle.v2"
+LEGACY_BUNDLE_SCHEMA_VERSION = "wizard_pair_detail_ui_bundle.v1"
 ROUTE_UNAVAILABLE_SCHEMA_VERSION = "wizard_pair_detail_route_unavailable.v1"
 PAIR_PAGE_MODES = (
     "Static (Spread)",
@@ -119,6 +123,11 @@ def ingest_wizard_pair_detail_ui_bundles(
         if not ledger.empty
         else 0
     )
+    auth_unproven = (
+        int(ledger["authenticated_capture_authority"].ne(True).sum())  # noqa: E712
+        if not ledger.empty
+        else 0
+    )
     failed_checks = int(validation["status"].eq("FAIL").sum()) if not validation.empty else 0
     accounted_pair_keys = (
         set(ledger["pair_group_key"].dropna().astype(str)) if not ledger.empty else set()
@@ -175,6 +184,7 @@ def ingest_wizard_pair_detail_ui_bundles(
         "explicitly_unavailable_cells": unavailable,
         "reverse_recalculation_pending_cells": reverse_pending,
         "invalid_orientation_capture_cells": invalid_orientation,
+        "authentication_unproven_cells": auth_unproven,
         "coverage_failures": failed_checks,
         "queue_pairs": len(progress),
         "queue_pairs_complete": complete_queue_pairs,
@@ -257,6 +267,11 @@ def _bundle_rows(
     capture_run_id = _text(payload.get("capture_run_id"))
     route = _text(payload.get("page_route") or baseline.get("url"))
     route_id = _match(r"/pair/([^?/#]+)", route)
+    auth = validate_wizard_browser_auth_observation(
+        payload.get("browser_auth_observation"),
+        expected_route_kind="pair_detail",
+    )
+    auth_proven = auth.get("status") == "PASS"
 
     capture_map: dict[tuple[str, str], dict[str, Any]] = {}
     duplicates: set[tuple[str, str]] = set()
@@ -288,6 +303,8 @@ def _bundle_rows(
                 unavailable=unavailable,
                 orientation_blocker=_text(payload.get("orientation_blocker")),
                 orientation_evidence=orientation_evidence,
+                auth_proven=auth_proven,
+                auth_blocker=_text(auth.get("blocker")),
             )
             row = _empty_ledger_row()
             row.update(
@@ -300,6 +317,11 @@ def _bundle_rows(
                     "pair_detail_session_route": route,
                     "pair_detail_session_route_id": route_id,
                     "route_identity_authority": "SESSION_EVIDENCE_ONLY",
+                    "browser_auth_status": auth.get("status"),
+                    "browser_auth_blocker": auth.get("blocker"),
+                    "browser_auth_route_kind": auth.get("route_kind"),
+                    "browser_auth_observation_id": auth.get("observation_id"),
+                    "authenticated_capture_authority": auth_proven,
                     "wizard_exchange": exchange,
                     "timeframe": timeframe,
                     "asset_x": asset_x,
@@ -346,6 +368,7 @@ def _bundle_rows(
         asset_y_raw=asset_y_raw,
         exchange=exchange,
         timeframe=timeframe,
+        auth=auth,
     )
     return rows, checks
 
@@ -380,6 +403,10 @@ def _route_unavailable_rows(
     observed_at = _text(payload.get("observed_at"))
     ui_message = _text(payload.get("ui_message"))
     blocker = _text(payload.get("route_blocker")) or "wizard_pair_route_not_available"
+    auth = validate_wizard_browser_auth_observation(
+        payload.get("browser_auth_observation")
+    )
+    auth_proven = auth.get("status") == "PASS"
 
     rows: list[dict[str, object]] = []
     for exact_mode in PLANNED_MODES:
@@ -400,6 +427,11 @@ def _route_unavailable_rows(
                     "pair_detail_session_route": route,
                     "pair_detail_session_route_id": "",
                     "route_identity_authority": "SCANNER_CONTEXT_PLUS_UI_REJECTION",
+                    "browser_auth_status": auth.get("status"),
+                    "browser_auth_blocker": auth.get("blocker"),
+                    "browser_auth_route_kind": auth.get("route_kind"),
+                    "browser_auth_observation_id": auth.get("observation_id"),
+                    "authenticated_capture_authority": auth_proven,
                     "wizard_exchange": exchange,
                     "timeframe": timeframe,
                     "asset_x": asset_x,
@@ -417,8 +449,18 @@ def _route_unavailable_rows(
                     ),
                     "orientation_verified": False,
                     "orientation_verification_status": "PAIR_ROUTE_NOT_AVAILABLE",
-                    "capture_status": "PAIR_ROUTE_NOT_AVAILABLE",
-                    "capture_blocker": f"{blocker}:{ui_message}" if ui_message else blocker,
+                    "capture_status": (
+                        "PAIR_ROUTE_NOT_AVAILABLE"
+                        if auth_proven
+                        else "AUTH_UNPROVEN_ROUTE_UNAVAILABLE_CLAIM"
+                    ),
+                    "capture_blocker": (
+                        f"{blocker}:{ui_message}"
+                        if auth_proven and ui_message
+                        else blocker
+                        if auth_proven
+                        else "browser_authentication_not_proven:" + _text(auth.get("blocker"))
+                    ),
                     "capture_timestamp": observed_at,
                     "evidence_path": evidence_path,
                     "wizard_metrics_authority": "DISCOVERY_DIAGNOSTIC_ONLY",
@@ -441,6 +483,11 @@ def _route_unavailable_rows(
             "credentials_excluded",
             payload.get("no_credentials_or_browser_storage_captured") is True,
             payload.get("no_credentials_or_browser_storage_captured"),
+        ),
+        (
+            "browser_authentication_proven",
+            auth_proven,
+            auth.get("blocker") or auth.get("observation_id"),
         ),
         ("stable_identity_fields", stable_identity, pair_group_key),
         ("ui_route_rejection_present", bool(ui_message), ui_message),
@@ -498,6 +545,16 @@ def _captured_fields(capture: dict[str, Any], *, asset_x: str, asset_y: str) -> 
         if isinstance(item, dict)
     }
     values = asdict(parsed)
+    johansen_state = _badge_state("coint Jn", stationarity.get("coint Jn", ""))
+    engle_granger_state = _badge_state("coint EG", stationarity.get("coint EG", ""))
+    metric_accounting_state, metric_accounting_blocker = _metric_accounting_state(
+        closed_trades=values.get("closed_trades"),
+        returns_total=values.get("returns_total"),
+        sharpe=values.get("sharpe"),
+    )
+    pair_page_data_quality_state, pair_page_data_quality_blocker = (
+        _pair_page_data_quality_state(body)
+    )
     return {
         "capture_timestamp": _text(capture.get("capturedAt")),
         "mode_value": _text(capture.get("mode_value")),
@@ -524,9 +581,14 @@ def _captured_fields(capture: dict[str, Any], *, asset_x: str, asset_y: str) -> 
         "wizard_cost_semantics_status": "UNVERIFIED_FOR_LOCAL_PARITY",
         "wizard_cost_point_in_time_ui_confirmed": False,
         "johansen_badge_class": stationarity.get("coint Jn", ""),
-        "johansen_state": _badge_state("coint Jn", stationarity.get("coint Jn", "")),
+        "johansen_state": johansen_state,
+        "johansen_cointegrated": johansen_state == "CORRELATED_SIGNAL",
         "engle_granger_badge_class": stationarity.get("coint EG", ""),
-        "engle_granger_state": _badge_state("coint EG", stationarity.get("coint EG", "")),
+        "engle_granger_state": engle_granger_state,
+        "engle_granger_cointegrated": engle_granger_state
+        in {"CORRELATED_SIGNAL", "ENGLE_GRANGER_TRENDING"},
+        "engle_granger_includes_trend": engle_granger_state
+        == "ENGLE_GRANGER_TRENDING",
         "hedge_ratio": values.get("hedge_ratio"),
         "hurst": values.get("hurst"),
         "half_life": values.get("half_life"),
@@ -550,6 +612,10 @@ def _captured_fields(capture: dict[str, Any], *, asset_x: str, asset_y: str) -> 
         "mean_period_return": values.get("mean_period_return"),
         "win_rate": values.get("win_rate"),
         "closed_trades": values.get("closed_trades"),
+        "metric_accounting_state": metric_accounting_state,
+        "metric_accounting_blocker": metric_accounting_blocker,
+        "pair_page_data_quality_state": pair_page_data_quality_state,
+        "pair_page_data_quality_blocker": pair_page_data_quality_blocker,
         "max_drawdown": values.get("drawdown"),
         "var_99": values.get("var"),
         "cvar_99": values.get("cvar"),
@@ -614,7 +680,19 @@ def _cell_status(
     unavailable: set[str],
     orientation_blocker: str,
     orientation_evidence: dict[str, object],
+    auth_proven: bool,
+    auth_blocker: str,
 ) -> tuple[str, str]:
+    if not auth_proven and capture is not None:
+        return (
+            "AUTH_UNPROVEN_CAPTURE",
+            "browser_authentication_not_proven:" + (auth_blocker or "missing_auth_observation"),
+        )
+    if not auth_proven and exact_mode in unavailable:
+        return (
+            "AUTH_UNPROVEN_UNAVAILABLE_CLAIM",
+            "browser_authentication_not_proven:" + (auth_blocker or "missing_auth_observation"),
+        )
     if exact_mode in unavailable:
         return "NOT_AVAILABLE_ON_PAIR_PAGE", "mode_not_offered_by_current_pair_page_selector"
     if capture is not None:
@@ -646,6 +724,7 @@ def _bundle_validation_rows(
     asset_y_raw: str,
     exchange: str,
     timeframe: str,
+    auth: dict[str, Any],
 ) -> list[dict[str, object]]:
     chart = payload.get("chart_coverage", {})
     declared_orientations = [
@@ -667,8 +746,17 @@ def _bundle_validation_rows(
                 f"{mode}:{orientation}:{evidence.get('orientation_verification_status', '')}"
             )
     checks = [
-        ("bundle_schema", payload.get("schema_version") == BUNDLE_SCHEMA_VERSION, payload.get("schema_version")),
+        (
+            "bundle_schema",
+            payload.get("schema_version") in {BUNDLE_SCHEMA_VERSION, LEGACY_BUNDLE_SCHEMA_VERSION},
+            payload.get("schema_version"),
+        ),
         ("credentials_excluded", payload.get("no_credentials_or_browser_storage_captured") is True, payload.get("no_credentials_or_browser_storage_captured")),
+        (
+            "browser_authentication_proven",
+            auth.get("status") == "PASS",
+            auth.get("blocker") or auth.get("observation_id"),
+        ),
         (
             "stable_identity_fields",
             all((asset_x_raw, asset_y_raw, exchange, timeframe)),
@@ -789,6 +877,9 @@ def _consolidate_ledger_candidates(candidates: pd.DataFrame) -> pd.DataFrame:
         "PAIR_ROUTE_NOT_AVAILABLE": 4,
         "INVALID_ORIENTATION_CAPTURE": 3,
         "PENDING_REVERSE_RECALCULATION": 2,
+        "AUTH_UNPROVEN_CAPTURE": 1,
+        "AUTH_UNPROVEN_UNAVAILABLE_CLAIM": 1,
+        "AUTH_UNPROVEN_ROUTE_UNAVAILABLE_CLAIM": 1,
         "MISSING_CAPTURE": 1,
     }
     working = candidates.copy()
@@ -838,6 +929,7 @@ def _capture_progress(queue: pd.DataFrame, ledger: pd.DataFrame) -> pd.DataFrame
         "accounted_planned_cells",
         "unavailable_planned_cells",
         "pending_reverse_cells",
+        "authentication_unproven_cells",
         "pair_detail_evidence_paths",
         "capture_progress_reason",
     ]
@@ -866,6 +958,11 @@ def _capture_progress(queue: pd.DataFrame, ledger: pd.DataFrame) -> pd.DataFrame
         )
         reverse_pending = int(group["capture_status"].eq("PENDING_REVERSE_RECALCULATION").sum()) if not group.empty else 0
         invalid_orientation = int(group["capture_status"].eq("INVALID_ORIENTATION_CAPTURE").sum()) if not group.empty else 0
+        auth_unproven = (
+            int(group["authenticated_capture_authority"].ne(True).sum())  # noqa: E712
+            if not group.empty
+            else 0
+        )
         if (
             accounted == len(PLANNED_MODES) * len(ORIENTATIONS)
             and route_unavailable == accounted
@@ -883,6 +980,13 @@ def _capture_progress(queue: pd.DataFrame, ledger: pd.DataFrame) -> pd.DataFrame
             reason = (
                 f"captured={captured};accounted={accounted};"
                 f"reverse_pending={reverse_pending};invalid_orientation={invalid_orientation}"
+            )
+        elif auth_unproven:
+            status = "AUTHENTICATION_UNPROVEN"
+            blocker = "pair_detail_browser_authentication_not_proven"
+            reason = (
+                f"captured={captured};accounted={accounted};"
+                f"authentication_unproven={auth_unproven}"
             )
         else:
             status = "NOT_CAPTURED"
@@ -905,6 +1009,7 @@ def _capture_progress(queue: pd.DataFrame, ledger: pd.DataFrame) -> pd.DataFrame
                 "accounted_planned_cells": accounted,
                 "unavailable_planned_cells": unavailable,
                 "pending_reverse_cells": reverse_pending,
+                "authentication_unproven_cells": auth_unproven,
                 "pair_detail_evidence_paths": ";".join(sorted(group["evidence_path"].dropna().astype(str).unique())) if not group.empty else "",
                 "capture_progress_reason": reason,
                 "live_trading_authorized": False,
@@ -918,7 +1023,9 @@ def _ledger_columns() -> list[str]:
     return [
         "schema_version", "capture_run_id", "pair_group_id", "pair_detail_queue_id",
         "pair_group_key", "pair_detail_session_route", "pair_detail_session_route_id",
-        "route_identity_authority", "wizard_exchange", "timeframe", "asset_x", "asset_y",
+        "route_identity_authority", "browser_auth_status", "browser_auth_blocker",
+        "browser_auth_route_kind", "browser_auth_observation_id",
+        "authenticated_capture_authority", "wizard_exchange", "timeframe", "asset_x", "asset_y",
         "asset_x_raw", "asset_y_raw",
         "pair", "exact_mode", "mode_value", "orientation", "orientation_expected_asset_x",
         "orientation_expected_asset_y", "capture_asset_x", "capture_asset_y",
@@ -932,12 +1039,16 @@ def _ledger_columns() -> list[str]:
         "close_n_periods", "stop_loss_pct", "ecm_deviation_min_pct", "corr_strength_min_pct",
         "x_weighting", "wizard_commission_pct", "wizard_slippage_pct", "wizard_cost_source",
         "wizard_cost_semantics_status", "wizard_cost_point_in_time_ui_confirmed",
-        "johansen_badge_class", "johansen_state", "engle_granger_badge_class",
-        "engle_granger_state", "hedge_ratio", "hurst", "half_life", "pearson_returns",
+        "johansen_badge_class", "johansen_state", "johansen_cointegrated",
+        "engle_granger_badge_class", "engle_granger_state",
+        "engle_granger_cointegrated", "engle_granger_includes_trend",
+        "hedge_ratio", "hurst", "half_life", "pearson_returns",
         "spearman_returns", "kendall_returns", "conditional_chart_value", "copula_family",
         "copula_correlation", "u1_given_u2", "u2_given_u1", "ou_mu", "ou_alpha", "ou_beta",
         "ou_b", "ou_sigma", "sharpe", "sortino", "returns_total", "annual_return",
-        "mean_period_return", "win_rate", "closed_trades", "max_drawdown", "var_99",
+        "mean_period_return", "win_rate", "closed_trades", "metric_accounting_state",
+        "metric_accounting_blocker", "pair_page_data_quality_state",
+        "pair_page_data_quality_blocker", "max_drawdown", "var_99",
         "cvar_99", "var_sim", "cvar_sim", "dependency_views_available",
         "conditional_views_available", "raw_chart_data_preserved", "evidence_path",
         "capture_candidate_count", "superseded_evidence_paths", "capture_selection_reason",
@@ -962,6 +1073,41 @@ def _badge_state(label: str, class_name: str) -> str:
     if any(value in token for value in ("natural", "gray", "grey")):
         return "NO_COLOR_SIGNAL"
     return "UNKNOWN"
+
+
+def _metric_accounting_state(
+    *,
+    closed_trades: object,
+    returns_total: object,
+    sharpe: object,
+) -> tuple[str, str]:
+    closed = _integer(closed_trades)
+    performance_values = [_number(returns_total), _number(sharpe)]
+    nonzero_performance = any(
+        value is not None and abs(value) > 1e-12 for value in performance_values
+    )
+    if closed is None:
+        return (
+            "UNKNOWN",
+            "missing_closed_trade_count" if nonzero_performance else "",
+        )
+    if closed <= 0 and nonzero_performance:
+        return (
+            "AMBIGUOUS_OPEN_OR_MARK_TO_MARKET",
+            "nonzero_performance_with_zero_closed_trades",
+        )
+    if closed > 0:
+        return "CLOSED_TRADES_PRESENT", ""
+    return "NO_CLOSED_TRADES_NO_REPORTED_PERFORMANCE", ""
+
+
+def _pair_page_data_quality_state(body: str) -> tuple[str, str]:
+    token = body.lower()
+    if "missing garch data" in token:
+        return "MISSING_GARCH_DATA", "missing_garch_data"
+    if "crazy%" in token or "crazy %" in token:
+        return "IMPLAUSIBLE_VOLATILITY_DISPLAY", "implausible_volatility_display"
+    return "NO_VISIBLE_WARNING", ""
 
 
 def _chart_coverage_valid(
@@ -1134,6 +1280,7 @@ def _bundle_paths(input_dir: Path) -> list[Path]:
             continue
         if isinstance(payload, dict) and payload.get("schema_version") in {
             BUNDLE_SCHEMA_VERSION,
+            LEGACY_BUNDLE_SCHEMA_VERSION,
             ROUTE_UNAVAILABLE_SCHEMA_VERSION,
         }:
             paths.append(path)
@@ -1234,6 +1381,7 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Explicitly unavailable cells: {summary['explicitly_unavailable_cells']}",
             f"- Reverse recalculation pending cells: {summary['reverse_recalculation_pending_cells']}",
             f"- Invalid orientation captures: {summary['invalid_orientation_capture_cells']}",
+            f"- Authentication-unproven cells: {summary['authentication_unproven_cells']}",
             f"- Coverage failures: {summary['coverage_failures']}",
             f"- Queue progress: {summary['queue_pairs_started']}/{summary['queue_pairs']} started; {summary['queue_pairs_complete']} captured complete; {summary['queue_pairs_terminally_accounted']} terminally accounted",
             "- Live trading authorized: `false`",

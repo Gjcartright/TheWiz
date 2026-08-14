@@ -67,7 +67,13 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
     experiments = _read_csv(experiment_path)
     modes = _read_csv(mode_path)
     pair_histories = _read_csv(pair_history_path)
-    mode_lookup = _unique_mode_rows(modes)
+    active_pair_group_ids = {_text(value) for value in experiments["pair_group_id"]}
+    if "" in active_pair_group_ids:
+        raise ValueError("Canonical replay experiment identity missing pair_group_id")
+    mode_lookup = _unique_mode_rows(
+        modes,
+        allowed_pair_group_ids=active_pair_group_ids,
+    )
     pair_lookup = _unique_rows(pair_histories, "pair_group_id")
     cost_payload = asdict(costs)
     material = {
@@ -460,10 +466,17 @@ def _orient_history(history: pd.DataFrame, *, orientation: str) -> pd.DataFrame:
     return oriented
 
 
-def _unique_mode_rows(frame: pd.DataFrame) -> dict[tuple[str, str, str], object]:
+def _unique_mode_rows(
+    frame: pd.DataFrame,
+    *,
+    allowed_pair_group_ids: set[str] | None = None,
+) -> dict[tuple[str, str, str], object]:
     rows: dict[tuple[str, str, str], object] = {}
     for row in frame.itertuples():
-        key = (_text(row.pair_group_id), _text(row.exact_mode), _text(row.orientation))
+        pair_group_id = _text(row.pair_group_id)
+        if allowed_pair_group_ids is not None and pair_group_id not in allowed_pair_group_ids:
+            continue
+        key = (pair_group_id, _text(row.exact_mode), _text(row.orientation))
         if key in rows:
             raise ValueError(f"Duplicate mode-ledger identity: {key}")
         rows[key] = row

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 from pathlib import Path
 
 
@@ -441,14 +442,19 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 def md_table(rows: list[dict[str, str]], columns: list[str]) -> str:
     lines = ["| " + " | ".join(columns) + " |", "| " + " | ".join(["---"] * len(columns)) + " |"]
     for item in rows:
-        lines.append("| " + " | ".join(str(item.get(c, "")).replace("|", "\\|") for c in columns) + " |")
+        lines.append(
+            "| " + " | ".join(str(item.get(c, "")).replace("|", "\\|") for c in columns) + " |"
+        )
     return "\n".join(lines)
 
 
 def build_missing_integrations(inventory: list[dict[str, str]]) -> list[dict[str, str]]:
     rows = []
     for item in inventory:
-        if item["recommended_integration_priority"] in {"must_integrate", "useful"} and item["missing_from_current_repo"]:
+        if (
+            item["recommended_integration_priority"] in {"must_integrate", "useful"}
+            and item["missing_from_current_repo"]
+        ):
             rows.append(
                 {
                     "page_or_section_name": item["page_or_section_name"],
@@ -513,26 +519,146 @@ def build_capture_opportunities(inventory: list[dict[str, str]]) -> list[dict[st
 
 def build_field_dictionary() -> str:
     field_rows = [
-        ("pair_id/spread_id", "scanner, pair detail", "Join scanner rows to pair-detail pages and captures.", "yes, scanner", "must_integrate"),
-        ("symbol_1/symbol_2", "scanner, pair detail controls", "Defines two-leg universe and local history fetch targets.", "yes", "must_integrate"),
-        ("exchange", "scanner, pair detail/API params", "Filters dYdX vs other exchanges.", "partial", "must_integrate"),
-        ("interval/period", "scanner, pair detail controls/API params", "Controls timeframe and sample window.", "partial", "must_integrate"),
-        ("spread/zscore/zscore_roll", "spread/zscore charts/API", "Core entry, exit, and regime path.", "partial local, dashboard raw arrays missing", "must_integrate"),
-        ("hedge_ratio/x_weighting/y_weighting", "scanner, pair header, weighting slider", "Sizing and spread construction.", "partial", "must_integrate"),
-        ("Pearson/Spearman/Kendall", "correlation/dependency view", "Dependency validation and stable-correlation filters.", "local computed, dashboard summary partial", "must_integrate"),
-        ("beta/betas", "dependency view", "Hedge stability and beta-anchor strategy design.", "partial local", "must_integrate"),
-        ("ecm_x/ecm_y/ecm_strength", "ECM dependency views", "Error-correction strategy and exits.", "raw pair detail partial, not evidence pipeline", "must_integrate"),
-        ("copula/u1_given_u2/u2_given_u1/tail thresholds", "copula view/API", "Nonlinear dependency, tail dislocation, and risk filters.", "partial", "must_integrate"),
-        ("Hurst/half_life/ou_optimal", "scanner/header/API", "Mean-reversion validation and timeout design.", "partial", "must_integrate"),
-        ("Sharpe/Sortino/returns/win_rate/closed trades", "backtest metrics", "Historical diagnostics only; not live signal features.", "local recomputed separately", "useful"),
-        ("MDD/drawdown/VaR/CVaR/underwater", "risk metrics and backtest chart", "Risk gates, drawdown controls, paper preflight.", "partial local", "must_integrate"),
-        ("entry/exit thresholds/operators", "backtest panel", "Reproducible dashboard strategy settings.", "not systematic", "must_integrate"),
-        ("Close N/Stop Loss/ECM min/Corr min", "override panel", "Exit/risk/regime controls.", "not systematic", "must_integrate"),
-        ("funding/slippage/cost assumptions", "not visible in current dashboard capture", "Paper-trade realism and stress tests.", "local placeholder only", "must_integrate"),
-        ("scanner filter set", "live scanner page", "Reproducible discovery snapshots across sort, cointegration, correlation, Hurst, half-life, copula, strategy, symbol, and exchange filters.", "not systematic", "must_integrate"),
-        ("inline strategy comparison returns/Sharpe", "live scanner selected-row detail", "Strategy-family triage only; must be replayed locally before acceptance.", "not ingested", "must_integrate"),
-        ("open/closed simulated positions", "live trades page", "Paper-trading validation, live monitoring, and post-trade review.", "not ingested", "must_integrate"),
-        ("Telegram alert configuration", "live alerts page", "Operational alert delivery only; credentials must stay outside repo.", "not ingested by design", "useful"),
+        (
+            "pair_id/spread_id",
+            "scanner, pair detail",
+            "Join scanner rows to pair-detail pages and captures.",
+            "yes, scanner",
+            "must_integrate",
+        ),
+        (
+            "symbol_1/symbol_2",
+            "scanner, pair detail controls",
+            "Defines two-leg universe and local history fetch targets.",
+            "yes",
+            "must_integrate",
+        ),
+        (
+            "exchange",
+            "scanner, pair detail/API params",
+            "Filters dYdX vs other exchanges.",
+            "partial",
+            "must_integrate",
+        ),
+        (
+            "interval/period",
+            "scanner, pair detail controls/API params",
+            "Controls timeframe and sample window.",
+            "partial",
+            "must_integrate",
+        ),
+        (
+            "spread/zscore/zscore_roll",
+            "spread/zscore charts/API",
+            "Core entry, exit, and regime path.",
+            "partial local, dashboard raw arrays missing",
+            "must_integrate",
+        ),
+        (
+            "hedge_ratio/x_weighting/y_weighting",
+            "scanner, pair header, weighting slider",
+            "Sizing and spread construction.",
+            "partial",
+            "must_integrate",
+        ),
+        (
+            "Pearson/Spearman/Kendall",
+            "correlation/dependency view",
+            "Dependency validation and stable-correlation filters.",
+            "local computed, dashboard summary partial",
+            "must_integrate",
+        ),
+        (
+            "beta/betas",
+            "dependency view",
+            "Hedge stability and beta-anchor strategy design.",
+            "partial local",
+            "must_integrate",
+        ),
+        (
+            "ecm_x/ecm_y/ecm_strength",
+            "ECM dependency views",
+            "Error-correction strategy and exits.",
+            "raw pair detail partial, not evidence pipeline",
+            "must_integrate",
+        ),
+        (
+            "copula/u1_given_u2/u2_given_u1/tail thresholds",
+            "copula view/API",
+            "Nonlinear dependency, tail dislocation, and risk filters.",
+            "partial",
+            "must_integrate",
+        ),
+        (
+            "Hurst/half_life/ou_optimal",
+            "scanner/header/API",
+            "Mean-reversion validation and timeout design.",
+            "partial",
+            "must_integrate",
+        ),
+        (
+            "Sharpe/Sortino/returns/win_rate/closed trades",
+            "backtest metrics",
+            "Historical diagnostics only; not live signal features.",
+            "local recomputed separately",
+            "useful",
+        ),
+        (
+            "MDD/drawdown/VaR/CVaR/underwater",
+            "risk metrics and backtest chart",
+            "Risk gates, drawdown controls, paper preflight.",
+            "partial local",
+            "must_integrate",
+        ),
+        (
+            "entry/exit thresholds/operators",
+            "backtest panel",
+            "Reproducible dashboard strategy settings.",
+            "not systematic",
+            "must_integrate",
+        ),
+        (
+            "Close N/Stop Loss/ECM min/Corr min",
+            "override panel",
+            "Exit/risk/regime controls.",
+            "not systematic",
+            "must_integrate",
+        ),
+        (
+            "funding/slippage/cost assumptions",
+            "not visible in current dashboard capture",
+            "Paper-trade realism and stress tests.",
+            "local placeholder only",
+            "must_integrate",
+        ),
+        (
+            "scanner filter set",
+            "live scanner page",
+            "Reproducible discovery snapshots across sort, cointegration, correlation, Hurst, half-life, copula, strategy, symbol, and exchange filters.",
+            "not systematic",
+            "must_integrate",
+        ),
+        (
+            "inline strategy comparison returns/Sharpe",
+            "live scanner selected-row detail",
+            "Strategy-family triage only; must be replayed locally before acceptance.",
+            "not ingested",
+            "must_integrate",
+        ),
+        (
+            "open/closed simulated positions",
+            "live trades page",
+            "Paper-trading validation, live monitoring, and post-trade review.",
+            "not ingested",
+            "must_integrate",
+        ),
+        (
+            "Telegram alert configuration",
+            "live alerts page",
+            "Operational alert delivery only; credentials must stay outside repo.",
+            "not ingested by design",
+            "useful",
+        ),
     ]
     lines = [
         "# Dashboard Field Dictionary",
@@ -558,7 +684,7 @@ def build_field_dictionary() -> str:
     return "\n".join(lines) + "\n"
 
 
-def main() -> None:
+def _legacy_snapshot_builder() -> None:
     inventory = build_inventory()
     missing = build_missing_integrations(inventory)
     opportunities = build_capture_opportunities(inventory)
@@ -588,7 +714,13 @@ def main() -> None:
         + "\n\n## Integration Priority Counts\n\n"
         + "\n".join(
             f"- {priority}: {sum(1 for row in inventory if row['recommended_integration_priority'] == priority)}"
-            for priority in ["must_integrate", "useful", "optional", "not_useful", "risky_or_hindsight"]
+            for priority in [
+                "must_integrate",
+                "useful",
+                "optional",
+                "not_useful",
+                "risky_or_hindsight",
+            ]
         )
         + "\n\n## Access Note\n\n"
         "Live access was available for the scanner and top-level dashboard pages in this run. Full historical pair-detail captures still come from older saved evidence; the current live route/action for the deeper pair detail page remains unresolved.\n",
@@ -641,6 +773,27 @@ def main() -> None:
                     str(DOCS / "dashboard_field_dictionary.md"),
                     str(REPORTS / "dashboard_integration_summary.md"),
                 ],
+            },
+            indent=2,
+        )
+    )
+
+
+def main() -> None:
+    """Validate the newer governed inventory without overwriting its evidence."""
+
+    sys.path.insert(0, str(ROOT / "src"))
+    from quant_platform.orchestration.corrective_wizard_surface_inventory import (
+        build_wizard_surface_inventory_readiness,
+    )
+
+    result = build_wizard_surface_inventory_readiness(root=ROOT)
+    print(
+        json.dumps(
+            {
+                "summary": result.summary,
+                "paths": {key: str(value) for key, value in result.paths.items()},
+                "legacy_snapshot_builder_disabled": True,
             },
             indent=2,
         )

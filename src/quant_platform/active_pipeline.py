@@ -1,34 +1,52 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
+import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import shutil
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Callable, Iterable
 from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 
+from quant_platform.apify_sources import infer_apify_venue
+from quant_platform.execution import DydxNetworkConfig, build_dydx_indexer_adapter
 from quant_platform.experiments import PairDataset
 from quant_platform.ml_filter import (
+    GLOBAL_PURGED_SPLIT_SCHEME,
+    MINIMUM_TRAINING_TAKE_RATE,
+    MODEL_SELECTION_BOUNDARY_SCHEME,
+    MODEL_SELECTION_ISOLATION_SCHEME,
+    MODEL_SELECTION_PHASE,
     NON_FEATURE_COLUMNS,
     RETURN_COLUMN,
     TARGET_COLUMN,
+    THRESHOLD_CALIBRATION_SCHEME,
     TIMESTAMP_COLUMN,
+    UNTOUCHED_EVALUATION_PHASE,
     build_trade_filter_dataset,
+    model_selection_leaderboard,
     train_trade_filter_walkforward,
 )
-from quant_platform.apify_sources import infer_apify_venue
-from quant_platform.execution import DydxNetworkConfig, build_dydx_indexer_adapter
-from quant_platform.pair_detail_ingestion import datasets_from_pair_detail_snapshots
+from quant_platform.pair_detail_ingestion import (
+    add_derived_beta_from_prices,
+    datasets_from_pair_detail_snapshots,
+    extract_history_rows,
+    load_pair_detail_payload,
+    snapshot_from_payload,
+)
 from quant_platform.pair_market_utils import pair_markets_from_pair
 from quant_platform.regimes import RegimeConfig, classify_regimes
-from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol, wizard_exchange_lane
-
+from quant_platform.wizard_symbols import (
+    normalize_wizard_exchange,
+    normalize_wizard_symbol,
+    wizard_exchange_lane,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 ACTIVE = ROOT / "reports" / "active"
@@ -36,6 +54,30 @@ DASHBOARD = ROOT / "reports" / "dashboard"
 ML_REPORTS = ROOT / "reports" / "ml"
 DATA_ML = ROOT / "data" / "ml"
 MODELS = ROOT / "models" / "trade_gate"
+TRADE_DATASET_BUILD_SCHEMA = "thewiz.trade_dataset_build.v3"
+MINIMUM_MODEL_GATED_TAKE_RATE = 0.10
+TRADE_DATASET_REGISTRIES = (
+    "current_wizard_hyperliquid_pair_history_results.csv",
+    "exhaustive_wizard_hyperliquid_pair_history_results.csv",
+)
+POST_OUTCOME_MEMORY_COLUMNS = {
+    "wizard_history_feature_count",
+    "wizard_same_regime_count",
+    "wizard_same_strategy_family_count",
+    "wizard_same_venue_count",
+    "wizard_same_regime_strategy_venue_count",
+    "wizard_verified_same_regime_strategy_venue_count",
+    "wizard_same_regime_strategy_venue_win_rate",
+    "wizard_same_regime_strategy_venue_mean_return",
+    "wizard_same_regime_strategy_venue_mean_drawdown",
+    "wizard_learning_feature_state",
+    "native_promotion_basis",
+    "shared_outcome_count",
+    "shared_verified_outcome_count",
+    "shared_outcome_win_rate",
+    "shared_outcome_mean_return",
+    "shared_outcome_mean_drawdown",
+}
 MULTI_VENUE_HISTORY_READINESS_FILENAME = "multi_venue_history_readiness.csv"
 LEGACY_MULTI_VENUE_HISTORY_READINESS_FILENAME = "multi_venue_history_readiness_2026-06-25.csv"
 DASHBOARD_REFRESH_PROFILES = {"monitor", "deep"}
@@ -85,6 +127,22 @@ ARTIFACT_COLUMNS = [
     "reason",
     "notes",
 ]
+ARTIFACT_EXCLUDED_DIRS = {
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".runtime_agents",
+    ".runtime_tmp",
+    ".venv",
+    ".venv311",
+    ".venv312",
+    "__pycache__",
+    "node_modules",
+    "venv",
+}
+ARTIFACT_EXCLUDED_DIR_PREFIXES = (".venv", "pytest-of-")
+ARTIFACT_EXCLUDED_FILES = {".DS_Store"}
 
 PAIR_UNIVERSE_COLUMNS = [
     "pair",
@@ -151,6 +209,14 @@ CANONICAL_COMMANDS = [
     "PYTHONPATH=src python -m quant_platform.cli system-check",
     "PYTHONPATH=src python -m quant_platform.cli build-artifact-index",
     "PYTHONPATH=src python -m quant_platform.cli current-state",
+    "PYTHONPATH=src python -m quant_platform.cli complete-corrective-plan",
+    "PYTHONPATH=src python -m quant_platform.cli build-scheduler-runtime-readiness",
+    "PYTHONPATH=src python -m quant_platform.cli build-wizard-reset-readiness",
+    "PYTHONPATH=src python -m quant_platform.cli build-stage4-handoff-readiness",
+    "PYTHONPATH=src python -m quant_platform.cli build-corrective-agent-governance",
+    "PYTHONPATH=src python -m quant_platform.cli run-corrective-l2-capture",
+    "python scripts/build_corrective_checkpoint.py",
+    "python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-research-pack",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-mode-matrix-capture-queue",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-pair-settings-capture-template",
@@ -165,6 +231,8 @@ CANONICAL_COMMANDS = [
     "PYTHONPATH=src python -m quant_platform.cli run-hyperliquid-auxiliary-timeframe-validation --interval 4h --intraday-days 800",
     "PYTHONPATH=src python -m quant_platform.cli hyperliquid-testnet-margin-snapshot",
     "PYTHONPATH=src python -m quant_platform.cli hyperliquid-testnet-smoke-approval-template",
+    "PYTHONPATH=src python -m quant_platform.cli hyperliquid-testnet-collateral-transfer-preflight --transfer-amount-usd 25",
+    "PYTHONPATH=src python -m quant_platform.cli run-hyperliquid-testnet-collateral-transfer --transfer-preflight-id <immutable_preflight_id> --transfer-approval-id <signed_one_run_approval_id> --transfer-amount-usd 25",
     "PYTHONPATH=src python -m quant_platform.cli build-hyperliquid-testnet-lifecycle-gate",
     "PYTHONPATH=src python -m quant_platform.cli capture-hyperliquid-testnet-lifecycle-evidence",
     (
@@ -244,11 +312,12 @@ class CommandResult:
 
 
 def build_artifact_index(root: Path = ROOT) -> CommandResult:
+    active = root / "reports" / "active"
     rows = [_artifact_row(path, root) for path in _iter_repo_files(root)]
     frame = pd.DataFrame(rows, columns=ARTIFACT_COLUMNS).sort_values("path").reset_index(drop=True)
-    csv_path = ACTIVE / "artifact_index.csv"
-    md_path = ACTIVE / "artifact_index.md"
-    commands_path = ACTIVE / "canonical_commands.md"
+    csv_path = active / "artifact_index.csv"
+    md_path = active / "artifact_index.md"
+    commands_path = active / "canonical_commands.md"
     _write_csv(frame, csv_path)
     _write_text(md_path, _artifact_index_markdown(frame))
     _write_text(commands_path, _canonical_commands_markdown())
@@ -270,7 +339,6 @@ def current_state(root: Path = ROOT) -> CommandResult:
     active = root / "reports" / "active"
     dashboard = root / "reports" / "dashboard"
     data_ml = root / "data" / "ml"
-    model_dir = root / "models" / "trade_gate"
     readiness_paths = build_phase1_readiness_surfaces(root)
     base_rl_handoff = _read_csv(root / "reports" / "rl" / "base_rl_paper_handoff_status.csv")
     handoff_ready = bool(
@@ -353,13 +421,8 @@ def current_state(root: Path = ROOT) -> CommandResult:
         hyperliquid_preflight_blocker = ";".join(sorted(set(blockers)))
     venue_route_state = _venue_route_state_row(root)
     rows = [
-        _state_row(
-            "active_layer",
-            _exists(active / "artifact_index.csv"),
-            "artifact index exists" if (active / "artifact_index.csv").exists() else "artifact index missing",
-            active / "artifact_index.csv",
-            "run build-artifact-index",
-        ),
+        *_seven_stage_state_rows(root),
+        _active_layer_state_row(root),
         _state_row(
             "pair_universe",
             _exists(root / "data" / "processed" / "pair_universe.csv"),
@@ -442,13 +505,7 @@ def current_state(root: Path = ROOT) -> CommandResult:
             root / "reports" / "agents" / "youtube_brain_status.csv",
             "run run-youtube-brain --no-fetch or enable the daily collector",
         ),
-        _state_row(
-            "trade_gate_model",
-            _exists(model_dir / "model.pkl"),
-            "model artifact exists" if (model_dir / "model.pkl").exists() else "model artifact missing",
-            model_dir / "metrics.json",
-            "run train-trade-gate after dataset is ready",
-        ),
+        _model_authority_state_row(root),
         {
             "area": "base_rl_handoff",
             "ready": handoff_ready,
@@ -583,6 +640,8 @@ def current_state(root: Path = ROOT) -> CommandResult:
 
 
 def system_check(root: Path = ROOT) -> CommandResult:
+    ACTIVE = root / "reports" / "active"
+    DASHBOARD = root / "reports" / "dashboard"
     rows = []
     for folder in ["data", "data/raw", "data/processed", "reports", "src/quant_platform"]:
         path = root / folder
@@ -626,6 +685,69 @@ def system_check(root: Path = ROOT) -> CommandResult:
         )
     for package in ["numpy", "pandas", "sklearn", "statsmodels", "requests", "yaml"]:
         rows.append(_package_check_row(package))
+    scheduler_runtime_path = ACTIVE / "scheduler_runtime_readiness.json"
+    scheduler_runtime = _read_json(scheduler_runtime_path)
+    scheduler_agents_ready = int(scheduler_runtime.get("agents_ready", 0) or 0)
+    scheduler_agents_expected = int(
+        scheduler_runtime.get("agents_expected", 3) or 3
+    )
+    scheduler_authority_safe = all(
+        scheduler_runtime.get(field) is False
+        for field in (
+            "candidate_promotion_authority",
+            "order_submission_included",
+            "testnet_order_authority",
+            "live_trading_authorized",
+        )
+    ) and int(scheduler_runtime.get("orders_submitted", -1) or 0) == 0
+    scheduler_runtime_ready = bool(
+        scheduler_runtime.get("status") == "PASS_SCHEDULER_RUNTIME_READY"
+        and scheduler_agents_expected == 3
+        and scheduler_agents_ready == scheduler_agents_expected
+        and int(scheduler_runtime.get("checks_total", 0) or 0) > 0
+        and int(scheduler_runtime.get("checks_passed", 0) or 0)
+        == int(scheduler_runtime.get("checks_total", 0) or 0)
+        and scheduler_authority_safe
+    )
+    scheduler_runtime_blockers = scheduler_runtime.get("blockers", [])
+    if not isinstance(scheduler_runtime_blockers, list):
+        scheduler_runtime_blockers = [str(scheduler_runtime_blockers)]
+    if not scheduler_runtime:
+        scheduler_runtime_blockers = ["scheduler_runtime_receipt_missing"]
+    elif not scheduler_authority_safe:
+        scheduler_runtime_blockers.append("scheduler_runtime_authority_not_zero")
+    scheduler_runtime_warnings = scheduler_runtime.get("operational_warnings", [])
+    if not isinstance(scheduler_runtime_warnings, list):
+        scheduler_runtime_warnings = [str(scheduler_runtime_warnings)]
+    rows.append(
+        {
+            "check": "scheduler:live_runtime_contract",
+            "ready": scheduler_runtime_ready,
+            "status": (
+                "ready_with_operational_warnings"
+                if scheduler_runtime_ready and scheduler_runtime_warnings
+                else "ready"
+                if scheduler_runtime_ready
+                else str(scheduler_runtime.get("status", "missing"))
+            ),
+            "blocker": (
+                ""
+                if scheduler_runtime_ready
+                else ";".join(
+                    str(value) for value in scheduler_runtime_blockers if str(value)
+                )
+                or "scheduler_runtime_contract_not_ready"
+            ),
+            "evidence_path": str(scheduler_runtime_path),
+            "next_action": (
+                "monitor_scheduler_runtime_and_system_volume_warning"
+                if scheduler_runtime_ready and scheduler_runtime_warnings
+                else "monitor_scheduler_runtime_receipt"
+                if scheduler_runtime_ready
+                else "run build-scheduler-runtime-readiness and repair every blocker"
+            ),
+        }
+    )
     storage = dashboard_storage_preflight(root)
     rows.append(
         {
@@ -2667,8 +2789,16 @@ def _market_context_evidence_path(source: str) -> str:
 
 
 def _venue_lane_classification(frame: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        "asset",
+        "best_lane",
+        "dydx_lane",
+        "hyperliquid_lane",
+        "blockers",
+        "next_action",
+    ]
     if frame.empty:
-        return pd.DataFrame(columns=["asset", "best_lane", "dydx_lane", "hyperliquid_lane", "blockers", "next_action"])
+        return pd.DataFrame(columns=columns)
     rows = []
     for asset, subset in frame[frame["asset"].astype(str) != "ALL"].groupby("asset"):
         lanes = set(subset["venue_lane"].astype(str))
@@ -2686,7 +2816,11 @@ def _venue_lane_classification(frame: pd.DataFrame) -> pd.DataFrame:
                 "next_action": _venue_lane_next_action(best_lane, blockers),
             }
         )
-    return pd.DataFrame(rows).sort_values(["best_lane", "asset"]).reset_index(drop=True)
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(rows, columns=columns).sort_values(
+        ["best_lane", "asset"]
+    ).reset_index(drop=True)
 
 
 def _best_asset_lane(lanes: set[str]) -> str:
@@ -2798,6 +2932,7 @@ def _truthy(value: object) -> bool:
 
 
 def build_pair_universe(root: Path = ROOT) -> CommandResult:
+    active = root / "reports" / "active"
     pair_rows = []
     experiment = _read_csv(root / "reports" / "experiment_results.csv")
     acceptance = _read_csv(root / "reports" / "acceptance_report.csv")
@@ -2934,10 +3069,10 @@ def build_pair_universe(root: Path = ROOT) -> CommandResult:
         ).drop(columns=["_wizard_strategy_rank"])
     output = root / "data" / "processed" / "pair_universe.csv"
     snapshot = root / "data" / "processed" / "pair_universe_snapshots" / f"{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H%M')}.csv"
-    summary = ACTIVE / "pair_universe_summary.csv"
-    summary_md = ACTIVE / "pair_universe_summary.md"
-    components = ACTIVE / "pair_score_components.csv"
-    decisions = ACTIVE / "pair_decision_buckets.csv"
+    summary = active / "pair_universe_summary.csv"
+    summary_md = active / "pair_universe_summary.md"
+    components = active / "pair_score_components.csv"
+    decisions = active / "pair_decision_buckets.csv"
     _write_csv(frame, output)
     _write_csv(frame, snapshot)
     _write_csv(_pair_summary(frame), summary)
@@ -2957,7 +3092,38 @@ def build_trade_dataset(root: Path = ROOT, input_dir: Path | None = None, fundin
     )
 
     source = input_dir or root / "data" / "raw" / "pair_details"
-    datasets = datasets_from_pair_detail_snapshots(source, require_research_usable=True)
+    if input_dir is None:
+        source_datasets, registry_audit = (
+            _registered_hyperliquid_training_datasets(root)
+        )
+        if not source_datasets:
+            raise SystemExit(
+                "no hash-verified READY histories exist in the Stage 2 Hyperliquid registries"
+            )
+    else:
+        source_datasets = datasets_from_pair_detail_snapshots(
+            source, require_research_usable=True
+        )
+        registry_audit = pd.DataFrame(
+            [
+                {
+                    "registry_path": str(source),
+                    "registry_status": "EXPLICIT_INPUT_DIRECTORY",
+                    "eligible_for_candidate_dataset": True,
+                    "blocker": "",
+                }
+            ]
+        )
+    datasets, source_selection = _select_hyperliquid_training_datasets(
+        source_datasets
+    )
+    source_selection = _annotate_trade_dataset_cost_coverage(
+        root, source_selection
+    )
+    if not datasets:
+        raise SystemExit(
+            "no canonical Hyperliquid histories are eligible for the trade dataset"
+        )
     datasets = [
         PairDataset(dataset.pair, classify_regimes(_ensure_trade_dataset_inputs(dataset.frame), RegimeConfig(preserve_existing=True)))
         for dataset in datasets
@@ -2968,36 +3134,900 @@ def build_trade_dataset(root: Path = ROOT, input_dir: Path | None = None, fundin
     hardened = _harden_trade_dataset(frame)
     build_shared_outcome_memory(root=root)
     build_native_outcome_feature_memory(root=root)
-    hardened = _enrich_trade_dataset_with_outcome_memory(root, hardened)
     audit = _leakage_audit(hardened)
     blocked_audit = audit["leakage_blocker"].fillna("").astype(str).ne("")
     if blocked_audit.any():
         blockers = audit.loc[blocked_audit, "trade_id"].head(5).tolist()
         raise SystemExit(f"leakage audit failed for trade rows: {blockers}")
-    DATA_ML.mkdir(parents=True, exist_ok=True)
-    ML_REPORTS.mkdir(parents=True, exist_ok=True)
-    csv_path = DATA_ML / "trade_training_dataset.csv"
-    parquet_path = DATA_ML / "trade_training_dataset.parquet"
-    summary_path = ML_REPORTS / "trade_dataset_summary.csv"
-    audit_path = ML_REPORTS / "leakage_audit.csv"
-    _write_csv(hardened, csv_path)
-    parquet_status = _write_parquet_if_available(hardened, parquet_path)
-    _write_csv(audit, audit_path)
-    _write_csv(_trade_dataset_summary(hardened, audit, parquet_status), summary_path)
+    staged = _stage_trade_dataset_candidate(
+        root=root,
+        dataset=hardened,
+        leakage_audit=audit,
+        source_selection=source_selection,
+        registry_audit=registry_audit,
+    )
     return CommandResult(
-        paths={"dataset_csv": csv_path, "dataset_parquet": parquet_path, "summary": summary_path, "leakage_audit": audit_path},
-        summary={"rows": len(hardened), "parquet_status": parquet_status},
+        paths=staged["paths"],
+        summary={
+            "rows": len(hardened),
+            "parquet_status": staged["parquet_status"],
+            "canonical_hyperliquid_histories": len(datasets),
+            "dataset_id": staged["dataset_id"],
+            "status": "VALIDATED_CANDIDATE",
+            "active_dataset_unchanged": True,
+        },
     )
 
 
-def train_trade_gate(root: Path = ROOT, input_path: Path | None = None, walkforward_splits: int = 5, min_train_rows: int = 100) -> CommandResult:
-    source = input_path or DATA_ML / "trade_training_dataset.csv"
-    dataset = _model_dataset_from_hardened(_read_csv(source))
+def _registered_hyperliquid_training_datasets(
+    root: Path,
+) -> tuple[list[PairDataset], pd.DataFrame]:
+    """Load only hash-verified Stage 2 histories registered as replay-ready."""
+
+    datasets: list[PairDataset] = []
+    audit_rows: list[dict[str, object]] = []
+    ready_statuses = {"READY", "READY_FOR_CANONICAL_1X_REPLAY"}
+    for registry_name in TRADE_DATASET_REGISTRIES:
+        registry_path = root / "reports" / "active" / registry_name
+        registry = _read_csv(registry_path)
+        if registry.empty:
+            audit_rows.append(
+                {
+                    "registry_path": str(registry_path),
+                    "registry_status": "MISSING_OR_EMPTY",
+                    "eligible_for_candidate_dataset": False,
+                    "blocker": "registered_history_ledger_missing_or_empty",
+                }
+            )
+            continue
+        for _, row in registry.iterrows():
+            pair = str(row.get("pair", "")).strip()
+            timeframe = str(
+                row.get("hyperliquid_interval", row.get("timeframe", ""))
+            ).strip().lower()
+            registered_status = str(row.get("history_status", "")).strip()
+            raw_history_path = str(row.get("history_path", "")).strip()
+            expected_hash = str(row.get("history_sha256", "")).strip().lower()
+            expected_rows = int(
+                pd.to_numeric(
+                    pd.Series([row.get("history_rows", 0)]), errors="coerce"
+                )
+                .fillna(0)
+                .iloc[0]
+            )
+            blocker = ""
+            actual_hash = ""
+            actual_rows = 0
+            history_path = Path(raw_history_path) if raw_history_path else Path()
+            if raw_history_path and not history_path.is_absolute():
+                history_path = root / history_path
+            if registered_status not in ready_statuses:
+                blocker = "registered_history_not_ready"
+            elif not raw_history_path or not history_path.is_file():
+                blocker = "registered_history_file_missing"
+            elif not expected_hash:
+                blocker = "registered_history_hash_missing"
+            else:
+                actual_hash = _sha256_file(history_path)
+                if actual_hash != expected_hash:
+                    blocker = "registered_history_hash_mismatch"
+            if not blocker:
+                try:
+                    payload = load_pair_detail_payload(history_path)
+                    snapshot = snapshot_from_payload(payload)
+                    history = extract_history_rows(payload)
+                    actual_rows = len(history)
+                    if not history:
+                        blocker = "registered_history_rows_missing"
+                    elif expected_rows and actual_rows != expected_rows:
+                        blocker = "registered_history_row_count_mismatch"
+                    elif pair and snapshot.pair and pair != snapshot.pair:
+                        blocker = "registered_history_pair_mismatch"
+                    else:
+                        frame = pd.DataFrame(history)
+                        frame["source_path"] = raw_history_path
+                        frame["source_registry_path"] = str(
+                            registry_path.relative_to(root)
+                        )
+                        frame["registered_history_sha256"] = actual_hash
+                        for column, value in snapshot.to_row().items():
+                            if column not in frame.columns and value is not None:
+                                frame[column] = value
+                        frame["exchange"] = "hyperliquid"
+                        if timeframe:
+                            frame["timeframe"] = timeframe
+                            frame["interval"] = timeframe
+                        frame = add_derived_beta_from_prices(frame)
+                        frame = _normalize_registered_history_features(frame)
+                        if "regime" not in frame.columns:
+                            frame["regime"] = "unknown"
+                        datasets.append(
+                            PairDataset(pair=pair or snapshot.pair, frame=frame)
+                        )
+                except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                    blocker = f"registered_history_parse_failed:{type(exc).__name__}"
+            audit_rows.append(
+                {
+                    "registry_path": str(registry_path.relative_to(root)),
+                    "pair": pair,
+                    "timeframe": timeframe,
+                    "registered_history_status": registered_status,
+                    "history_path": raw_history_path,
+                    "expected_history_sha256": expected_hash,
+                    "actual_history_sha256": actual_hash,
+                    "expected_rows": expected_rows,
+                    "actual_rows": actual_rows,
+                    "registry_status": "HASH_VERIFIED_READY" if not blocker else "REJECTED",
+                    "eligible_for_candidate_dataset": not blocker,
+                    "blocker": blocker,
+                    "promotion_authority": False,
+                    "testnet_order_authority": False,
+                    "live_trading_authorized": False,
+                }
+            )
+    return datasets, pd.DataFrame(audit_rows)
+
+
+def _normalize_registered_history_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Expose canonical feature names without hiding math-v2/proxy provenance."""
+
+    normalized = frame.copy()
+    mappings: dict[str, tuple[str, ...]] = {
+        "conditional_probability_distortion": (
+            "math_v2_conditional_probability_distortion",
+            "research_proxy_conditional_probability_distortion",
+        ),
+        "u1_given_u2": (
+            "math_v2_u1_given_u2",
+            "research_proxy_u1_given_u2",
+        ),
+        "u2_given_u1": (
+            "math_v2_u2_given_u1",
+            "research_proxy_u2_given_u1",
+        ),
+        "ecm_strength": (
+            "math_v2_ecm_strength",
+            "research_proxy_ecm_strength",
+        ),
+        "ecm_x": ("research_proxy_ecm_x",),
+        "ecm_y": ("research_proxy_ecm_y",),
+        "half_life": ("math_v2_half_life", "research_proxy_half_life"),
+        "hurst": ("math_v2_hurst", "research_proxy_hurst"),
+        "ou_optimal": ("research_proxy_ou_optimal",),
+        "tail_dependence": ("research_proxy_tail_dependence",),
+        "cvar": ("research_proxy_cvar",),
+        "regime_strategy_match": ("research_proxy_regime_strategy_match",),
+        "cointegration_pvalue": (
+            "math_v2_cointegration_pvalue",
+            "research_proxy_cointegration_pvalue",
+        ),
+        "copula_calibration_score": (
+            "research_proxy_copula_calibration_score",
+        ),
+        "composite_score": ("research_proxy_composite_score",),
+        "bid_ask_spread_bps": ("research_proxy_bid_ask_spread_bps",),
+        "funding_bps_per_day": ("research_proxy_funding_bps_per_day",),
+    }
+    for target, sources in mappings.items():
+        values = pd.to_numeric(
+            normalized.get(target, pd.Series(np.nan, index=normalized.index)),
+            errors="coerce",
+        )
+        provenance = pd.Series(
+            np.where(values.notna(), target, ""), index=normalized.index
+        )
+        for source in sources:
+            if source not in normalized.columns:
+                continue
+            candidate = pd.to_numeric(normalized[source], errors="coerce")
+            use = values.isna() & candidate.notna()
+            values = values.where(~use, candidate)
+            provenance = provenance.where(~use, source)
+        normalized[target] = values
+        normalized[f"{target}_feature_source"] = provenance
+    return normalized
+
+
+def _annotate_trade_dataset_cost_coverage(
+    root: Path, source_selection: pd.DataFrame
+) -> pd.DataFrame:
+    annotated = source_selection.copy()
+    costs = _read_csv(root / "data" / "processed" / "hyperliquid_pair_cost_models.csv")
+    ready_pairs: set[str] = set()
+    if not costs.empty and "pair" in costs.columns:
+        ready = costs.get(
+            "strict_observed_cost_ready", pd.Series(False, index=costs.index)
+        ).map(_truthy)
+        ready_pairs = set(costs.loc[ready, "pair"].astype(str))
+    annotated["strict_observed_cost_ready"] = annotated.get(
+        "pair", pd.Series("", index=annotated.index)
+    ).astype(str).isin(ready_pairs)
+    annotated["strict_cost_model_path"] = np.where(
+        annotated["strict_observed_cost_ready"],
+        "data/processed/hyperliquid_pair_cost_models.csv",
+        "",
+    )
+    return annotated
+
+
+def _stage_trade_dataset_candidate(
+    *,
+    root: Path,
+    dataset: pd.DataFrame,
+    leakage_audit: pd.DataFrame,
+    source_selection: pd.DataFrame,
+    registry_audit: pd.DataFrame,
+    receipt_context: dict[str, object] | None = None,
+    additional_acceptance_blockers: Iterable[str] = (),
+) -> dict[str, object]:
+    context = dict(receipt_context or {})
+    protected_context_keys = {
+        "schema_version",
+        "dataset_id",
+        "status",
+        "dataset_sha256",
+        "leakage_audit_sha256",
+        "source_selection_sha256",
+        "history_registry_audit_sha256",
+        "research_acceptance_blockers",
+        "promotion_authority",
+        "testnet_order_authority",
+        "live_trading_authorized",
+    }
+    forbidden_context = protected_context_keys.intersection(context)
+    if forbidden_context:
+        raise ValueError(
+            "trade dataset receipt context overrides protected fields: "
+            + ";".join(sorted(forbidden_context))
+        )
+    context_hash = hashlib.sha256(
+        json.dumps(
+            context, sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")
+    ).hexdigest()
+    data_ml = root / "data" / "ml"
+    ml_reports = root / "reports" / "ml"
+    builds = data_ml / "dataset_builds"
+    temporary = builds / f".candidate-{uuid4().hex}"
+    temporary.mkdir(parents=True, exist_ok=False)
+    csv_path = temporary / "trade_training_dataset.csv"
+    parquet_path = temporary / "trade_training_dataset.parquet"
+    audit_path = temporary / "leakage_audit.csv"
+    selection_path = temporary / "trade_dataset_source_selection.csv"
+    registry_path = temporary / "trade_dataset_history_registry_audit.csv"
+    summary_path = temporary / "trade_dataset_summary.csv"
+    _write_csv(dataset, csv_path)
+    parquet_status = _write_parquet_if_available(dataset, parquet_path)
+    _write_csv(leakage_audit, audit_path)
+    _write_csv(source_selection, selection_path)
+    _write_csv(registry_audit, registry_path)
+    _write_csv(
+        _trade_dataset_summary(dataset, leakage_audit, parquet_status),
+        summary_path,
+    )
+    dataset_hash = _sha256_file(csv_path)
+    audit_hash = _sha256_file(audit_path)
+    selection_hash = _sha256_file(selection_path)
+    registry_hash = _sha256_file(registry_path)
+    identity = hashlib.sha256(
+        "|".join(
+            (
+                TRADE_DATASET_BUILD_SCHEMA,
+                dataset_hash,
+                audit_hash,
+                selection_hash,
+                registry_hash,
+                context_hash,
+            )
+        ).encode("utf-8")
+    ).hexdigest()
+    dataset_id = f"tradedataset_{identity[:20]}"
+    final_dir = builds / dataset_id
+    selected = source_selection.get(
+        "selection_status", pd.Series("", index=source_selection.index)
+    ).astype(str).eq("SELECTED_CANONICAL")
+    strict = source_selection.get(
+        "strict_observed_cost_ready", pd.Series(False, index=source_selection.index)
+    ).map(_truthy)
+    exact_modes = sorted(
+        value
+        for value in dataset.get("exact_mode", pd.Series(dtype=object))
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+        .tolist()
+        if value
+    )
+    strict_cost_intersections = int((selected & strict).sum())
+    selected_histories = int(selected.sum())
+    acceptance_blockers = [
+        str(value).strip()
+        for value in additional_acceptance_blockers
+        if str(value).strip()
+    ]
+    if not exact_modes:
+        acceptance_blockers.append("exact_mode_trade_provenance_missing")
+    if selected_histories <= 0:
+        acceptance_blockers.append("canonical_history_selection_missing")
+    elif strict_cost_intersections != selected_histories:
+        acceptance_blockers.append("strict_observed_cost_history_coverage_incomplete")
+    if not str(context.get("registered_execution_id", "")).strip():
+        acceptance_blockers.append("registered_stage4_execution_lineage_missing")
+    receipt = {
+        "schema_version": TRADE_DATASET_BUILD_SCHEMA,
+        "dataset_id": dataset_id,
+        "created_at_utc": _now(),
+        "status": "VALIDATED_CANDIDATE",
+        "rows": len(dataset),
+        "pairs": int(dataset.get("pair", pd.Series(dtype=object)).nunique()),
+        "timeframes": sorted(
+            dataset.get("timeframe", pd.Series(dtype=object))
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        ),
+        "source_venues": sorted(
+            dataset.get("source_venue", pd.Series(dtype=object))
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        ),
+        "strategy_names": sorted(
+            dataset.get("strategy_name", pd.Series(dtype=object))
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        ),
+        "strategy_families": sorted(
+            dataset.get("family", pd.Series(dtype=object))
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        ),
+        "exact_modes": exact_modes,
+        "canonical_hyperliquid_histories": int(selected.sum()),
+        "strict_cost_history_intersections": strict_cost_intersections,
+        "selected_canonical_histories": selected_histories,
+        "cost_model_scope": (
+            "pair_specific_strict_observed_costs"
+            if selected_histories > 0
+            and strict_cost_intersections == selected_histories
+            else "incomplete_or_provisional_cost_coverage"
+        ),
+        "receipt_context_sha256": context_hash,
+        **context,
+        "research_acceptance_blockers": sorted(set(acceptance_blockers)),
+        "dataset_sha256": dataset_hash,
+        "leakage_audit_sha256": audit_hash,
+        "source_selection_sha256": selection_hash,
+        "history_registry_audit_sha256": registry_hash,
+        "dataset_path": str((final_dir / csv_path.name).relative_to(root)),
+        "parquet_path": str((final_dir / parquet_path.name).relative_to(root)),
+        "leakage_audit_path": str((final_dir / audit_path.name).relative_to(root)),
+        "source_selection_path": str((final_dir / selection_path.name).relative_to(root)),
+        "history_registry_audit_path": str((final_dir / registry_path.name).relative_to(root)),
+        "summary_path": str((final_dir / summary_path.name).relative_to(root)),
+        "promotion_authority": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    _write_json(temporary / "dataset_receipt.json", receipt)
+    if final_dir.exists():
+        existing = _read_json(final_dir / "dataset_receipt.json")
+        if existing.get("dataset_sha256") != dataset_hash:
+            shutil.rmtree(temporary)
+            raise SystemExit(f"dataset build identity collision: {dataset_id}")
+        shutil.rmtree(temporary)
+    else:
+        temporary.rename(final_dir)
+    pointer = {
+        **receipt,
+        "candidate_receipt_path": str(
+            (final_dir / "dataset_receipt.json").relative_to(root)
+        ),
+        "active_dataset_unchanged": True,
+    }
+    candidate_pointer = data_ml / "candidate_trade_dataset.json"
+    _write_json(candidate_pointer, pointer)
+    _write_json(ml_reports / "trade_dataset_candidate_receipt.json", pointer)
+    _write_csv(
+        source_selection,
+        ml_reports / "candidate_trade_dataset_source_selection.csv",
+    )
+    _write_csv(
+        registry_audit,
+        ml_reports / "candidate_trade_dataset_history_registry_audit.csv",
+    )
+    paths = {
+        "dataset_csv": final_dir / csv_path.name,
+        "dataset_parquet": final_dir / parquet_path.name,
+        "summary": final_dir / summary_path.name,
+        "leakage_audit": final_dir / audit_path.name,
+        "source_selection": final_dir / selection_path.name,
+        "history_registry_audit": final_dir / registry_path.name,
+        "receipt": final_dir / "dataset_receipt.json",
+        "candidate_pointer": candidate_pointer,
+    }
+    return {
+        "paths": paths,
+        "dataset_id": dataset_id,
+        "parquet_status": parquet_status,
+    }
+
+
+def promote_trade_dataset(
+    root: Path = ROOT, candidate_pointer_path: Path | None = None
+) -> CommandResult:
+    """Promote a validated candidate while preserving the prior active evidence."""
+
+    data_ml = root / "data" / "ml"
+    ml_reports = root / "reports" / "ml"
+    pointer_path = candidate_pointer_path or data_ml / "candidate_trade_dataset.json"
+    candidate = _read_json(pointer_path)
+    if candidate.get("status") != "VALIDATED_CANDIDATE":
+        raise SystemExit("validated candidate trade dataset pointer is missing")
+    required_paths = {
+        "dataset": _rooted_path(root, candidate.get("dataset_path")),
+        "leakage_audit": _rooted_path(root, candidate.get("leakage_audit_path")),
+        "source_selection": _rooted_path(root, candidate.get("source_selection_path")),
+        "history_registry_audit": _rooted_path(
+            root, candidate.get("history_registry_audit_path")
+        ),
+        "summary": _rooted_path(root, candidate.get("summary_path")),
+    }
+    expected_hashes = {
+        "dataset": str(candidate.get("dataset_sha256", "")),
+        "leakage_audit": str(candidate.get("leakage_audit_sha256", "")),
+        "source_selection": str(candidate.get("source_selection_sha256", "")),
+        "history_registry_audit": str(
+            candidate.get("history_registry_audit_sha256", "")
+        ),
+    }
+    blockers = []
+    declared_blockers = candidate.get("research_acceptance_blockers", [])
+    if isinstance(declared_blockers, str):
+        declared_blockers = [
+            value.strip()
+            for value in declared_blockers.replace(",", ";").split(";")
+            if value.strip()
+        ]
+    if not isinstance(declared_blockers, list):
+        declared_blockers = ["invalid_research_acceptance_blockers"]
+    blockers.extend(
+        f"candidate_research_acceptance_blocker:{value}"
+        for value in declared_blockers
+        if str(value).strip()
+    )
+    for name, path in required_paths.items():
+        if not path.is_file():
+            blockers.append(f"candidate_artifact_missing:{name}")
+        elif name in expected_hashes and _sha256_file(path) != expected_hashes[name]:
+            blockers.append(f"candidate_artifact_hash_mismatch:{name}")
+    leakage = _read_csv(required_paths["leakage_audit"])
+    leakage_blockers = int(
+        leakage.get(
+            "leakage_blocker", pd.Series("", index=leakage.index)
+        )
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .ne("")
+        .sum()
+    )
+    if leakage.empty:
+        blockers.append("candidate_leakage_audit_empty")
+    if leakage_blockers:
+        blockers.append("candidate_leakage_audit_blocked")
+    dataset = _read_csv(required_paths["dataset"])
+    forbidden = sorted(POST_OUTCOME_MEMORY_COLUMNS.intersection(dataset.columns))
+    if forbidden:
+        blockers.append("post_outcome_memory_features_present")
+    venues = dataset.get(
+        "source_venue", pd.Series("", index=dataset.index)
+    ).fillna("").astype(str).str.lower()
+    if dataset.empty or venues.ne("hyperliquid").any():
+        blockers.append("candidate_dataset_not_hyperliquid_only")
+    observed_modes = {
+        value
+        for value in dataset.get("exact_mode", pd.Series(dtype=object))
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        if value
+    }
+    declared_modes = {
+        str(value).strip()
+        for value in candidate.get("exact_modes", [])
+        if str(value).strip()
+    }
+    if not observed_modes:
+        blockers.append("candidate_exact_mode_trade_provenance_missing")
+    elif observed_modes != declared_modes:
+        blockers.append("candidate_exact_mode_receipt_mismatch")
+    source_selection = _read_csv(required_paths["source_selection"])
+    selected = source_selection.get(
+        "selection_status", pd.Series("", index=source_selection.index)
+    ).astype(str).eq("SELECTED_CANONICAL")
+    strict = source_selection.get(
+        "strict_observed_cost_ready", pd.Series(False, index=source_selection.index)
+    ).map(_truthy)
+    selected_count = int(selected.sum())
+    strict_selected_count = int((selected & strict).sum())
+    if selected_count <= 0:
+        blockers.append("candidate_canonical_history_selection_missing")
+    elif strict_selected_count != selected_count:
+        blockers.append("candidate_strict_cost_coverage_incomplete")
+    declared_strict_count = int(candidate.get("strict_cost_history_intersections", -1))
+    if declared_strict_count != strict_selected_count:
+        blockers.append("candidate_strict_cost_receipt_mismatch")
+    for field in (
+        "registered_contract_id",
+        "registered_execution_id",
+        "source_family_sha256",
+        "exact_mode_parity_sha256",
+    ):
+        if not str(candidate.get(field, "")).strip():
+            blockers.append(f"candidate_registered_lineage_missing:{field}")
+    for field in (
+        "full_family_accounted",
+        "causal_entry_features_proven",
+        "strict_cost_coverage_complete",
+    ):
+        if not _truthy(candidate.get(field)):
+            blockers.append(f"candidate_registered_lineage_not_proven:{field}")
+    if candidate.get("cost_model_scope") != "pair_specific_strict_observed_costs":
+        blockers.append("candidate_cost_model_scope_not_strict_pair_specific")
+    execution_receipt = _rooted_path(
+        root, candidate.get("registered_execution_receipt_path")
+    )
+    execution_receipt_hash = str(
+        candidate.get("registered_execution_receipt_sha256", "")
+    )
+    if not execution_receipt.is_file():
+        blockers.append("candidate_registered_execution_receipt_missing")
+    elif (
+        not execution_receipt_hash
+        or _sha256_file(execution_receipt) != execution_receipt_hash
+    ):
+        blockers.append("candidate_registered_execution_receipt_hash_mismatch")
+    if blockers:
+        raise SystemExit(
+            "candidate trade dataset promotion blocked: " + ";".join(blockers)
+        )
+
+    superseded = _snapshot_active_trade_dataset(root)
+    canonical = {
+        "dataset": data_ml / "trade_training_dataset.csv",
+        "leakage_audit": ml_reports / "leakage_audit.csv",
+        "source_selection": ml_reports / "trade_dataset_source_selection.csv",
+        "history_registry_audit": ml_reports
+        / "trade_dataset_history_registry_audit.csv",
+        "summary": ml_reports / "trade_dataset_summary.csv",
+    }
+    for name, destination in canonical.items():
+        _link_or_copy_atomic(required_paths[name], destination)
+    candidate_parquet = _rooted_path(root, candidate.get("parquet_path"))
+    canonical_parquet = data_ml / "trade_training_dataset.parquet"
+    if candidate_parquet.is_file():
+        _link_or_copy_atomic(candidate_parquet, canonical_parquet)
+    active_pointer = {
+        **candidate,
+        "status": "ACTIVE_RESEARCH_DATASET",
+        "promoted_at_utc": _now(),
+        "active_dataset_path": str(canonical["dataset"].relative_to(root)),
+        "active_dataset_sha256": _sha256_file(canonical["dataset"]),
+        "superseded_dataset_receipt": (
+            str(superseded.relative_to(root)) if superseded else ""
+        ),
+        "model_retraining_required": True,
+        "promotion_authority": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    active_pointer_path = data_ml / "active_trade_dataset.json"
+    _write_json(active_pointer_path, active_pointer)
+    _write_json(ml_reports / "active_trade_dataset_receipt.json", active_pointer)
+    return CommandResult(
+        paths={
+            "dataset_csv": canonical["dataset"],
+            "dataset_parquet": canonical_parquet,
+            "leakage_audit": canonical["leakage_audit"],
+            "source_selection": canonical["source_selection"],
+            "history_registry_audit": canonical["history_registry_audit"],
+            "summary": canonical["summary"],
+            "active_pointer": active_pointer_path,
+        },
+        summary={
+            "dataset_id": candidate.get("dataset_id", ""),
+            "rows": len(dataset),
+            "status": "ACTIVE_RESEARCH_DATASET",
+            "model_retraining_required": True,
+            "promotion_authority": False,
+        },
+    )
+
+
+def _snapshot_active_trade_dataset(root: Path) -> Path | None:
+    data_ml = root / "data" / "ml"
+    current = data_ml / "trade_training_dataset.csv"
+    if not current.is_file():
+        return None
+    current_hash = _sha256_file(current)
+    snapshot_dir = data_ml / "dataset_builds" / f"superseded_{current_hash[:20]}"
+    receipt_path = snapshot_dir / "dataset_receipt.json"
+    if receipt_path.is_file():
+        return receipt_path
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    artifacts = {
+        "trade_training_dataset.csv": current,
+        "trade_training_dataset.parquet": data_ml / "trade_training_dataset.parquet",
+        "leakage_audit.csv": root / "reports" / "ml" / "leakage_audit.csv",
+        "trade_dataset_source_selection.csv": root
+        / "reports"
+        / "ml"
+        / "trade_dataset_source_selection.csv",
+        "trade_dataset_summary.csv": root
+        / "reports"
+        / "ml"
+        / "trade_dataset_summary.csv",
+    }
+    preserved = []
+    for name, source in artifacts.items():
+        if source.is_file():
+            destination = snapshot_dir / name
+            _link_or_copy(source, destination)
+            preserved.append(name)
+    _write_json(
+        receipt_path,
+        {
+            "schema_version": TRADE_DATASET_BUILD_SCHEMA,
+            "dataset_id": f"superseded_{current_hash[:20]}",
+            "status": "SUPERSEDED_PRESERVED",
+            "preserved_at_utc": _now(),
+            "dataset_sha256": current_hash,
+            "artifacts": preserved,
+            "promotion_authority": False,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+    return receipt_path
+
+
+def _rooted_path(root: Path, value: object) -> Path:
+    path = Path(str(value or ""))
+    return path if path.is_absolute() else root / path
+
+
+def _link_or_copy(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        return
+    try:
+        os.link(source, destination)
+    except OSError:
+        shutil.copyfile(source, destination)
+
+
+def _link_or_copy_atomic(source: Path, destination: Path) -> None:
+    def writer(temporary: Path) -> None:
+        try:
+            os.link(source, temporary)
+        except OSError:
+            shutil.copyfile(source, temporary)
+
+    _atomic_replace_path(destination, writer)
+
+
+def _select_hyperliquid_training_datasets(
+    datasets: list[PairDataset],
+) -> tuple[list[PairDataset], pd.DataFrame]:
+    """Select one deepest point-in-time Hyperliquid history per pair/timeframe."""
+
+    records: list[dict[str, object]] = []
+    for index, dataset in enumerate(datasets):
+        frame = dataset.frame
+        venue_values = frame.get("exchange", pd.Series(dtype=object)).dropna().astype(str)
+        venue = venue_values.iloc[0].strip().lower() if not venue_values.empty else ""
+        venue = "hyperliquid" if "hyperliquid" in venue else venue
+        timeframe_values = pd.Series(dtype=object)
+        for column in ("timeframe", "interval"):
+            if column in frame.columns:
+                timeframe_values = frame[column].dropna().astype(str)
+                if not timeframe_values.empty:
+                    break
+        timeframe = (
+            timeframe_values.iloc[0].strip().lower()
+            if not timeframe_values.empty
+            else ""
+        )
+        timeframe = {
+            "5mins": "5m",
+            "5min": "5m",
+            "daily": "1d",
+            "1day": "1d",
+            "4hour": "4h",
+            "1hour": "1h",
+        }.get(timeframe.replace(" ", ""), timeframe)
+        source_values = frame.get("source_path", pd.Series(dtype=object)).dropna().astype(str)
+        source_path = source_values.iloc[0] if not source_values.empty else ""
+        timestamps = pd.to_datetime(
+            frame.get("timestamp", pd.Series(dtype=object)),
+            utc=True,
+            errors="coerce",
+            format="mixed",
+        ).dropna()
+        records.append(
+            {
+                "dataset_index": index,
+                "pair": dataset.pair,
+                "source_venue": venue,
+                "timeframe": timeframe,
+                "source_path": source_path,
+                "rows": len(frame),
+                "unique_timestamps": int(timestamps.nunique()),
+                "history_start": timestamps.min().isoformat() if not timestamps.empty else "",
+                "history_end": timestamps.max().isoformat() if not timestamps.empty else "",
+                "eligible_target_venue": venue == "hyperliquid",
+            }
+        )
+    audit = pd.DataFrame(records)
+    if audit.empty:
+        return [], audit
+    audit["selection_rank"] = 0
+    audit["selection_status"] = "REJECTED_OUTSIDE_TARGET_VENUE"
+    audit["blocker"] = "source_venue_not_hyperliquid"
+    selected_indices: list[int] = []
+    eligible = audit.loc[audit["eligible_target_venue"]].copy()
+    for _, group in eligible.groupby(
+        ["pair", "source_venue", "timeframe"], dropna=False, sort=True
+    ):
+        ranked = group.sort_values(
+            ["unique_timestamps", "rows", "history_end", "source_path"],
+            ascending=[False, False, False, True],
+        )
+        for rank, row_index in enumerate(ranked.index, start=1):
+            audit.loc[row_index, "selection_rank"] = rank
+            if rank == 1:
+                audit.loc[row_index, "selection_status"] = "SELECTED_CANONICAL"
+                audit.loc[row_index, "blocker"] = ""
+                selected_indices.append(int(audit.loc[row_index, "dataset_index"]))
+            else:
+                audit.loc[row_index, "selection_status"] = (
+                    "REJECTED_OVERLAPPING_HISTORY"
+                )
+                audit.loc[row_index, "blocker"] = (
+                    "deeper_canonical_history_selected_for_same_pair_venue_timeframe"
+                )
+    audit["promotion_authority"] = False
+    audit["testnet_order_authority"] = False
+    audit["live_trading_authorized"] = False
+    selected = [datasets[index] for index in selected_indices]
+    return selected, audit.sort_values(
+        ["eligible_target_venue", "pair", "timeframe", "selection_rank"],
+        ascending=[False, True, True, True],
+    ).reset_index(drop=True)
+
+
+def _training_dataset_lineage(
+    root: Path, input_path: Path | None
+) -> tuple[Path, dict[str, object]]:
+    data_ml = root / "data" / "ml"
+    active_pointer_path = data_ml / "active_trade_dataset.json"
+    active = _read_json(active_pointer_path)
+    if input_path is None and active.get("status") == "ACTIVE_RESEARCH_DATASET":
+        source = _rooted_path(root, active.get("active_dataset_path"))
+        expected_hash = str(active.get("active_dataset_sha256", ""))
+        dataset_id = str(active.get("dataset_id", ""))
+        pointer_used = str(active_pointer_path.relative_to(root))
+    else:
+        source = input_path or data_ml / "trade_training_dataset.csv"
+        expected_hash = ""
+        dataset_id = ""
+        pointer_used = ""
+    if not source.is_file():
+        raise SystemExit(f"trade gate dataset is missing: {source}")
+    actual_hash = _sha256_file(source)
+    if expected_hash and actual_hash != expected_hash:
+        raise SystemExit("active trade dataset hash does not match its pointer")
+    if not dataset_id:
+        dataset_id = f"external_{actual_hash[:20]}"
+    return source, {
+        "training_dataset_id": dataset_id,
+        "training_dataset_sha256": actual_hash,
+        "training_dataset_path": str(
+            source.relative_to(root) if source.is_relative_to(root) else source
+        ),
+        "training_dataset_pointer": pointer_used,
+    }
+
+
+def _snapshot_trade_gate_model(root: Path) -> Path | None:
+    model_dir = root / "models" / "trade_gate"
+    model_path = model_dir / "model.pkl"
+    if not model_path.is_file():
+        return None
+    model_hash = _sha256_file(model_path)
+    snapshot_dir = model_dir / "model_builds" / f"superseded_{model_hash[:20]}"
+    receipt_path = snapshot_dir / "model_receipt.json"
+    if receipt_path.is_file():
+        return receipt_path
+    artifacts = {
+        "model.pkl": model_path,
+        "metrics.json": model_dir / "metrics.json",
+        "feature_schema.json": model_dir / "feature_schema.json",
+        "model_walkforward_predictions.csv": root
+        / "reports"
+        / "ml"
+        / "model_walkforward_predictions.csv",
+        "model_backtest_comparison.csv": root
+        / "reports"
+        / "ml"
+        / "model_backtest_comparison.csv",
+        "model_gated_acceptance.csv": root
+        / "reports"
+        / "ml"
+        / "model_gated_acceptance.csv",
+        "ml_trade_filter_manifest.json": model_dir
+        / "ml_trade_filter_manifest.json",
+    }
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    preserved = []
+    for name, source in artifacts.items():
+        if source.is_file():
+            _link_or_copy(source, snapshot_dir / name)
+            preserved.append(name)
+    _write_json(
+        receipt_path,
+        {
+            "schema_version": "thewiz.trade_gate_model_build.v1",
+            "model_id": f"superseded_{model_hash[:20]}",
+            "model_sha256": model_hash,
+            "status": "SUPERSEDED_PRESERVED",
+            "preserved_at_utc": _now(),
+            "artifacts": preserved,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+    return receipt_path
+
+
+def train_trade_gate(
+    root: Path = ROOT,
+    input_path: Path | None = None,
+    walkforward_splits: int = 5,
+    min_train_rows: int = 100,
+    embargo_periods: int = 1,
+) -> CommandResult:
+    source, dataset_lineage = _training_dataset_lineage(root, input_path)
+    raw_dataset = _read_csv(source)
+    forbidden = sorted(POST_OUTCOME_MEMORY_COLUMNS.intersection(raw_dataset.columns))
+    if forbidden:
+        raise SystemExit(
+            "trade gate dataset contains post-outcome aggregate features: "
+            + ";".join(forbidden)
+        )
+    dataset = _model_dataset_from_hardened(raw_dataset)
     if dataset.empty:
         raise SystemExit(f"trade gate dataset is empty: {source}")
-    study_dir = ML_REPORTS / "trade_gate"
+    ml_reports = root / "reports" / "ml"
+    model_root = root / "models" / "trade_gate"
+    study_dir = ml_reports / "trade_gate"
+    superseded_model_receipt = _snapshot_trade_gate_model(root)
     try:
-        paths = train_trade_filter_walkforward(dataset, output_dir=study_dir, n_splits=walkforward_splits, min_train_rows=min_train_rows)
+        paths = train_trade_filter_walkforward(
+            dataset,
+            output_dir=study_dir,
+            n_splits=walkforward_splits,
+            min_train_rows=min_train_rows,
+            embargo_periods=embargo_periods,
+        )
     except ValueError as exc:
         class_counts = dataset[TARGET_COLUMN].value_counts(dropna=False).to_dict() if TARGET_COLUMN in dataset else {}
         positive_trades = int(class_counts.get(1, 0))
@@ -3020,15 +4050,20 @@ def train_trade_gate(root: Path = ROOT, input_path: Path | None = None, walkforw
             "positive_trades": positive_trades,
             "negative_trades": negative_trades,
             "class_balance_blocker": "requires both profitable and unprofitable labels",
+            **dataset_lineage,
         }
         model_dir = study_dir / "failure"
         model_dir.mkdir(parents=True, exist_ok=True)
         empty_predictions = model_dir / "model_walkforward_predictions.csv"
         _write_json(model_dir / "train_failure.json", {"error": str(exc), "source": str(source), "class_counts": class_counts})
-        failure_predictions = ML_REPORTS / "model_walkforward_predictions.csv"
-        empty_backtest_summary = ML_REPORTS / "model_backtest_comparison.csv"
-        empty_score_bucket = ML_REPORTS / "score_bucket_report.csv"
-        empty_pair_conc = ML_REPORTS / "model_pair_concentration.csv"
+        failure_predictions = ml_reports / "model_walkforward_predictions.csv"
+        empty_backtest_summary = ml_reports / "model_backtest_comparison.csv"
+        empty_score_bucket = ml_reports / "score_bucket_report.csv"
+        empty_pair_conc = ml_reports / "model_pair_concentration.csv"
+        empty_gain_conc = ml_reports / "model_gain_concentration.csv"
+        empty_selection_leaderboard = (
+            ml_reports / "model_selection_leaderboard.csv"
+        )
         _write_csv(pd.DataFrame(), empty_predictions)
         _write_csv(pd.DataFrame(), model_dir / "model_backtest_comparison.csv")
         _write_csv(pd.DataFrame(), model_dir / "score_bucket_report.csv")
@@ -3037,47 +4072,203 @@ def train_trade_gate(root: Path = ROOT, input_path: Path | None = None, walkforw
         _write_csv(pd.DataFrame(), empty_backtest_summary)
         _write_csv(pd.DataFrame(), empty_score_bucket)
         _write_csv(pd.DataFrame(), empty_pair_conc)
+        _write_csv(pd.DataFrame(), empty_gain_conc)
+        _write_csv(pd.DataFrame(), empty_selection_leaderboard)
         _write_json(model_dir / "train_failure.json", {"error": str(exc), "source": str(source), "class_counts": class_counts})
-        _write_json(MODELS / "feature_schema.json", _feature_schema(dataset))
-        _write_json(MODELS / "metrics.json", metrics)
-        _write_csv(_model_acceptance_frame(metrics), ML_REPORTS / "model_gated_acceptance.csv")
+        feature_schema = {**_feature_schema(dataset), **dataset_lineage}
+        _write_json(model_root / "feature_schema.json", feature_schema)
+        _write_json(model_root / "metrics.json", metrics)
+        _write_csv(
+            _model_acceptance_frame(metrics),
+            ml_reports / "model_gated_acceptance.csv",
+        )
         return CommandResult(
             paths={
-                "model": MODELS / "model.pkl",
-                "feature_schema": MODELS / "feature_schema.json",
-                "metrics": MODELS / "metrics.json",
+                "model": model_root / "model.pkl",
+                "feature_schema": model_root / "feature_schema.json",
+                "metrics": model_root / "metrics.json",
                 "predictions": failure_predictions,
+                "selection_leaderboard": empty_selection_leaderboard,
             },
             summary={"accepted": False, "best_model": "", "blocker": str(exc)},
         )
-    MODELS.mkdir(parents=True, exist_ok=True)
-    model_path = MODELS / "model.pkl"
-    shutil.copyfile(paths["best_model"], model_path)
+    model_root.mkdir(parents=True, exist_ok=True)
+    model_path = model_root / "model.pkl"
+    walkforward_manifest_path = model_root / "ml_trade_filter_manifest.json"
+    _link_or_copy_atomic(paths["best_model"], model_path)
+    _link_or_copy_atomic(paths["manifest"], walkforward_manifest_path)
+    walkforward_manifest = _read_json(walkforward_manifest_path)
+    walkforward_manifest_sha256 = _sha256_file(walkforward_manifest_path)
     summary = _read_csv(paths["summary"])
     predictions = _read_csv(paths["predictions"])
-    metrics = _trade_gate_metrics(summary, predictions)
-    feature_schema = _feature_schema(dataset)
+    selection_leaderboard = _read_csv(paths["selection_leaderboard"])
+    metrics = {**_trade_gate_metrics(summary, predictions), **dataset_lineage}
+    model_hash = _sha256_file(model_path)
+    model_id = f"tradegate_{model_hash[:20]}"
+    metrics["model_id"] = model_id
+    metrics["model_sha256"] = model_hash
+    metrics["walkforward_manifest_path"] = str(
+        walkforward_manifest_path.relative_to(root)
+    )
+    metrics["walkforward_manifest_sha256"] = walkforward_manifest_sha256
+    metrics["superseded_model_receipt"] = (
+        str(superseded_model_receipt.relative_to(root))
+        if superseded_model_receipt
+        else ""
+    )
+    selected_model_predictions = _filter_predictions_to_model(
+        predictions, str(metrics.get("best_model", ""))
+    )
+    selected_predictions = _filter_predictions_to_untouched_evaluation(
+        selected_model_predictions
+    )
+    feature_schema = {
+        **_feature_schema(dataset),
+        **dataset_lineage,
+        "model_id": model_id,
+        "model_sha256": model_hash,
+        "walkforward_manifest_path": str(
+            walkforward_manifest_path.relative_to(root)
+        ),
+        "walkforward_manifest_sha256": walkforward_manifest_sha256,
+        "selection_evaluation_boundary_scheme": str(
+            walkforward_manifest.get(
+                "selection_evaluation_boundary_scheme", ""
+            )
+        ),
+        "chronology_gap_folds": walkforward_manifest.get(
+            "chronology_gap_folds", []
+        ),
+        "selection_label_end_boundary": str(
+            walkforward_manifest.get("selection_label_end_boundary", "")
+        ),
+        "untouched_evaluation_start_boundary": str(
+            walkforward_manifest.get(
+                "untouched_evaluation_start_boundary", ""
+            )
+        ),
+    }
     acceptance = _model_acceptance_frame(metrics)
-    bucket_report = _score_bucket_report(predictions)
-    concentration = _model_pair_concentration(predictions)
-    _write_json(MODELS / "feature_schema.json", feature_schema)
-    _write_json(MODELS / "metrics.json", metrics)
-    _write_csv(summary, ML_REPORTS / "model_backtest_comparison.csv")
-    _write_csv(predictions, ML_REPORTS / "model_walkforward_predictions.csv")
-    _write_csv(bucket_report, ML_REPORTS / "score_bucket_report.csv")
-    _write_csv(concentration, ML_REPORTS / "model_pair_concentration.csv")
-    _write_csv(acceptance, ML_REPORTS / "model_gated_acceptance.csv")
+    bucket_report = _score_bucket_report(selected_predictions)
+    concentration = _model_pair_concentration(selected_predictions)
+    gain_concentration = _model_gain_concentration(selected_predictions)
+    _write_json(model_root / "feature_schema.json", feature_schema)
+    _write_json(model_root / "metrics.json", metrics)
+    _write_json(
+        model_root / "model_lineage.json",
+        {
+            "schema_version": "thewiz.trade_gate_model_build.v1",
+            "model_id": model_id,
+            "model_sha256": model_hash,
+            "walkforward_manifest_path": str(
+                walkforward_manifest_path.relative_to(root)
+            ),
+            "walkforward_manifest_sha256": walkforward_manifest_sha256,
+            "selection_isolation_scheme": str(
+                walkforward_manifest.get("selection_isolation_scheme", "")
+            ),
+            "selection_evaluation_boundary_scheme": str(
+                walkforward_manifest.get(
+                    "selection_evaluation_boundary_scheme", ""
+                )
+            ),
+            "chronology_gap_folds": walkforward_manifest.get(
+                "chronology_gap_folds", []
+            ),
+            "selection_label_end_boundary": str(
+                walkforward_manifest.get("selection_label_end_boundary", "")
+            ),
+            "untouched_evaluation_start_boundary": str(
+                walkforward_manifest.get(
+                    "untouched_evaluation_start_boundary", ""
+                )
+            ),
+            **dataset_lineage,
+            "accepted": bool(metrics.get("accepted", False)),
+            "created_at_utc": _now(),
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+    _write_csv(summary, ml_reports / "model_backtest_comparison.csv")
+    _write_csv(predictions, ml_reports / "model_walkforward_predictions.csv")
+    _write_csv(
+        selection_leaderboard,
+        ml_reports / "model_selection_leaderboard.csv",
+    )
+    _write_csv(bucket_report, ml_reports / "score_bucket_report.csv")
+    _write_csv(concentration, ml_reports / "model_pair_concentration.csv")
+    _write_csv(gain_concentration, ml_reports / "model_gain_concentration.csv")
+    _write_csv(acceptance, ml_reports / "model_gated_acceptance.csv")
     return CommandResult(
-        paths={"model": model_path, "feature_schema": MODELS / "feature_schema.json", "metrics": MODELS / "metrics.json"},
-        summary={"accepted": bool(metrics["accepted"]), "best_model": metrics.get("best_model", "")},
+        paths={
+            "model": model_path,
+            "feature_schema": model_root / "feature_schema.json",
+            "metrics": model_root / "metrics.json",
+            "lineage": model_root / "model_lineage.json",
+            "selection_leaderboard": (
+                ml_reports / "model_selection_leaderboard.csv"
+            ),
+        },
+        summary={
+            "accepted": bool(metrics["accepted"]),
+            "best_model": metrics.get("best_model", ""),
+            "model_id": model_id,
+            "training_dataset_id": dataset_lineage["training_dataset_id"],
+        },
     )
 
 
 def run_model_gated_backtest(root: Path = ROOT) -> CommandResult:
-    predictions = _read_csv(ML_REPORTS / "model_walkforward_predictions.csv")
-    predictions = _filter_predictions_to_selected_model(root, predictions)
+    ml_reports = root / "reports" / "ml"
+    model_root = root / "models" / "trade_gate"
+    all_predictions = _read_csv(ml_reports / "model_walkforward_predictions.csv")
+    summary = _read_csv(ml_reports / "model_backtest_comparison.csv")
+    existing_metrics = _read_json(model_root / "metrics.json")
+    metrics = _trade_gate_metrics(summary, all_predictions)
+    selection_leaderboard = model_selection_leaderboard(all_predictions)
+    for key in (
+        "model_id",
+        "model_sha256",
+        "training_dataset_id",
+        "training_dataset_sha256",
+        "training_dataset_path",
+        "training_dataset_pointer",
+        "superseded_model_receipt",
+        "walkforward_manifest_path",
+        "walkforward_manifest_sha256",
+    ):
+        if key in existing_metrics:
+            metrics[key] = existing_metrics[key]
+    selected_model_predictions = _filter_predictions_to_model(
+        all_predictions, str(metrics.get("best_model", ""))
+    )
+    predictions = _filter_predictions_to_untouched_evaluation(
+        selected_model_predictions
+    )
+    _write_json(model_root / "metrics.json", metrics)
+    _write_csv(
+        selection_leaderboard,
+        ml_reports / "model_selection_leaderboard.csv",
+    )
+    _write_csv(
+        _score_bucket_report(predictions), ml_reports / "score_bucket_report.csv"
+    )
+    _write_csv(
+        _model_pair_concentration(predictions),
+        ml_reports / "model_pair_concentration.csv",
+    )
+    _write_csv(
+        _model_gain_concentration(predictions),
+        ml_reports / "model_gain_concentration.csv",
+    )
     if predictions.empty:
-        blocker = "model walk-forward predictions missing; run train-trade-gate first"
+        blocker = str(
+            metrics.get(
+                "blocker",
+                "selected model walk-forward predictions missing; run train-trade-gate first",
+            )
+        )
         acceptance = pd.DataFrame(
             [
                 {
@@ -3103,20 +4294,49 @@ def run_model_gated_backtest(root: Path = ROOT) -> CommandResult:
                 }
             ]
         )
-        _write_csv(acceptance, ML_REPORTS / "model_gated_acceptance.csv")
-        _write_csv(predictions, ML_REPORTS / "model_gated_backtest.csv")
-        _write_csv(pd.DataFrame(), ML_REPORTS / "model_failure_attribution.csv")
+        _write_csv(acceptance, ml_reports / "model_gated_acceptance.csv")
+        _write_csv(predictions, ml_reports / "model_gated_backtest.csv")
+        _write_csv(pd.DataFrame(), ml_reports / "model_failure_attribution.csv")
         model_gate_pair_support_report(root=root)
-        return CommandResult(paths={"backtest": ML_REPORTS / "model_gated_backtest.csv", "acceptance": ML_REPORTS / "model_gated_acceptance.csv", "failures": ML_REPORTS / "model_failure_attribution.csv", "pair_support": ML_REPORTS / "model_gate_pair_support_report.csv"}, summary={"accepted": False, "blocker": blocker})
+        return CommandResult(
+            paths={
+                "backtest": ml_reports / "model_gated_backtest.csv",
+                "acceptance": ml_reports / "model_gated_acceptance.csv",
+                "predictions": ml_reports / "model_walkforward_predictions.csv",
+                "failures": ml_reports / "model_failure_attribution.csv",
+                "pair_support": ml_reports / "model_gate_pair_support_report.csv",
+                "score_buckets": ml_reports / "score_bucket_report.csv",
+                "pair_concentration": ml_reports / "model_pair_concentration.csv",
+                "gain_concentration": ml_reports / "model_gain_concentration.csv",
+                "selection_leaderboard": (
+                    ml_reports / "model_selection_leaderboard.csv"
+                ),
+                "metrics": model_root / "metrics.json",
+            },
+            summary={"accepted": False, "blocker": blocker},
+        )
     comparison = _model_gated_comparison(predictions)
     acceptance = _model_gated_acceptance(comparison)
     failures = _model_failure_attribution(predictions, acceptance, root=root)
-    _write_csv(comparison, ML_REPORTS / "model_gated_backtest.csv")
-    _write_csv(acceptance, ML_REPORTS / "model_gated_acceptance.csv")
-    _write_csv(failures, ML_REPORTS / "model_failure_attribution.csv")
+    _write_csv(comparison, ml_reports / "model_gated_backtest.csv")
+    _write_csv(acceptance, ml_reports / "model_gated_acceptance.csv")
+    _write_csv(failures, ml_reports / "model_failure_attribution.csv")
     pair_support = model_gate_pair_support_report(root=root)
     return CommandResult(
-        paths={"backtest": ML_REPORTS / "model_gated_backtest.csv", "acceptance": ML_REPORTS / "model_gated_acceptance.csv", "failures": ML_REPORTS / "model_failure_attribution.csv", **pair_support.paths},
+        paths={
+            "backtest": ml_reports / "model_gated_backtest.csv",
+            "acceptance": ml_reports / "model_gated_acceptance.csv",
+            "predictions": ml_reports / "model_walkforward_predictions.csv",
+            "failures": ml_reports / "model_failure_attribution.csv",
+            "score_buckets": ml_reports / "score_bucket_report.csv",
+            "pair_concentration": ml_reports / "model_pair_concentration.csv",
+            "gain_concentration": ml_reports / "model_gain_concentration.csv",
+            "selection_leaderboard": (
+                ml_reports / "model_selection_leaderboard.csv"
+            ),
+            "metrics": model_root / "metrics.json",
+            **pair_support.paths,
+        },
         summary={"accepted": bool(acceptance["accepted"].iloc[0]) if not acceptance.empty else False},
     )
 
@@ -3141,6 +4361,9 @@ def export_trade_gate_model(root: Path = ROOT) -> CommandResult:
 def build_command_dashboard(root: Path = ROOT, *, refresh_profile: str = "deep") -> CommandResult:
     from quant_platform.wizard_control_plane import build_wizard_control_plane
 
+    ACTIVE = root / "reports" / "active"
+    DASHBOARD = root / "reports" / "dashboard"
+    ML_REPORTS = root / "reports" / "ml"
     if refresh_profile not in DASHBOARD_REFRESH_PROFILES:
         raise ValueError(f"unsupported dashboard refresh profile: {refresh_profile}")
     DASHBOARD.mkdir(parents=True, exist_ok=True)
@@ -4072,14 +5295,14 @@ def build_command_dashboard(root: Path = ROOT, *, refresh_profile: str = "deep")
     )
 
 
-def archive_from_index(dry_run: bool = True) -> CommandResult:
-    index = _read_csv(ACTIVE / "artifact_index.csv")
+def archive_from_index(dry_run: bool = True, root: Path = ROOT) -> CommandResult:
+    index = _read_csv(root / "reports" / "active" / "artifact_index.csv")
     if index.empty:
         raise SystemExit("artifact index missing; run build-artifact-index first")
     candidates = index[index["safe_to_archive_later"].astype(bool)].copy()
     candidates["planned_action"] = "would_archive" if dry_run else "blocked_by_policy"
     candidates["archive_path"] = candidates["path"].map(lambda p: f"archive/pending/{p}")
-    out = ROOT / "archive" / "archive_manifest.csv"
+    out = root / "archive" / "archive_manifest.csv"
     _write_csv(candidates, out)
     if not dry_run:
         raise SystemExit("archive apply is intentionally blocked until active lineage is reviewed")
@@ -4087,14 +5310,17 @@ def archive_from_index(dry_run: bool = True) -> CommandResult:
 
 
 def _iter_repo_files(root: Path) -> Iterable[Path]:
-    skipped = {".git", "__pycache__"}
-    for path in root.rglob("*"):
-        if not path.is_file():
-            continue
-        rel_parts = path.relative_to(root).parts
-        if any(part in skipped for part in rel_parts):
-            continue
-        yield path
+    for directory, dirnames, filenames in os.walk(root):
+        dirnames[:] = [name for name in dirnames if not _artifact_dir_is_excluded(name)]
+        base = Path(directory)
+        for filename in filenames:
+            if filename in ARTIFACT_EXCLUDED_FILES:
+                continue
+            yield base / filename
+
+
+def _artifact_dir_is_excluded(name: str) -> bool:
+    return name in ARTIFACT_EXCLUDED_DIRS or name.startswith(ARTIFACT_EXCLUDED_DIR_PREFIXES)
 
 
 def _artifact_row(path: Path, root: Path) -> dict[str, object]:
@@ -4116,15 +5342,37 @@ def _artifact_row(path: Path, root: Path) -> dict[str, object]:
 
 
 def _artifact_status(rel: str) -> str:
-    if rel in {".env.local", ".env.example", "pyproject.toml", "README.md", "project_objective.md", "memory.md"}:
+    if rel in {
+        ".env.local",
+        ".env.example",
+        ".gitignore",
+        "mcp.example.json",
+        "pyproject.toml",
+        "README.md",
+        "project_objective.md",
+        "memory.md",
+        "uv.lock",
+    }:
         return "do_not_move"
-    if rel.startswith(("src/", "tests/", "config/", "scripts/", "docs/")):
+    if rel.startswith(
+        ("src/", "tests/", "config/", "scripts/", "docs/", "apps/", ".github/", ".vscode/")
+    ):
         return "active"
-    if rel.startswith(("reports/active/", "reports/dashboard/", "reports/ml/", "data/ml/")):
+    if rel.startswith(
+        (
+            "reports/active/",
+            "reports/dashboard/",
+            "reports/ml/",
+            "data/agent_memory/",
+            "data/fixtures/",
+            "data/ml/",
+            "models/trade_gate/",
+        )
+    ):
         return "active"
-    if rel.startswith(("data/raw/", "data/processed/", "data/meta_learning/", "reports/")):
+    if rel.startswith(("data/", "models/", "reports/", "runs/", "archive/")):
         return "historical_evidence"
-    if rel.startswith(("work/", "outputs/")) or rel.endswith((".log", ".tmp")):
+    if rel.startswith(("work/", "outputs/", "tmp_")) or rel.endswith((".log", ".tmp")):
         return "scratch"
     if ".pytest_cache/" in rel or rel.endswith(".pyc"):
         return "superseded"
@@ -4791,7 +6039,9 @@ def _harden_trade_dataset(frame: pd.DataFrame) -> pd.DataFrame:
     hardened["label_timestamp"] = hardened.get("exit_timestamp", "")
     hardened["uses_dashboard_hindsight"] = False
     hardened["feature_completeness_score"] = hardened.notna().mean(axis=1).round(4)
-    hardened["evidence_path"] = "data/raw/pair_details"
+    hardened["evidence_path"] = hardened.get(
+        "source_path", "data/raw/pair_details"
+    )
     hardened["backtest_label"] = hardened["good_trade"]
     hardened["paper_label"] = ""
     hardened["live_label"] = ""
@@ -4902,6 +6152,10 @@ def _ensure_trade_dataset_inputs(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def _leakage_audit(frame: pd.DataFrame) -> pd.DataFrame:
+    trade_ids = frame.get(
+        "trade_id", pd.Series(range(len(frame)), index=frame.index)
+    ).astype(str)
+    duplicate_identity = trade_ids.duplicated(keep=False)
     entry = pd.to_datetime(frame.get("feature_timestamp", pd.Series(dtype=str)), utc=True, errors="coerce", format="mixed")
     label = pd.to_datetime(frame.get("label_timestamp", pd.Series(dtype=str)), utc=True, errors="coerce", format="mixed")
     returns = pd.to_numeric(frame.get("profit_after_cost", pd.Series(np.nan, index=frame.index)), errors="coerce")
@@ -4910,8 +6164,9 @@ def _leakage_audit(frame: pd.DataFrame) -> pd.DataFrame:
     invalid_label = label.isna() | ~label.dt.year.between(2009, pd.Timestamp.now(tz="UTC").year + 1)
     invalid_return = returns.isna() | ~np.isfinite(returns) | returns.lt(-1.0 - 1e-9)
     blocker = np.select(
-        [invalid_entry, invalid_label, uses_future, invalid_return],
+        [duplicate_identity, invalid_entry, invalid_label, uses_future, invalid_return],
         [
+            "duplicate_trade_identity",
             "invalid_or_missing_feature_timestamp",
             "invalid_or_missing_label_timestamp",
             "feature_timestamp_not_before_label_timestamp",
@@ -4921,7 +6176,9 @@ def _leakage_audit(frame: pd.DataFrame) -> pd.DataFrame:
     )
     return pd.DataFrame(
         {
-            "trade_id": frame.get("trade_id", pd.Series(range(len(frame)))).astype(str),
+            "trade_id": trade_ids,
+            "source_venue": frame.get("source_venue", ""),
+            "source_path": frame.get("source_path", ""),
             "feature_timestamp": frame.get("feature_timestamp", ""),
             "label_timestamp": frame.get("label_timestamp", ""),
             "uses_future_data": uses_future,
@@ -4967,40 +6224,248 @@ def _model_dataset_from_hardened(frame: pd.DataFrame) -> pd.DataFrame:
 def _trade_gate_metrics(summary: pd.DataFrame, predictions: pd.DataFrame) -> dict[str, object]:
     if summary.empty:
         return {"accepted": False, "blocker": "missing_model_summary"}
-    best = summary.sort_values(["promising", "profit_factor_delta", "sharpe_delta"], ascending=[False, False, False]).iloc[0]
+    if "selection_score" not in summary.columns:
+        return {
+            "accepted": False,
+            "blocker": "model_selection_isolation_summary_missing",
+        }
+    replayed_leaderboard = model_selection_leaderboard(predictions)
+    if replayed_leaderboard.empty:
+        return {
+            "accepted": False,
+            "blocker": "model_selection_leaderboard_replay_failed",
+        }
+    best_model = str(replayed_leaderboard.iloc[0]["model_name"])
+    best_rows = summary.loc[
+        summary.get("model_name", pd.Series("", index=summary.index))
+        .astype(str)
+        .eq(best_model)
+    ]
+    if len(best_rows) != 1:
+        return {
+            "accepted": False,
+            "blocker": "selected_model_summary_row_missing_or_duplicated",
+        }
+    best = best_rows.iloc[0]
+    all_selected_predictions = _filter_predictions_to_model(predictions, best_model)
+    selected_predictions = _filter_predictions_to_untouched_evaluation(
+        all_selected_predictions
+    )
+    gain_concentration = _model_gain_concentration(selected_predictions)
+
+    def top_gain_share(dimension: str) -> float:
+        scoped = gain_concentration.loc[
+            gain_concentration.get(
+                "dimension", pd.Series("", index=gain_concentration.index)
+            ).astype(str).eq(dimension)
+        ]
+        if scoped.empty:
+            return 1.0
+        return float(scoped["share_of_positive_returns"].max())
+
+    pair_gain_share = top_gain_share("pair")
+    timeframe_gain_share = top_gain_share("timeframe")
+    regime_gain_share = top_gain_share("regime")
+    strategy_gain_share = top_gain_share("strategy")
+    concentration_limit = 0.50
     checks = {
-        "purged_pair_aware_evaluation": bool(
-            str(best.get("evaluation_scheme", "")) == "purged_embargoed_pair_aware_timestamp_groups"
+        "selected_model_predictions_present": bool(not selected_predictions.empty),
+        "model_winner_replayed": bool(
+            _truthy(replayed_leaderboard.iloc[0].get("chosen_model"))
+            and int(replayed_leaderboard.iloc[0].get("selection_rank", 0)) == 1
         ),
-        "profit_factor_delta_positive": bool(best.get("profit_factor_delta", 0.0) > 0),
-        "filtered_profit_factor_min": bool(best.get("median_filtered_profit_factor", 0.0) >= 1.2),
-        "filtered_sharpe_positive": bool(best.get("median_filtered_sharpe", 0.0) > 0.0),
-        "filtered_drawdown_max": bool(best.get("worst_filtered_drawdown", 1.0) <= 0.30),
-        "drawdown_delta_nonpositive": bool(best.get("drawdown_delta", 0.0) <= 0),
-        "take_rate_min": bool(best.get("median_take_rate", 0.0) >= 0.05),
-        "filtered_trades_min": bool(best.get("total_filtered_trades", 0.0) >= 20),
-        "score_buckets_monotonic": bool(_score_buckets_monotonic(predictions)),
+        "selection_candidate_eligible": _truthy(
+            replayed_leaderboard.iloc[0].get("promising")
+        ),
+        "model_selection_isolation_proven": bool(
+            str(best.get("selection_isolation_scheme", ""))
+            == MODEL_SELECTION_ISOLATION_SCHEME
+            and _model_selection_isolation_proven(all_selected_predictions)
+        ),
+        "training_only_threshold_calibration_proven": (
+            _training_threshold_calibration_proven(all_selected_predictions)
+        ),
+        "globally_purged_pair_aware_evaluation": bool(
+            str(best.get("evaluation_scheme", ""))
+            == GLOBAL_PURGED_SPLIT_SCHEME
+            and _global_label_purge_proven(selected_predictions)
+        ),
+        "profit_factor_delta_positive": bool(
+            best.get("evaluation_profit_factor_delta", 0.0) > 0
+        ),
+        "filtered_profit_factor_min": bool(
+            best.get("evaluation_median_filtered_profit_factor", 0.0) >= 1.2
+        ),
+        "filtered_sharpe_positive": bool(
+            best.get("evaluation_median_filtered_sharpe", 0.0) > 0.0
+        ),
+        "filtered_drawdown_max": bool(
+            best.get("evaluation_worst_filtered_drawdown", 1.0) <= 0.30
+        ),
+        "drawdown_delta_nonpositive": bool(
+            best.get("evaluation_drawdown_delta", 0.0) <= 0
+        ),
+        "take_rate_min": bool(
+            best.get("evaluation_median_take_rate", 0.0)
+            >= MINIMUM_MODEL_GATED_TAKE_RATE
+        ),
+        "filtered_trades_min": bool(
+            best.get("evaluation_total_filtered_trades", 0.0) >= 20
+        ),
+        "score_buckets_monotonic": bool(
+            _score_buckets_monotonic(selected_predictions)
+        ),
+        "pair_gain_concentration_max": pair_gain_share <= concentration_limit,
+        "timeframe_gain_concentration_max": timeframe_gain_share
+        <= concentration_limit,
+        "regime_gain_concentration_max": regime_gain_share
+        <= concentration_limit,
+        "strategy_gain_concentration_max": strategy_gain_share
+        <= concentration_limit,
     }
     accepted = bool(all(checks.values()))
     failing_checks = [name for name, passed in checks.items() if not passed]
     return {
         "accepted": accepted,
-        "best_model": str(best.get("model_name", "")),
-        "profit_factor_delta": float(best.get("profit_factor_delta", 0.0)),
-        "filtered_profit_factor": float(best.get("median_filtered_profit_factor", 0.0)),
-        "filtered_sharpe": float(best.get("median_filtered_sharpe", 0.0)),
-        "filtered_drawdown": float(best.get("worst_filtered_drawdown", 0.0)),
-        "sharpe_delta": float(best.get("sharpe_delta", 0.0)),
-        "drawdown_delta": float(best.get("drawdown_delta", 0.0)),
-        "median_take_rate": float(best.get("median_take_rate", 0.0)),
-        "total_filtered_trades": int(best.get("total_filtered_trades", 0)),
+        "best_model": best_model,
+        "diagnostic_prediction_scope": "selected_model_untouched_evaluation_only",
+        "diagnostic_prediction_rows": len(selected_predictions),
+        "all_model_prediction_rows": len(predictions),
+        "selection_prediction_rows": len(all_selected_predictions)
+        - len(selected_predictions),
+        "models_ranked_for_selection": int(len(replayed_leaderboard)),
+        "selection_score": float(
+            replayed_leaderboard.iloc[0].get("selection_score", 0.0)
+        ),
+        "model_winner_replayed": checks["model_winner_replayed"],
+        "selection_candidate_eligible": checks[
+            "selection_candidate_eligible"
+        ],
+        "profit_factor_delta": float(
+            best.get("evaluation_profit_factor_delta", 0.0)
+        ),
+        "filtered_profit_factor": float(
+            best.get("evaluation_median_filtered_profit_factor", 0.0)
+        ),
+        "filtered_sharpe": float(
+            best.get("evaluation_median_filtered_sharpe", 0.0)
+        ),
+        "filtered_drawdown": float(
+            best.get("evaluation_worst_filtered_drawdown", 0.0)
+        ),
+        "sharpe_delta": float(best.get("evaluation_sharpe_delta", 0.0)),
+        "drawdown_delta": float(best.get("evaluation_drawdown_delta", 0.0)),
+        "median_take_rate": float(
+            best.get("evaluation_median_take_rate", 0.0)
+        ),
+        "total_filtered_trades": int(
+            best.get("evaluation_total_filtered_trades", 0)
+        ),
         "score_buckets_monotonic": checks["score_buckets_monotonic"],
+        "maximum_gain_concentration": concentration_limit,
+        "top_pair_positive_gain_share": pair_gain_share,
+        "top_timeframe_positive_gain_share": timeframe_gain_share,
+        "top_regime_positive_gain_share": regime_gain_share,
+        "top_strategy_positive_gain_share": strategy_gain_share,
         "evaluation_scheme": str(best.get("evaluation_scheme", "")),
+        "selection_isolation_scheme": str(
+            best.get("selection_isolation_scheme", "")
+        ),
+        "selection_evaluation_boundary_scheme": str(
+            best.get("selection_evaluation_boundary_scheme", "")
+        ),
+        "chronology_gap_folds": str(best.get("chronology_gap_folds", "")),
+        "chronology_gap_fold_count": int(
+            best.get("chronology_gap_fold_count", 0) or 0
+        ),
+        "selection_label_end_boundary": str(
+            best.get("selection_label_end_max", "")
+        ),
+        "untouched_evaluation_start_boundary": str(
+            best.get("untouched_evaluation_start", "")
+        ),
+        "selection_folds": int(best.get("selection_folds", 0) or 0),
+        "untouched_evaluation_folds": int(
+            best.get("untouched_evaluation_folds", 0) or 0
+        ),
+        "model_selection_isolation_proven": checks[
+            "model_selection_isolation_proven"
+        ],
+        "training_only_threshold_calibration_proven": checks[
+            "training_only_threshold_calibration_proven"
+        ],
+        "global_label_purge_proven": checks[
+            "globally_purged_pair_aware_evaluation"
+        ],
         "failing_checks": ";".join(failing_checks),
         "blocker": "" if accepted else "model_acceptance_gates_not_met",
         "created_at": _now(),
         "label_source": "backtest_trained",
     }
+
+
+def _training_threshold_calibration_proven(predictions: pd.DataFrame) -> bool:
+    required = {
+        "threshold_calibration_scheme",
+        "minimum_training_take_rate",
+        "training_take_rate_at_threshold",
+        "training_take_rate_floor_pass",
+    }
+    if predictions.empty or not required.issubset(predictions.columns):
+        return False
+    minimum = pd.to_numeric(
+        predictions["minimum_training_take_rate"], errors="coerce"
+    )
+    observed = pd.to_numeric(
+        predictions["training_take_rate_at_threshold"], errors="coerce"
+    )
+    floor_pass = predictions["training_take_rate_floor_pass"].map(_truthy)
+    return bool(
+        predictions["threshold_calibration_scheme"]
+        .astype(str)
+        .eq(THRESHOLD_CALIBRATION_SCHEME)
+        .all()
+        and minimum.notna().all()
+        and minimum.eq(MINIMUM_TRAINING_TAKE_RATE).all()
+        and observed.notna().all()
+        and observed.ge(minimum).all()
+        and floor_pass.all()
+    )
+
+
+def _global_label_purge_proven(predictions: pd.DataFrame) -> bool:
+    required = {
+        "split_scheme",
+        "global_label_purge",
+        "global_label_overlap_rows_after_purge",
+        "test_start",
+        "train_label_end_max",
+    }
+    if predictions.empty or not required.issubset(predictions.columns):
+        return False
+    test_start = pd.to_datetime(
+        predictions["test_start"], utc=True, errors="coerce", format="mixed"
+    )
+    train_label_end = pd.to_datetime(
+        predictions["train_label_end_max"],
+        utc=True,
+        errors="coerce",
+        format="mixed",
+    )
+    overlap_after = pd.to_numeric(
+        predictions["global_label_overlap_rows_after_purge"], errors="coerce"
+    )
+    return bool(
+        predictions["split_scheme"].astype(str).eq(
+            GLOBAL_PURGED_SPLIT_SCHEME
+        ).all()
+        and predictions["global_label_purge"].map(_truthy).all()
+        and overlap_after.notna().all()
+        and overlap_after.eq(0).all()
+        and test_start.notna().all()
+        and train_label_end.notna().all()
+        and train_label_end.lt(test_start).all()
+    )
 
 
 def _feature_schema(dataset: pd.DataFrame) -> dict[str, object]:
@@ -5025,6 +6490,21 @@ def _model_acceptance_frame(metrics: dict[str, object]) -> pd.DataFrame:
                 "take_rate": metrics.get("median_take_rate", 0.0),
                 "trades": metrics.get("total_filtered_trades", 0),
                 "score_buckets_monotonic": metrics.get("score_buckets_monotonic", False),
+                "maximum_gain_concentration": metrics.get(
+                    "maximum_gain_concentration", 0.50
+                ),
+                "top_pair_positive_gain_share": metrics.get(
+                    "top_pair_positive_gain_share", 1.0
+                ),
+                "top_timeframe_positive_gain_share": metrics.get(
+                    "top_timeframe_positive_gain_share", 1.0
+                ),
+                "top_regime_positive_gain_share": metrics.get(
+                    "top_regime_positive_gain_share", 1.0
+                ),
+                "top_strategy_positive_gain_share": metrics.get(
+                    "top_strategy_positive_gain_share", 1.0
+                ),
                 "failing_checks": metrics.get("failing_checks", ""),
                 "acceptance_reason": "passed"
                 if metrics.get("accepted", False)
@@ -5295,8 +6775,136 @@ def _filter_predictions_to_selected_model(root: Path, predictions: pd.DataFrame)
                 chosen_model = ""
     if not chosen_model:
         return predictions
-    filtered = predictions[predictions["model_name"].astype(str) == chosen_model].copy()
-    return filtered if not filtered.empty else predictions
+    selected = _filter_predictions_to_model(predictions, chosen_model)
+    if "selection_phase" not in selected.columns:
+        return selected
+    return _filter_predictions_to_untouched_evaluation(selected)
+
+
+def _filter_predictions_to_model(
+    predictions: pd.DataFrame, model_name: str
+) -> pd.DataFrame:
+    if (
+        predictions.empty
+        or not model_name
+        or "model_name" not in predictions.columns
+    ):
+        return pd.DataFrame(columns=predictions.columns)
+    return predictions.loc[
+        predictions["model_name"].astype(str).eq(model_name)
+    ].copy()
+
+
+def _filter_predictions_to_untouched_evaluation(
+    predictions: pd.DataFrame,
+) -> pd.DataFrame:
+    if predictions.empty or "selection_phase" not in predictions.columns:
+        return pd.DataFrame(columns=predictions.columns)
+    return predictions.loc[
+        predictions["selection_phase"]
+        .astype(str)
+        .eq(UNTOUCHED_EVALUATION_PHASE)
+    ].copy()
+
+
+def _model_selection_isolation_proven(
+    predictions: pd.DataFrame,
+    *,
+    minimum_selection_folds: int = 1,
+    minimum_evaluation_folds: int = 1,
+) -> bool:
+    required = {
+        "trade_id",
+        "fold",
+        "selection_phase",
+        "selection_isolation_scheme",
+        "selection_evaluation_boundary_scheme",
+        "chronology_gap_folds",
+        "selection_label_end_boundary",
+        "untouched_evaluation_start_boundary",
+        "entry_timestamp",
+        "exit_timestamp",
+    }
+    if predictions.empty or not required.issubset(predictions.columns):
+        return False
+    if (
+        predictions["trade_id"].fillna("").astype(str).str.strip().eq("").any()
+        or predictions["trade_id"].astype(str).duplicated().any()
+        or not predictions["selection_isolation_scheme"]
+        .astype(str)
+        .eq(MODEL_SELECTION_ISOLATION_SCHEME)
+        .all()
+        or not predictions["selection_evaluation_boundary_scheme"]
+        .astype(str)
+        .eq(MODEL_SELECTION_BOUNDARY_SCHEME)
+        .all()
+    ):
+        return False
+    phases = predictions["selection_phase"].astype(str)
+    if set(phases) != {MODEL_SELECTION_PHASE, UNTOUCHED_EVALUATION_PHASE}:
+        return False
+    selection = predictions.loc[phases.eq(MODEL_SELECTION_PHASE)].copy()
+    evaluation = predictions.loc[
+        phases.eq(UNTOUCHED_EVALUATION_PHASE)
+    ].copy()
+    selection_folds = set(selection["fold"].dropna().astype(str)) - {""}
+    evaluation_folds = set(evaluation["fold"].dropna().astype(str)) - {""}
+    if (
+        len(selection_folds) < minimum_selection_folds
+        or len(evaluation_folds) < minimum_evaluation_folds
+        or selection_folds.intersection(evaluation_folds)
+    ):
+        return False
+    selection_entry = pd.to_datetime(
+        selection["entry_timestamp"], utc=True, errors="coerce", format="mixed"
+    )
+    selection_exit = pd.to_datetime(
+        selection["exit_timestamp"], utc=True, errors="coerce", format="mixed"
+    )
+    evaluation_entry = pd.to_datetime(
+        evaluation["entry_timestamp"], utc=True, errors="coerce", format="mixed"
+    )
+    evaluation_exit = pd.to_datetime(
+        evaluation["exit_timestamp"], utc=True, errors="coerce", format="mixed"
+    )
+    selection_boundary = pd.to_datetime(
+        predictions["selection_label_end_boundary"],
+        utc=True,
+        errors="coerce",
+        format="mixed",
+    )
+    evaluation_boundary = pd.to_datetime(
+        predictions["untouched_evaluation_start_boundary"],
+        utc=True,
+        errors="coerce",
+        format="mixed",
+    )
+    if any(
+        series.isna().any()
+        for series in (
+            selection_entry,
+            selection_exit,
+            evaluation_entry,
+            evaluation_exit,
+            selection_boundary,
+            evaluation_boundary,
+        )
+    ):
+        return False
+    if (
+        selection_boundary.nunique() != 1
+        or evaluation_boundary.nunique() != 1
+        or selection_boundary.iloc[0] >= evaluation_boundary.iloc[0]
+        or selection_exit.max() != selection_boundary.iloc[0]
+        or evaluation_entry.min() != evaluation_boundary.iloc[0]
+    ):
+        return False
+    return bool(
+        selection_entry.max() < evaluation_entry.min()
+        and selection_exit.max() < evaluation_entry.min()
+        and selection_entry.lt(selection_exit).all()
+        and evaluation_entry.lt(evaluation_exit).all()
+    )
 
 
 def _score_bucket_report(predictions: pd.DataFrame) -> pd.DataFrame:
@@ -5307,6 +6915,12 @@ def _score_bucket_report(predictions: pd.DataFrame) -> pd.DataFrame:
     grouped = frame.groupby("score_bucket", observed=False)[RETURN_COLUMN].agg(["count", "mean"]).reset_index()
     grouped = grouped.rename(columns={"count": "rows", "mean": "mean_return"})
     grouped["monotonic"] = _score_buckets_monotonic(predictions)
+    grouped["model_name"] = (
+        str(predictions["model_name"].iloc[0])
+        if "model_name" in predictions and not predictions.empty
+        else ""
+    )
+    grouped["diagnostic_scope"] = "selected_model_oos_only"
     return grouped
 
 
@@ -5340,7 +6954,90 @@ def _model_pair_concentration(predictions: pd.DataFrame) -> pd.DataFrame:
     grouped = predictions.groupby("pair").agg(rows=("pair", "size"), taken_rows=(take_col, "sum")).reset_index()
     total = max(float(grouped["taken_rows"].sum()), 1.0)
     grouped["share_of_taken"] = grouped["taken_rows"] / total
+    grouped["model_name"] = (
+        str(predictions["model_name"].iloc[0])
+        if "model_name" in predictions and not predictions.empty
+        else ""
+    )
+    grouped["diagnostic_scope"] = "selected_model_oos_only"
     return grouped.sort_values("share_of_taken", ascending=False)
+
+
+def _model_gain_concentration(predictions: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        "dimension",
+        "value",
+        "rows",
+        "taken_rows",
+        "taken_return_sum",
+        "positive_return_sum",
+        "share_of_taken",
+        "share_of_positive_returns",
+        "model_name",
+        "diagnostic_scope",
+    ]
+    if predictions.empty or RETURN_COLUMN not in predictions:
+        return pd.DataFrame(columns=columns)
+    frame = predictions.copy()
+    if "shadow_take" in frame:
+        taken = frame["shadow_take"].map(_truthy)
+    elif "probability_profitable" in frame:
+        threshold = pd.to_numeric(
+            frame.get("threshold", pd.Series(0.70, index=frame.index)),
+            errors="coerce",
+        ).fillna(0.70)
+        taken = pd.to_numeric(
+            frame["probability_profitable"], errors="coerce"
+        ).fillna(0.0).ge(threshold)
+    else:
+        taken = pd.Series(False, index=frame.index)
+    frame["_taken"] = taken
+    frame["_return"] = pd.to_numeric(
+        frame[RETURN_COLUMN], errors="coerce"
+    ).fillna(0.0)
+    frame["_positive_return"] = frame["_return"].clip(lower=0.0).where(
+        frame["_taken"], 0.0
+    )
+    total_taken = max(int(frame["_taken"].sum()), 1)
+    total_positive = float(frame["_positive_return"].sum())
+    model_name = (
+        str(frame["model_name"].iloc[0]) if "model_name" in frame else ""
+    )
+    rows: list[dict[str, object]] = []
+    dimensions = {
+        "pair": "pair",
+        "timeframe": "timeframe",
+        "regime": "regime",
+        "strategy": "strategy_name",
+    }
+    for dimension, column in dimensions.items():
+        if column not in frame.columns:
+            continue
+        for value, group in frame.groupby(column, dropna=False, sort=True):
+            group_taken = group["_taken"]
+            positive_sum = float(group["_positive_return"].sum())
+            rows.append(
+                {
+                    "dimension": dimension,
+                    "value": str(value),
+                    "rows": len(group),
+                    "taken_rows": int(group_taken.sum()),
+                    "taken_return_sum": float(
+                        group.loc[group_taken, "_return"].sum()
+                    ),
+                    "positive_return_sum": positive_sum,
+                    "share_of_taken": float(group_taken.sum() / total_taken),
+                    "share_of_positive_returns": (
+                        positive_sum / total_positive if total_positive > 0 else 1.0
+                    ),
+                    "model_name": model_name,
+                    "diagnostic_scope": "selected_model_oos_only",
+                }
+            )
+    return pd.DataFrame(rows, columns=columns).sort_values(
+        ["dimension", "share_of_positive_returns"],
+        ascending=[True, False],
+    )
 
 
 def _model_gated_comparison(predictions: pd.DataFrame) -> pd.DataFrame:
@@ -5392,7 +7089,7 @@ def _model_gated_acceptance(comparison: pd.DataFrame) -> pd.DataFrame:
         and gated["total_return"] > 0.0
         and gated["max_drawdown"] <= raw["max_drawdown"]
         and gated["trades"] >= 20
-        and gated["take_rate"] >= 0.05
+        and gated["take_rate"] >= MINIMUM_MODEL_GATED_TAKE_RATE
     )
     return pd.DataFrame(
         [
@@ -5960,7 +7657,7 @@ def paper_candidate_shortlist_rows(
     universe["acceptance_score"] = pd.to_numeric(universe.get("acceptance_score", pd.Series(dtype=float)), errors="coerce").fillna(0.0)
     universe["funding_drag_bps"] = pd.to_numeric(universe.get("funding_drag_bps", pd.Series(dtype=float)), errors="coerce").fillna(0.0)
     universe = _attach_rl_shortlist_context(universe, rl_summary)
-    universe = _attach_native_shortlist_context(universe, native_focus)
+    universe = _attach_native_shortlist_context(universe, native_focus, root=root)
     unsupported_model_support_statuses = {
         "no_model_support",
         "pair_missing_from_model_predictions",
@@ -6045,7 +7742,9 @@ def paper_candidate_shortlist_rows(
         wizard_additions = wizard_validated[~wizard_validated.get("pair", pd.Series(dtype=object)).astype(str).isin(shortlist_pairs)].copy()
         shortlist = pd.concat([wizard_additions, shortlist], ignore_index=True, sort=False) if not wizard_additions.empty else shortlist
         shortlist = _attach_rl_shortlist_context(shortlist, rl_summary)
-        shortlist = _attach_native_shortlist_context(shortlist, native_focus)
+        shortlist = _attach_native_shortlist_context(
+            shortlist, native_focus, root=root
+        )
 
     shortlisted_visible = _filter_shortlist_to_visible_dydx_markets(shortlist)
     if not shortlisted_visible.empty:
@@ -6336,14 +8035,17 @@ def focused_paper_validation_rows(root: Path = ROOT) -> pd.DataFrame:
 
     rows: list[dict[str, object]] = []
     for _, row in shortlist.iterrows():
-        pair_model_support = str(row.get("pair_model_support_status", "") or "")
+        pair_model_support = (
+            str(row.get("pair_model_support_status", "") or "").strip()
+            or "model_predictions_missing"
+        )
         pair_support_row = _match_row(pair_support, str(row.get("pair", "")), "pair")
         model_gate_repair_action = (
             str(pair_support_row.get("recommended_repair_action", "") or "")
             if pair_support_row is not None
             else ""
         )
-        if pair_model_support and pair_model_support != "strong_model_support":
+        if pair_model_support != "strong_model_support":
             validation_status = "hold_for_pair_specific_model_support"
             next_action = "improve pair-specific model support before focused paper validation"
         elif global_paper_ready and model_accepted:
@@ -6390,9 +8092,14 @@ def focused_paper_validation_rows(root: Path = ROOT) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=columns)
 
 
-def _attach_native_shortlist_context(shortlist: pd.DataFrame, native_focus: pd.DataFrame) -> pd.DataFrame:
+def _attach_native_shortlist_context(
+    shortlist: pd.DataFrame,
+    native_focus: pd.DataFrame,
+    *,
+    root: Path = ROOT,
+) -> pd.DataFrame:
     enriched = shortlist.copy()
-    enriched["pair_model_support_status"] = ""
+    enriched["pair_model_support_status"] = "model_predictions_missing"
     enriched["pair_model_taken_trades"] = 0
     enriched["pair_model_profit_factor"] = 0.0
     enriched["pair_model_mean_return"] = 0.0
@@ -6400,7 +8107,9 @@ def _attach_native_shortlist_context(shortlist: pd.DataFrame, native_focus: pd.D
     focus_sources: list[pd.DataFrame] = []
     if not native_focus.empty and "pair" in native_focus.columns:
         focus_sources.append(native_focus.copy())
-    model_gate_pairs = _read_csv(ROOT / "reports" / "ml" / "model_gate_pair_support_report.csv")
+    model_gate_pairs = _read_csv(
+        root / "reports" / "ml" / "model_gate_pair_support_report.csv"
+    )
     if not model_gate_pairs.empty and "pair" in model_gate_pairs.columns:
         focus_sources.append(
             model_gate_pairs.rename(
@@ -6437,7 +8146,14 @@ def _attach_native_shortlist_context(shortlist: pd.DataFrame, native_focus: pd.D
         return None
 
     enriched["pair_model_support_status"] = enriched["pair"].map(
-        lambda pair: str(_focus_row(pair).get("pair_model_support_status", "") or "") if _focus_row(pair) is not None else ""
+        lambda pair: str(
+            _focus_row(pair).get(
+                "pair_model_support_status", "model_predictions_missing"
+            )
+            or "model_predictions_missing"
+        )
+        if _focus_row(pair) is not None
+        else "model_predictions_missing"
     )
     enriched["pair_model_taken_trades"] = enriched["pair"].map(
         lambda pair: int(pd.to_numeric(pd.Series([_focus_row(pair).get("pair_model_taken_trades", 0) if _focus_row(pair) is not None else 0]), errors="coerce").fillna(0).iloc[0])
@@ -6674,6 +8390,14 @@ def _read_json(path: Path) -> dict[str, object]:
         return {}
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _configured_env_key_present(root: Path, key: str) -> bool:
     """Check process or local-file configuration without loading secret values."""
 
@@ -6771,6 +8495,133 @@ def _max_drawdown(returns: pd.Series) -> float:
 
 def _exists(path: Path) -> bool:
     return path.exists()
+
+
+def _seven_stage_state_rows(root: Path) -> list[dict[str, object]]:
+    path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
+    frame = _read_csv(path)
+    required = {"stage", "objective", "status", "evidence_progress", "blocker", "next_action"}
+    if frame.empty or not required.issubset(frame.columns):
+        return [
+            _state_row(
+                "seven_stage_checkpoint",
+                False,
+                "seven_stage_checkpoint_missing_or_invalid",
+                path,
+                "run the corrective program checkpoint builder",
+            )
+        ]
+
+    rows: list[dict[str, object]] = []
+    for _, source in frame.sort_values("stage", key=lambda values: pd.to_numeric(values, errors="coerce")).iterrows():
+        stage = str(source.get("stage", "")).strip()
+        status = str(source.get("status", "BLOCKED")).strip().upper() or "BLOCKED"
+        ready = status == "PASS"
+        blocker = str(source.get("blocker", "") or "").strip()
+        evidence_progress = str(source.get("evidence_progress", "") or "").strip()
+        rows.append(
+            {
+                "area": f"seven_stage_{stage}",
+                "ready": ready,
+                "status": status,
+                "blocker": "" if ready else blocker or f"stage_{stage}_{status.lower()}",
+                "detail": evidence_progress,
+                "pair": "",
+                "candidate_id": "",
+                "setup_identity": "",
+                "setup_role": "",
+                "setup_status": status,
+                "setup_blocker": "" if ready else blocker,
+                "evidence_path": str(path),
+                "next_action": str(source.get("next_action", "") or "").strip(),
+            }
+        )
+    return rows
+
+
+def _active_layer_state_row(root: Path) -> dict[str, object]:
+    path = root / "reports" / "active" / "artifact_index.csv"
+    frame = _read_csv(path)
+    if frame.empty or not set(ARTIFACT_COLUMNS).issubset(frame.columns):
+        return _state_row(
+            "active_layer",
+            False,
+            "artifact_index_missing_or_invalid",
+            path,
+            "run build-artifact-index",
+        )
+    indexed_paths = frame["path"].fillna("").astype(str)
+    polluted = indexed_paths.map(lambda value: any(_artifact_dir_is_excluded(part) for part in Path(value).parts))
+    pollution_count = int(polluted.sum())
+    unknown_count = int(frame["status"].fillna("").astype(str).eq("unknown").sum())
+    ready = pollution_count == 0
+    return {
+        "area": "active_layer",
+        "ready": ready,
+        "status": "ready" if ready else "blocked",
+        "blocker": "" if ready else f"artifact_index_contains_generated_dependency_paths:{pollution_count}",
+        "detail": f"artifacts={len(frame)};unknown={unknown_count};excluded_path_violations={pollution_count}",
+        "pair": "",
+        "candidate_id": "",
+        "setup_identity": "",
+        "setup_role": "",
+        "setup_status": "ready" if ready else "blocked",
+        "setup_blocker": "" if ready else "artifact_index_contains_generated_dependency_paths",
+        "evidence_path": str(path),
+        "next_action": "review unknown classifications" if ready and unknown_count else "run build-artifact-index",
+    }
+
+
+def _model_authority_state_row(root: Path) -> dict[str, object]:
+    authority_path = root / "reports" / "active" / "model_authority_status.json"
+    model_path = root / "models" / "trade_gate" / "model.pkl"
+    authority = _read_json(authority_path)
+    if not authority:
+        return _state_row(
+            "trade_gate_model",
+            False,
+            "model_authority_status_missing",
+            authority_path,
+            "run corrective agent governance after training",
+        )
+
+    authority_status = str(authority.get("model_authority", "RESEARCH_ONLY")).strip().upper()
+    blockers = authority.get("blockers", [])
+    if not isinstance(blockers, list):
+        blockers = [str(blockers)]
+    blockers = [str(value).strip() for value in blockers if str(value).strip()]
+    ready = bool(
+        model_path.exists()
+        and authority_status not in {"", "RESEARCH_ONLY", "BLOCKED", "NOT_AUTHORIZED"}
+        and authority.get("out_of_sample_incremental_edge_accepted") is True
+        and authority.get("score_buckets_monotonic") is True
+        and authority.get("rl_out_of_sample_accepted") is True
+    )
+    blocker = "" if ready else ";".join(blockers) or f"model_authority_{authority_status.lower()}"
+    return {
+        "area": "trade_gate_model",
+        "ready": ready,
+        "status": authority_status or "BLOCKED",
+        "blocker": blocker,
+        "detail": (
+            f"artifact_exists={model_path.exists()};authority={authority_status};"
+            f"oos_edge={bool(authority.get('out_of_sample_incremental_edge_accepted', False))};"
+            f"monotonic={bool(authority.get('score_buckets_monotonic', False))};"
+            f"rl_oos={bool(authority.get('rl_out_of_sample_accepted', False))}"
+        ),
+        "pair": "",
+        "candidate_id": "",
+        "setup_identity": "",
+        "setup_role": "",
+        "setup_status": authority_status or "BLOCKED",
+        "setup_blocker": blocker,
+        "evidence_path": str(authority_path),
+        "next_action": (
+            "retain the model for research only and resolve every recorded blocker"
+            if not ready
+            else "retain accepted model lineage and monitor out-of-sample evidence"
+        ),
+    }
 
 
 def _acceptance_ready(root: Path) -> bool:

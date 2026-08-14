@@ -22,6 +22,7 @@ from quant_platform.three_brain_system import (
     build_wizard_dashboard_investigation,
     _normalize_wizard_blocker_chain,
     _native_forward_walk_diagnosis,
+    _paper_route_followup_action,
     _wizard_repair_loop_action,
     _shadow_evidence_quality_status,
     _wizard_exact_mode_capture_status,
@@ -29,6 +30,12 @@ from quant_platform.three_brain_system import (
     build_wizard_specialist_lane,
     build_native_specialist_lane,
 )
+
+
+def test_paper_route_followup_action_handles_blocked_and_unknown_statuses():
+    assert _paper_route_followup_action({"paper_status": "blocked"}) == "clear_paper_route_blocker_then_recheck_candidate"
+    assert _paper_route_followup_action({"paper_status": "manual_review"}) == "recheck_candidate_against_current_paper_route"
+    assert _paper_route_followup_action({}) == ""
 from quant_platform.rl.brain_contract import build_phase1_readiness_surfaces
 from quant_platform.wizard_evidence import build_wizard_evidence, build_wizard_strategy_alignment_report
 

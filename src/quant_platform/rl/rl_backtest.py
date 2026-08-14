@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import math
+import hashlib
 import json
+import math
+import os
+import shutil
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import ROOT, CommandResult
 from quant_platform.rl.features import (
     attach_copula_dashboard_features,
     build_rl_feature_frame,
@@ -17,7 +20,24 @@ from quant_platform.rl.features import (
 from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
 
 
-def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
+def run_rl_research(
+    root: Path = ROOT,
+    pair_id: str = "",
+    *,
+    train_fraction: float = 0.60,
+    validation_fraction: float = 0.20,
+    minimum_rows: tuple[int, int, int] = (50, 30, 30),
+    entry_threshold_quantile: float = 0.70,
+) -> CommandResult:
+    if (
+        not 0.0 < float(train_fraction) < 1.0
+        or not 0.0 < float(validation_fraction) < 1.0
+        or float(train_fraction) + float(validation_fraction) >= 1.0
+        or len(minimum_rows) != 3
+        or any(int(value) <= 0 for value in minimum_rows)
+        or not 0.0 <= float(entry_threshold_quantile) <= 1.0
+    ):
+        raise ValueError("invalid registered RL partition or calibration parameters")
     reports = root / "reports" / "rl"
     dashboard = root / "reports" / "dashboard"
     models = root / "models" / "rl"
@@ -25,7 +45,26 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
     dashboard.mkdir(parents=True, exist_ok=True)
     models.mkdir(parents=True, exist_ok=True)
 
+    active_pointer_path = root / "data" / "ml" / "active_trade_dataset.json"
+    active_pointer = _read_json(active_pointer_path)
     dataset_path = root / "data" / "ml" / "trade_training_dataset.csv"
+    if str(active_pointer.get("status", "")) == "ACTIVE_RESEARCH_DATASET":
+        pointed_path = Path(str(active_pointer.get("active_dataset_path", "")))
+        dataset_path = pointed_path if pointed_path.is_absolute() else root / pointed_path
+    expected_dataset_hash = str(active_pointer.get("active_dataset_sha256", ""))
+    actual_dataset_hash = _sha256_file(dataset_path) if dataset_path.is_file() else ""
+    dataset_id = str(active_pointer.get("dataset_id", ""))
+    dataset_lineage_ready = bool(
+        dataset_id
+        and expected_dataset_hash
+        and actual_dataset_hash == expected_dataset_hash
+    )
+    dataset_lineage = {
+        "training_dataset_id": dataset_id,
+        "training_dataset_sha256": actual_dataset_hash,
+        "training_dataset_pointer": str(active_pointer_path.relative_to(root)),
+        "dataset_lineage_ready": dataset_lineage_ready,
+    }
     dataset = _read_csv(dataset_path)
     copula_journal_path = root / "reports" / "active" / "wizard_research_journal.csv"
     copula_journal = _read_csv(copula_journal_path)
@@ -34,7 +73,7 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
         dataset = dataset[dataset["pair"].astype(str).str.replace("/", "-").str.contains(pair_id.replace("/", "-"), case=False, regex=False)]
         if not copula_join_audit.empty:
             copula_join_audit = copula_join_audit[copula_join_audit["pair"].astype(str).str.replace("/", "-").str.contains(pair_id.replace("/", "-"), case=False, regex=False)]
-    blocker = ""
+    blocker = "" if dataset_lineage_ready else "rl_active_dataset_lineage_not_ready"
     if dataset.empty:
         blocker = "missing_trade_dataset"
     leaked = leakage_columns(dataset.columns) if not dataset.empty else []
@@ -54,7 +93,9 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
         "dashboard_blocked_actions": dashboard / "rl_blocked_actions.csv",
         "training_report_json": models / "training_report.json",
         "acceptance_report_json": models / "acceptance_report.json",
+        "lineage_report_json": models / "rl_lineage.json",
     }
+    superseded_receipt = _snapshot_rl_research_outputs(root, paths)
     write_feature_schema(paths["feature_schema"])
     join_statuses = copula_join_audit.get("join_status", pd.Series(dtype=str)).value_counts().to_dict()
     leakage_audit = pd.DataFrame(
@@ -87,10 +128,18 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
 
         feature_source = dataset.drop(columns=leaked, errors="ignore")
         features = build_rl_feature_frame(feature_source)
-        ordered, partitions, split_audit = _chronological_rl_partitions(dataset)
+        ordered, partitions, split_audit = _chronological_rl_partitions(
+            dataset,
+            train_fraction=float(train_fraction),
+            validation_fraction=float(validation_fraction),
+            minimum_rows=tuple(int(value) for value in minimum_rows),
+        )
         split_ready = bool(not split_audit.empty and split_audit["status"].eq("ready").all())
         calibration = partitions.get("train", pd.DataFrame()) if split_ready else ordered
-        policy_plan = _build_policy(calibration)
+        policy_plan = _build_policy(
+            calibration,
+            entry_threshold_quantile=float(entry_threshold_quantile),
+        )
         evaluation_rows: list[dict[str, object]] = []
         per_trade_frames: list[pd.DataFrame] = []
         splits = (("validation", "validation"), ("test", "held_out_test")) if split_ready else (("diagnostic", "diagnostic_full_sample"),)
@@ -154,6 +203,20 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
         "ready" if not split_audit.empty and split_audit.get("status", pd.Series(dtype=str)).eq("ready").all() else "blocked"
     )
     leakage_audit["split_evidence_path"] = str(paths["split_audit"])
+    for frame in (
+        training,
+        evaluation,
+        per_trade_log,
+        acceptance,
+        blocked,
+        leakage_audit,
+        split_audit,
+        copula_join_audit,
+    ):
+        for key, value in dataset_lineage.items():
+            frame[key] = value
+        frame["testnet_order_authority"] = False
+        frame["live_trading_authorized"] = False
     training.to_csv(paths["training_report"], index=False)
     evaluation.to_csv(paths["evaluation_report"], index=False)
     per_trade_log.to_csv(paths["execution_backtest"], index=False)
@@ -165,9 +228,75 @@ def run_rl_research(root: Path = ROOT, pair_id: str = "") -> CommandResult:
     training.to_csv(paths["dashboard_research_status"], index=False)
     acceptance.to_csv(paths["dashboard_acceptance"], index=False)
     blocked.to_csv(paths["dashboard_blocked_actions"], index=False)
+    feature_schema = _read_json(paths["feature_schema"])
+    feature_schema.update(
+        {
+            **dataset_lineage,
+            "policy_action_inputs": [
+                "entry_abs_zscore",
+                "realized_volatility_percentile",
+                "timeframe",
+            ],
+            "forbidden_policy_action_inputs": [
+                "hold_bars",
+                "trade_bars",
+                "max_adverse_excursion",
+                "max_favorable_excursion",
+                "exit_timestamp",
+            ],
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        }
+    )
+    paths["feature_schema"].write_text(
+        json.dumps(feature_schema, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    lineage_report = {
+        "schema_version": "thewiz.rl_research_lineage.v1",
+        **dataset_lineage,
+        "copula_journal_sha256": (
+            _sha256_file(copula_journal_path)
+            if copula_journal_path.is_file()
+            else ""
+        ),
+        "superseded_rl_receipt": (
+            str(superseded_receipt.relative_to(root))
+            if superseded_receipt
+            else ""
+        ),
+        "accepted": bool(
+            acceptance.get("accepted", pd.Series([False])).iloc[0]
+        ),
+        "policy_action_uses_realized_hold_duration": False,
+        "mae_mfe_exit_simulation": "conservative_retrospective_research_proxy",
+        "registered_policy_parameters": {
+            "train_fraction": float(train_fraction),
+            "validation_fraction": float(validation_fraction),
+            "minimum_rows": [int(value) for value in minimum_rows],
+            "entry_threshold_quantile": float(entry_threshold_quantile),
+        },
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    paths["lineage_report_json"].write_text(
+        json.dumps(lineage_report, indent=2, sort_keys=True), encoding="utf-8"
+    )
     paths["training_report_json"].write_text(json.dumps(training.iloc[0].to_dict(), indent=2, sort_keys=True), encoding="utf-8")
     paths["acceptance_report_json"].write_text(json.dumps(acceptance.iloc[0].to_dict(), indent=2, sort_keys=True, default=str), encoding="utf-8")
-    return CommandResult(paths=paths, summary={"rows": int(len(dataset)), "accepted": bool(acceptance.get("accepted", pd.Series([False])).iloc[0]), "blocker": str(acceptance.get("blocker", pd.Series([""])).iloc[0])})
+    return CommandResult(
+        paths=paths,
+        summary={
+            "rows": int(len(dataset)),
+            "training_dataset_id": dataset_id,
+            "dataset_lineage_ready": dataset_lineage_ready,
+            "accepted": bool(
+                acceptance.get("accepted", pd.Series([False])).iloc[0]
+            ),
+            "blocker": str(
+                acceptance.get("blocker", pd.Series([""])).iloc[0]
+            ),
+        },
+    )
 
 
 def _return_column(frame: pd.DataFrame) -> pd.Series:
@@ -186,17 +315,31 @@ def simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) ->
     return _simulate_strategy_returns(frame, policy)
 
 
-def _build_policy(frame: pd.DataFrame) -> dict[str, object]:
+def _build_policy(
+    frame: pd.DataFrame,
+    *,
+    entry_threshold_quantile: float = 0.70,
+) -> dict[str, object]:
     data = frame.copy()
     zscores = _to_numeric(data.get("entry_abs_zscore", pd.Series(0.0, index=data.index)).fillna(0.0))
-    hold_bars = _to_numeric(data.get("hold_bars", data.get("trade_bars", pd.Series(1000, index=data.index)))).fillna(1000)
-    min_bars = float(hold_bars.replace([np.inf, -np.inf], np.nan).min() if not hold_bars.empty else 12.0)
-    min_hold = max(1.0, min_bars) if math.isfinite(min_bars) else 12.0
     return {
         "policy_name": "simulated_quantile_hold_policy",
-        "entry_threshold": float(zscores.quantile(0.70)) if not zscores.empty else 0.0,
+        "entry_threshold": (
+            float(zscores.quantile(entry_threshold_quantile))
+            if not zscores.empty
+            else 0.0
+        ),
+        "entry_threshold_calibration_quantile": float(entry_threshold_quantile),
         "max_position_fraction": 1.0,
-        "min_hold_bars": int(min_hold),
+        "min_hold_bars": 1,
+        "target_hold_bars_by_timeframe": {
+            "5m": 24,
+            "15m": 16,
+            "1h": 12,
+            "4h": 6,
+            "1d": 3,
+        },
+        "default_target_hold_bars": 3,
         "stop_loss_pct": 0.05,
         "take_profit_pct": 0.12,
         "max_trade_drawdown_pct": 0.08,
@@ -232,18 +375,33 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
     )
 
     strength_pct = (zscores / z_cap).clip(0.0, 1.0)
-    proposed_hold = (data["hold_bars"] * (0.25 + 0.65 * strength_pct)).round().astype(float)
-    proposed_hold = proposed_hold.where(proposed_hold > 0, 1)
+    hold_targets = policy.get("target_hold_bars_by_timeframe", {})
+    if not isinstance(hold_targets, dict):
+        hold_targets = {}
+    timeframe = data.get("timeframe", pd.Series("", index=data.index)).astype(str)
+    declared_hold = timeframe.map(
+        lambda value: float(
+            hold_targets.get(
+                value,
+                policy.get("default_target_hold_bars", 3),
+            )
+        )
+    )
+    proposed_hold = (
+        declared_hold * (0.35 + 0.65 * strength_pct)
+    ).round().clip(lower=1)
     per_trade_hold_cap = (data["trade_bars"].clip(lower=1) * hold_cap_pct).apply(math.ceil).clip(lower=1)
     min_hold = max(float(policy.get("min_hold_bars", 1) or 1), 1.0)
-    per_trade_min_hold = np.minimum(per_trade_hold_cap, min_hold)
-    proposed_hold = np.minimum(np.maximum(proposed_hold, per_trade_min_hold), per_trade_hold_cap)
+    proposed_hold = np.maximum(proposed_hold, min_hold)
     threshold_active = zscores >= entry_threshold
     volatility_gate = _to_numeric(data.get("realized_volatility_percentile", pd.Series(0.0, index=data.index)).fillna(0.0)).fillna(0.0)
     vol_penalty = 1.0 - (volatility_gate.clip(0.0, 1.0) * volatility_penalty_weight)
     proposed_hold = (proposed_hold * vol_penalty).round().astype(int).clip(lower=1)
+    realized_hold_proxy = np.minimum(proposed_hold, per_trade_hold_cap)
     # only hold for part of the trade horizon; "held_fraction" simulates early exits
-    held_fraction = (proposed_hold / data["trade_bars"].replace(0, 1)).clip(0.0, 1.0)
+    held_fraction = (
+        realized_hold_proxy / data["trade_bars"].replace(0, 1)
+    ).clip(0.0, 1.0)
     # profit_after_cost/realized_return already reflects strategy direction and costs.
     # Prorating that net outcome is conservative research proxying, not bar-path replay.
     simulated = data["base_return"] * held_fraction * position_fraction
@@ -296,16 +454,42 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
             "pair": data.get("pair", ""),
             "strategy_name": data.get("strategy_name", ""),
             "timeframe": data.get("timeframe", ""),
+            "regime": data.get("regime", ""),
             "strategy_id": data.get("strategy_id", ""),
+            "exact_mode": data.get("exact_mode", ""),
+            "orientation": data.get("orientation", ""),
+            "experiment_id": data.get("experiment_id", ""),
+            "registered_contract_id": data.get(
+                "registered_contract_id", ""
+            ),
+            "registered_execution_id": data.get(
+                "registered_execution_id", ""
+            ),
+            "registered_semantic_hypothesis_id": data.get(
+                "registered_semantic_hypothesis_id", ""
+            ),
+            "registered_hypothesis_outcome": data.get(
+                "registered_hypothesis_outcome", ""
+            ),
+            "registered_candidate": data.get("registered_candidate", False),
+            "accepted_stage4_survivor": data.get(
+                "accepted_stage4_survivor", False
+            ),
+            "feature_timestamp": data.get("feature_timestamp", ""),
+            "entry_timestamp": data.get("entry_timestamp", ""),
+            "exit_timestamp": data.get("exit_timestamp", ""),
             "entry_bar_index": _to_numeric(data.get("entry_bar_index", pd.Series(0, index=data.index))).fillna(0).astype(int),
             "exit_bar_index": data.get("exit_bar_index", pd.Series(0, index=data.index)).astype(str),
             "entry_signal_strength": zscores,
             "entry_side": data["entry_side"],
             "proposed_hold_bars": proposed_hold,
-            "actual_exit_bars": (held_fraction * data["trade_bars"]).astype(int).clip(lower=1),
+            "actual_exit_bars": realized_hold_proxy.astype(int).clip(lower=1),
             "base_return": data["base_return"],
             "simulated_return": simulated,
             "policy_name": policy.get("policy_name", "simulated_quantile_hold_policy"),
+            "entry_threshold_calibration_quantile": policy.get(
+                "entry_threshold_calibration_quantile", 0.70
+            ),
             "simulation_reason": np.select(
                 [session_blocked, ~threshold_active],
                 ["session_loss_cap", "below_entry_threshold"],
@@ -354,3 +538,61 @@ def _read_csv(path: Path) -> pd.DataFrame:
         return pd.read_csv(path)
     except Exception:
         return pd.DataFrame()
+
+
+def _read_json(path: Path) -> dict[str, object]:
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _snapshot_rl_research_outputs(
+    root: Path, paths: dict[str, Path]
+) -> Path | None:
+    acceptance = paths["acceptance_report"]
+    if not acceptance.is_file():
+        return None
+    evidence_hash = _sha256_file(acceptance)
+    snapshot_dir = root / "reports" / "rl" / "runs" / f"superseded_{evidence_hash[:20]}"
+    receipt = snapshot_dir / "rl_run_receipt.json"
+    if receipt.is_file():
+        return receipt
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    preserved = []
+    for name, source in paths.items():
+        if not source.is_file():
+            continue
+        destination = snapshot_dir / f"{name}{source.suffix}"
+        try:
+            os.link(source, destination)
+        except OSError:
+            shutil.copyfile(source, destination)
+        preserved.append(name)
+    receipt.write_text(
+        json.dumps(
+            {
+                "schema_version": "thewiz.rl_research_lineage.v1",
+                "status": "SUPERSEDED_PRESERVED",
+                "acceptance_sha256": evidence_hash,
+                "artifacts": preserved,
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            },
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return receipt

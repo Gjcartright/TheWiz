@@ -1,0 +1,12 @@
+{
+  "schema_version": "thewiz.wizard_browser_auth_contract.v1",
+  "max_age_hours": 24,
+  "required_route_kinds": [
+    "scanner",
+    "pair_detail"
+  ],
+  "authority": "research_evidence_only",
+  "promotion_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

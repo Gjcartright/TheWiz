@@ -1,60 +1,60 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
+    build_current_wizard_hyperliquid_operating_cadence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_concentration import (
+    build_current_wizard_hyperliquid_concentration,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
+    materialize_current_wizard_hyperliquid_cost_evidence,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
+    build_current_wizard_hyperliquid_failure_attribution,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_handoff import (
     build_current_wizard_hyperliquid_handoff,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
+    build_current_wizard_hyperliquid_learning_ledger,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
+    build_current_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
+    run_current_wizard_hyperliquid_observed_cost_replay,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_regimes import (
+    build_current_wizard_hyperliquid_regime_attribution,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
     materialize_current_wizard_hyperliquid_history,
     run_current_wizard_hyperliquid_canonical_replay,
 )
-from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
-    materialize_current_wizard_hyperliquid_cost_evidence,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
-    run_current_wizard_hyperliquid_observed_cost_replay,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
-    run_current_wizard_hyperliquid_walkforward,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_regimes import (
-    build_current_wizard_hyperliquid_regime_attribution,
-)
 from quant_platform.orchestration.current_wizard_hyperliquid_robustness import (
     run_current_wizard_hyperliquid_robustness,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_concentration import (
-    build_current_wizard_hyperliquid_concentration,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
-    build_current_wizard_hyperliquid_failure_attribution,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
-    build_current_wizard_hyperliquid_leverage_surface,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
-    build_current_wizard_hyperliquid_learning_ledger,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
-    validate_current_wizard_hyperliquid_chain,
-)
-from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
-    build_current_wizard_hyperliquid_operating_cadence,
-)
-from quant_platform.orchestration.snapshot_lineage import (
-    verified_snapshot_reference,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
     build_current_wizard_hyperliquid_storage_reclamation_plan,
 )
-
+from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
+    validate_current_wizard_hyperliquid_chain,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
+    run_current_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.snapshot_lineage import (
+    verified_snapshot_reference,
+)
 
 READY_PAIR = "binance|daily|ETH|WIF"
 BLOCKED_PAIR = "binance|daily|AAA|BBB"
@@ -709,10 +709,23 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     attribution_rows = pd.read_csv(
         attribution.paths["attribution"], keep_default_na=False
     )
+    attribution_routes = pd.read_csv(
+        attribution.paths["route_index"], keep_default_na=False
+    )
     attribution_validation = pd.read_csv(
         attribution.paths["validation"], keep_default_na=False
     )
     assert len(attribution_rows) == 32
+    assert len(attribution_routes) == 32
+    assert attribution_routes["experiment_id"].is_unique
+    assert set(attribution_routes.columns) == {
+        "experiment_id",
+        "pair_group_key",
+        "pair",
+        "asset_x",
+        "asset_y",
+        "overall_research_rank",
+    }
     assert attribution_rows["experiment_id"].nunique() == 32
     assert attribution_rows["first_blocker"].astype(str).ne("").all()
     assert attribution_rows["next_action"].astype(str).ne("").all()
@@ -735,6 +748,24 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     )
     assert attribution.summary["referenced_upstream_bytes"] > 0
     assert attribution.summary["locally_copied_input_bytes"] == 0
+    assert attribution.summary["schema_version"].endswith(".v1")
+    assert "route_index" not in attribution.summary["artifacts"]
+    assert json.loads(
+        attribution.paths["manifest"].read_text(encoding="utf-8")
+    ) == attribution.summary
+    route_manifest = json.loads(
+        attribution.paths["route_manifest"].read_text(encoding="utf-8")
+    )
+    assert route_manifest["route_index_rows"] == 32
+    assert route_manifest["route_index_unique_experiment_ids"] == 32
+    assert route_manifest["source_failure_attribution_id"] == attribution.summary[
+        "failure_attribution_id"
+    ]
+    assert route_manifest["route_index_sha256"] == sha256(
+        attribution.paths["route_index"].read_bytes()
+    ).hexdigest()
+    assert route_manifest["testnet_order_authority"] is False
+    assert route_manifest["live_trading_authorized"] is False
 
     leverage = build_current_wizard_hyperliquid_leverage_surface(
         root=tmp_path,

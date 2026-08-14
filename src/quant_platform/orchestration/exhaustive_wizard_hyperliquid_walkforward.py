@@ -198,7 +198,13 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
         "snapshot_summary_md": snapshot_dir / "summary.md",
     }
 
-    mode_lookup = _unique_mode_rows(modes)
+    active_pair_group_ids = {_text(value) for value in observed["pair_group_id"]}
+    if "" in active_pair_group_ids:
+        raise ValueError("Walk-forward replay identity missing pair_group_id")
+    mode_lookup = _unique_mode_rows(
+        modes,
+        allowed_pair_group_ids=active_pair_group_ids,
+    )
     pair_lookup = _row_lookup(pair_costs, "pair_group_id")
     history_cache: dict[str, pd.DataFrame] = {}
     status_rows: list[dict[str, object]] = []
@@ -331,6 +337,15 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
                     costs,
                     interval=_text(observed_row.hyperliquid_interval),
                 )
+                closed, bars = _attach_causal_entry_features(
+                    closed=ledger.closed_trades,
+                    bars=ledger.bar_ledger,
+                    signal_history=signal_history,
+                    mode_metric=mode_result.metric,
+                    metric_name=mode_result.metric_name,
+                    settings=settings,
+                    exact_mode=exact_mode,
+                )
             except Exception as exc:
                 candidate_blocker = f"fold_{fold['fold_number']}:{type(exc).__name__}:{exc}"
                 break
@@ -364,11 +379,9 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
             }
             candidate_fold_rows.append(fold_metrics)
 
-            closed = ledger.closed_trades.copy()
             if not closed.empty:
                 closed["fold_number"] = fold["fold_number"]
                 candidate_trades.append(closed)
-            bars = ledger.bar_ledger.copy()
             bars["fold_number"] = fold["fold_number"]
             candidate_bars.append(bars)
 
@@ -431,11 +444,34 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
                     else:
                         bar_rows.append(payload)
 
-    candidates = pd.DataFrame(candidate_rows)
-    candidates = _add_statistical_selection_controls(candidates)
     status = pd.DataFrame(status_rows)
     if len(status) != len(observed) or status["experiment_id"].nunique() != len(observed):
         raise ValueError("Walk-forward failed complete experiment accounting")
+    walkforward_status_defaults = {
+        "folds_complete": 0,
+        "positive_folds": 0,
+        "aggregate_trades": 0,
+        "aggregate_profit_factor": "",
+        "aggregate_expectancy": "",
+        "aggregate_sharpe": "",
+        "aggregate_max_drawdown": "",
+        "aggregate_total_return": "",
+        "fold_return_raw_pvalue": "",
+        "bh_qvalue": "",
+        "parameter_stability_status": "NOT_EVALUATED",
+        "deflated_sharpe_status": "NOT_EVALUATED",
+    }
+    for column, default in walkforward_status_defaults.items():
+        status[column] = status.get(
+            column,
+            pd.Series(index=status.index, dtype=object),
+        ).fillna(default)
+    candidates = (
+        pd.DataFrame(candidate_rows)
+        if candidate_rows
+        else status.iloc[0:0].copy()
+    )
+    candidates = _add_statistical_selection_controls(candidates)
     statistical_columns = [
         "family_tests",
         "fold_return_raw_pvalue",
@@ -460,13 +496,21 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
     status["statistical_selection_blocker"] = status.get(
         "statistical_selection_blocker", pd.Series(index=status.index, dtype=object)
     ).fillna("walk_forward_not_completed")
-    folds_frame = pd.DataFrame(fold_rows)
+    folds_frame = (
+        pd.DataFrame(fold_rows)
+        if fold_rows
+        else pd.DataFrame(columns=["experiment_id", "fold_number", "fold_status"])
+    )
     trades = (
         pd.DataFrame(trade_rows)
         if trade_rows
         else pd.DataFrame(columns=EMPTY_TRADE_COLUMNS)
     )
-    bars = pd.DataFrame(bar_rows)
+    bars = (
+        pd.DataFrame(bar_rows)
+        if bar_rows
+        else pd.DataFrame(columns=["experiment_id", "timestamp", "fold_number"])
+    )
     ranked = _rank_candidates(candidates)
 
     for frame, active_path, snapshot_path in (
@@ -600,6 +644,169 @@ def _fit_training_parameters(
         diagnostics["fitted_ou_mu"] = mu
         diagnostics["fitted_ou_sigma"] = sigma
     return settings, diagnostics
+
+
+def _attach_causal_entry_features(
+    *,
+    closed: pd.DataFrame,
+    bars: pd.DataFrame,
+    signal_history: pd.DataFrame,
+    mode_metric: pd.Series,
+    metric_name: str,
+    settings: dict[str, object],
+    exact_mode: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Attach only candle-close information known when each position changed."""
+
+    features = _causal_feature_frame(
+        signal_history=signal_history,
+        mode_metric=mode_metric,
+        metric_name=metric_name,
+        settings=settings,
+        exact_mode=exact_mode,
+    )
+    keyed = features.drop_duplicates("_feature_key", keep="last")
+
+    bar_ledger = bars.copy()
+    bar_ledger["_feature_key"] = _utc_key(bar_ledger.get("timestamp"))
+    bar_ledger = bar_ledger.merge(
+        keyed,
+        on="_feature_key",
+        how="left",
+        validate="many_to_one",
+    ).drop(columns="_feature_key")
+
+    trade_ledger = closed.copy()
+    if not trade_ledger.empty:
+        trade_ledger["_feature_key"] = _utc_key(
+            trade_ledger.get("entry_timestamp")
+        )
+        trade_ledger = trade_ledger.merge(
+            keyed,
+            on="_feature_key",
+            how="left",
+            validate="many_to_one",
+        ).drop(columns="_feature_key")
+        missing = pd.to_numeric(
+            trade_ledger.get("mode_metric", pd.Series(dtype=float)),
+            errors="coerce",
+        ).isna()
+        if missing.any():
+            raise ValueError("closed_trade_entry_feature_join_incomplete")
+        trade_ledger["label_timestamp"] = trade_ledger["exit_timestamp"]
+    return trade_ledger, bar_ledger
+
+
+def _causal_feature_frame(
+    *,
+    signal_history: pd.DataFrame,
+    mode_metric: pd.Series,
+    metric_name: str,
+    settings: dict[str, object],
+    exact_mode: str,
+) -> pd.DataFrame:
+    timestamps = pd.to_datetime(
+        signal_history.get("timestamp"), utc=True, errors="coerce", format="mixed"
+    )
+    if timestamps.isna().any() or timestamps.duplicated().any():
+        raise ValueError("causal_feature_timestamps_invalid_or_duplicate")
+    price_x = pd.to_numeric(signal_history.get("price_x"), errors="coerce")
+    price_y = pd.to_numeric(signal_history.get("price_y"), errors="coerce")
+    hedge_ratio = pd.to_numeric(
+        signal_history.get(
+            "hedge_ratio",
+            pd.Series(settings.get("hedge_ratio"), index=signal_history.index),
+        ),
+        errors="coerce",
+    )
+    spread = np.log(price_y.where(price_y > 0.0)) - hedge_ratio * np.log(
+        price_x.where(price_x > 0.0)
+    )
+    returns_x = price_x.pct_change(fill_method=None)
+    returns_y = price_y.pct_change(fill_method=None)
+    pair_return = returns_y - hedge_ratio * returns_x
+    realized_volatility = pair_return.rolling(20, min_periods=10).std(ddof=0)
+    volatility_percentile = realized_volatility.rolling(
+        252, min_periods=20
+    ).rank(pct=True)
+    correlation = returns_x.rolling(60, min_periods=20).corr(returns_y)
+    hedge_mean = hedge_ratio.rolling(60, min_periods=20).mean().abs()
+    hedge_cv = hedge_ratio.rolling(60, min_periods=20).std(ddof=0).div(
+        hedge_mean.where(hedge_mean > 1e-12)
+    )
+    hedge_stability = 1.0 / (1.0 + hedge_cv.clip(lower=0.0))
+    metric = pd.to_numeric(mode_metric.reindex(signal_history.index), errors="coerce")
+    is_copula = exact_mode == "Copula"
+    is_rolling = exact_mode.endswith("ZScoreR)")
+    funding = _first_numeric_series(
+        signal_history,
+        ("funding_bps_per_day", "pair_funding_bps_per_day"),
+    )
+    slippage_x = _first_numeric_series(
+        signal_history,
+        ("slippage_x_model_bps", "slippage_x_p95_bps"),
+    ).abs()
+    slippage_y = _first_numeric_series(
+        signal_history,
+        ("slippage_y_model_bps", "slippage_y_p95_bps"),
+    ).abs()
+    pair_slippage = slippage_x.add(slippage_y, fill_value=0.0)
+    liquidity_score = 1.0 / (1.0 + pair_slippage.clip(lower=0.0))
+    frame = pd.DataFrame(
+        {
+            "_feature_key": timestamps,
+            "feature_timestamp": timestamps.map(
+                lambda value: value.isoformat() if pd.notna(value) else ""
+            ),
+            "mode_metric": metric,
+            "mode_metric_lag_1": metric.shift(1),
+            "mode_metric_slope_5": metric.diff(5).div(5.0),
+            "mode_metric_name": metric_name,
+            "zscore": np.nan if is_copula else metric,
+            "rolling_zscore": metric if is_rolling else np.nan,
+            "spread": spread,
+            "spread_slope": spread.diff(5).div(5.0),
+            "realized_volatility_20": realized_volatility,
+            "realized_volatility_percentile": volatility_percentile,
+            "correlation": correlation,
+            "hedge_ratio": hedge_ratio,
+            "hedge_ratio_stability": hedge_stability,
+            "beta": hedge_ratio,
+            "beta_stability": hedge_stability,
+            "funding_bps_per_day": funding,
+            "liquidity_score": liquidity_score,
+            "conditional_probability_distortion": (
+                metric.sub(0.5).abs() if is_copula else np.nan
+            ),
+            "strategy": exact_mode,
+            "strategy_name": exact_mode,
+            "family": exact_mode,
+            "entry_style": "wizard_exact_mode_captured_thresholds",
+            "exit_style": "wizard_exact_mode_captured_thresholds",
+            "mode_fidelity_status": "local_formula_approximation",
+            "feature_source": "causal_walkforward_entry_bar",
+            "feature_known_at_or_before_entry": True,
+            "feature_uses_future_data": False,
+            "uses_dashboard_hindsight": False,
+        },
+        index=signal_history.index,
+    )
+    if is_copula and metric_name in {"u1_given_u2", "u2_given_u1"}:
+        frame[metric_name] = metric
+    return frame.reset_index(drop=True)
+
+
+def _first_numeric_series(
+    frame: pd.DataFrame, names: tuple[str, ...]
+) -> pd.Series:
+    for name in names:
+        if name in frame.columns:
+            return pd.to_numeric(frame[name], errors="coerce")
+    return pd.Series(0.0, index=frame.index, dtype="float64")
+
+
+def _utc_key(values: object) -> pd.Series:
+    return pd.to_datetime(values, utc=True, errors="coerce", format="mixed")
 
 
 def _flat_fold_signal(

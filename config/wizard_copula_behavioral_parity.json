@@ -1,0 +1,61 @@
+{
+  "schema_version": "thewiz.wizard_copula_behavioral_parity.v1",
+  "registered_at_utc": "2026-08-09T23:51:00Z",
+  "registered_before_current_queue_vendor_responses": true,
+  "current_queue_vendor_responses_at_registration": 0,
+  "official_endpoint": "https://api.cryptowizards.net/v1beta/copula",
+  "official_documentation": "https://api.cryptowizards.net/docsv1beta/copula-post.mdx/",
+  "request_fields": [
+    "series_1_closes",
+    "series_2_closes"
+  ],
+  "documented_response_fields": [
+    "copula_name",
+    "u1_given_u2",
+    "u2_given_u1"
+  ],
+  "frozen_checks": {
+    "same_input_repeatability": {
+      "copula_name_equal": true,
+      "conditional_probability_abs_tolerance": 1e-12
+    },
+    "orientation_swap": {
+      "copula_name_equal": true,
+      "swapped_u1_matches_original_u2_abs_tolerance": 1e-12,
+      "swapped_u2_matches_original_u1_abs_tolerance": 1e-12
+    },
+    "probability_bounds": {
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "provenance": {
+      "raw_request_required": true,
+      "raw_response_required": true,
+      "request_sha256_required": true,
+      "response_sha256_required": true,
+      "response_timestamp_required": true
+    }
+  },
+  "claims_allowed_after_all_checks_pass": [
+    "vendor_copula_endpoint_behavior_observed",
+    "vendor_copula_orientation_behavior_observed",
+    "vendor_copula_response_repeatability_observed"
+  ],
+  "claims_never_granted_by_this_contract": [
+    "vendor_copula_formula_reconstructed",
+    "vendor_copula_family_selection_reconstructed",
+    "vendor_copula_historical_signal_series_reconstructed",
+    "performance_accounting_parity",
+    "cost_parity",
+    "point_in_time_live_signal_parity",
+    "candidate_promotion_authority",
+    "testnet_order_authority",
+    "live_trading_authority"
+  ],
+  "hindsight_status": "full_submitted_sample_research_only",
+  "threshold_changes_after_vendor_response_allowed": false,
+  "research_only": true,
+  "candidate_promotion_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

@@ -57,20 +57,6 @@ FEATURE_COLUMNS = [
     "crisis_probability",
     "liquidity_score",
     "trade_quality_score",
-    "wizard_history_feature_count",
-    "wizard_same_regime_count",
-    "wizard_same_strategy_family_count",
-    "wizard_same_venue_count",
-    "wizard_same_regime_strategy_venue_count",
-    "wizard_verified_same_regime_strategy_venue_count",
-    "wizard_same_regime_strategy_venue_win_rate",
-    "wizard_same_regime_strategy_venue_mean_return",
-    "wizard_same_regime_strategy_venue_mean_drawdown",
-    "shared_outcome_count",
-    "shared_verified_outcome_count",
-    "shared_outcome_win_rate",
-    "shared_outcome_mean_return",
-    "shared_outcome_mean_drawdown",
 ]
 
 FUTURE_ONLY_COLUMNS = {
@@ -83,6 +69,10 @@ FUTURE_ONLY_COLUMNS = {
     "exit_reason",
     "future_return",
     "realized_return",
+    "hold_bars",
+    "trade_bars",
+    "entry_bar_index",
+    "exit_bar_index",
 }
 
 RL_POLICY_SCHEMA_VERSION = "rl_policy_v2"

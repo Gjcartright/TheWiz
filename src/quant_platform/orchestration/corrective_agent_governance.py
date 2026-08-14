@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -10,7 +11,7 @@ from typing import Any
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult
+from quant_platform.active_pipeline import CommandResult, POST_OUTCOME_MEMORY_COLUMNS
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -187,6 +188,24 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
     _atomic_csv(frame, path)
     leakage_path = root / "reports" / "ml" / "leakage_audit.csv"
     leakage = _read_csv(leakage_path)
+    active_pointer_path = root / "data" / "ml" / "active_trade_dataset.json"
+    active_pointer = _read_json(active_pointer_path)
+    active_pointer_ready = (
+        str(active_pointer.get("status", "")) == "ACTIVE_RESEARCH_DATASET"
+    )
+    raw_dataset_path = str(
+        active_pointer.get(
+            "active_dataset_path", "data/ml/trade_training_dataset.csv"
+        )
+    )
+    dataset_path = Path(raw_dataset_path)
+    if not dataset_path.is_absolute():
+        dataset_path = root / dataset_path
+    dataset = _read_csv(dataset_path)
+    source_selection_path = (
+        root / "reports" / "ml" / "trade_dataset_source_selection.csv"
+    )
+    source_selection = _read_csv(source_selection_path)
     future = int(leakage.get("uses_future_data", pd.Series(False, index=leakage.index)).map(_truthy).sum())
     hindsight = int(leakage.get("uses_dashboard_hindsight", pd.Series(False, index=leakage.index)).map(_truthy).sum())
     audit_blockers = int(leakage.get("leakage_blocker", pd.Series("", index=leakage.index)).fillna("").astype(str).str.strip().ne("").sum())
@@ -201,6 +220,76 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
         feature = pd.to_datetime(leakage["feature_timestamp"], utc=True, errors="coerce")
         label = pd.to_datetime(leakage["label_timestamp"], utc=True, errors="coerce")
         invalid_time = int((feature.isna() | label.isna() | (feature >= label)).sum())
+    trade_ids = dataset.get("trade_id", pd.Series("", index=dataset.index)).astype(str)
+    duplicate_trade_id_rows = int(trade_ids.duplicated(keep=False).sum())
+    conflicting_trade_ids = 0
+    if duplicate_trade_id_rows:
+        duplicate_rows = dataset.loc[trade_ids.duplicated(keep=False)].copy()
+        duplicate_rows["_trade_id"] = trade_ids.loc[duplicate_rows.index]
+        context_columns = [
+            column
+            for column in ("pair", "timeframe", "source_venue", "regime")
+            if column in duplicate_rows.columns
+        ]
+        conflicting_trade_ids = sum(
+            1
+            for _, group in duplicate_rows.groupby("_trade_id", dropna=False)
+            if any(group[column].fillna("__missing__").astype(str).nunique() > 1 for column in context_columns)
+        )
+    venues = dataset.get(
+        "source_venue", pd.Series("", index=dataset.index)
+    ).fillna("").astype(str).str.strip().str.lower()
+    missing_venue_rows = int(venues.eq("").sum())
+    non_hyperliquid_rows = int((venues.ne("") & venues.ne("hyperliquid")).sum())
+    expected_dataset_hash = str(
+        active_pointer.get("active_dataset_sha256", "")
+    )
+    actual_dataset_hash = _sha256_file(dataset_path) if dataset_path.is_file() else ""
+    dataset_hash_matches_pointer = bool(
+        expected_dataset_hash
+        and actual_dataset_hash
+        and expected_dataset_hash == actual_dataset_hash
+    )
+    post_outcome_feature_columns = sorted(
+        POST_OUTCOME_MEMORY_COLUMNS.intersection(dataset.columns)
+    )
+    selected_canonical_histories = int(
+        source_selection.get(
+            "selection_status", pd.Series("", index=source_selection.index)
+        )
+        .astype(str)
+        .eq("SELECTED_CANONICAL")
+        .sum()
+    )
+    lineage_blockers = []
+    if dataset.empty:
+        lineage_blockers.append("trade_training_dataset_missing")
+    if not active_pointer_ready:
+        lineage_blockers.append("active_trade_dataset_pointer_missing")
+    if active_pointer_ready and not dataset_hash_matches_pointer:
+        lineage_blockers.append("active_trade_dataset_hash_mismatch")
+    if duplicate_trade_id_rows:
+        lineage_blockers.append("duplicate_trade_identity_rows")
+    if conflicting_trade_ids:
+        lineage_blockers.append("conflicting_trade_identity_context")
+    if missing_venue_rows:
+        lineage_blockers.append("source_venue_provenance_missing")
+    if non_hyperliquid_rows:
+        lineage_blockers.append("non_hyperliquid_training_rows")
+    if selected_canonical_histories <= 0:
+        lineage_blockers.append("canonical_hyperliquid_source_selection_missing")
+    if post_outcome_feature_columns:
+        lineage_blockers.append("post_outcome_memory_features_present")
+    core_blocked = any(
+        (
+            future,
+            hindsight,
+            invalid_time,
+            audit_blockers,
+            invalid_returns,
+            invalid_return_units,
+        )
+    )
     audit = {
         "schema_version": SCHEMA_VERSION,
         "rows_audited": len(leakage),
@@ -211,11 +300,35 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "invalid_fractional_return_rows": invalid_returns,
         "invalid_return_unit_rows": invalid_return_units,
         "compounded_return_rows": compounded_rows,
-        "status": "PASS" if not any((future, hindsight, invalid_time, audit_blockers, invalid_returns, invalid_return_units)) and not leakage.empty else "BLOCKED",
+        "duplicate_trade_id_rows": duplicate_trade_id_rows,
+        "conflicting_trade_ids": conflicting_trade_ids,
+        "missing_source_venue_rows": missing_venue_rows,
+        "non_hyperliquid_training_rows": non_hyperliquid_rows,
+        "active_dataset_id": str(active_pointer.get("dataset_id", "")),
+        "active_dataset_pointer_ready": active_pointer_ready,
+        "active_dataset_sha256": actual_dataset_hash,
+        "dataset_hash_matches_pointer": dataset_hash_matches_pointer,
+        "post_outcome_feature_columns": post_outcome_feature_columns,
+        "selected_canonical_hyperliquid_histories": selected_canonical_histories,
+        "lineage_blockers": lineage_blockers,
+        "status": (
+            "PASS"
+            if not core_blocked
+            and not lineage_blockers
+            and not leakage.empty
+            else "BLOCKED"
+        ),
         "training_authority": "backtest_research_only",
         "testnet_order_authority": False,
         "live_trading_authorized": False,
-        "evidence_path": _relative(leakage_path, root),
+        "evidence_path": ";".join(
+            (
+                _relative(leakage_path, root),
+                _relative(dataset_path, root),
+                _relative(source_selection_path, root),
+                _relative(active_pointer_path, root),
+            )
+        ),
     }
     audit_path = root / "reports" / "active" / "learning_label_audit.json"
     _atomic_json(audit, audit_path)
@@ -224,18 +337,89 @@ def build_learning_label_contract(*, root: Path = ROOT) -> dict[str, Any]:
 
 def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = None) -> dict[str, Any]:
     metrics_path = root / "models" / "trade_gate" / "metrics.json"
+    model_path = root / "models" / "trade_gate" / "model.pkl"
+    dataset_pointer_path = root / "data" / "ml" / "active_trade_dataset.json"
     acceptance_path = root / "reports" / "ml" / "model_gated_acceptance.csv"
     metrics = _read_json(metrics_path)
+    dataset_pointer = _read_json(dataset_pointer_path)
     acceptance = _read_csv(acceptance_path)
     rl_acceptance_path = root / "reports" / "rl" / "rl_acceptance_report.csv"
     rl_split_path = root / "reports" / "rl" / "rl_split_audit.csv"
     rl_acceptance = _read_csv(rl_acceptance_path)
     rl_split = _read_csv(rl_split_path)
-    accepted = bool(metrics.get("accepted", False)) and bool(not acceptance.empty and acceptance.get("accepted", pd.Series(False)).map(_truthy).all())
+    label_audit_path = root / "reports" / "active" / "learning_label_audit.json"
+    label_audit = _read_json(label_audit_path)
+    label_lineage_ready = str(label_audit.get("status", "BLOCKED")) == "PASS"
+    active_dataset_id = str(dataset_pointer.get("dataset_id", ""))
+    active_dataset_hash = str(dataset_pointer.get("active_dataset_sha256", ""))
+    model_dataset_id = str(metrics.get("training_dataset_id", ""))
+    model_dataset_hash = str(metrics.get("training_dataset_sha256", ""))
+    model_dataset_lineage_matches = bool(
+        active_dataset_id
+        and active_dataset_hash
+        and model_dataset_id == active_dataset_id
+        and model_dataset_hash == active_dataset_hash
+    )
+    expected_model_hash = str(metrics.get("model_sha256", ""))
+    actual_model_hash = _sha256_file(model_path) if model_path.is_file() else ""
+    model_artifact_hash_matches = bool(
+        expected_model_hash
+        and actual_model_hash
+        and expected_model_hash == actual_model_hash
+    )
+    exact_modes = dataset_pointer.get("exact_modes", [])
+    if not isinstance(exact_modes, list):
+        exact_modes = []
+    exact_mode_trade_provenance_ready = bool(exact_modes)
+    strict_cost_history_intersections = int(
+        _finite(dataset_pointer.get("strict_cost_history_intersections", 0))
+        if math.isfinite(
+            _finite(dataset_pointer.get("strict_cost_history_intersections", 0))
+        )
+        else 0
+    )
+    strict_cost_training_evidence_ready = strict_cost_history_intersections > 0
+    rl_lineage_frames = [frame for frame in (rl_acceptance, rl_split) if not frame.empty]
+    rl_active_dataset_lineage_matches = bool(
+        len(rl_lineage_frames) == 2
+        and all(
+            frame.get(
+                "training_dataset_id", pd.Series("", index=frame.index)
+            )
+            .astype(str)
+            .eq(active_dataset_id)
+            .all()
+            and frame.get(
+                "training_dataset_sha256", pd.Series("", index=frame.index)
+            )
+            .astype(str)
+            .eq(active_dataset_hash)
+            .all()
+            and frame.get(
+                "dataset_lineage_ready", pd.Series(False, index=frame.index)
+            )
+            .map(_truthy)
+            .all()
+            for frame in rl_lineage_frames
+        )
+    )
+    accepted = (
+        bool(metrics.get("accepted", False))
+        and bool(
+            not acceptance.empty
+            and acceptance.get("accepted", pd.Series(False)).map(_truthy).all()
+        )
+        and label_lineage_ready
+        and model_dataset_lineage_matches
+        and model_artifact_hash_matches
+        and exact_mode_trade_provenance_ready
+        and strict_cost_training_evidence_ready
+    )
     rl_accepted = bool(
         not rl_acceptance.empty
         and rl_acceptance.get("accepted", pd.Series(False, index=rl_acceptance.index)).map(_truthy).all()
         and rl_acceptance.get("out_of_sample_evidence", pd.Series(False, index=rl_acceptance.index)).map(_truthy).all()
+        and rl_active_dataset_lineage_matches
     )
     rl_split_ready = bool(
         not rl_split.empty
@@ -247,12 +431,24 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
     blockers = []
     if not accepted:
         blockers.append("model_incremental_edge_not_accepted")
+    if not label_lineage_ready:
+        blockers.append("model_training_dataset_lineage_not_accepted")
+    if not model_dataset_lineage_matches:
+        blockers.append("model_active_dataset_lineage_mismatch")
+    if not model_artifact_hash_matches:
+        blockers.append("model_artifact_hash_not_verified")
+    if not exact_mode_trade_provenance_ready:
+        blockers.append("exact_mode_trade_provenance_not_ready")
+    if not strict_cost_training_evidence_ready:
+        blockers.append("strict_cost_training_evidence_not_ready")
     if not math.isfinite(take_rate) or take_rate < 0.10:
         blockers.append("model_take_rate_below_minimum")
     if not monotonic:
         blockers.append("score_buckets_not_monotonic")
     if not rl_split_ready:
         blockers.append("rl_global_label_purge_split_not_ready")
+    if not rl_active_dataset_lineage_matches:
+        blockers.append("rl_active_dataset_lineage_mismatch")
     if not rl_accepted:
         blockers.append("rl_out_of_sample_acceptance_not_met")
     blockers.append("realized_testnet_sample_not_available")
@@ -262,12 +458,28 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
         "generated_at_utc": _as_utc(now).isoformat(),
         "model_version": str(metrics.get("best_model", "")),
         "label_source": str(metrics.get("label_source", "backtest_trained")),
+        "training_dataset_lineage_ready": label_lineage_ready,
+        "training_dataset_lineage_blockers": label_audit.get(
+            "lineage_blockers", ["learning_label_audit_missing"]
+        ),
+        "active_dataset_id": active_dataset_id,
+        "active_dataset_sha256": active_dataset_hash,
+        "model_training_dataset_id": model_dataset_id,
+        "model_training_dataset_sha256": model_dataset_hash,
+        "model_active_dataset_lineage_matches": model_dataset_lineage_matches,
+        "model_artifact_sha256": actual_model_hash,
+        "model_artifact_hash_matches": model_artifact_hash_matches,
+        "exact_modes": exact_modes,
+        "exact_mode_trade_provenance_ready": exact_mode_trade_provenance_ready,
+        "strict_cost_history_intersections": strict_cost_history_intersections,
+        "strict_cost_training_evidence_ready": strict_cost_training_evidence_ready,
         "out_of_sample_incremental_edge_accepted": accepted,
         "median_take_rate": take_rate if math.isfinite(take_rate) else None,
         "minimum_take_rate": 0.10,
         "score_buckets_monotonic": monotonic,
         "rl_out_of_sample_accepted": rl_accepted,
         "rl_global_label_purge_ready": rl_split_ready,
+        "rl_active_dataset_lineage_matches": rl_active_dataset_lineage_matches,
         "rl_validation_passed": _truthy(rl_row.get("validation_passed", False)),
         "rl_held_out_test_passed": _truthy(rl_row.get("held_out_test_passed", False)),
         "rl_validation_gate_failures": str(rl_row.get("validation_gate_failures", "")),
@@ -280,7 +492,9 @@ def build_model_authority_status(*, root: Path = ROOT, now: datetime | None = No
         "blockers": blockers,
         "evidence_path": (
             f"{_relative(metrics_path, root)};{_relative(acceptance_path, root)};"
-            f"{_relative(rl_acceptance_path, root)};{_relative(rl_split_path, root)}"
+            f"{_relative(rl_acceptance_path, root)};{_relative(rl_split_path, root)};"
+            f"{_relative(label_audit_path, root)};{_relative(dataset_pointer_path, root)};"
+            f"{_relative(model_path, root)}"
         ),
     }
     path = root / "reports" / "active" / "model_authority_status.json"
@@ -308,8 +522,25 @@ def build_corrective_agent_governance(*, root: Path = ROOT, now: datetime | None
             "label_rows_audited": labels["summary"]["rows_audited"],
             "model_authority": model["summary"]["model_authority"],
             "model_blockers": model["summary"]["blockers"],
+            "active_dataset_id": model["summary"]["active_dataset_id"],
+            "model_active_dataset_lineage_matches": model["summary"][
+                "model_active_dataset_lineage_matches"
+            ],
+            "model_artifact_hash_matches": model["summary"][
+                "model_artifact_hash_matches"
+            ],
+            "model_median_take_rate": model["summary"]["median_take_rate"],
+            "exact_mode_trade_provenance_ready": model["summary"][
+                "exact_mode_trade_provenance_ready"
+            ],
+            "strict_cost_training_evidence_ready": model["summary"][
+                "strict_cost_training_evidence_ready"
+            ],
             "rl_out_of_sample_accepted": model["summary"]["rl_out_of_sample_accepted"],
             "rl_global_label_purge_ready": model["summary"]["rl_global_label_purge_ready"],
+            "rl_active_dataset_lineage_matches": model["summary"][
+                "rl_active_dataset_lineage_matches"
+            ],
             "rl_validation_passed": model["summary"]["rl_validation_passed"],
             "rl_held_out_test_passed": model["summary"]["rl_held_out_test_passed"],
             "testnet_order_authority": False,
@@ -346,6 +577,14 @@ def _read_json(path: Path) -> dict[str, Any]:
         return {}
     payload = json.loads(path.read_text(encoding="utf-8"))
     return payload if isinstance(payload, dict) else {}
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _finite(value: Any) -> float:

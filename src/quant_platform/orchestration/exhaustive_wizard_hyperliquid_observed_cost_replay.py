@@ -145,7 +145,13 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
         "snapshot_manifest": snapshot_dir / "manifest.json",
         "snapshot_summary_md": snapshot_dir / "summary.md",
     }
-    mode_lookup = _unique_mode_rows(modes)
+    active_pair_group_ids = {_text(value) for value in experiments["pair_group_id"]}
+    if "" in active_pair_group_ids:
+        raise ValueError("Observed-cost experiment identity missing pair_group_id")
+    mode_lookup = _unique_mode_rows(
+        modes,
+        allowed_pair_group_ids=active_pair_group_ids,
+    )
     pair_lookup = _row_lookup(pair_costs, "pair_group_id")
     readiness_lookup = _row_lookup(experiment_costs, "experiment_id")
     canonical_lookup = _row_lookup(canonical, "experiment_id")
@@ -344,6 +350,10 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
     results = pd.DataFrame(result_rows)
     if len(results) != len(experiments) or results["experiment_id"].nunique() != len(experiments):
         raise ValueError("Observed-cost replay failed complete experiment accounting")
+    results["math_version"] = results.get(
+        "math_version",
+        pd.Series(index=results.index, dtype=object),
+    ).fillna("")
     results["research_rank_eligible"] = False
     results["research_rank_blocker"] = "replay_not_complete"
     completed_mask = results["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE")

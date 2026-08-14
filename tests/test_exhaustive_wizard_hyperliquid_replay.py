@@ -13,6 +13,7 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_replay import (
     materialize_exhaustive_wizard_hyperliquid_history,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
+    _unique_mode_rows,
     run_exhaustive_wizard_hyperliquid_canonical_replay,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_cost_evidence import (
@@ -26,6 +27,7 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_observed_cost_re
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward import (
     FOLD_COUNT,
+    _attach_causal_entry_features,
     run_exhaustive_wizard_hyperliquid_walkforward,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
@@ -50,6 +52,78 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
     build_exhaustive_wizard_hyperliquid_mapping_refresh,
     build_exhaustive_wizard_hyperliquid_run,
 )
+
+
+def test_walkforward_entry_features_are_causal_and_label_separated():
+    timestamps = pd.date_range("2025-01-01", periods=80, freq="h", tz="UTC")
+    history = pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "price_x": 100.0 + np.arange(80) * 0.3,
+            "price_y": 80.0 + np.arange(80) * 0.2 + np.sin(np.arange(80) / 5),
+            "hedge_ratio": np.linspace(0.9, 1.1, 80),
+            "funding_bps_per_day": np.linspace(-0.2, 0.2, 80),
+            "slippage_x_model_bps": 1.5,
+            "slippage_y_model_bps": 2.0,
+        }
+    )
+    metric = pd.Series(np.linspace(0.05, 0.95, 80), index=history.index)
+    closed = pd.DataFrame(
+        [
+            {
+                "trade_id": 1,
+                "entry_timestamp": timestamps[35],
+                "exit_timestamp": timestamps[40],
+                "profit_after_cost": 0.01,
+            }
+        ]
+    )
+    bars = pd.DataFrame(
+        [{"timestamp": timestamps[35], "net_return": 0.0}]
+    )
+
+    trades, _ = _attach_causal_entry_features(
+        closed=closed,
+        bars=bars,
+        signal_history=history,
+        mode_metric=metric,
+        metric_name="u1_given_u2",
+        settings={"hedge_ratio": 1.0},
+        exact_mode="Copula",
+    )
+    changed = history.copy()
+    changed.loc[36:, ["price_x", "price_y", "hedge_ratio"]] *= 10.0
+    changed_metric = metric.copy()
+    changed_metric.loc[36:] = 0.0
+    changed_trades, _ = _attach_causal_entry_features(
+        closed=closed,
+        bars=bars,
+        signal_history=changed,
+        mode_metric=changed_metric,
+        metric_name="u1_given_u2",
+        settings={"hedge_ratio": 1.0},
+        exact_mode="Copula",
+    )
+
+    row = trades.iloc[0]
+    changed_row = changed_trades.iloc[0]
+    assert row["feature_timestamp"] == timestamps[35].isoformat()
+    assert row["label_timestamp"] == timestamps[40]
+    assert row["mode_metric"] == pytest.approx(metric.iloc[35])
+    assert row["u1_given_u2"] == pytest.approx(metric.iloc[35])
+    assert bool(row["feature_uses_future_data"]) is False
+    assert bool(row["feature_known_at_or_before_entry"]) is True
+    for column in (
+        "mode_metric",
+        "spread",
+        "spread_slope",
+        "realized_volatility_percentile",
+        "correlation",
+        "hedge_ratio",
+        "funding_bps_per_day",
+        "liquidity_score",
+    ):
+        assert changed_row[column] == pytest.approx(row[column])
 
 
 def _build_fixture(root, *, asset_y="ETH", mapped=True):
@@ -637,6 +711,23 @@ def test_canonical_replay_accounts_for_every_experiment_without_accepting_resear
     assert result.summary["live_trading_authorized"] is False
 
 
+def test_mode_lookup_scopes_historical_rows_but_rejects_active_duplicates():
+    frame = pd.DataFrame(
+        [
+            {"pair_group_id": "active", "exact_mode": "Copula", "orientation": "original"},
+            {"pair_group_id": "", "exact_mode": "Copula", "orientation": "original"},
+            {"pair_group_id": "", "exact_mode": "Copula", "orientation": "original"},
+        ]
+    )
+
+    lookup = _unique_mode_rows(frame, allowed_pair_group_ids={"active"})
+    assert list(lookup) == [("active", "Copula", "original")]
+
+    active_duplicate = pd.concat([frame.iloc[[0]], frame.iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="Duplicate mode-ledger identity"):
+        _unique_mode_rows(active_duplicate, allowed_pair_group_ids={"active"})
+
+
 def test_funding_evidence_aligns_without_mutating_canonical_history(tmp_path):
     _build_fixture(tmp_path)
     build_exhaustive_wizard_hyperliquid_replay_preflight(root=tmp_path)
@@ -713,6 +804,15 @@ def test_cost_bridge_accounts_all_pairs_and_experiments_without_promoting_provis
     tmp_path,
 ):
     _build_fixture(tmp_path)
+    active = tmp_path / "reports" / "active"
+    mode_path = active / "exhaustive_wizard_pair_detail_mode_ledger.csv"
+    mode_rows = pd.read_csv(mode_path, keep_default_na=False)
+    retained_historical = mode_rows.iloc[[0]].copy()
+    retained_historical["pair_group_id"] = ""
+    pd.concat(
+        [mode_rows, retained_historical, retained_historical],
+        ignore_index=True,
+    ).to_csv(mode_path, index=False)
     build_exhaustive_wizard_hyperliquid_replay_preflight(root=tmp_path)
     materialize_exhaustive_wizard_hyperliquid_history(
         root=tmp_path,
@@ -725,7 +825,6 @@ def test_cost_bridge_accounts_all_pairs_and_experiments_without_promoting_provis
         fetcher=_fake_funding_fetcher,
         sleep=lambda _: None,
     )
-    active = tmp_path / "reports" / "active"
     pd.DataFrame(
         [
             {
@@ -900,3 +999,61 @@ def test_cost_bridge_accounts_all_pairs_and_experiments_without_promoting_provis
     assert leverage.summary["testnet_1x_lifecycle_ready"] == 0
     assert leverage.summary["acceptance_eligible_replays"] == 0
     assert leverage.summary["live_trading_authorized"] is False
+
+
+def test_zero_survivor_chain_writes_schema_bearing_artifacts(tmp_path):
+    _build_fixture(tmp_path)
+    build_exhaustive_wizard_hyperliquid_replay_preflight(root=tmp_path)
+    materialize_exhaustive_wizard_hyperliquid_history(
+        root=tmp_path,
+        fetcher=_fake_candle_fetcher(rows=800),
+        sleep=lambda _: None,
+    )
+    run_exhaustive_wizard_hyperliquid_canonical_replay(root=tmp_path)
+    materialize_exhaustive_hyperliquid_funding_evidence(
+        root=tmp_path,
+        fetcher=_fake_funding_fetcher,
+        sleep=lambda _: None,
+    )
+    build_exhaustive_wizard_hyperliquid_cost_evidence(root=tmp_path)
+    observed = run_exhaustive_wizard_hyperliquid_observed_cost_replay(root=tmp_path)
+    assert observed.summary["observed_cost_replays_complete"] == 0
+
+    walkforward = run_exhaustive_wizard_hyperliquid_walkforward(root=tmp_path)
+    candidates = pd.read_csv(walkforward.paths["candidates"], keep_default_na=False)
+    folds = pd.read_csv(walkforward.paths["folds"], keep_default_na=False)
+    bars = pd.read_csv(walkforward.paths["bars"], keep_default_na=False)
+    assert candidates.empty and "experiment_id" in candidates.columns
+    assert folds.empty and "fold_number" in folds.columns
+    assert bars.empty and "timestamp" in bars.columns
+
+    regimes = build_exhaustive_wizard_hyperliquid_regime_attribution(root=tmp_path)
+    regime_candidates = pd.read_csv(regimes.paths["candidates"], keep_default_na=False)
+    assert regime_candidates.empty and "experiment_id" in regime_candidates.columns
+
+    robustness = run_exhaustive_wizard_hyperliquid_robustness(root=tmp_path)
+    robustness_candidates = pd.read_csv(
+        robustness.paths["candidates"], keep_default_na=False
+    )
+    scenarios = pd.read_csv(robustness.paths["scenarios"], keep_default_na=False)
+    assert robustness_candidates.empty and "experiment_id" in robustness_candidates.columns
+    assert scenarios.empty and "scenario" in scenarios.columns
+
+    concentration = build_exhaustive_wizard_hyperliquid_concentration(root=tmp_path)
+    assert concentration.summary["experiment_status_accounted"] is True
+    assert concentration.summary["ready_for_leverage_gate"] is False
+
+    leverage = build_exhaustive_wizard_hyperliquid_leverage_surface(root=tmp_path)
+    assert leverage.summary["experiment_status_accounted"] is True
+    assert leverage.summary["testnet_1x_lifecycle_ready"] == 0
+
+    validation = (
+        exhaustive_wizard_hyperliquid_validation.run_exhaustive_wizard_hyperliquid_validation(
+            root=tmp_path
+        )
+    )
+    assert validation.summary["stage_accounting_complete"] is True
+    assert validation.summary["learning_ledger"]["records"] == len(EXACT_MODES) * len(
+        ORIENTATIONS
+    )
+    assert validation.summary["learning_ledger"]["training_eligible_records"] == 0

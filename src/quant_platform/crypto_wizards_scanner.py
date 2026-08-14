@@ -71,6 +71,8 @@ SCANNER_COLUMNS = [
     "eg_flag",
     "johansen_badge_state",
     "engle_granger_badge_state",
+    "engle_granger_includes_trend",
+    "stationarity_state_source",
     "hurst",
     "half_life",
     "sigma_0_count",
@@ -149,6 +151,8 @@ class CryptoWizardsScannerRow:
     eg_flag: bool | None = None
     johansen_badge_state: str | None = None
     engle_granger_badge_state: str | None = None
+    engle_granger_includes_trend: bool | None = None
+    stationarity_state_source: str | None = None
     hurst: float | None = None
     half_life: float | None = None
     sigma_0_count: int | None = None
@@ -299,6 +303,19 @@ def _scanner_row_from_record(
     risk_values = _numbers(risk_cell)
     reward_values = _numbers(reward_cell)
     sigma_counts = _sigma_counts(stationarity_cell)
+    johansen_state = _stationarity_badge_state(normalized, "johansen", "jn")
+    engle_granger_state = _stationarity_badge_state(normalized, "engle_granger", "eg")
+    (
+        johansen_flag,
+        engle_granger_flag,
+        engle_granger_includes_trend,
+        stationarity_state_source,
+    ) = _stationarity_flags(
+        normalized,
+        johansen_state=johansen_state,
+        engle_granger_state=engle_granger_state,
+        raw_stationarity_cell=stationarity_cell,
+    )
 
     return CryptoWizardsScannerRow(
         source_path=source_path,
@@ -354,10 +371,12 @@ def _scanner_row_from_record(
             normalized.get("dependency_y_over_x"), dependency_values[1] if len(dependency_values) > 1 else None
         ),
         correlation=_safe_float(normalized.get("correlation"), dependency_values[2] if len(dependency_values) > 2 else None),
-        jn_flag=_safe_bool(normalized.get("jn_flag"), _contains_token(stationarity_cell, "Jn")),
-        eg_flag=_safe_bool(normalized.get("eg_flag"), _contains_token(stationarity_cell, "EG")),
-        johansen_badge_state=_stationarity_badge_state(normalized, "johansen", "jn"),
-        engle_granger_badge_state=_stationarity_badge_state(normalized, "engle_granger", "eg"),
+        jn_flag=johansen_flag,
+        eg_flag=engle_granger_flag,
+        johansen_badge_state=johansen_state,
+        engle_granger_badge_state=engle_granger_state,
+        engle_granger_includes_trend=engle_granger_includes_trend,
+        stationarity_state_source=stationarity_state_source,
         hurst=_safe_float(normalized.get("hurst"), _labeled_number(stationarity_cell, "hurst") or (stationarity_values[0] if stationarity_values else None)),
         half_life=_safe_float(
             normalized.get("half_life"),
@@ -440,6 +459,64 @@ def _stationarity_badge_state(record: dict[str, Any], long_name: str, short_name
             return "trending"
         if text in {"gray", "grey", "none", "not_confirmed", "not confirmed", "fail", "failed"}:
             return "not_confirmed"
+    return None
+
+
+def _stationarity_flags(
+    record: dict[str, Any],
+    *,
+    johansen_state: str | None,
+    engle_granger_state: str | None,
+    raw_stationarity_cell: str | None,
+) -> tuple[bool | None, bool | None, bool | None, str]:
+    """Resolve flags only from explicit API booleans or structured badge state."""
+
+    johansen_explicit = _first_bool(record, "jn_flag", "johansen_coint")
+    engle_granger_explicit = _first_bool(record, "eg_flag", "coint_eg")
+    trend_explicit = _first_bool(
+        record,
+        "engle_granger_includes_trend",
+        "coint_eg_inc_trend",
+    )
+    has_explicit = any(
+        key in record
+        for key in (
+            "jn_flag",
+            "johansen_coint",
+            "eg_flag",
+            "coint_eg",
+            "engle_granger_includes_trend",
+            "coint_eg_inc_trend",
+        )
+    )
+
+    johansen = johansen_explicit
+    if johansen is None and johansen_state is not None:
+        johansen = johansen_state == "confirmed"
+
+    engle_granger = engle_granger_explicit
+    if engle_granger is None and engle_granger_state is not None:
+        engle_granger = engle_granger_state in {"confirmed", "trending"}
+
+    includes_trend = trend_explicit
+    if includes_trend is None and engle_granger_state is not None:
+        includes_trend = engle_granger_state == "trending"
+
+    if has_explicit:
+        source = "explicit_boolean"
+    elif johansen_state is not None or engle_granger_state is not None:
+        source = "structured_badge"
+    elif raw_stationarity_cell:
+        source = "unknown_text_only"
+    else:
+        source = "missing"
+    return johansen, engle_granger, includes_trend, source
+
+
+def _first_bool(record: dict[str, Any], *keys: str) -> bool | None:
+    for key in keys:
+        if key in record:
+            return _safe_bool(record.get(key), None)
     return None
 
 
@@ -559,13 +636,6 @@ def _safe_bool(value: Any, fallback: bool | None = None) -> bool | None:
     if text in {"false", "0", "no", "n", "fail", "failed"}:
         return False
     return fallback
-
-
-def _contains_token(text: str | None, token: str) -> bool | None:
-    if not text:
-        return None
-    pattern = rf"\b{re.escape(token)}\b"
-    return bool(re.search(pattern, text, flags=re.IGNORECASE))
 
 
 def _dependency_profile(text: str | None) -> str | None:

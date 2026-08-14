@@ -7,24 +7,27 @@ sent in one signed bulk-order action after an explicit, runtime-only approval.
 
 from __future__ import annotations
 
+import fcntl
+import importlib.util
+import json
+import math
+import os
+import re
+import subprocess
+from collections.abc import Callable, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
-import importlib.util
-import json
-import os
 from pathlib import Path
-import re
-import subprocess
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import pandas as pd
 import requests
 from eth_account import Account
 
 from quant_platform.execution import ExecutionMode, FillReport, OrderIntent
-
 
 ROOT = Path(__file__).resolve().parents[2]
 HYPERLIQUID_TESTNET_URL = "https://api.hyperliquid-testnet.xyz"
@@ -235,6 +238,9 @@ class HyperliquidTestnetPairExecutor:
             "agent_authorized_for_master": False,
             "local_signature_created": False,
             "submit_orders_enabled": bool(resolved.submit_orders),
+            "order_submission_performed": False,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
         }
         if not bool(result["sdk_available"]):
             blockers.append("missing_hyperliquid_python_sdk")
@@ -277,7 +283,7 @@ class HyperliquidTestnetPairExecutor:
         blockers = _unique(blockers)
         result["blockers"] = ";".join(blockers)
         result["ready_for_no_order_preflight"] = not blockers
-        result["ready_for_testnet_submit"] = bool(not blockers and resolved.submit_orders)
+        result["ready_for_testnet_submit"] = False
         result["next_action"] = _next_action(result, resolved)
         return result
 
@@ -287,19 +293,36 @@ class HyperliquidTestnetPairExecutor:
         config: HyperliquidTestnetConfig | None = None,
     ) -> HyperliquidPairExecutionResult:
         resolved = config or HyperliquidTestnetConfig.paper_testnet_from_env()
-        blockers = resolved.submission_blockers()
-        if resolved.order_approval_id:
-            approval_blockers = list(
-                self._approval_validator(resolved.order_approval_id, resolved)
+        constructor_blockers: list[str] = []
+        if self._exchange_factory is None and self._state_path is None:
+            constructor_blockers.append(
+                "hyperliquid_real_exchange_requires_durable_execution_state"
             )
-            blockers.extend(approval_blockers)
-            if self._uses_default_approval_validator and not approval_blockers:
-                blockers.extend(
-                    _signed_approval_intent_blockers(
-                        resolved.order_approval_id,
-                        intents,
-                    )
+        if self._exchange_factory is None and not self._uses_default_approval_validator:
+            constructor_blockers.append(
+                "hyperliquid_real_exchange_custom_approval_validator_forbidden"
+            )
+        if constructor_blockers:
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=";".join(constructor_blockers),
+            )
+        with self._exclusive_submission_lock() as lock_acquired:
+            if not lock_acquired:
+                return HyperliquidPairExecutionResult(
+                    status="pair_blocked",
+                    reason="hyperliquid_testnet_pair_executor_lock_present",
+                    state_path=self._state_path_text(),
                 )
+            return self._submit_pair_locked(intents, resolved)
+
+    def _submit_pair_locked(
+        self,
+        intents: Sequence[OrderIntent],
+        resolved: HyperliquidTestnetConfig,
+    ) -> HyperliquidPairExecutionResult:
+        blockers = resolved.submission_blockers()
+        blockers.extend(self._approval_blockers(intents, resolved))
         blockers.extend(_pair_intent_blockers(intents, resolved))
         prior_state = self._read_execution_state()
         state_blockers = self._submission_state_blockers(
@@ -342,6 +365,28 @@ class HyperliquidTestnetPairExecutor:
                 status="pair_blocked",
                 reason=";".join(market_rule_blockers),
             )
+
+        exit_price_blockers = self._pair_exit_price_blockers(intents, resolved)
+        if exit_price_blockers:
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=";".join(exit_price_blockers),
+            )
+
+        final_blockers = self._approval_blockers(intents, resolved)
+        final_blockers.extend(self._pair_exit_price_blockers(intents, resolved))
+        latest_state = self._read_execution_state()
+        final_blockers.extend(
+            self._submission_state_blockers(latest_state, intents, resolved)
+        )
+        final_blockers = _unique(final_blockers)
+        if final_blockers:
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=";".join(final_blockers),
+                state_path=self._state_path_text(),
+            )
+        prior_state = latest_state
 
         state = self._new_execution_state(intents, resolved)
         if (
@@ -391,6 +436,35 @@ class HyperliquidTestnetPairExecutor:
             return HyperliquidPairExecutionResult(
                 status="pair_configuration_error",
                 reason=str(state["blocker"]),
+                state_path=self._state_path_text(),
+            )
+
+        submission_blockers = self._approval_blockers(intents, resolved)
+        submission_blockers.extend(
+            self._pair_exit_price_blockers(intents, resolved)
+        )
+        latest_state = self._read_execution_state()
+        state_unchanged = bool(
+            self._state_path is None
+            or (
+                latest_state.get("state_integrity_valid") is True
+                and latest_state.get("execution_state_id")
+                == state.get("execution_state_id")
+            )
+        )
+        if not state_unchanged:
+            submission_blockers.append(
+                "hyperliquid_pair_execution_state_changed_before_submission"
+            )
+        submission_blockers = _unique(submission_blockers)
+        if submission_blockers:
+            if state_unchanged:
+                state["phase"] = "PRE_SUBMISSION_FAILED"
+                state["blocker"] = ";".join(submission_blockers)
+                self._persist_execution_state(state)
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=";".join(submission_blockers),
                 state_path=self._state_path_text(),
             )
 
@@ -485,6 +559,20 @@ class HyperliquidTestnetPairExecutor:
         config: HyperliquidTestnetConfig | None = None,
     ) -> HyperliquidPairExecutionResult:
         """Recover a journaled uncertain pair without ever retrying its entry."""
+
+        with self._exclusive_submission_lock() as lock_acquired:
+            if not lock_acquired:
+                return HyperliquidPairExecutionResult(
+                    status="pair_recovery_blocked",
+                    reason="hyperliquid_testnet_pair_executor_lock_present",
+                    state_path=self._state_path_text(),
+                )
+            return self._recover_incomplete_pair_locked(config)
+
+    def _recover_incomplete_pair_locked(
+        self,
+        config: HyperliquidTestnetConfig | None = None,
+    ) -> HyperliquidPairExecutionResult:
 
         state = self._read_execution_state()
         if not state:
@@ -651,25 +739,60 @@ class HyperliquidTestnetPairExecutor:
             "live_trading_authorized": False,
         }
 
+    def _approval_blockers(
+        self,
+        intents: Sequence[OrderIntent],
+        config: HyperliquidTestnetConfig,
+    ) -> list[str]:
+        if not config.order_approval_id:
+            return []
+        is_exit = all(intent.reduce_only for intent in intents)
+        blockers = (
+            _signed_approval_blockers(
+                config.order_approval_id,
+                config,
+                validation_scope="exit" if is_exit else "entry",
+            )
+            if self._uses_default_approval_validator
+            else list(self._approval_validator(config.order_approval_id, config))
+        )
+        if self._uses_default_approval_validator and not blockers:
+            blockers.extend(
+                _signed_approval_intent_blockers(
+                    config.order_approval_id,
+                    intents,
+                )
+            )
+        return _unique(blockers)
+
     def _submission_state_blockers(
         self,
         state: dict[str, object],
         intents: Sequence[OrderIntent],
         config: HyperliquidTestnetConfig,
     ) -> list[str]:
+        is_entry = not all(intent.reduce_only for intent in intents)
         if not state:
-            return []
+            return [] if is_entry else ["hyperliquid_exit_entry_state_missing"]
         if state.get("state_integrity_valid") is not True:
             return ["hyperliquid_pair_execution_state_hash_invalid"]
         prior_approval = str(state.get("order_approval_id", ""))
         current_approval = str(config.order_approval_id or "")
-        is_entry = not all(intent.reduce_only for intent in intents)
         if (
             is_entry
             and prior_approval == current_approval
             and state.get("entry_submit_attempted") is True
         ):
             return ["hyperliquid_duplicate_entry_approval_consumed"]
+        if not is_entry:
+            if prior_approval != current_approval:
+                return ["hyperliquid_exit_approval_does_not_match_entry_state"]
+            if state.get("entry_submit_attempted") is not True:
+                return ["hyperliquid_exit_requires_recorded_entry_attempt"]
+            if state.get("exit_submit_attempted") is True:
+                return ["hyperliquid_duplicate_exit_submission_blocked"]
+            if str(state.get("phase", "")) != "AWAITING_EXCHANGE_CONFIRMATION":
+                return ["hyperliquid_exit_requires_open_lifecycle_state"]
         terminal_phases = {"FLAT_RECONCILED", "PRE_SUBMISSION_FAILED", "REJECTED"}
         if (
             prior_approval != current_approval
@@ -721,6 +844,24 @@ class HyperliquidTestnetPairExecutor:
         )
         temporary.replace(self._state_path)
 
+    @contextmanager
+    def _exclusive_submission_lock(self):
+        if self._state_path is None:
+            yield True
+            return
+        lock_path = self._state_path.with_suffix(self._state_path.suffix + ".lock")
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        with lock_path.open("a+", encoding="utf-8") as handle:
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                yield False
+                return
+            try:
+                yield True
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
     def _read_execution_state(self) -> dict[str, object]:
         if self._state_path is None or not self._state_path.is_file():
             return {}
@@ -766,10 +907,24 @@ class HyperliquidTestnetPairExecutor:
             return ["hyperliquid_pair_open_orders_missing"]
         blockers: list[str] = []
         positions = _pair_position_sizes(state, coins)
-        if not all(intent.reduce_only for intent in intents) and any(
+        is_exit = all(intent.reduce_only for intent in intents)
+        if not is_exit and any(
             abs(size) > 0.0 for size in positions.values()
         ):
             blockers.append("hyperliquid_pair_markets_not_flat_before_entry")
+        if is_exit:
+            for intent in intents:
+                coin = _normalize_perp_coin(intent.market)
+                position = float(positions.get(coin, 0.0))
+                side = str(intent.side).strip().upper()
+                if abs(position) <= 0.0:
+                    blockers.append(f"hyperliquid_exit_position_missing:{coin}")
+                    continue
+                expected_side = "SELL" if position > 0.0 else "BUY"
+                if side != expected_side:
+                    blockers.append(f"hyperliquid_exit_side_not_risk_reducing:{coin}")
+                if float(intent.size) > abs(position) + 1e-12:
+                    blockers.append(f"hyperliquid_exit_size_exceeds_open_position:{coin}")
         if _pair_open_orders(open_orders, coins):
             blockers.append("hyperliquid_pair_open_orders_exist_before_submit")
         return blockers
@@ -819,6 +974,24 @@ class HyperliquidTestnetPairExecutor:
             if notional < 10.0:
                 blockers.append(f"hyperliquid_leg_notional_below_10_usd:{coin}")
         return _unique(blockers)
+
+    def _pair_exit_price_blockers(
+        self,
+        intents: Sequence[OrderIntent],
+        config: HyperliquidTestnetConfig,
+    ) -> list[str]:
+        if not all(intent.reduce_only for intent in intents):
+            return []
+        if not self._uses_default_approval_validator:
+            return []
+        slippage_bps = _signed_exit_slippage_bps(config.order_approval_id)
+        if slippage_bps is None:
+            return ["hyperliquid_runtime_exit_slippage_policy_invalid"]
+        try:
+            mids = self._info({"type": "allMids"}, config)
+        except Exception:
+            return ["hyperliquid_runtime_exit_mids_unavailable"]
+        return _exit_price_band_blockers(intents, mids, slippage_bps)
 
     def _recover_pair_to_flat(
         self,
@@ -927,7 +1100,7 @@ class HyperliquidTestnetPairExecutor:
             "is_buy": str(intent.side).upper() == "BUY",
             "sz": float(intent.size),
             "limit_px": float(intent.limit_price or 0.0),
-            "order_type": {"limit": {"tif": "Gtc"}},
+            "order_type": {"limit": {"tif": "Ioc"}},
             "reduce_only": bool(intent.reduce_only),
         }
 
@@ -1436,6 +1609,8 @@ def _unique(values: Sequence[str]) -> list[str]:
 def _signed_approval_blockers(
     approval_id: str,
     config: HyperliquidTestnetConfig,
+    *,
+    validation_scope: str = "entry",
 ) -> list[str]:
     try:
         from quant_platform.orchestration.hyperliquid_learning_and_risk import (
@@ -1446,13 +1621,25 @@ def _signed_approval_blockers(
             approval_id=approval_id,
             root=ROOT,
             config=config,
+            validation_scope=validation_scope,
         )
     except Exception:
         return ["hyperliquid_signed_approval_validation_failed"]
     blockers = result.get("blockers", [])
-    return [str(blocker) for blocker in blockers] if isinstance(blockers, list) else [
-        "hyperliquid_signed_approval_validation_failed"
-    ]
+    resolved = (
+        [str(blocker) for blocker in blockers]
+        if isinstance(blockers, list)
+        else ["hyperliquid_signed_approval_validation_failed"]
+    )
+    if not (
+        result.get("status") == "PASS"
+        and result.get("execution_allowed") is True
+        and result.get("testnet_order_authority") is True
+        and result.get("live_trading_authorized") is False
+        and result.get("authority_scope") == validation_scope
+    ):
+        resolved.append("hyperliquid_testnet_explicit_order_authority_not_granted")
+    return _unique(resolved)
 
 
 def _signed_approval_intent_blockers(
@@ -1471,6 +1658,54 @@ def _signed_approval_intent_blockers(
     return _approval_intent_blockers(approval, intents)
 
 
+def _signed_exit_slippage_bps(approval_id: str | None) -> float | None:
+    path = ROOT / "reports" / "active" / "hyperliquid_testnet_smoke_approval.json"
+    try:
+        approval = json.loads(path.read_text(encoding="utf-8"))
+        if str(approval.get("approval_id", "")) != str(approval_id or ""):
+            return None
+        value = float(approval.get("maximum_exit_slippage_bps"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+    return value if 0.0 < value <= 50.0 else None
+
+
+def _exit_price_band_blockers(
+    intents: Sequence[OrderIntent],
+    mids: dict[str, object],
+    maximum_slippage_bps: float,
+) -> list[str]:
+    blockers: list[str] = []
+    if not 0.0 < maximum_slippage_bps <= 50.0:
+        return ["hyperliquid_runtime_exit_slippage_policy_invalid"]
+    band = maximum_slippage_bps / 10_000.0
+    for index, intent in enumerate(intents):
+        try:
+            coin = _normalize_perp_coin(intent.market)
+            mid = float(mids.get(coin, 0.0))
+            price = float(intent.limit_price or 0.0)
+        except (TypeError, ValueError):
+            blockers.append(f"hyperliquid_runtime_exit_mid_or_price_invalid:{index}")
+            continue
+        if not all(math.isfinite(value) and value > 0.0 for value in (mid, price)):
+            blockers.append(f"hyperliquid_runtime_exit_mid_or_price_invalid:{index}")
+            continue
+        side = str(intent.side).strip().upper()
+        if side == "SELL":
+            if price > mid:
+                blockers.append(f"hyperliquid_runtime_exit_limit_not_marketable:{index}")
+            if price < mid * (1.0 - band) - 1e-12:
+                blockers.append(f"hyperliquid_runtime_exit_price_below_slippage_band:{index}")
+        elif side == "BUY":
+            if price < mid:
+                blockers.append(f"hyperliquid_runtime_exit_limit_not_marketable:{index}")
+            if price > mid * (1.0 + band) + 1e-12:
+                blockers.append(f"hyperliquid_runtime_exit_price_above_slippage_band:{index}")
+        else:
+            blockers.append(f"hyperliquid_runtime_exit_side_invalid:{index}")
+    return _unique(blockers)
+
+
 def _approval_intent_blockers(
     approval: dict[str, object],
     intents: Sequence[OrderIntent],
@@ -1486,7 +1721,6 @@ def _approval_intent_blockers(
 
     is_exit = all(intent.reduce_only for intent in intents)
     blockers: list[str] = []
-    total_notional = Decimal("0")
     for index, (leg, intent) in enumerate(zip(legs, intents, strict=True)):
         assert isinstance(leg, dict)
         try:
@@ -1522,23 +1756,26 @@ def _approval_intent_blockers(
                 blockers.append(f"hyperliquid_runtime_entry_size_mismatch:{index}")
             if runtime_price != approved_price:
                 blockers.append(f"hyperliquid_runtime_entry_price_mismatch:{index}")
-        if runtime_size.is_finite() and runtime_price.is_finite():
-            total_notional += runtime_size * runtime_price
-
     if is_exit:
         expected_policy = {
             "reduce_only": True,
             "opposite_side": True,
             "market_scope": "approved_entry_markets",
             "maximum_size": "approved_entry_size_per_leg",
-            "maximum_total_notional_usd": 25.0,
+            "entry_notional_cap_not_reapplied_to_exit": True,
         }
         if approval.get("exit_policy") != expected_policy:
             blockers.append("hyperliquid_runtime_exit_policy_missing_or_invalid")
         try:
-            cap = Decimal(str(approval.get("max_total_notional_usd", "")))
+            maximum_exit_slippage_bps = Decimal(
+                str(approval.get("maximum_exit_slippage_bps", ""))
+            )
         except (InvalidOperation, TypeError, ValueError):
-            cap = Decimal("NaN")
-        if not cap.is_finite() or total_notional > cap:
-            blockers.append("hyperliquid_runtime_exit_notional_exceeds_approval")
+            maximum_exit_slippage_bps = Decimal("NaN")
+        if (
+            not maximum_exit_slippage_bps.is_finite()
+            or maximum_exit_slippage_bps <= 0
+            or maximum_exit_slippage_bps > Decimal(50)
+        ):
+            blockers.append("hyperliquid_runtime_exit_slippage_policy_invalid")
     return _unique(blockers)

@@ -28,6 +28,7 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward impo
     FOLD_COUNT,
     _add_statistical_selection_controls,
     _aggregate_candidate,
+    _attach_causal_entry_features,
     _build_folds,
     _fit_training_parameters,
     _flat_fold_signal,
@@ -220,6 +221,15 @@ def run_current_wizard_hyperliquid_walkforward(
                     costs,
                     interval=_interval(_text(observed_row.timeframe)),
                 )
+                closed, bars = _attach_causal_entry_features(
+                    closed=ledger.closed_trades,
+                    bars=ledger.bar_ledger,
+                    signal_history=signal_history,
+                    mode_metric=mode_result.metric,
+                    metric_name=mode_result.metric_name,
+                    settings=settings,
+                    exact_mode=exact_mode,
+                )
             except Exception as exc:
                 candidate_blocker = (
                     f"fold_{fold['fold_number']}:{type(exc).__name__}:{exc}"
@@ -252,11 +262,9 @@ def run_current_wizard_hyperliquid_walkforward(
                 "live_trading_authorized": False,
             }
             candidate_fold_rows.append(fold_row)
-            if not ledger.closed_trades.empty:
-                closed = ledger.closed_trades.copy()
+            if not closed.empty:
                 closed["fold_number"] = fold["fold_number"]
                 candidate_trades.append(closed)
-            bars = ledger.bar_ledger.copy()
             bars["fold_number"] = fold["fold_number"]
             candidate_bars.append(bars)
 

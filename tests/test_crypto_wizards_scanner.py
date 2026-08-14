@@ -52,8 +52,9 @@ def test_scanner_rows_from_payload_extracts_visible_scanner_columns():
     assert row.dependency_x_over_y == 0.568
     assert row.dependency_y_over_x == 0.006
     assert row.correlation == pytest.approx(0.117)
-    assert row.jn_flag is True
-    assert row.eg_flag is True
+    assert row.jn_flag is None
+    assert row.eg_flag is None
+    assert row.stationarity_state_source == "unknown_text_only"
     assert row.hurst == 1.10
     assert row.half_life == 36.0
     assert row.sigma_0_count == 16
@@ -125,6 +126,28 @@ def test_scanner_rows_preserve_colored_stationarity_badges():
 
     assert row.johansen_badge_state == "not_confirmed"
     assert row.engle_granger_badge_state == "trending"
+    assert row.jn_flag is False
+    assert row.eg_flag is True
+    assert row.engle_granger_includes_trend is True
+    assert row.stationarity_state_source == "structured_badge"
+
+
+def test_scanner_rows_preserve_explicit_api_stationarity_booleans():
+    row = scanner_rows_from_payload(
+        [
+            {
+                "pair": "BTC-USD/ETH-USD",
+                "johansen_coint": True,
+                "coint_eg": True,
+                "coint_eg_inc_trend": False,
+            }
+        ]
+    )[0]
+
+    assert row.jn_flag is True
+    assert row.eg_flag is True
+    assert row.engle_granger_includes_trend is False
+    assert row.stationarity_state_source == "explicit_boolean"
 
 
 def test_write_scanner_reports_writes_rows_and_field_dictionary(tmp_path):

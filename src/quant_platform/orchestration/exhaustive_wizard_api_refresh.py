@@ -29,6 +29,9 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
     EXACT_MODES,
     ORIENTATIONS,
 )
+from quant_platform.orchestration.corrective_wizard_browser_auth import (
+    validate_wizard_browser_auth_readiness,
+)
 from quant_platform.wizard_run_config import canonical_wizard_interval
 from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol
 
@@ -108,9 +111,12 @@ def build_exhaustive_wizard_api_refresh_delta(
         credit_limit - reserved_credits - credits_used_after_estimate,
         0,
     )
+    browser_route = _browser_pair_detail_route_status(root, as_of=as_of)
     acquisition_plan = _build_pair_detail_acquisition_plan(
         pair_groups=len(api_groups),
         credits_available=credits_available_after_reserve,
+        browser_route_status=_text(browser_route.get("status")),
+        browser_route_operational=bool(browser_route.get("operational")),
     )
 
     input_hashes = {
@@ -121,6 +127,9 @@ def build_exhaustive_wizard_api_refresh_delta(
         "frozen_pair_ledger": _file_hash(frozen_pair_path),
         "hyperliquid_testnet_inventory": _file_hash(inventory_path),
     }
+    inspector_status_path = root / _text(browser_route.get("evidence_path"))
+    if inspector_status_path.exists():
+        input_hashes["browser_inspector_status"] = _file_hash(inspector_status_path)
     refresh_material = {
         "schema_version": SCHEMA_VERSION,
         "exhaustive_run_id": run_id,
@@ -267,8 +276,12 @@ def build_exhaustive_wizard_api_refresh_delta(
         "credits_used_after_sweep_estimate": credits_used_after_estimate,
         "credits_available_after_reserve_estimate": credits_available_after_reserve,
         "pair_detail_acquisition_lanes": int(len(acquisition_plan)),
-        "pair_detail_browser_route_status": "BLOCKED_CHROME_CONTENT_READ_TIMEOUT",
-        "exact_modes_required": list(EXACT_MODES),
+        "pair_detail_browser_route_status": browser_route["status"],
+        "pair_detail_browser_route_operational": browser_route["operational"],
+        "pair_detail_browser_route_observed_at": browser_route["observed_at"],
+        "pair_detail_browser_route_evidence_path": browser_route["evidence_path"],
+        "exact_modes_required": list(PAIR_PAGE_EXACT_MODES),
+        "scanner_overlays_required": ["OU (Optimal)"],
         "orientations_required": list(ORIENTATIONS),
         "no_silent_drops": True,
         "discovery_authority": "API_REFRESH_DISCOVERY_ONLY",
@@ -283,6 +296,7 @@ def build_exhaustive_wizard_api_refresh_delta(
             "frozen_exhaustive_manifest": _relative(exhaustive_manifest_path, root),
             "frozen_pair_ledger": _relative(frozen_pair_path, root),
             "hyperliquid_testnet_inventory": _relative(inventory_path, root),
+            "browser_inspector_status": browser_route["evidence_path"],
         },
         "artifacts": {key: _relative(path, root) for key, path in paths.items()},
         "immutable_snapshot": _relative(snapshot_dir, root),
@@ -784,6 +798,8 @@ def _build_pair_detail_acquisition_plan(
     *,
     pair_groups: int,
     credits_available: int,
+    browser_route_status: str,
+    browser_route_operational: bool,
 ) -> pd.DataFrame:
     lane_specs = [
         {
@@ -797,8 +813,8 @@ def _build_pair_detail_acquisition_plan(
             "wizard_venue_data": True,
             "hyperliquid_data": False,
             "authority": "vendor_pair_detail_evidence_after_capture",
-            "operational_status": "BLOCKED_CHROME_CONTENT_READ_TIMEOUT",
-            "recommended_use": "primary_complete_capture_lane_after_browser_recovery",
+            "operational_status": browser_route_status,
+            "recommended_use": "primary_complete_capture_lane_with_fresh_authenticated_inspector_proof",
         },
         {
             "lane": "documented_get_full_bundle",
@@ -876,7 +892,7 @@ def _build_pair_detail_acquisition_plan(
         per_pair = int(spec["credits_per_pair"])
         credit_capacity = pair_groups if per_pair == 0 else min(pair_groups, credits_available // per_pair)
         operational_capacity = credit_capacity
-        if spec["operational_status"] == "BLOCKED_CHROME_CONTENT_READ_TIMEOUT":
+        if spec["lane"] == "authenticated_dashboard_pair_page" and not browser_route_operational:
             operational_capacity = 0
         rows.append(
             {
@@ -893,6 +909,44 @@ def _build_pair_detail_acquisition_plan(
             }
         )
     return pd.DataFrame(rows)
+
+
+def _browser_pair_detail_route_status(
+    root: Path,
+    *,
+    as_of: datetime,
+) -> dict[str, object]:
+    path = root / "reports" / "active" / "wizard_browser_auth_readiness.json"
+    relative = _relative(path, root)
+    fallback = {
+        "status": "NOT_PROBED_THIS_REFRESH",
+        "operational": False,
+        "observed_at": "",
+        "evidence_path": relative,
+    }
+    if not path.exists():
+        return {**fallback, "status": "AUTHENTICATION_RECEIPT_NOT_PROVEN"}
+    validation = validate_wizard_browser_auth_readiness(root=root, now=as_of)
+    if validation.get("status") != "PASS":
+        return {
+            **fallback,
+            "status": "AUTHENTICATION_RECEIPT_NOT_PROVEN",
+        }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        pair_evidence = next(
+            item
+            for item in payload.get("selected_evidence", [])
+            if item.get("route_kind") == "pair_detail"
+        )
+    except (OSError, StopIteration, TypeError, json.JSONDecodeError):
+        return {**fallback, "status": "INVALID_AUTHENTICATION_RECEIPT"}
+    return {
+        "status": "AVAILABLE_AUTHENTICATED_RECEIPT",
+        "operational": True,
+        "observed_at": _text(pair_evidence.get("captured_at")),
+        "evidence_path": _text(validation.get("receipt_path")) or relative,
+    }
 
 
 def _build_validation(

@@ -11,6 +11,78 @@ from quant_platform.crypto_wizards_sweep import build_wizard_sweep_cells
 from quant_platform.orchestration.exhaustive_wizard_api_refresh import (
     build_exhaustive_wizard_api_refresh_delta,
 )
+from quant_platform.orchestration.corrective_wizard_browser_auth import (
+    build_wizard_browser_auth_readiness,
+)
+
+
+def _auth_observation(route_kind: str) -> dict[str, object]:
+    pair = route_kind == "pair_detail"
+    url = (
+        "https://cryptowizards.net/wizards/zscore/pair/6"
+        if pair
+        else "https://cryptowizards.net/wizards/zscore/scanner"
+    )
+    return {
+        "schema_version": "wizard_browser_auth_observation.v1",
+        "captured_at": "2026-08-08T12:04:00+00:00",
+        "requested_url": url,
+        "requested_url_source": "capture_argument",
+        "final_url": url,
+        "route_kind": route_kind,
+        "member_navigation_targets": [
+            "https://cryptowizards.net/wizards/account",
+            "https://cryptowizards.net/wizards/zscore/scanner",
+            "https://cryptowizards.net/wizards/zscore/trades",
+        ],
+        "protected_content_markers": (
+            [
+                "pair_mode_selector",
+                "timeframe_selector",
+                "ordered_asset_inputs",
+                "rendered_asset_labels",
+            ]
+            if pair
+            else [
+                "scanner_filter_controls",
+                "scanner_strategy_control",
+                "scanner_exchange_control",
+                "scanner_results_surface",
+            ]
+        ),
+        "sign_in_form_present": False,
+        "verification_form_present": False,
+        "public_marketing_shell_present": False,
+        "browser_storage_accessed": False,
+        "no_credentials_or_browser_storage_captured": True,
+    }
+
+
+def _write_browser_auth_readiness(root: Path) -> None:
+    config = root / "config"
+    config.mkdir(exist_ok=True)
+    (config / "wizard_browser_auth_contract.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "thewiz.wizard_browser_auth_contract.v1",
+                "max_age_hours": 24,
+                "required_route_kinds": ["scanner", "pair_detail"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    raw = root / "data" / "raw" / "crypto_wizards" / "browser_auth"
+    raw.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for route_kind in ("scanner", "pair_detail"):
+        path = raw / f"{route_kind}.json"
+        path.write_text(json.dumps(_auth_observation(route_kind)), encoding="utf-8")
+        paths.append(path)
+    build_wizard_browser_auth_readiness(
+        root=root,
+        now=datetime(2026, 8, 8, 12, 5, tzinfo=timezone.utc),
+        observation_paths=paths,
+    )
 
 
 def _write_inputs(root: Path) -> tuple[Path, Path, Path, Path]:
@@ -189,6 +261,11 @@ def test_refresh_accounts_for_every_row_and_queues_every_current_pair(tmp_path: 
     assert result.summary["current_api_hyperliquid_blocked_pair_groups"] == 0
     assert result.summary["promotion_authority"] is False
     assert result.summary["live_trading_authorized"] is False
+    assert result.summary["pair_detail_browser_route_status"] == (
+        "AUTHENTICATION_RECEIPT_NOT_PROVEN"
+    )
+    assert "OU (Optimal)" not in result.summary["exact_modes_required"]
+    assert result.summary["scanner_overlays_required"] == ["OU (Optimal)"]
 
     accounting = pd.read_csv(result.paths["source_accounting"], keep_default_na=False)
     delta = pd.read_csv(result.paths["delta"], keep_default_na=False)
@@ -237,6 +314,53 @@ def test_refresh_accounts_for_every_row_and_queues_every_current_pair(tmp_path: 
     assert validation["status"].eq("PASS").all()
     assert result.paths["snapshot_api_candidates"].exists()
     assert result.paths["snapshot_manifest"].exists()
+
+
+def test_refresh_uses_fresh_authenticated_browser_inspector_status(tmp_path: Path) -> None:
+    _write_inputs(tmp_path)
+    _write_browser_auth_readiness(tmp_path)
+
+    result = build_exhaustive_wizard_api_refresh_delta(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 12, 5, tzinfo=timezone.utc),
+    )
+
+    acquisition = pd.read_csv(
+        result.paths["pair_detail_acquisition_plan"], keep_default_na=False
+    )
+    browser = acquisition.loc[
+        acquisition["lane"].eq("authenticated_dashboard_pair_page")
+    ].iloc[0]
+    assert result.summary["pair_detail_browser_route_operational"] is True
+    assert result.summary["pair_detail_browser_route_status"] == (
+        "AVAILABLE_AUTHENTICATED_RECEIPT"
+    )
+    assert browser["operational_capacity_pairs_now"] == 10
+
+
+def test_refresh_rejects_legacy_mutable_authenticated_boolean(tmp_path: Path) -> None:
+    _write_inputs(tmp_path)
+    status_path = tmp_path / "reports" / "active" / "crypto_wizards_inspector_status.json"
+    status_path.write_text(
+        json.dumps(
+            {
+                "observed_at": "2026-08-08T12:04:00+00:00",
+                "authenticated": True,
+                "pair_detail_route_status": "AVAILABLE_AUTHENTICATED_MANUAL_CAPTURE",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = build_exhaustive_wizard_api_refresh_delta(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 12, 5, tzinfo=timezone.utc),
+    )
+
+    assert result.summary["pair_detail_browser_route_operational"] is False
+    assert result.summary["pair_detail_browser_route_status"] == (
+        "AUTHENTICATION_RECEIPT_NOT_PROVEN"
+    )
 
 
 def test_refresh_refuses_incomplete_sweep(tmp_path: Path) -> None:

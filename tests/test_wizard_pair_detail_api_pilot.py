@@ -16,6 +16,26 @@ from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
 PAIR_GROUP = "binance|daily|ETH|WIF"
 
 
+def test_backtest_probe_uses_verified_cost_defaults_without_implicit_stop():
+    params = _endpoint_params(
+        "backtest",
+        {
+            "symbol_1": "BTCUSDT",
+            "symbol_2": "ETHUSDT",
+            "exchange": "Binance",
+            "interval": "Daily",
+            "period": 365,
+            "spread_type": "Static",
+            "roll_w": 42,
+            "strategy": "Spread",
+        },
+    )
+
+    assert params["commission_rate"] == 0.001
+    assert params["slippage_rate"] == 0.0005
+    assert "stop_loss_rate" not in params
+
+
 def _write_inputs(root: Path) -> None:
     active = root / "reports" / "active"
     active.mkdir(parents=True)

@@ -2,6 +2,21 @@
 
 Research-first platform for discovering, validating, ranking, and eventually executing crypto statistical arbitrage opportunities. The system is designed to prove where edge comes from rather than assuming that z-score, cointegration, ECM, copula, or any single indicator is alpha.
 
+## Current Authority
+
+The active workflow is the seven-stage Crypto Wizards to Hyperliquid corrective program. Its canonical status is `reports/active/seven_stage_goal_checkpoint.csv`; model authority is separate in `reports/active/model_authority_status.json`. A model file, dashboard score, Wizard result, or historical V2 report does not grant Testnet or live authority.
+
+Start with the status-only commands below. They do not submit orders:
+
+```bash
+PYTHONPATH=src python -m quant_platform.cli system-check
+PYTHONPATH=src python -m quant_platform.cli complete-corrective-plan
+PYTHONPATH=src python -m quant_platform.cli build-artifact-index
+PYTHONPATH=src python -m quant_platform.cli current-state
+```
+
+See `docs/current_corrective_operations.md` for the authority hierarchy, stage definitions, scheduler behavior, and recovery rules. The V2, dYdX, Binance, and other venue sections below remain historical/reference workflows unless the seven-stage checkpoint explicitly incorporates them.
+
 ## Current State
 
 This repository contains the production scaffold:
@@ -21,9 +36,9 @@ This repository contains the production scaffold:
 
 Live API calls require credentials and exact endpoint details. Until then, research can run from archived JSON/CSV snapshots in `data/raw`.
 
-## V2 Run-Scoped Pipeline
+## Historical V2 Run-Scoped Pipeline
 
-The clean active path is now the sealed V2 run pipeline. It snapshots declared evidence into one immutable `runs/<run_id>/` directory, validates candidate and policy identity, applies stage-specific gates, and publishes only a status row when blocked. Mutable global reports are never read again after the snapshot is sealed.
+The sealed V2 run pipeline is retained for historical replay and evidence comparison. It snapshots declared evidence into one immutable `runs/<run_id>/` directory, validates candidate and policy identity, applies stage-specific gates, and publishes only a status row when blocked. It is not the current execution authority.
 
 ```bash
 PYTHONPATH=src python -m quant_platform.cli build-v2-preflight-run
@@ -233,6 +248,7 @@ Shadow-mode inference is available without changing live behavior:
 PYTHONPATH=src python -m quant_platform.cli shadow-ml-trade-filter \
   --input-dir reports/ml_trade_filter_dataset.csv \
   --model-path reports/ml_trade_filter/ml_trade_filter_best_model.pkl \
+  --model-sha256 <best_model_sha256_from_independently_verified_manifest> \
   --output-path reports/ml_trade_filter_shadow_predictions.csv
 ```
 

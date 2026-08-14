@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 import json
 import math
 import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 from urllib.parse import urlencode
 
 import requests
@@ -13,7 +13,6 @@ import requests
 from quant_platform.api_extraction import CryptoWizardsFetchError
 from quant_platform.crypto_wizards_catalog import BASE_URL
 from quant_platform.wizard_run_config import WizardRunConfiguration, canonical_exact_mode
-
 
 PRESCANNED_ROW_FEATURES = (
     "profile_match",
@@ -83,8 +82,8 @@ class CryptoWizardsHistoryRequest:
         exit_level: float = 0.0,
         x_weighting: float = 0.5,
         slippage_rate: float = 0.0005,
-        commission_rate: float = 0.0005,
-        stop_loss_rate: float = 0.10,
+        commission_rate: float = 0.001,
+        stop_loss_rate: float | None = None,
         exit_n_periods: int | None = None,
     ) -> dict[str, object]:
         params: dict[str, object] = {
@@ -95,8 +94,9 @@ class CryptoWizardsHistoryRequest:
             "x_weighting": x_weighting,
             "slippage_rate": slippage_rate,
             "commission_rate": commission_rate,
-            "stop_loss_rate": stop_loss_rate,
         }
+        if stop_loss_rate is not None:
+            params["stop_loss_rate"] = stop_loss_rate
         if exit_n_periods is not None:
             params["exit_n_periods"] = exit_n_periods
         return params
@@ -131,7 +131,7 @@ class CryptoWizardsCustomSeriesBacktestRequest:
         )
         if self.strategy not in {"Spread", "ZScoreRoll", "Copula"}:
             raise ValueError(f"unsupported Crypto Wizards custom-series strategy: {self.strategy}")
-        if self.spread_type not in {None, "", "Static", "Dynamic", "OU"}:
+        if self.spread_type not in {None, "", "Static", "Dynamic", "OU", "Ou"}:
             raise ValueError(f"unsupported Crypto Wizards custom-series spread type: {self.spread_type}")
         if self.roll_w < 2:
             raise ValueError("roll_w must be at least 2")
@@ -147,7 +147,7 @@ class CryptoWizardsCustomSeriesBacktestRequest:
             "with_history": bool(self.with_history),
         }
         if self.spread_type:
-            params["spread_type"] = self.spread_type
+            params["spread_type"] = "Ou" if self.spread_type.lower() == "ou" else self.spread_type
         bt_inputs: dict[str, object] = {
             "entry_level": float(self.entry_level),
             "exit_level": float(self.exit_level),
@@ -160,6 +160,59 @@ class CryptoWizardsCustomSeriesBacktestRequest:
         if self.exit_n_periods is not None:
             bt_inputs["exit_n_periods"] = int(self.exit_n_periods)
         return {"params": params, "bt_inputs": bt_inputs}
+
+
+@dataclass(frozen=True)
+class CryptoWizardsCustomSeriesCopulaRequest:
+    """A bounded POST /v1beta/copula request using caller-supplied closes."""
+
+    series_1_closes: tuple[float, ...]
+    series_2_closes: tuple[float, ...]
+
+    def payload(self) -> dict[str, object]:
+        _validate_custom_series(self.series_1_closes, self.series_2_closes)
+        return {
+            "series_1_closes": list(self.series_1_closes),
+            "series_2_closes": list(self.series_2_closes),
+        }
+
+
+@dataclass(frozen=True)
+class CryptoWizardsCustomSeriesAnalyticsRequest:
+    """A typed caller-supplied-series request for the one-credit analytics APIs."""
+
+    series_1_closes: tuple[float, ...]
+    series_2_closes: tuple[float, ...]
+    spread_type: str = "Static"
+    roll_w: int = 42
+    with_history: bool = True
+
+    def payload(self, endpoint: str) -> dict[str, object]:
+        endpoint = endpoint.strip().lower()
+        if endpoint not in {"cointegration", "correlations", "spread", "zscores"}:
+            raise ValueError(f"unsupported Crypto Wizards analytics endpoint: {endpoint}")
+        _validate_custom_series(self.series_1_closes, self.series_2_closes)
+        payload: dict[str, object] = {
+            "series_1_closes": list(self.series_1_closes),
+            "series_2_closes": list(self.series_2_closes),
+        }
+        if endpoint in {"cointegration", "spread", "zscores"}:
+            if self.spread_type not in {"Static", "Dynamic", "OU", "Ou"}:
+                raise ValueError(
+                    f"unsupported Crypto Wizards custom-series spread type: {self.spread_type}"
+                )
+            if self.roll_w < 2:
+                raise ValueError("roll_w must be at least 2")
+            payload.update(
+                {
+                    "spread_type": (
+                        "Ou" if self.spread_type.lower() == "ou" else self.spread_type
+                    ),
+                    "roll_w": int(self.roll_w),
+                    "with_history": bool(self.with_history),
+                }
+            )
+        return payload
 
 
 def fetch_prescanned_pairs(
@@ -264,8 +317,8 @@ def fetch_backtest_history(
     exit_level: float = 0.0,
     x_weighting: float = 0.5,
     slippage_rate: float = 0.0005,
-    commission_rate: float = 0.0005,
-    stop_loss_rate: float = 0.10,
+    commission_rate: float = 0.001,
+    stop_loss_rate: float | None = None,
     exit_n_periods: int | None = None,
 ) -> dict[str, Any]:
     return _get_json(
@@ -300,6 +353,49 @@ def fetch_custom_series_backtest(
     )
     if not isinstance(response, dict):
         raise CryptoWizardsFetchError("Crypto Wizards custom-series backtest response was not an object")
+    return response
+
+
+def fetch_custom_series_copula(
+    request: CryptoWizardsCustomSeriesCopulaRequest,
+    *,
+    api_key: str | None = None,
+    base_url: str = BASE_URL,
+    timeout: float = 30.0,
+) -> dict[str, Any]:
+    response = _post_json(
+        f"{base_url.rstrip('/')}/v1beta/copula",
+        payload=request.payload(),
+        api_key=api_key,
+        timeout=timeout,
+    )
+    if not isinstance(response, dict):
+        raise CryptoWizardsFetchError(
+            "Crypto Wizards custom-series copula response was not an object"
+        )
+    return response
+
+
+def fetch_custom_series_analytics(
+    endpoint: str,
+    request: CryptoWizardsCustomSeriesAnalyticsRequest,
+    *,
+    api_key: str | None = None,
+    base_url: str = BASE_URL,
+    timeout: float = 30.0,
+) -> dict[str, Any]:
+    endpoint = endpoint.strip().lower()
+    payload = request.payload(endpoint)
+    response = _post_json(
+        f"{base_url.rstrip('/')}/v1beta/{endpoint}",
+        payload=payload,
+        api_key=api_key,
+        timeout=timeout,
+    )
+    if not isinstance(response, dict):
+        raise CryptoWizardsFetchError(
+            f"Crypto Wizards custom-series {endpoint} response was not an object"
+        )
     return response
 
 
@@ -567,8 +663,8 @@ def crawl_prescanned_backtest_histories(
     exit_level: float = 0.0,
     x_weighting: float = 0.5,
     slippage_rate: float = 0.0005,
-    commission_rate: float = 0.0005,
-    stop_loss_rate: float = 0.10,
+    commission_rate: float = 0.001,
+    stop_loss_rate: float | None = None,
 ) -> list[Path]:
     if not api_key:
         api_key = os.getenv("CRYPTO_WIZARDS_API_KEY")
@@ -652,8 +748,8 @@ def official_min5_request_rows(
     exit_level: float = 0.0,
     x_weighting: float = 0.5,
     slippage_rate: float = 0.0005,
-    commission_rate: float = 0.0005,
-    stop_loss_rate: float = 0.10,
+    commission_rate: float = 0.001,
+    stop_loss_rate: float | None = None,
 ) -> list[dict[str, str]]:
     output_base = Path(output_dir)
     prescanned_params: dict[str, object] = {
@@ -830,9 +926,26 @@ def _post_json(url: str, *, payload: dict[str, object], api_key: str | None, tim
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as exc:
-        raise CryptoWizardsFetchError(f"Crypto Wizards API request failed at {url}: {exc}") from exc
+        detail = _http_error_detail(response if "response" in locals() else None)
+        suffix = f"; vendor_response={detail}" if detail else ""
+        raise CryptoWizardsFetchError(
+            f"Crypto Wizards API request failed at {url}: {exc}{suffix}"
+        ) from exc
     except ValueError as exc:
         raise CryptoWizardsFetchError(f"Crypto Wizards API response was not JSON at {url}: {exc}") from exc
+
+
+def _http_error_detail(response: object | None) -> str:
+    if response is None:
+        return ""
+    status = getattr(response, "status_code", "")
+    body = str(getattr(response, "text", "") or "").strip()
+    body = " ".join(body.split())[:500]
+    if status and body:
+        return f"status={status}; body={body}"
+    if status:
+        return f"status={status}"
+    return body
 
 
 def _validate_custom_series(*series: tuple[float, ...]) -> None:

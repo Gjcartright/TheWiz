@@ -89,7 +89,7 @@ def run_rl_idea_scout(
     eval_report = _read_csv(reports / "rl_evaluation_report.csv")
     training = _read_csv(training_path)
     policy_type = _extract_policy(training)
-    timestamp = pd.Timestamp.utcnow().isoformat()
+    timestamp = pd.Timestamp.now(tz="UTC").isoformat()
 
     if pair_filter and "pair" in dataset.columns:
         dataset = _filter_pairs(dataset, pair_filter)

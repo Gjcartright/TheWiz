@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from hashlib import sha256
 from itertools import product
 from pathlib import Path
-from typing import Any, Callable, Iterable
-import json
-import re
+from typing import Any
 
 import pandas as pd
 
@@ -18,6 +19,11 @@ from quant_platform.crypto_wizards_history import (
     fetch_prescanned_payload,
     prescanned_pairs_from_payload,
 )
+from quant_platform.wizard_credit_ledger import (
+    DISCOVERY_LANE,
+    reconcile_wizard_credit_lane,
+    reserve_wizard_credit_lane,
+)
 from quant_platform.wizard_run_config import (
     WizardRunConfiguration,
     api_wizard_discovery_interval,
@@ -26,7 +32,6 @@ from quant_platform.wizard_run_config import (
     canonical_wizard_strategy,
     normalized_key,
 )
-
 
 WIZARD_SWEEP_SCHEMA_VERSION = "wizard_discovery_sweep.v1"
 WIZARD_CRYPTO_EXCHANGES = ("Binance", "BinanceUs", "ByBit", "Coinbase", "Dydx")
@@ -94,7 +99,11 @@ def restore_complete_wizard_sweep_from_raw(
         metadata = envelope.get("capture_metadata")
         request = envelope.get("request")
         response = envelope.get("response")
-        if not isinstance(metadata, dict) or not isinstance(request, dict) or not isinstance(response, list):
+        if (
+            not isinstance(metadata, dict)
+            or not isinstance(request, dict)
+            or not isinstance(response, list)
+        ):
             continue
         candidate_sweep_id = str(metadata.get("sweep_id", "")).strip()
         if not candidate_sweep_id:
@@ -110,8 +119,7 @@ def restore_complete_wizard_sweep_from_raw(
     for candidate_id in requested_ids:
         files = groups.get(str(candidate_id), [])
         actual_request_ids = {
-            str(envelope["capture_metadata"].get("request_id", "")).strip()
-            for _, envelope in files
+            str(envelope["capture_metadata"].get("request_id", "")).strip() for _, envelope in files
         }
         if actual_request_ids == expected_request_ids and len(files) == len(expected_request_ids):
             selected_id = str(candidate_id)
@@ -173,7 +181,9 @@ def restore_complete_wizard_sweep_from_raw(
                     "sweep_exchange": request.get("exchange", cell.exchange),
                     "sweep_interval": request.get("interval", cell.interval),
                     "sweep_captured_at": captured_at,
-                    "sweep_source_timestamp": pair.get("backtest_ts") or pair.get("updated_at") or "",
+                    "sweep_source_timestamp": pair.get("backtest_ts")
+                    or pair.get("updated_at")
+                    or "",
                     "point_in_time_status": "historical_snapshot_discovery",
                     "sweep_response_hash": response_hash,
                     "sweep_evidence_path": evidence_path,
@@ -206,7 +216,9 @@ def restore_complete_wizard_sweep_from_raw(
     summary: dict[str, object] = {
         "schema_version": WIZARD_SWEEP_SCHEMA_VERSION,
         "sweep_id": selected_id,
-        "started_at": min(value for value in started_values if value) if any(started_values) else "",
+        "started_at": min(value for value in started_values if value)
+        if any(started_values)
+        else "",
         "execute": True,
         "restored_from_raw": True,
         "planned_cells": total_cells,
@@ -407,13 +419,15 @@ def run_wizard_discovery_sweep(
     now: datetime | None = None,
     credits_fetcher: CreditsFetcher | None = None,
     prescanned_fetcher: PrescannedFetcher | None = None,
+    credit_reserver: Callable[..., Any] | None = None,
+    credit_reconciler: Callable[..., Any] | None = None,
     publish_active: bool = True,
 ) -> WizardSweepResult:
     if daily_credit_limit <= 0:
         raise ValueError("daily_credit_limit must be positive")
     if reserved_credits < 0:
         raise ValueError("reserved_credits must be non-negative")
-    started_at = _as_utc(now or datetime.now(timezone.utc))
+    started_at = _as_utc(now or datetime.now(UTC))
     sweep_id = started_at.strftime("%Y%m%dT%H%M%S%fZ")
     cells = build_wizard_sweep_cells(
         sweep_id=sweep_id,
@@ -435,28 +449,70 @@ def run_wizard_discovery_sweep(
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     credit_usage = WizardCreditUsage(None, daily_credit_limit, None, False, "")
+    credit_reservation_status = "NOT_REQUESTED"
+    credit_reservation_blocker = ""
+    credit_reservation_id = ""
+    credit_reservation_path = ""
+    credit_reconciliation_status = "NOT_REQUESTED"
+    credit_reconciliation_blocker = ""
+    credit_reconciliation_id = ""
+    credit_reconciliation_path = ""
     preflight_blocker = "preflight_only"
     if execute:
         if not api_key:
             preflight_blocker = "missing_crypto_wizards_api_key"
         else:
             try:
-                credit_payload = (credits_fetcher or fetch_credits_used)(
-                    api_key=api_key,
-                    base_url=base_url,
-                    timeout=timeout,
+                reservation = (credit_reserver or reserve_wizard_credit_lane)(
+                    root=Path(root),
+                    lane=DISCOVERY_LANE,
+                    planned_credits=planned_credits,
+                    now=started_at,
+                    daily_credit_limit=daily_credit_limit,
+                    protected_reserve=reserved_credits,
                 )
-                credit_usage = parse_wizard_credit_usage(
-                    credit_payload,
-                    configured_limit=daily_credit_limit,
+                credit_reservation_status = str(reservation.summary.get("status", "BLOCKED"))
+                credit_reservation_blocker = str(reservation.summary.get("blocker", ""))
+                credit_reservation_id = str(reservation.summary.get("reservation_id", ""))
+                credit_reservation_path = _relative_path(
+                    reservation.paths.get("reservation"), root=Path(root)
                 )
-                if not credit_usage.known:
-                    preflight_blocker = "credit_usage_unknown"
-                elif planned_credits > max((credit_usage.remaining or 0) - reserved_credits, 0):
-                    preflight_blocker = "insufficient_credits_for_complete_sweep"
+                remaining_lane_credits = int(
+                    reservation.summary.get("lane_remaining_reserved_credits", 0) or 0
+                )
+                external_spend_authorized = bool(
+                    reservation.summary.get(
+                        "external_spend_authorized",
+                        credit_reservation_status == "PASS",
+                    )
+                )
+                if credit_reservation_status not in {"PASS", "REUSED"}:
+                    preflight_blocker = "shared_credit_reservation_blocked:" + (
+                        credit_reservation_blocker or "unknown_reservation_failure"
+                    )
+                elif not external_spend_authorized:
+                    preflight_blocker = (
+                        "reused_credit_reservation_does_not_authorize_external_replay"
+                    )
+                elif planned_credits > remaining_lane_credits:
+                    preflight_blocker = "insufficient_lane_reservation_remaining_for_complete_sweep"
                 else:
-                    preflight_blocker = ""
-            except (CryptoWizardsFetchError, ValueError, TypeError) as exc:
+                    credit_payload = (credits_fetcher or fetch_credits_used)(
+                        api_key=api_key,
+                        base_url=base_url,
+                        timeout=timeout,
+                    )
+                    credit_usage = parse_wizard_credit_usage(
+                        credit_payload,
+                        configured_limit=daily_credit_limit,
+                    )
+                    if not credit_usage.known:
+                        preflight_blocker = "credit_usage_unknown"
+                    elif planned_credits > max((credit_usage.remaining or 0) - reserved_credits, 0):
+                        preflight_blocker = "insufficient_credits_for_complete_sweep"
+                    else:
+                        preflight_blocker = ""
+            except (CryptoWizardsFetchError, OSError, ValueError, TypeError) as exc:
                 preflight_blocker = f"credit_preflight_failed:{_safe_error(exc)}"
 
     manifest_rows: list[dict[str, object]] = []
@@ -472,7 +528,7 @@ def run_wizard_discovery_sweep(
         requested_at = ""
         completed_at = ""
         if execute and not preflight_blocker:
-            requested_at = datetime.now(timezone.utc).isoformat()
+            requested_at = datetime.now(UTC).isoformat()
             attempted_credits += cell.credit_cost
             try:
                 payload = (prescanned_fetcher or fetch_prescanned_payload)(
@@ -496,7 +552,7 @@ def run_wizard_discovery_sweep(
                 )
                 raw_response_path = str(raw_path.relative_to(Path(root)))
                 row_count = len(pairs)
-                completed_at = datetime.now(timezone.utc).isoformat()
+                completed_at = datetime.now(UTC).isoformat()
                 completed_credits += cell.credit_cost
                 status = "completed"
                 error = ""
@@ -522,7 +578,7 @@ def run_wizard_discovery_sweep(
                         }
                     )
             except (CryptoWizardsFetchError, ValueError, TypeError) as exc:
-                completed_at = datetime.now(timezone.utc).isoformat()
+                completed_at = datetime.now(UTC).isoformat()
                 status = "failed"
                 error = _safe_error(exc)
         manifest_rows.append(
@@ -547,11 +603,40 @@ def run_wizard_discovery_sweep(
             }
         )
 
+    if execute and credit_reservation_id:
+        try:
+            reconciliation = (credit_reconciler or reconcile_wizard_credit_lane)(
+                root=Path(root),
+                lane=DISCOVERY_LANE,
+                reservation_id=credit_reservation_id,
+                reconciliation_key=sweep_id,
+                attempted_credits=attempted_credits,
+                completed_credits=completed_credits,
+                external_requests=sum(bool(row["requested_at"]) for row in manifest_rows),
+                observed_used_before=credit_usage.used,
+                now=started_at,
+            )
+            credit_reconciliation_status = str(reconciliation.summary.get("status", "BLOCKED"))
+            credit_reconciliation_blocker = str(reconciliation.summary.get("blocker", ""))
+            credit_reconciliation_id = str(reconciliation.summary.get("reconciliation_id", ""))
+            credit_reconciliation_path = _relative_path(
+                reconciliation.paths.get("reconciliation"), root=Path(root)
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            credit_reconciliation_status = "BLOCKED"
+            credit_reconciliation_blocker = f"credit_reconciliation_failed:{_safe_error(exc)}"
+
     completed_cells = sum(row["status"] == "completed" for row in manifest_rows)
     failed_cells = sum(row["status"] == "failed" for row in manifest_rows)
     total_cells = len(manifest_rows)
     completion_percentage = round(100.0 * completed_cells / total_cells, 2) if total_cells else 0.0
-    sweep_complete = bool(execute and total_cells and completed_cells == total_cells)
+    reconciliation_passes = credit_reconciliation_status in {
+        "PASS_RECONCILED",
+        "REUSED_RECONCILIATION",
+    }
+    sweep_complete = bool(
+        execute and total_cells and completed_cells == total_cells and reconciliation_passes
+    )
     if not execute:
         authority = "preflight_only"
         blocker = "execution_not_requested"
@@ -561,6 +646,11 @@ def run_wizard_discovery_sweep(
     elif failed_cells:
         authority = "blocked_partial_discovery"
         blocker = f"failed_requests:{failed_cells}"
+    elif not reconciliation_passes:
+        authority = "blocked_partial_discovery"
+        blocker = "credit_reconciliation_blocked:" + (
+            credit_reconciliation_blocker or credit_reconciliation_status
+        )
     else:
         authority = "complete_discovery"
         blocker = ""
@@ -577,6 +667,10 @@ def run_wizard_discovery_sweep(
                 "credit_limit": credit_usage.limit,
                 "credits_remaining_before": credit_usage.remaining,
                 "reserved_credits": reserved_credits,
+                "credit_reservation_status": credit_reservation_status,
+                "credit_reservation_id": credit_reservation_id,
+                "credit_reconciliation_status": credit_reconciliation_status,
+                "credit_reconciliation_id": credit_reconciliation_id,
                 "sweep_complete": sweep_complete,
                 "discovery_authority": authority,
                 "sweep_blocker": blocker,
@@ -626,6 +720,14 @@ def run_wizard_discovery_sweep(
         "credit_limit": credit_usage.limit,
         "credits_remaining_before": credit_usage.remaining,
         "reserved_credits": reserved_credits,
+        "credit_reservation_status": credit_reservation_status,
+        "credit_reservation_blocker": credit_reservation_blocker,
+        "credit_reservation_id": credit_reservation_id,
+        "credit_reservation_path": credit_reservation_path,
+        "credit_reconciliation_status": credit_reconciliation_status,
+        "credit_reconciliation_blocker": credit_reconciliation_blocker,
+        "credit_reconciliation_id": credit_reconciliation_id,
+        "credit_reconciliation_path": credit_reconciliation_path,
         "credit_usage_known": credit_usage.known,
         "candidate_rows": len(candidate_rows),
         "publish_active_requested": publish_active,
@@ -758,6 +860,10 @@ def _manifest_columns() -> list[str]:
         "credit_limit",
         "credits_remaining_before",
         "reserved_credits",
+        "credit_reservation_status",
+        "credit_reservation_id",
+        "credit_reconciliation_status",
+        "credit_reconciliation_id",
         "sweep_complete",
         "discovery_authority",
         "sweep_blocker",
@@ -839,7 +945,17 @@ def _safe_error(exc: BaseException) -> str:
     return re.sub(r"\s+", " ", str(exc)).strip()[:300]
 
 
+def _relative_path(path: object, *, root: Path) -> str:
+    if path is None:
+        return ""
+    resolved = Path(path)
+    try:
+        return str(resolved.relative_to(root))
+    except ValueError:
+        return str(resolved)
+
+
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)

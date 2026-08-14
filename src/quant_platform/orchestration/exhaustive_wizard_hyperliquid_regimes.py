@@ -270,7 +270,27 @@ def build_exhaustive_wizard_hyperliquid_regime_attribution(
     status = pd.DataFrame(status_rows)
     if len(status) != len(statuses) or status["experiment_id"].nunique() != len(statuses):
         raise ValueError("Regime attribution failed complete experiment accounting")
-    candidate_frame = pd.DataFrame(candidate_rows)
+    regime_status_defaults = {
+        "regimes_observed": 0,
+        "regimes_with_minimum_trades": 0,
+        "positive_expectancy_regimes": 0,
+        "regime_profit_concentration": "",
+        "worst_regime_expectancy": "",
+        "crisis_trades": 0,
+        "crisis_expectancy": "",
+        "regime_stability_status": "NOT_EVALUATED",
+        "regime_stability_blocker": "prior_walk_forward_gate_not_passed",
+    }
+    for column, default in regime_status_defaults.items():
+        status[column] = status.get(
+            column,
+            pd.Series(index=status.index, dtype=object),
+        ).fillna(default)
+    candidate_frame = (
+        pd.DataFrame(candidate_rows)
+        if candidate_rows
+        else status.iloc[0:0].copy()
+    )
     detail = pd.DataFrame(detail_rows, columns=REGIME_DETAIL_COLUMNS)
     regime_bars = (
         pd.concat(regime_bar_frames, ignore_index=True)

@@ -1,13 +1,19 @@
 import json
 
+import pytest
 import requests
 
+from quant_platform.api_extraction import CryptoWizardsFetchError
 from quant_platform.crypto_wizards_history import (
     CryptoWizardsCustomSeriesBacktestRequest,
+    CryptoWizardsCustomSeriesAnalyticsRequest,
+    CryptoWizardsCustomSeriesCopulaRequest,
     CryptoWizardsHistoryRequest,
     crawl_prescanned_backtest_histories,
     crawl_prescanned_zscores_histories,
     fetch_custom_series_backtest,
+    fetch_custom_series_analytics,
+    fetch_custom_series_copula,
     official_min5_request_rows,
     payload_from_backtest_history,
     payload_from_zscores_history,
@@ -34,11 +40,25 @@ def test_custom_series_backtest_request_preserves_captured_mode_and_cost_setting
     payload = request.payload()
 
     assert payload["params"]["strategy"] == "ZScoreRoll"
-    assert payload["params"]["spread_type"] == "OU"
+    assert payload["params"]["spread_type"] == "Ou"
     assert payload["bt_inputs"]["commission_rate"] == 0.0005
     assert len(payload["params"]["series_1_opens"]) == 50
     assert len(payload["params"]["series_2_opens"]) == 50
     assert payload["bt_inputs"]["stop_loss_rate"] == 0.1
+
+
+def test_get_backtest_defaults_match_verified_dashboard_costs_and_omit_stop():
+    params = CryptoWizardsHistoryRequest(
+        symbol_1="BTCUSDT",
+        symbol_2="ETHUSDT",
+        exchange="Binance",
+        interval="Daily",
+        period=365,
+    ).backtest_params()
+
+    assert params["commission_rate"] == 0.001
+    assert params["slippage_rate"] == 0.0005
+    assert "stop_loss_rate" not in params
 
 
 def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch):
@@ -77,6 +97,98 @@ def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch):
     assert seen["url"].endswith("/v1beta/backtest")
     assert seen["json"]["params"]["strategy"] == "Spread"
     assert seen["headers"]["X-api-key"] == "test-key"
+
+
+def test_fetch_custom_series_copula_posts_only_matching_close_series(monkeypatch):
+    seen = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "copula_name": "clayton",
+                "u1_given_u2": 0.91,
+                "u2_given_u1": 0.08,
+            }
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        seen.update({"url": url, "json": json, "headers": headers})
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    request = CryptoWizardsCustomSeriesCopulaRequest(
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+    )
+
+    response = fetch_custom_series_copula(request, api_key="test-key")
+
+    assert response["copula_name"] == "clayton"
+    assert seen["url"].endswith("/v1beta/copula")
+    assert set(seen["json"]) == {"series_1_closes", "series_2_closes"}
+    assert len(seen["json"]["series_1_closes"]) == 50
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "expected_extra"),
+    [
+        ("cointegration", {"spread_type", "roll_w", "with_history"}),
+        ("correlations", set()),
+        ("spread", {"spread_type", "roll_w", "with_history"}),
+        ("zscores", {"spread_type", "roll_w", "with_history"}),
+    ],
+)
+def test_fetch_custom_series_analytics_uses_typed_endpoint_payload(
+    monkeypatch, endpoint, expected_extra
+):
+    seen = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"endpoint": endpoint}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        seen.update({"url": url, "json": json, "headers": headers})
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    request = CryptoWizardsCustomSeriesAnalyticsRequest(
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+    )
+
+    response = fetch_custom_series_analytics(endpoint, request, api_key="test-key")
+
+    assert response["endpoint"] == endpoint
+    assert seen["url"].endswith(f"/v1beta/{endpoint}")
+    assert set(seen["json"]) == {
+        "series_1_closes",
+        "series_2_closes",
+        *expected_extra,
+    }
+
+
+def test_post_error_preserves_bounded_vendor_diagnostic(monkeypatch):
+    class FakeResponse:
+        status_code = 400
+        text = '{"detail":"spread_type must be Ou"}'
+
+        def raise_for_status(self):
+            raise requests.HTTPError("400 Client Error")
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: FakeResponse())
+    request = CryptoWizardsCustomSeriesCopulaRequest(
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+    )
+
+    with pytest.raises(CryptoWizardsFetchError, match="spread_type must be Ou"):
+        fetch_custom_series_copula(request, api_key="test-key")
 
 
 def test_payload_from_zscores_history_normalizes_official_min5_response():
