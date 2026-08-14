@@ -95,6 +95,35 @@ def _canonical_result(*, root: Path, now: datetime) -> CommandResult:
     )
 
 
+def _checkpoint_result(*, root: Path, now: datetime) -> CommandResult:
+    return CommandResult(
+        paths={},
+        summary={
+            "implementation_status": "COMPLETE",
+            "operational_acceptance_status": "BLOCKED",
+            "generated_at_utc": now.isoformat(),
+            "current_decision": "CONTINUE_RESEARCH_ONLY",
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+
+
+def _rebind_result(*, root: Path, now: datetime) -> CommandResult:
+    return _bound_result(
+        root,
+        directory="canonical_stage4_rebindings",
+        filename="stage4rebind_test.json",
+        summary={
+            "status": "PASS_STAGE4_CHECKPOINT_REBOUND",
+            "generated_at_utc": now.isoformat(),
+            "receipt_id": "stage4rebind_test",
+            "only_stage4_evidence_progress_changed": True,
+            **_zero_authority(),
+        },
+    )
+
+
 def _credit_result(
     *,
     root: Path,
@@ -132,6 +161,8 @@ def test_unattended_preflight_binds_reset_canonical_and_1000_credit_policy(tmp_p
         now=NOW,
         reset_readiness_builder=_reset_result,
         reset_readiness_validator=lambda **_: {"status": "PASS", "blockers": []},
+        checkpoint_refresher=_checkpoint_result,
+        stage4_checkpoint_rebinder=_rebind_result,
         canonical_status_builder=_canonical_result,
         credit_receipt_capturer=_credit_result,
     )
@@ -144,6 +175,7 @@ def test_unattended_preflight_binds_reset_canonical_and_1000_credit_policy(tmp_p
     assert result.summary["testnet_order_authority"] is False
     assert result.summary["live_trading_authorized"] is False
     assert Path(result.paths["immutable_receipt"]).is_file()
+    assert not list((tmp_path / "reports" / "active").glob("*.lock"))
 
 
 def test_unattended_preflight_makes_no_credit_call_before_reset(tmp_path: Path):
@@ -157,6 +189,9 @@ def test_unattended_preflight_makes_no_credit_call_before_reset(tmp_path: Path):
             AssertionError("reset readiness must not run before the window")
         ),
         reset_readiness_validator=lambda **_: {"status": "PASS"},
+        checkpoint_refresher=lambda **_: (_ for _ in ()).throw(
+            AssertionError("checkpoint refresh must not run before the window")
+        ),
         canonical_status_builder=lambda **_: (_ for _ in ()).throw(
             AssertionError("canonical refresh must not run before the window")
         ),
@@ -166,6 +201,64 @@ def test_unattended_preflight_makes_no_credit_call_before_reset(tmp_path: Path):
     assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
     assert result.summary["blockers"] == ["unattended_frozen_manifest_not_due_or_invalid"]
     assert credit_calls == []
+
+
+def test_unattended_preflight_defers_without_spend_when_producer_lock_is_busy(
+    tmp_path: Path,
+):
+    _manifest(tmp_path)
+    credit_calls: list[dict[str, object]] = []
+
+    result = build_wizard_unattended_external_preflight(
+        root=tmp_path,
+        now=NOW,
+        reset_readiness_builder=_reset_result,
+        reset_readiness_validator=lambda **_: {"status": "PASS", "blockers": []},
+        checkpoint_refresher=_checkpoint_result,
+        stage4_checkpoint_rebinder=lambda **_: (_ for _ in ()).throw(
+            AssertionError("rebind called without locks")
+        ),
+        canonical_status_builder=lambda **_: (_ for _ in ()).throw(
+            AssertionError("canonical called without locks")
+        ),
+        credit_receipt_capturer=lambda **kwargs: credit_calls.append(kwargs),
+        lock_acquirer=lambda *_, **__: (_ for _ in ()).throw(FileExistsError("busy")),
+    )
+
+    assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
+    assert any(
+        blocker.startswith("unattended_locked_canonical_refresh_failed:FileExistsError:busy")
+        for blocker in result.summary["blockers"]
+    )
+    assert credit_calls == []
+
+
+def test_unattended_preflight_releases_partially_acquired_locks(tmp_path: Path):
+    _manifest(tmp_path)
+    acquired: list[Path] = []
+
+    def acquire(path: Path, **_: object) -> None:
+        if acquired:
+            raise FileExistsError("second_lock_busy")
+        path.write_text("owned", encoding="utf-8")
+        acquired.append(path)
+
+    result = build_wizard_unattended_external_preflight(
+        root=tmp_path,
+        now=NOW,
+        reset_readiness_builder=_reset_result,
+        reset_readiness_validator=lambda **_: {"status": "PASS", "blockers": []},
+        checkpoint_refresher=_checkpoint_result,
+        stage4_checkpoint_rebinder=_rebind_result,
+        canonical_status_builder=_canonical_result,
+        credit_receipt_capturer=lambda **_: (_ for _ in ()).throw(
+            AssertionError("credit endpoint called")
+        ),
+        lock_acquirer=acquire,
+    )
+
+    assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
+    assert acquired and not acquired[0].exists()
 
 
 def test_unattended_preflight_does_not_call_credit_endpoint_when_reset_is_blocked(
@@ -181,12 +274,38 @@ def test_unattended_preflight_does_not_call_credit_endpoint_when_reset_is_blocke
             **kwargs, status="BLOCKED_RESET_AUTOMATION"
         ),
         reset_readiness_validator=lambda **_: {"status": "BLOCKED"},
+        checkpoint_refresher=_checkpoint_result,
         canonical_status_builder=_canonical_result,
         credit_receipt_capturer=lambda **kwargs: credit_calls.append(kwargs),
     )
 
     assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
     assert "unattended_reset_readiness_not_bound" in result.summary["blockers"]
+    assert credit_calls == []
+
+
+def test_unattended_preflight_does_not_call_credit_endpoint_when_checkpoint_refresh_fails(
+    tmp_path: Path,
+):
+    _manifest(tmp_path)
+    credit_calls: list[dict[str, object]] = []
+
+    result = build_wizard_unattended_external_preflight(
+        root=tmp_path,
+        now=NOW,
+        reset_readiness_builder=_reset_result,
+        reset_readiness_validator=lambda **_: {"status": "PASS", "blockers": []},
+        checkpoint_refresher=lambda **_: (_ for _ in ()).throw(RuntimeError("locked")),
+        canonical_status_builder=_canonical_result,
+        credit_receipt_capturer=lambda **kwargs: credit_calls.append(kwargs),
+    )
+
+    assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
+    assert any(
+        blocker.startswith("unattended_checkpoint_refresh_failed:RuntimeError:locked")
+        for blocker in result.summary["blockers"]
+    )
+    assert "unattended_checkpoint_refresh_not_current" in result.summary["blockers"]
     assert credit_calls == []
 
 

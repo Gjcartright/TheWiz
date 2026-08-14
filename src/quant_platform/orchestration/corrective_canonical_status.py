@@ -6,6 +6,7 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Callable
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -26,6 +27,144 @@ STAGE4_RECEIPT_PATTERN = re.compile(r"(?:^|;)stage4_handoff_receipt_id=([^;]+)")
 STAGE4_CLOSURE_PATTERN = re.compile(
     r"(?:^|;)stage4_handoff_source_closure_sha256=([0-9a-f]{64})(?:;|$)"
 )
+STAGE4_REBIND_SCHEMA_VERSION = "thewiz.canonical_stage4_rebinding.v1"
+
+
+def rebind_checkpoint_stage4_evidence(
+    *,
+    root: Path = ROOT,
+    now: datetime | None = None,
+    stage4_validator: Callable[..., dict[str, Any]] | None = None,
+) -> CommandResult:
+    """Atomically bind the checkpoint to the current validated Stage 4 receipt."""
+
+    generated_at = _as_utc(now)
+    active = root / "reports" / "active"
+    active.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = active / "seven_stage_goal_checkpoint.csv"
+    stage4_path = active / "stage4_handoff_readiness.json"
+    stage4 = _read_json(stage4_path)
+    checkpoint = _read_csv(checkpoint_path)
+    before_sha256 = _file_hash(checkpoint_path)
+    blockers: list[str] = []
+
+    if stage4_validator is None:
+        from quant_platform.orchestration.corrective_stage4_handoff_readiness import (
+            validate_stage4_handoff_readiness_receipt,
+        )
+
+        stage4_validator = validate_stage4_handoff_readiness_receipt
+    try:
+        validation = stage4_validator(root=root, receipt=stage4)
+    except Exception as exc:  # noqa: BLE001 - rebinding must fail closed
+        validation = {
+            "status": "BLOCKED",
+            "blockers": [f"stage4_validator_failed:{type(exc).__name__}:{exc}"],
+        }
+    if validation.get("status") != "PASS":
+        blockers.append("canonical_stage4_source_receipt_invalid")
+
+    authority_fields = (
+        "candidate_promotion_authority",
+        "order_submission_included",
+        "testnet_order_authority",
+        "live_trading_authorized",
+    )
+    if any(stage4.get(field) is not False for field in authority_fields):
+        blockers.append("canonical_stage4_source_authority_not_strictly_zero")
+
+    required_checkpoint_columns = {"stage", "evidence_progress"}
+    stage4_rows = (
+        checkpoint.index[checkpoint["stage"].astype(str).eq("4")].tolist()
+        if not checkpoint.empty and required_checkpoint_columns.issubset(checkpoint.columns)
+        else []
+    )
+    if len(stage4_rows) != 1:
+        blockers.append("canonical_stage4_checkpoint_row_invalid")
+
+    current_receipt_id = str(stage4.get("receipt_id", "")).strip()
+    current_closure = str(stage4.get("source_closure_sha256", "")).strip().lower()
+    current_checked_at = str(stage4.get("checked_at_utc", "")).strip()
+    if not current_receipt_id:
+        blockers.append("canonical_stage4_source_receipt_id_missing")
+    if not re.fullmatch(r"[0-9a-f]{64}", current_closure):
+        blockers.append("canonical_stage4_source_closure_invalid")
+    if _parse_optional_utc(current_checked_at) is None:
+        blockers.append("canonical_stage4_source_checked_at_invalid")
+
+    previous_evidence = ""
+    rebound_evidence = ""
+    semantic_preservation_valid = False
+    if not blockers:
+        row_index = stage4_rows[0]
+        previous = checkpoint.copy(deep=True)
+        previous_evidence = str(checkpoint.at[row_index, "evidence_progress"])
+        rebound_evidence = previous_evidence
+        for key, value in (
+            ("stage4_handoff_receipt_id", current_receipt_id),
+            ("stage4_handoff_source_closure_sha256", current_closure),
+            ("stage4_handoff_checked_at", current_checked_at),
+        ):
+            rebound_evidence = _set_evidence_token(rebound_evidence, key=key, value=value)
+        checkpoint.at[row_index, "evidence_progress"] = rebound_evidence
+
+        comparison = checkpoint.copy(deep=True)
+        comparison.at[row_index, "evidence_progress"] = previous_evidence
+        semantic_preservation_valid = comparison.equals(previous)
+        if not semantic_preservation_valid:
+            blockers.append("canonical_stage4_rebinding_changed_unrelated_checkpoint_fields")
+        else:
+            _atomic_text(checkpoint_path, checkpoint.to_csv(index=False))
+
+    after_sha256 = _file_hash(checkpoint_path)
+    payload: dict[str, Any] = {
+        "schema_version": STAGE4_REBIND_SCHEMA_VERSION,
+        "generated_at_utc": generated_at.isoformat(),
+        "status": "PASS_STAGE4_CHECKPOINT_REBOUND"
+        if not blockers
+        else "BLOCKED_STAGE4_CHECKPOINT_REBIND",
+        "blockers": list(dict.fromkeys(blockers)),
+        "checkpoint_path": _relative(checkpoint_path, root),
+        "checkpoint_sha256_before": before_sha256,
+        "checkpoint_sha256_after": after_sha256,
+        "stage4_path": _relative(stage4_path, root),
+        "stage4_sha256": _file_hash(stage4_path),
+        "stage4_receipt_id": current_receipt_id,
+        "stage4_source_closure_sha256": current_closure,
+        "stage4_checked_at_utc": current_checked_at,
+        "stage4_validation_status": str(validation.get("status", "BLOCKED")),
+        "stage4_validation_blockers": list(validation.get("blockers", [])),
+        "previous_evidence_progress": previous_evidence,
+        "rebound_evidence_progress": rebound_evidence,
+        "only_stage4_evidence_progress_changed": semantic_preservation_valid,
+        "research_only": True,
+        "candidate_promotion_authority": False,
+        "order_submission_included": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    payload["receipt_id"] = (
+        "stage4rebind_" + sha256(_canonical_json(payload).encode("utf-8")).hexdigest()[:20]
+    )
+    immutable_path = (
+        root / "data" / "research" / "canonical_stage4_rebindings" / f"{payload['receipt_id']}.json"
+    )
+    status_path = active / "canonical_stage4_rebinding.json"
+    _write_or_validate_immutable_json(payload, immutable_path)
+    active_payload = {
+        **payload,
+        "immutable_receipt_path": _relative(immutable_path, root),
+        "immutable_receipt_sha256": _file_hash(immutable_path),
+    }
+    _atomic_json(active_payload, status_path)
+    return CommandResult(
+        paths={
+            "status": status_path,
+            "checkpoint": checkpoint_path,
+            "immutable_receipt": immutable_path,
+        },
+        summary=active_payload,
+    )
 
 
 def build_canonical_program_status(
@@ -376,6 +515,15 @@ def _read_csv(path: Path) -> pd.DataFrame:
         return pd.read_csv(path, keep_default_na=False)
     except (OSError, pd.errors.ParserError, UnicodeDecodeError):
         return pd.DataFrame()
+
+
+def _set_evidence_token(evidence: str, *, key: str, value: str) -> str:
+    token = f"{key}={value}"
+    pattern = re.compile(rf"(?:(?<=;)|^){re.escape(key)}=[^;]*(?=;|$)")
+    if pattern.search(evidence):
+        return pattern.sub(token, evidence, count=1)
+    separator = "" if not evidence or evidence.endswith(";") else ";"
+    return f"{evidence}{separator}{token};"
 
 
 def _as_utc(value: datetime | None) -> datetime:

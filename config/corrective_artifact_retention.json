@@ -8,6 +8,7 @@
     "data/research/wizard_reset_readiness",
     "data/research/wizard_proof_launcher_receipts",
     "data/research/wizard_unattended_external_preflights",
+    "data/research/canonical_stage4_rebindings",
     "data/research/canonical_program_status"
   ],
   "receipt_retention_days": 14,

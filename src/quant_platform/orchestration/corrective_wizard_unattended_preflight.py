@@ -14,7 +14,10 @@ from typing import Any
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration.corrective_canonical_status import (
     build_canonical_program_status,
+    rebind_checkpoint_stage4_evidence,
 )
+from quant_platform.orchestration.corrective_daily_scheduler import _acquire_lock
+from quant_platform.orchestration.corrective_program import complete_corrective_plan
 from quant_platform.orchestration.corrective_wizard_api_credit_receipt import (
     capture_wizard_api_credit_receipt,
 )
@@ -27,6 +30,13 @@ ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.wizard_unattended_external_preflight.v1"
 DAILY_CREDIT_LIMIT = 1000
 PROTECTED_CREDIT_RESERVE = 100
+CRITICAL_LOCK_NAMES = (
+    ".corrective_daily.lock",
+    ".corrective_l2_capture.lock",
+    ".corrective_wizard_proof.lock",
+    ".corrective_registered_rerun.lock",
+)
+LOCK_STALE_TIMEOUT_SECONDS = 4 * 60 * 60
 
 
 def build_wizard_unattended_external_preflight(
@@ -39,8 +49,11 @@ def build_wizard_unattended_external_preflight(
     reset_readiness_validator: Callable[..., dict[str, Any]] = (
         validate_wizard_reset_readiness_receipt
     ),
+    checkpoint_refresher: Callable[..., CommandResult] = complete_corrective_plan,
+    stage4_checkpoint_rebinder: Callable[..., CommandResult] = (rebind_checkpoint_stage4_evidence),
     canonical_status_builder: Callable[..., CommandResult] = build_canonical_program_status,
     credit_receipt_capturer: Callable[..., CommandResult] = capture_wizard_api_credit_receipt,
+    lock_acquirer: Callable[..., None] = _acquire_lock,
     daily_credit_limit: int = DAILY_CREDIT_LIMIT,
     protected_reserve: int = PROTECTED_CREDIT_RESERVE,
 ) -> CommandResult:
@@ -91,24 +104,70 @@ def build_wizard_unattended_external_preflight(
     if manifest_ready and not reset_ready:
         blockers.append("unattended_reset_readiness_not_bound")
 
-    canonical: dict[str, Any] = {}
+    checkpoint: dict[str, Any] = {}
     if manifest_ready and reset_ready:
         try:
-            canonical_result = canonical_status_builder(root=root, now=checked_at)
-            canonical = dict(canonical_result.summary)
+            checkpoint_result = checkpoint_refresher(root=root, now=checked_at)
+            checkpoint = dict(checkpoint_result.summary)
         except Exception as exc:  # noqa: BLE001 - preflight must fail closed
-            blockers.append(f"unattended_canonical_status_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"unattended_checkpoint_refresh_failed:{type(exc).__name__}:{exc}")
+    checkpoint_ready = bool(
+        checkpoint.get("implementation_status") == "COMPLETE"
+        and checkpoint.get("generated_at_utc") == checked_at.isoformat()
+        and checkpoint.get("current_decision") == "CONTINUE_RESEARCH_ONLY"
+        and checkpoint.get("testnet_order_authority") is False
+        and checkpoint.get("live_trading_authorized") is False
+    )
+    if manifest_ready and reset_ready and not checkpoint_ready:
+        blockers.append("unattended_checkpoint_refresh_not_current")
+
+    rebind: dict[str, Any] = {}
+    rebind_ready = False
+    canonical: dict[str, Any] = {}
+    acquired_locks: list[Path] = []
+    if manifest_ready and reset_ready and checkpoint_ready:
+        try:
+            for lock_name in CRITICAL_LOCK_NAMES:
+                lock_path = active / lock_name
+                lock_acquirer(
+                    lock_path,
+                    now=checked_at,
+                    timeout_seconds=LOCK_STALE_TIMEOUT_SECONDS,
+                )
+                acquired_locks.append(lock_path)
+            rebind_result = stage4_checkpoint_rebinder(root=root, now=checked_at)
+            rebind = dict(rebind_result.summary)
+            rebind_ready = bool(
+                rebind.get("status") == "PASS_STAGE4_CHECKPOINT_REBOUND"
+                and rebind.get("generated_at_utc") == checked_at.isoformat()
+                and rebind.get("only_stage4_evidence_progress_changed") is True
+                and _immutable_binding_valid(rebind, root=root)
+                and _authority_is_zero(rebind)
+            )
+            if not rebind_ready:
+                blockers.append("unattended_stage4_checkpoint_rebinding_not_current")
+            else:
+                canonical_result = canonical_status_builder(root=root, now=checked_at)
+                canonical = dict(canonical_result.summary)
+        except Exception as exc:  # noqa: BLE001 - preflight must fail closed
+            blockers.append(
+                f"unattended_locked_canonical_refresh_failed:{type(exc).__name__}:{exc}"
+            )
+        finally:
+            for lock_path in reversed(acquired_locks):
+                lock_path.unlink(missing_ok=True)
     canonical_ready = bool(
-        canonical.get("status") == "PASS_CANONICAL_CURRENT"
+        rebind_ready
+        and canonical.get("status") == "PASS_CANONICAL_CURRENT"
         and canonical.get("generated_at_utc") == checked_at.isoformat()
         and _immutable_binding_valid(canonical, root=root)
         and _authority_is_zero(canonical)
     )
-    if manifest_ready and reset_ready and not canonical_ready:
+    if manifest_ready and reset_ready and checkpoint_ready and not canonical_ready:
         blockers.append("unattended_canonical_status_not_current")
 
     credit: dict[str, Any] = {}
-    if manifest_ready and reset_ready and canonical_ready:
+    if manifest_ready and reset_ready and checkpoint_ready and canonical_ready:
         try:
             credit_result = credit_receipt_capturer(
                 root=root,
@@ -132,7 +191,7 @@ def build_wizard_unattended_external_preflight(
         and _immutable_binding_valid(credit, root=root)
         and _authority_is_zero(credit)
     )
-    if manifest_ready and reset_ready and canonical_ready and not credit_ready:
+    if manifest_ready and reset_ready and checkpoint_ready and canonical_ready and not credit_ready:
         blockers.append("unattended_authenticated_credit_preflight_not_bound")
 
     blockers = list(dict.fromkeys(blockers))
@@ -154,6 +213,13 @@ def build_wizard_unattended_external_preflight(
         "reset_readiness_status": str(reset.get("status", "NOT_RUN")),
         "reset_readiness_receipt_id": str(reset.get("receipt_id", "")),
         "reset_readiness_binding_status": str(reset_binding.get("status", "BLOCKED")),
+        "checkpoint_refresh_status": str(checkpoint.get("implementation_status", "NOT_RUN")),
+        "checkpoint_operational_status": str(
+            checkpoint.get("operational_acceptance_status", "NOT_RUN")
+        ),
+        "critical_lock_names": list(CRITICAL_LOCK_NAMES),
+        "stage4_checkpoint_rebinding_status": str(rebind.get("status", "NOT_RUN")),
+        "stage4_checkpoint_rebinding_receipt_id": str(rebind.get("receipt_id", "")),
         "canonical_status": str(canonical.get("status", "NOT_RUN")),
         "canonical_receipt_id": str(canonical.get("receipt_id", "")),
         "credit_preflight_status": str(credit.get("status", "NOT_RUN")),

@@ -54,6 +54,7 @@ LAUNCH_AGENT_LABEL = "com.thewiz.corrective-wizard-proof"
 LAUNCHER_MODULE = "quant_platform.orchestration.corrective_wizard_proof_launcher"
 MAX_INTERVAL_SECONDS = 600
 HEARTBEAT_GRACE_MULTIPLIER = 2
+RESET_GRACE_INTERVAL_MULTIPLIER = 3
 API_KEY_ENV = "CRYPTO_WIZARDS_API_KEY"
 MIN_RUNTIME_TEMP_FREE_BYTES = 1024**3
 
@@ -396,14 +397,10 @@ def build_corrective_wizard_reset_readiness(
     )
 
     reset_at = _try_parse_utc(str(manifest.get("next_external_attempt_eligible_at", "")))
-    reset_contract_valid = bool(
-        reset_at
-        and reset_at.minute == 0
-        and reset_at.second == 0
-        and reset_at.microsecond == 0
-        and reset_at.hour == 0
-        and checked_at - timedelta(seconds=max(interval, 0)) <= reset_at
-        and reset_at <= checked_at + timedelta(hours=24)
+    reset_contract_valid = _reset_contract_is_valid(
+        reset_at=reset_at,
+        checked_at=checked_at,
+        interval_seconds=interval,
     )
     capture_window_status = (
         "WAITING_FOR_RESET" if reset_at and checked_at < reset_at else "DUE_AFTER_RESET"
@@ -617,6 +614,7 @@ def build_corrective_wizard_reset_readiness(
             ou_v6_capture_audit.get("unresolved_call_intents")
         ),
         "next_external_attempt_eligible_at": reset_at.isoformat() if reset_at else "",
+        "reset_retry_grace_seconds": max(interval * RESET_GRACE_INTERVAL_MULTIPLIER, 0),
         "browser_auth_required_at_utc": browser_auth_required_at.isoformat(),
         "browser_auth_valid_at_capture_window": browser_auth_window_ready,
         "browser_auth_valid_until_utc": (
@@ -1186,6 +1184,24 @@ def _file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _reset_contract_is_valid(
+    *, reset_at: datetime | None, checked_at: datetime, interval_seconds: int
+) -> bool:
+    retry_grace_seconds = max(
+        interval_seconds * RESET_GRACE_INTERVAL_MULTIPLIER,
+        0,
+    )
+    return bool(
+        reset_at
+        and reset_at.minute == 0
+        and reset_at.second == 0
+        and reset_at.microsecond == 0
+        and reset_at.hour == 0
+        and checked_at - timedelta(seconds=retry_grace_seconds) <= reset_at
+        and reset_at <= checked_at + timedelta(hours=24)
+    )
 
 
 def _as_utc(value: datetime | None) -> datetime:

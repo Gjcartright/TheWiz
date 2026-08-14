@@ -10,6 +10,7 @@ from quant_platform.orchestration.corrective_canonical_status import (
     build_canonical_program_status,
     materialize_scheduler_status_roles,
     publish_scheduler_status_pointers,
+    rebind_checkpoint_stage4_evidence,
 )
 
 
@@ -48,6 +49,8 @@ def _root(tmp_path: Path) -> Path:
             "receipt_id": "stage4_current",
             "checked_at_utc": "2026-08-14T14:00:00+00:00",
             "source_closure_sha256": "a" * 64,
+            "candidate_promotion_authority": False,
+            "order_submission_included": False,
             "testnet_order_authority": False,
             "live_trading_authorized": False,
         },
@@ -150,6 +153,91 @@ def test_canonical_status_accepts_new_heartbeat_with_same_stage4_closure(tmp_pat
     assert result.summary["stage4_exact_receipt_binding_match"] is False
     assert result.summary["stage4_closure_binding_match"] is True
     assert result.summary["stage4_receipt_binding_match"] is True
+
+
+def test_stage4_rebind_updates_only_stage4_evidence_and_repairs_canonical_status(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    active = root / "reports" / "active"
+    stage4 = active / "stage4_handoff_readiness.json"
+    _write_json(
+        stage4,
+        {
+            "receipt_id": "stage4_rotated",
+            "checked_at_utc": "2026-08-14T14:05:00+00:00",
+            "source_closure_sha256": "b" * 64,
+            "candidate_promotion_authority": False,
+            "order_submission_included": False,
+            "testnet_order_authority": False,
+            "live_trading_authorized": False,
+        },
+    )
+    checkpoint_path = active / "seven_stage_goal_checkpoint.csv"
+    before = pd.read_csv(checkpoint_path, keep_default_na=False)
+
+    result = rebind_checkpoint_stage4_evidence(
+        root=root,
+        now=datetime(2026, 8, 14, 14, 6, tzinfo=UTC),
+        stage4_validator=lambda **_: {"status": "PASS", "blockers": []},
+    )
+
+    after = pd.read_csv(checkpoint_path, keep_default_na=False)
+    assert result.summary["status"] == "PASS_STAGE4_CHECKPOINT_REBOUND"
+    assert result.summary["only_stage4_evidence_progress_changed"] is True
+    assert result.paths["immutable_receipt"].is_file()
+    assert before.drop(columns=["evidence_progress"]).equals(
+        after.drop(columns=["evidence_progress"])
+    )
+    assert before.loc[before["stage"].ne(4), "evidence_progress"].equals(
+        after.loc[after["stage"].ne(4), "evidence_progress"]
+    )
+    evidence = after.loc[after["stage"].eq(4), "evidence_progress"].iloc[0]
+    assert "stage4_handoff_receipt_id=stage4_rotated" in evidence
+    assert f"stage4_handoff_source_closure_sha256={'b' * 64}" in evidence
+    assert "stage4_handoff_checked_at=2026-08-14T14:05:00+00:00" in evidence
+
+    canonical = build_canonical_program_status(
+        root=root,
+        now=datetime(2026, 8, 14, 14, 6, tzinfo=UTC),
+    )
+    assert canonical.summary["status"] == "PASS_CANONICAL_CURRENT"
+
+
+def test_stage4_rebind_fails_closed_without_validated_zero_authority_source(
+    tmp_path: Path,
+) -> None:
+    root = _root(tmp_path)
+    checkpoint_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
+    before = checkpoint_path.read_bytes()
+
+    result = rebind_checkpoint_stage4_evidence(
+        root=root,
+        stage4_validator=lambda **_: {
+            "status": "BLOCKED",
+            "blockers": ["immutable_mismatch"],
+        },
+    )
+
+    assert result.summary["status"] == "BLOCKED_STAGE4_CHECKPOINT_REBIND"
+    assert "canonical_stage4_source_receipt_invalid" in result.summary["blockers"]
+    assert checkpoint_path.read_bytes() == before
+
+
+def test_stage4_rebind_requires_explicit_zero_authority_fields(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    stage4_path = root / "reports" / "active" / "stage4_handoff_readiness.json"
+    stage4 = json.loads(stage4_path.read_text(encoding="utf-8"))
+    stage4.pop("order_submission_included")
+    _write_json(stage4_path, stage4)
+
+    result = rebind_checkpoint_stage4_evidence(
+        root=root,
+        stage4_validator=lambda **_: {"status": "PASS", "blockers": []},
+    )
+
+    assert result.summary["status"] == "BLOCKED_STAGE4_CHECKPOINT_REBIND"
+    assert "canonical_stage4_source_authority_not_strictly_zero" in result.summary["blockers"]
 
 
 def test_scheduler_role_pointers_cannot_shadow_each_other(tmp_path: Path) -> None:

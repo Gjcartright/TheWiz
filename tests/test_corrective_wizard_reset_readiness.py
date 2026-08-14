@@ -301,6 +301,21 @@ def test_reset_readiness_passes_without_granting_authority(tmp_path: Path) -> No
     )
 
 
+def test_reset_contract_allows_three_scheduler_intervals_for_lock_retry() -> None:
+    reset_at = datetime(2026, 8, 15, 0, 0, tzinfo=UTC)
+
+    assert corrective_wizard_reset_readiness._reset_contract_is_valid(
+        reset_at=reset_at,
+        checked_at=datetime(2026, 8, 15, 0, 25, tzinfo=UTC),
+        interval_seconds=600,
+    )
+    assert not corrective_wizard_reset_readiness._reset_contract_is_valid(
+        reset_at=reset_at,
+        checked_at=datetime(2026, 8, 15, 0, 31, tzinfo=UTC),
+        interval_seconds=600,
+    )
+
+
 def test_reset_readiness_requires_observation_manifest_and_execution_reset_roles(
     tmp_path: Path,
 ) -> None:
