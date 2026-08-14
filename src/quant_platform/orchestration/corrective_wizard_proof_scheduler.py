@@ -13,6 +13,10 @@ from typing import Any
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.env import load_env_file
+from quant_platform.orchestration.corrective_canonical_status import (
+    SCHEDULER_EXECUTION_POINTER,
+    publish_scheduler_status_pointers,
+)
 from quant_platform.orchestration.corrective_daily_scheduler import _acquire_lock
 from quant_platform.orchestration.corrective_program import complete_corrective_plan
 from quant_platform.orchestration.corrective_registered_rerun_executor import (
@@ -308,8 +312,9 @@ def run_corrective_wizard_proof_cycle(
     receipts.mkdir(parents=True, exist_ok=True)
     lock_path = active / ".corrective_wizard_proof.lock"
     latest_path = active / "corrective_wizard_proof_scheduler_status.json"
+    execution_status_path = active / SCHEDULER_EXECUTION_POINTER
     receipt_path = receipts / started_at.strftime("%Y-%m-%d_%H%M%S_%f.json")
-    previous = _read_json(latest_path)
+    previous = _read_json(execution_status_path) or _read_json(latest_path)
     prior_external_attempt_today = _already_attempted_today(previous, started_at)
     blockers: list[str] = []
     batch_summaries: list[dict[str, Any]] = []
@@ -2459,7 +2464,11 @@ def run_corrective_wizard_proof_cycle(
         "wizardproof_" + sha256(_canonical_json(receipt).encode("utf-8")).hexdigest()[:20]
     )
     _atomic_json(receipt, receipt_path)
-    _atomic_json({**receipt, "receipt_path": _relative(receipt_path, root)}, latest_path)
+    pointer_paths = publish_scheduler_status_pointers(
+        root=root,
+        payload=receipt,
+        receipt_path=receipt_path,
+    )
     checkpoint_refresh_needed = bool(
         completed_after > completed_before
         or responses_captured_after > responses_captured_before
@@ -2496,7 +2505,11 @@ def run_corrective_wizard_proof_cycle(
             "wizardproof_" + sha256(_canonical_json(receipt).encode("utf-8")).hexdigest()[:20]
         )
         _atomic_json(receipt, receipt_path)
-        _atomic_json({**receipt, "receipt_path": _relative(receipt_path, root)}, latest_path)
+        pointer_paths = publish_scheduler_status_pointers(
+            root=root,
+            payload=receipt,
+            receipt_path=receipt_path,
+        )
     registered_rerun_handoff_ready = bool(
         execute
         and registered_rerun_runner is not None
@@ -2537,9 +2550,10 @@ def run_corrective_wizard_proof_cycle(
                 "wizardproof_" + sha256(_canonical_json(receipt).encode("utf-8")).hexdigest()[:20]
             )
             _atomic_json(receipt, receipt_path)
-            _atomic_json(
-                {**receipt, "receipt_path": _relative(receipt_path, root)},
-                latest_path,
+            pointer_paths = publish_scheduler_status_pointers(
+                root=root,
+                payload=receipt,
+                receipt_path=receipt_path,
             )
     if registered_rerun_handoff_ready:
         try:
@@ -2599,7 +2613,11 @@ def run_corrective_wizard_proof_cycle(
             "wizardproof_" + sha256(_canonical_json(receipt).encode("utf-8")).hexdigest()[:20]
         )
         _atomic_json(receipt, receipt_path)
-        _atomic_json({**receipt, "receipt_path": _relative(receipt_path, root)}, latest_path)
+        pointer_paths = publish_scheduler_status_pointers(
+            root=root,
+            payload=receipt,
+            receipt_path=receipt_path,
+        )
     immutable_receipt_path = _write_final_immutable_scheduler_receipt(
         root=root,
         active_receipt_path=receipt_path,
@@ -2608,6 +2626,8 @@ def run_corrective_wizard_proof_cycle(
     return CommandResult(
         paths={
             "latest_status": latest_path,
+            "execution_status": pointer_paths["execution"],
+            "observation_status": pointer_paths["observation"],
             "cycle_receipt": receipt_path,
             "immutable_cycle_receipt": immutable_receipt_path,
             "proof_queue": queue_path,

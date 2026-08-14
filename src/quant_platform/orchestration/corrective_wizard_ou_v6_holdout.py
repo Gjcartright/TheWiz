@@ -22,6 +22,9 @@ from quant_platform.crypto_wizards_history import (
     fetch_custom_series_backtest,
 )
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.orchestration.corrective_wizard_api_credit_receipt import (
+    publish_wizard_api_credit_receipt,
+)
 from quant_platform.orchestration.corrective_wizard_ou_holdout import (
     _aligned_candles,
     _as_utc,
@@ -493,6 +496,8 @@ def run_ou_v6_prospective_holdout(
     ]
     key = api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
     credits_used: int | None = None
+    credit_receipt_id = ""
+    credit_receipt_path: Path | None = None
     blocker = ""
     ambiguous = (
         _ambiguous_call_intent_blockers(
@@ -511,10 +516,23 @@ def run_ou_v6_prospective_holdout(
             blocker = "crypto_wizards_api_key_missing"
         else:
             try:
+                raw_usage = credits_fetcher(api_key=key)
                 usage = parse_wizard_credit_usage(
-                    credits_fetcher(api_key=key),
+                    raw_usage,
                     configured_limit=daily_credit_limit,
                 )
+                credit_receipt = publish_wizard_api_credit_receipt(
+                    root=root,
+                    now=timestamp,
+                    response=raw_usage,
+                    api_key_present=True,
+                    api_key_source="argument" if api_key else "environment",
+                    daily_limit=daily_credit_limit,
+                    protected_reserve=reserved_credits,
+                    required_credits=len(missing) * 2,
+                )
+                credit_receipt_id = str(credit_receipt.summary.get("receipt_id", ""))
+                credit_receipt_path = credit_receipt.paths["immutable_receipt"]
                 if not usage.known or usage.used is None:
                     blocker = "credit_usage_unknown"
                 else:
@@ -604,6 +622,10 @@ def run_ou_v6_prospective_holdout(
         "calls_made": calls_made,
         "responses_captured": responses_captured,
         "credits_used_before": credits_used,
+        "credit_preflight_receipt_id": credit_receipt_id,
+        "credit_preflight_receipt_path": (
+            _relative(credit_receipt_path, root) if credit_receipt_path is not None else ""
+        ),
         "credits_attempted": calls_made * 2,
         "credits_completed": responses_captured * 2,
         "call_attempt_intent_paths": intent_paths,
@@ -650,6 +672,8 @@ def run_ou_v6_prospective_holdout(
     paths["capture_status"] = status_path
     if attempt_path.is_file():
         paths["attempt"] = attempt_path
+    if credit_receipt_path is not None:
+        paths["credit_preflight_receipt"] = credit_receipt_path
     return CommandResult(paths=paths, summary=status)
 
 

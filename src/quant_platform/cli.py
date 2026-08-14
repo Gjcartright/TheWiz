@@ -188,6 +188,12 @@ from quant_platform.orchestration import run_langgraph_agent_workflow, run_orche
 from quant_platform.orchestration.corrective_agent_governance import (
     build_corrective_agent_governance,
 )
+from quant_platform.orchestration.corrective_artifact_retention import (
+    run_corrective_artifact_retention,
+)
+from quant_platform.orchestration.corrective_canonical_status import (
+    build_canonical_program_status,
+)
 from quant_platform.orchestration.corrective_daily_scheduler import build_corrective_daily_cadence
 from quant_platform.orchestration.corrective_data_evidence import build_corrective_data_evidence
 from quant_platform.orchestration.corrective_governance import build_corrective_governance
@@ -226,6 +232,9 @@ from quant_platform.orchestration.corrective_testnet_collateral_transfer import 
 from quant_platform.orchestration.corrective_testnet_pair_execution import (
     build_testnet_pair_execution_preflight,
     run_testnet_pair_execution,
+)
+from quant_platform.orchestration.corrective_wizard_api_credit_receipt import (
+    capture_wizard_api_credit_receipt,
 )
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     build_corrective_wizard_capture_manifest,
@@ -7441,6 +7450,48 @@ def _append_current_state_operational_gaps(frame: pd.DataFrame, output: Path) ->
     return augmented
 
 
+def _seven_stage_priority_gap_frame(root: Path = ROOT) -> pd.DataFrame:
+    """Project the active seven-stage checkpoint into the assessment schema."""
+
+    checkpoint_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
+    checkpoint = _read_csv_or_empty(checkpoint_path)
+    required = {
+        "stage",
+        "objective",
+        "status",
+        "evidence_progress",
+        "blocker",
+        "next_action",
+    }
+    if checkpoint.empty or not required.issubset(checkpoint.columns):
+        return pd.DataFrame()
+    stages = pd.to_numeric(checkpoint["stage"], errors="coerce")
+    if stages.isna().any() or set(stages.astype(int)) != set(range(1, 8)):
+        return pd.DataFrame()
+    if stages.astype(int).duplicated().any():
+        return pd.DataFrame()
+
+    severity = {1: "medium", 2: "critical", 3: "critical", 4: "critical", 5: "high", 6: "high", 7: "high"}
+    rows: list[dict[str, object]] = []
+    for _, row in checkpoint.assign(_stage=stages.astype(int)).sort_values("_stage").iterrows():
+        stage = int(row["_stage"])
+        passed = str(row["status"]).strip().upper() == "PASS"
+        rows.append(
+            {
+                "priority": f"S{stage}",
+                "area": f"seven_stage_{stage}_{str(row['objective']).strip()}",
+                "status": "pass" if passed else "gap",
+                "severity": "none" if passed else severity[stage],
+                "gap": "" if passed else str(row["blocker"] or "").strip(),
+                "current_evidence": str(row["evidence_progress"] or "").strip(),
+                "required_proof": f"stage_{stage}_pass_with_immutable_evidence",
+                "source_report": str(checkpoint_path.relative_to(root)),
+                "next_action": str(row["next_action"] or "").strip(),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def priority_gap_test_report(
     readiness: pd.DataFrame | None = None,
     output_path: Path | None = None,
@@ -7449,6 +7500,10 @@ def priority_gap_test_report(
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_gap_test.csv"
+    seven_stage = _seven_stage_priority_gap_frame(ROOT)
+    if not seven_stage.empty:
+        _write_csv_atomic(seven_stage, output)
+        return seven_stage
     readiness = readiness if readiness is not None else priority_readiness_report()
     if refresh_paper_preflight:
         paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
@@ -11456,6 +11511,9 @@ def main() -> None:
             "build-live-canary-executor-preflight",
             "run-live-canary-executor",
             "complete-corrective-plan",
+            "build-canonical-program-status",
+            "capture-wizard-api-credit-receipt",
+            "corrective-artifact-retention",
             "build-artifact-index",
             "current-state",
             "build-pair-universe",
@@ -12806,6 +12864,30 @@ def main() -> None:
         print(json.dumps(result.as_dict(), indent=2))
     elif args.command == "complete-corrective-plan":
         result = complete_corrective_plan(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-canonical-program-status":
+        result = build_canonical_program_status(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "capture-wizard-api-credit-receipt":
+        result = capture_wizard_api_credit_receipt(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "corrective-artifact-retention":
+        result = run_corrective_artifact_retention(root=ROOT, apply=bool(args.apply))
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},

@@ -7198,6 +7198,39 @@ def test_canonical_gap_report_separates_historical_wizard_coverage_from_current_
     assert rows.loc["current_state_hyperliquid_wizard_exact_mode_intake", "severity"] == "critical"
 
 
+def test_priority_gap_report_prefers_active_seven_stage_checkpoint(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "stage": stage,
+                "objective": f"objective_{stage}",
+                "status": "PASS" if stage == 1 else "BLOCKED",
+                "evidence_progress": f"stage_{stage}_evidence",
+                "blocker": "" if stage == 1 else f"stage_{stage}_blocker",
+                "next_action": "continue" if stage == 1 else f"repair_stage_{stage}",
+            }
+            for stage in range(1, 8)
+        ]
+    ).to_csv(active / "seven_stage_goal_checkpoint.csv", index=False)
+
+    report = cli.priority_gap_test_report(
+        pd.DataFrame(),
+        refresh_paper_preflight=False,
+    )
+
+    assert len(report) == 7
+    assert set(report["priority"]) == {f"S{stage}" for stage in range(1, 8)}
+    assert not report["area"].str.contains("dydx", case=False).any()
+    assert report.loc[report["priority"].eq("S1"), "status"].iloc[0] == "pass"
+    assert report.loc[report["priority"].eq("S4"), "severity"].iloc[0] == "critical"
+    assert set(report["source_report"]) == {
+        "reports/active/seven_stage_goal_checkpoint.csv"
+    }
+
+
 def test_gap_analysis_checklist_builds_checkpoint_files(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     fake_gap_report = pd.DataFrame(

@@ -819,6 +819,14 @@ def run_post_window_readiness_refresh(
     _atomic_json(payload, status_path)
     _write_immutable_json(payload, immutable_path)
     output_paths.update({"status": status_path, "immutable_receipt": immutable_path})
+    from quant_platform.orchestration.corrective_canonical_status import (
+        build_canonical_program_status,
+    )
+
+    canonical = build_canonical_program_status(root=root, now=evaluated_at)
+    output_paths.update(
+        {f"canonical_{name}": path for name, path in canonical.paths.items()}
+    )
     return CommandResult(paths=output_paths, summary=payload)
 
 

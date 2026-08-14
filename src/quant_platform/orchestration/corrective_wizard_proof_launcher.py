@@ -411,7 +411,13 @@ def run_wizard_proof_launcher(
     ).hexdigest()
     status_path = active / "corrective_wizard_proof_launcher_status.json"
     _publish_latest_launcher_status(payload, status_path)
+    from quant_platform.orchestration.corrective_canonical_status import (
+        build_canonical_program_status,
+    )
+
+    canonical = build_canonical_program_status(root=root, now=checked_at)
     payload["launcher_status_path"] = _relative(status_path, root)
+    payload["canonical_status_path"] = _relative(canonical.paths["status"], root)
     return payload
 
 
@@ -752,8 +758,7 @@ def _ou_v5_scheduler_evidence_complete(
         return True
     if root is not None:
         return bool(
-            validate_ou_v5_stage3_evidence(root=root, evidence=receipt).get("status")
-            == "PASS"
+            validate_ou_v5_stage3_evidence(root=root, evidence=receipt).get("status") == "PASS"
         )
     if receipt.get("ou_v5_prospectively_registered") is not True:
         return True
@@ -782,8 +787,7 @@ def _ou_v6_scheduler_evidence_complete(
 ) -> bool:
     if root is not None:
         return bool(
-            validate_ou_v6_stage3_evidence(root=root, evidence=receipt).get("status")
-            == "PASS"
+            validate_ou_v6_stage3_evidence(root=root, evidence=receipt).get("status") == "PASS"
         )
     if receipt.get("ou_v6_prospectively_registered") is not True:
         return True
@@ -824,9 +828,7 @@ def _capture_manifest_reconciliation_complete(
     counts_complete = bool(completed == required and pending == 0 and blocked == 0)
     source_valid = bool(
         root is None
-        or validate_capture_reconciliation_evidence(root=root, evidence=receipt).get(
-            "status"
-        )
+        or validate_capture_reconciliation_evidence(root=root, evidence=receipt).get("status")
         == "PASS"
     )
     return bool(

@@ -1,0 +1,28 @@
+{
+  "schema_version": "thewiz.corrective_artifact_retention_policy.v1",
+  "operational_receipt_directories": [
+    "data/research/stage4_handoff_readiness",
+    "data/research/l2_readiness_refresh",
+    "data/research/scheduler_runtime_readiness",
+    "data/research/wizard_comparator_review_controls",
+    "data/research/wizard_reset_readiness",
+    "data/research/wizard_proof_launcher_receipts",
+    "data/research/canonical_program_status"
+  ],
+  "receipt_retention_days": 14,
+  "minimum_newest_per_directory": 100,
+  "log_paths": [
+    "reports/active/schedule_logs/*.log"
+  ],
+  "log_rotation_threshold_bytes": 26214400,
+  "log_rotations_to_keep": 8,
+  "never_archive_directories": [
+    "data/research/registered_rerun_contracts",
+    "data/research/registered_rerun_executions",
+    "data/research/registered_rerun_conclusions",
+    "data/research/wizard_ou_v6_holdout",
+    "data/research/wizard_ou_v6_holdout_evaluations",
+    "data/research/wizard_api_credit_receipts",
+    "data/research/testnet_lifecycle_executions"
+  ]
+}

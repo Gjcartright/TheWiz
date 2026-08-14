@@ -425,6 +425,11 @@ def _complete_corrective_plan_unlocked(*, root: Path, now: datetime) -> CommandR
         registered_learning_audit=registered_learning_audit,
         now=now,
     )
+    from quant_platform.orchestration.corrective_canonical_status import (
+        build_canonical_program_status,
+    )
+
+    canonical = build_canonical_program_status(root=root, now=now)
     return CommandResult(
         paths={
             "execution_plan": plan_path,
@@ -433,6 +438,7 @@ def _complete_corrective_plan_unlocked(*, root: Path, now: datetime) -> CommandR
             "completion_summary": completion_md,
             "seven_stage_checkpoint": seven_stage_path,
             "seven_stage_checkpoint_markdown": seven_stage_md,
+            **{f"canonical_{name}": path for name, path in canonical.paths.items()},
             "current_l2_candidates": Path(final_l2_candidates["path"]),
             **{
                 f"phase_{phase}_{name}": path
@@ -1758,6 +1764,8 @@ def _write_seven_stage_checkpoint(
                 f"stage4_handoff_readiness={stage4_handoff_readiness.get('status', 'NOT_AUDITED')};"
                 f"stage4_handoff_state={stage4_handoff_readiness.get('handoff_state', 'NOT_AUDITED')};"
                 f"stage4_handoff_receipt_id={stage4_handoff_readiness.get('receipt_id', '')};"
+                f"stage4_handoff_source_closure_sha256="
+                f"{stage4_handoff_readiness.get('source_closure_sha256', '')};"
                 f"stage4_handoff_checked_at={stage4_handoff_readiness.get('checked_at_utc', '')};"
                 f"stage4_handoff_checks={int(stage4_handoff_readiness.get('checks_passed', 0) or 0)}/"
                 f"{int(stage4_handoff_readiness.get('checks_total', 0) or 0)};"
@@ -1950,6 +1958,31 @@ def _write_seven_stage_checkpoint(
         },
     ]
     frame = pd.DataFrame(rows)
+    classified = frame.apply(
+        lambda row: _classify_checkpoint_evidence_paths(
+            root=root,
+            evidence_path=str(row.get("evidence_path", "")),
+        ),
+        axis=1,
+        result_type="expand",
+    )
+    classified.columns = [
+        "existing_evidence_paths",
+        "planned_output_paths",
+        "missing_required_paths",
+    ]
+    frame = pd.concat([frame, classified], axis=1)
+    frame["evidence_path_status"] = frame["missing_required_paths"].map(
+        lambda value: "BLOCKED_MISSING_REQUIRED" if str(value).strip() else "PASS"
+    )
+    missing_required = frame["missing_required_paths"].astype(str).str.strip().ne("")
+    for index in frame.index[missing_required]:
+        missing = str(frame.at[index, "missing_required_paths"])
+        frame.at[index, "status"] = "BLOCKED"
+        frame.at[index, "blocker"] = _join_blockers(
+            [str(frame.at[index, "blocker"]), f"required_evidence_paths_missing:{missing}"]
+        )
+        frame.at[index, "next_action"] = "restore_or_rebuild_missing_required_evidence"
     frame["testnet_order_authority"] = False
     frame["live_trading_authorized"] = False
     csv_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
@@ -1962,6 +1995,30 @@ def _write_seven_stage_checkpoint(
         encoding="utf-8",
     )
     return csv_path, md_path
+
+
+def _classify_checkpoint_evidence_paths(*, root: Path, evidence_path: str) -> tuple[str, str, str]:
+    """Classify broad inventories; only ``required:`` links are hard dependencies."""
+
+    existing: list[str] = []
+    planned: list[str] = []
+    missing_required: list[str] = []
+    for raw in evidence_path.split(";"):
+        relative = raw.strip()
+        if not relative:
+            continue
+        required = relative.startswith("required:")
+        if required:
+            relative = relative.removeprefix("required:").strip()
+        if not relative:
+            continue
+        if (root / relative).exists():
+            existing.append(relative)
+        elif required:
+            missing_required.append(relative)
+        else:
+            planned.append(relative)
+    return ";".join(existing), ";".join(planned), ";".join(missing_required)
 
 
 def _capture_reconciliation_pass(evidence: dict[str, Any]) -> bool:

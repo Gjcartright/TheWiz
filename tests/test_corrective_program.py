@@ -13,6 +13,7 @@ from quant_platform.orchestration.corrective_program import (
     TASK_STATUS,
     _capture_manifest_continuity_pass,
     _capture_reconciliation_pass,
+    _classify_checkpoint_evidence_paths,
     _daily_cadence_task_status,
     _next_ou_v5_action,
     _next_ou_v6_action,
@@ -36,6 +37,25 @@ from tests.browser_auth_support import write_browser_auth_binding
 from tests.capture_reconciliation_support import (
     write_valid_capture_reconciliation_evidence,
 )
+
+
+def test_checkpoint_evidence_classification_distinguishes_planned_and_required(tmp_path):
+    existing = tmp_path / "reports" / "active" / "existing.json"
+    existing.parent.mkdir(parents=True)
+    existing.write_text("{}", encoding="utf-8")
+
+    material, planned, missing = _classify_checkpoint_evidence_paths(
+        root=tmp_path,
+        evidence_path=(
+            "reports/active/existing.json;"
+            "reports/active/planned.json;"
+            "required:reports/active/required.json"
+        ),
+    )
+
+    assert material == "reports/active/existing.json"
+    assert planned == "reports/active/planned.json"
+    assert missing == "reports/active/required.json"
 
 
 def test_stage_five_blockers_distinguish_waiting_from_invalid_terminal_evidence():
