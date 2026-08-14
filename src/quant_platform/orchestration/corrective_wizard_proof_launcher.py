@@ -119,6 +119,7 @@ def run_wizard_proof_launcher(
     force: bool = False,
     python: Path | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    unattended_preflight_builder: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
     """Skip heavy imports after a proven daily attempt; otherwise run the scheduler."""
 
@@ -203,7 +204,41 @@ def run_wizard_proof_launcher(
     scheduler_ou_v5_proof_refresh_status = ""
     scheduler_ou_v5_comparator_generation = 0
     scheduler_ou_v5_proofs_refreshed = 0
+    unattended_preflight_required = bool(
+        unattended_preflight_builder is not None and execute and not invoke_internal_continuation
+    )
+    unattended_preflight_status = "NOT_REQUIRED"
+    unattended_preflight_receipt_id = ""
+    unattended_preflight_receipt_path = ""
+    unattended_preflight_blockers: list[str] = []
     next_eligible = str(latest.get("next_external_attempt_eligible_at", ""))
+    if should_run and unattended_preflight_required:
+        try:
+            preflight = unattended_preflight_builder(root=root, now=checked_at)
+            preflight_summary = dict(preflight.summary)
+            unattended_preflight_status = str(
+                preflight_summary.get("status", "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT")
+            )
+            unattended_preflight_receipt_id = str(preflight_summary.get("receipt_id", ""))
+            unattended_preflight_receipt_path = _relative(
+                Path(preflight.paths.get("immutable_receipt", "")), root
+            )
+            unattended_preflight_blockers = [
+                str(value) for value in preflight_summary.get("blockers", [])
+            ]
+        except Exception as exc:  # noqa: BLE001 - launcher must fail closed
+            unattended_preflight_status = "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
+            unattended_preflight_blockers = [
+                f"unattended_preflight_failed:{type(exc).__name__}:{exc}"
+            ]
+        if unattended_preflight_status != "PASS_UNATTENDED_EXTERNAL_PREFLIGHT":
+            should_run = False
+            launcher_status = "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
+            blocker = (
+                unattended_preflight_blockers[0]
+                if unattended_preflight_blockers
+                else "unattended_external_preflight_not_pass"
+            )
     if should_run:
         executable = python or root / ".venv312" / "bin" / "python"
         if not executable.is_file():
@@ -376,6 +411,11 @@ def run_wizard_proof_launcher(
         "scheduler_ou_v5_proof_refresh_status": scheduler_ou_v5_proof_refresh_status,
         "scheduler_ou_v5_comparator_generation": scheduler_ou_v5_comparator_generation,
         "scheduler_ou_v5_proofs_refreshed": scheduler_ou_v5_proofs_refreshed,
+        "unattended_external_preflight_required": unattended_preflight_required,
+        "unattended_external_preflight_status": unattended_preflight_status,
+        "unattended_external_preflight_receipt_id": unattended_preflight_receipt_id,
+        "unattended_external_preflight_receipt_path": unattended_preflight_receipt_path,
+        "unattended_external_preflight_blockers": unattended_preflight_blockers,
         "internal_registered_continuation_needed": internal_continuation_needed,
         "internal_continuation_reason": internal_continuation_reason,
         "internal_continuation_prior_stage4_contract_id": (prior_stage4_contract_id),
@@ -2293,6 +2333,7 @@ def _launcher_exit_code(result: dict[str, Any]) -> int:
         "BLOCKED_UNVERIFIABLE_SAME_DAY_EVIDENCE",
         "BLOCKED_SCHEDULER_PYTHON_MISSING",
         "BLOCKED_SCHEDULER_RECEIPT_UNVERIFIED",
+        "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT",
         "HEAVY_SCHEDULER_BLOCKED",
         "HEAVY_SCHEDULER_RECONCILED_INCOMPLETE",
         "INTERNAL_REGISTERED_CONTINUATION_INCOMPLETE",
@@ -2308,7 +2349,17 @@ def main() -> None:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-    result = run_wizard_proof_launcher(execute=args.execute, force=args.force)
+    from quant_platform.orchestration.corrective_wizard_unattended_preflight import (
+        build_wizard_unattended_external_preflight,
+    )
+
+    result = run_wizard_proof_launcher(
+        execute=args.execute,
+        force=args.force,
+        unattended_preflight_builder=(
+            build_wizard_unattended_external_preflight if args.execute else None
+        ),
+    )
     print(json.dumps(result, indent=2))
     exit_code = _launcher_exit_code(result)
     if exit_code:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import plistlib
 from datetime import UTC, datetime
@@ -298,6 +299,125 @@ def test_reset_readiness_passes_without_granting_authority(tmp_path: Path) -> No
     assert validation["state_sha256"] == wizard_reset_readiness_state_sha256(
         json.loads(result.paths["status"].read_text(encoding="utf-8"))
     )
+
+
+def test_reset_readiness_requires_observation_manifest_and_execution_reset_roles(
+    tmp_path: Path,
+) -> None:
+    root, plist_path = _prepare_root(tmp_path)
+    active = root / "reports" / "active"
+    legacy_path = active / "corrective_wizard_proof_scheduler_status.json"
+    observation_path = active / "corrective_wizard_proof_scheduler_observation_status.json"
+    execution_path = active / "corrective_wizard_proof_scheduler_execution_status.json"
+    observation = json.loads(legacy_path.read_text(encoding="utf-8"))
+    observation.update({"execution_requested": False, "pointer_role": "observation"})
+    _write_json(observation_path, observation)
+
+    execution_receipt = {
+        "schema_version": "thewiz.corrective_wizard_proof_scheduler.v1",
+        "attempt_date_utc": "2026-08-11",
+        "started_at_utc": "2026-08-11T15:00:00+00:00",
+        "execution_requested": True,
+        "external_attempt_made": True,
+        "next_external_attempt_eligible_at": RESET,
+        "receipt_id": "wizardproof_0123456789abcdef0123",
+        **{
+            key: False
+            for key in (
+                "candidate_promotion_authority",
+                "order_submission_included",
+                "testnet_order_authority",
+                "live_trading_authorized",
+            )
+        },
+    }
+    execution_receipt_path = active / "wizard_proof_scheduler_receipts" / "execution.json"
+    _write_json(execution_receipt_path, execution_receipt)
+    execution = {
+        **execution_receipt,
+        "pointer_role": "execution",
+        "pointer_source_path": str(execution_receipt_path.relative_to(root)),
+    }
+    _write_json(execution_path, execution)
+    _write_json(
+        legacy_path,
+        {
+            "schema_version": "thewiz.corrective_wizard_proof_scheduler.v1",
+            "execution_requested": False,
+            "capture_manifest_continuity_valid": False,
+            "capture_manifest_drift_detected": True,
+        },
+    )
+
+    result = _run(root, plist_path)
+
+    assert result.summary["status"] == "PASS_RESET_AUTOMATION_READY"
+    assert result.summary["scheduler_role_split_enforced"] is True
+    assert result.summary["scheduler_execution_reset_binding_valid"] is True
+    checks = list(csv.DictReader(result.paths["checks"].open(encoding="utf-8")))
+    continuity = next(
+        row for row in checks if row["check"] == "scheduler_capture_manifest_continuity"
+    )
+    assert continuity["evidence_path"].endswith(
+        "corrective_wizard_proof_scheduler_observation_status.json"
+    )
+
+
+def test_reset_readiness_blocks_when_observation_pointer_replaces_execution_role(
+    tmp_path: Path,
+) -> None:
+    root, plist_path = _prepare_root(tmp_path)
+    active = root / "reports" / "active"
+    legacy = json.loads(
+        (active / "corrective_wizard_proof_scheduler_status.json").read_text(encoding="utf-8")
+    )
+    observation = {**legacy, "execution_requested": False, "pointer_role": "observation"}
+    _write_json(active / "corrective_wizard_proof_scheduler_observation_status.json", observation)
+    _write_json(active / "corrective_wizard_proof_scheduler_execution_status.json", observation)
+
+    result = _run(root, plist_path)
+
+    assert result.summary["status"] == "BLOCKED_RESET_AUTOMATION"
+    assert result.summary["scheduler_execution_reset_binding_valid"] is False
+    assert "wizard_scheduler_execution_reset_binding_invalid" in result.summary["blockers"]
+
+
+def test_reset_readiness_blocks_execution_receipt_with_missing_authority_field(
+    tmp_path: Path,
+) -> None:
+    root, plist_path = _prepare_root(tmp_path)
+    active = root / "reports" / "active"
+    legacy_path = active / "corrective_wizard_proof_scheduler_status.json"
+    observation = json.loads(legacy_path.read_text(encoding="utf-8"))
+    observation.update({"execution_requested": False, "pointer_role": "observation"})
+    _write_json(active / "corrective_wizard_proof_scheduler_observation_status.json", observation)
+    execution_receipt = {
+        "schema_version": "thewiz.corrective_wizard_proof_scheduler.v1",
+        "attempt_date_utc": "2026-08-11",
+        "started_at_utc": "2026-08-11T15:00:00+00:00",
+        "execution_requested": True,
+        "external_attempt_made": True,
+        "next_external_attempt_eligible_at": RESET,
+        "receipt_id": "wizardproof_0123456789abcdef0123",
+        "candidate_promotion_authority": False,
+        "order_submission_included": False,
+        "testnet_order_authority": False,
+    }
+    source = active / "wizard_proof_scheduler_receipts" / "missing_authority.json"
+    _write_json(source, execution_receipt)
+    _write_json(
+        active / "corrective_wizard_proof_scheduler_execution_status.json",
+        {
+            **execution_receipt,
+            "pointer_role": "execution",
+            "pointer_source_path": str(source.relative_to(root)),
+        },
+    )
+
+    result = _run(root, plist_path)
+
+    assert result.summary["scheduler_execution_reset_binding_valid"] is False
+    assert "wizard_scheduler_execution_reset_binding_invalid" in result.summary["blockers"]
 
 
 def test_reset_readiness_blocks_ou_v5_unresolved_cross_day_intent(

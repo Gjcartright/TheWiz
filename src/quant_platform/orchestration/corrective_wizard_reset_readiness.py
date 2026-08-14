@@ -77,13 +77,26 @@ def build_corrective_wizard_reset_readiness(
     checked_at = _as_utc(now)
     active = root / "reports" / "active"
     manifest_path = active / "corrective_wizard_next_capture_manifest.json"
-    scheduler_path = active / "corrective_wizard_proof_scheduler_status.json"
+    scheduler_observation_path = (
+        active / "corrective_wizard_proof_scheduler_observation_status.json"
+    )
+    scheduler_execution_path = active / "corrective_wizard_proof_scheduler_execution_status.json"
+    scheduler_legacy_path = active / "corrective_wizard_proof_scheduler_status.json"
+    scheduler_path = (
+        scheduler_observation_path
+        if scheduler_observation_path.is_file()
+        else scheduler_legacy_path
+    )
     launcher_path = active / "corrective_wizard_proof_launcher_status.json"
     budget_path = active / "wizard_credit_budget_contract.json"
     launch_agent_path = launch_agent_path or workspace_launch_agent_path(root, LAUNCH_AGENT_LABEL)
 
     manifest = _read_json(manifest_path)
     scheduler = _read_json(scheduler_path)
+    execution_scheduler = _read_json(scheduler_execution_path)
+    role_split_enforced = bool(
+        scheduler_observation_path.is_file() and scheduler_execution_path.is_file()
+    )
     launcher = _read_json(launcher_path)
     budget = _read_json(budget_path)
     checks: list[dict[str, str]] = []
@@ -352,6 +365,13 @@ def build_corrective_wizard_reset_readiness(
 
     scheduler_continuity_valid = bool(
         scheduler.get("schema_version") == "thewiz.corrective_wizard_proof_scheduler.v1"
+        and (
+            not role_split_enforced
+            or (
+                scheduler.get("execution_requested") is False
+                and scheduler.get("pointer_role") == "observation"
+            )
+        )
         and scheduler.get("capture_manifest_enforced") is True
         and scheduler.get("capture_manifest_id") == manifest_id
         and scheduler.get("capture_manifest_immutable_path") == immutable_relative
@@ -395,6 +415,31 @@ def build_corrective_wizard_reset_readiness(
         observed=reset_at.isoformat() if reset_at else "invalid",
         evidence_path=_relative(manifest_path, root),
         blocker="wizard_capture_reset_timestamp_invalid",
+    )
+
+    execution_scheduler_binding_valid = bool(
+        not role_split_enforced
+        or _scheduler_execution_binding_valid(
+            root=root,
+            pointer=execution_scheduler,
+            reset_at=reset_at,
+        )
+    )
+    _add_check(
+        checks,
+        name="scheduler_execution_reset_binding",
+        passed=execution_scheduler_binding_valid,
+        observed=(
+            str(execution_scheduler.get("receipt_id", "missing"))
+            if role_split_enforced
+            else "legacy_single_pointer_compatibility"
+        ),
+        evidence_path=(
+            _relative(scheduler_execution_path, root)
+            if role_split_enforced
+            else _relative(scheduler_path, root)
+        ),
+        blocker="wizard_scheduler_execution_reset_binding_invalid",
     )
 
     browser_auth_path = active / "wizard_browser_auth_readiness.json"
@@ -552,6 +597,13 @@ def build_corrective_wizard_reset_readiness(
         "scheduler_manifest_continuity_status": str(
             scheduler.get("capture_manifest_continuity_status", "")
         ),
+        "scheduler_role_split_enforced": role_split_enforced,
+        "scheduler_observation_pointer_path": _relative(scheduler_path, root),
+        "scheduler_execution_pointer_path": (
+            _relative(scheduler_execution_path, root) if role_split_enforced else ""
+        ),
+        "scheduler_execution_reset_binding_valid": execution_scheduler_binding_valid,
+        "scheduler_execution_receipt_id": str(execution_scheduler.get("receipt_id", "")),
         "pending_calls": pending_calls,
         "planned_credits": planned_credits,
         "ou_v5_capture_readiness_status": str(ou_v5_capture_audit.get("status", "")),
@@ -873,6 +925,54 @@ def _authority_is_zero(payload: dict[str, Any]) -> bool:
             "live_trading_authorized",
         )
         if field in payload
+    )
+
+
+def _strict_authority_is_zero(payload: dict[str, Any]) -> bool:
+    return all(
+        payload.get(field) is False
+        for field in (
+            "candidate_promotion_authority",
+            "order_submission_included",
+            "testnet_order_authority",
+            "live_trading_authorized",
+        )
+    )
+
+
+def _scheduler_execution_binding_valid(
+    *,
+    root: Path,
+    pointer: dict[str, Any],
+    reset_at: datetime | None,
+) -> bool:
+    if reset_at is None:
+        return False
+    source_relative = str(pointer.get("pointer_source_path", ""))
+    source_path = _safe_root_file(root, source_relative)
+    source = _read_json(source_path) if source_path is not None else {}
+    started_at = _try_parse_utc(str(pointer.get("started_at_utc", "")))
+    prior_attempt_date = (reset_at - timedelta(days=1)).date().isoformat()
+    source_matches_pointer = bool(
+        source
+        and all(pointer.get(key) == value for key, value in source.items())
+        and source.get("receipt_id") == pointer.get("receipt_id")
+    )
+    return bool(
+        pointer.get("schema_version") == "thewiz.corrective_wizard_proof_scheduler.v1"
+        and pointer.get("execution_requested") is True
+        and pointer.get("pointer_role") == "execution"
+        and pointer.get("external_attempt_made") is True
+        and pointer.get("attempt_date_utc") == prior_attempt_date
+        and pointer.get("next_external_attempt_eligible_at") == reset_at.isoformat()
+        and str(pointer.get("receipt_id", "")).startswith("wizardproof_")
+        and started_at is not None
+        and started_at < reset_at
+        and source_path is not None
+        and source_path.is_file()
+        and source_matches_pointer
+        and _strict_authority_is_zero(pointer)
+        and _strict_authority_is_zero(source)
     )
 
 
