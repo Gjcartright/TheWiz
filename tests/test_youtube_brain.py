@@ -110,6 +110,28 @@ def _write_formula_catalog(root: Path) -> None:
     ).to_csv(path, index=False)
 
 
+def _write_hudson_thames_recommendations(root: Path) -> None:
+    path = root / "reports" / "research" / "hudson_thames_youtube_recommendations.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([{
+        "recommendation_id": "htr_copula_logic",
+        "theme": "copula",
+        "theme_label": "Copula entry and exit logic matrix",
+        "recommendation": "Test AND/OR entry and exit rules as explicit strategy parameters.",
+        "interesting_suggestion": "Preserve the full four-combination matrix.",
+        "local_validation_test": "Replay every Boolean combination point-in-time after costs.",
+        "strategy_families": "copula",
+        "priority": "must_test",
+        "confidence": 0.85,
+        "source_video_count": 1,
+        "source_videos": "Copula Research (https://www.youtube.com/watch?v=hLV5Roa_Bek)",
+        "evidence_basis": "assistant-reviewed caption window",
+        "review_status": "assistant_reviewed",
+        "promotion_authority": "none_research_only",
+        "trade_authorized": False,
+    }]).to_csv(path, index=False)
+
+
 def test_youtube_extraction_requires_direct_video_and_avoids_ou_substring(tmp_path):
     _write_audit(tmp_path)
 
@@ -156,6 +178,7 @@ def test_collection_cadence_uses_last_live_refresh_not_local_registry_updates():
 def test_youtube_brain_builds_safe_hypotheses_and_idempotent_outcome_memory(tmp_path):
     _write_audit(tmp_path)
     _write_formula_catalog(tmp_path)
+    _write_hudson_thames_recommendations(tmp_path)
     catalog = _write_catalog(
         tmp_path / "data" / "external" / "youtube" / "channel_videos.json",
         [
@@ -164,7 +187,15 @@ def test_youtube_brain_builds_safe_hypotheses_and_idempotent_outcome_memory(tmp_
         ],
     )
     refresh_youtube_collection(root=tmp_path, catalog_path=catalog)
-    build_youtube_brain(root=tmp_path)
+    brain_result = build_youtube_brain(root=tmp_path)
+    external_priors = pd.read_csv(brain_result.paths["external_research_priors"])
+    claims = pd.read_csv(brain_result.paths["claims"])
+
+    assert len(external_priors) == 1
+    assert external_priors.iloc[0]["source_channel"] == "Hudson & Thames"
+    assert external_priors.iloc[0]["promotion_authority"] == "none_research_only"
+    assert not bool(external_priors.iloc[0]["trade_authorized"])
+    assert claims["claim_id"].astype(str).str.startswith("ytx_").any()
 
     active = tmp_path / "reports" / "active"
     active.mkdir(parents=True, exist_ok=True)

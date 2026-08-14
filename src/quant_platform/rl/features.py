@@ -42,13 +42,30 @@ FEATURE_COLUMNS = [
     "wizard_copula_zscore_norm",
     "wizard_copula_zscore_roll",
     "wizard_copula_signal_strength",
+    "wizard_copula_snapshot_completeness",
     "wizard_copula_johansen_confirmed",
     "wizard_copula_engle_granger_confirmed",
     "wizard_copula_engle_granger_trending",
+    "wizard_copula_ecm_x_available",
+    "wizard_copula_ecm_y_available",
+    "wizard_copula_ecm_strength_available",
+    "wizard_copula_entry_lower",
+    "wizard_copula_entry_upper",
+    "wizard_copula_exit_lower",
+    "wizard_copula_exit_upper",
+    "wizard_copula_direction_short_x_long_y",
+    "wizard_copula_direction_long_x_short_y",
     "wizard_copula_research_only",
     "wizard_copula_execution_blocked",
     "wizard_copula_model_studentt",
     "wizard_copula_model_gaussian",
+    "wizard_copula_model_clayton",
+    "wizard_copula_model_gumbel",
+    "wizard_copula_model_frank",
+    "wizard_copula_model_joe",
+    "wizard_copula_lower_tail_family",
+    "wizard_copula_upper_tail_family",
+    "wizard_copula_symmetric_family",
     "wizard_copula_model_other",
     "ecm_x",
     "ecm_y",
@@ -107,6 +124,20 @@ def _timeframe_key(value: object) -> str:
     return aliases.get(text, text)
 
 
+def _mode_key(value: object) -> str:
+    text = re.sub(r"[^a-z0-9]+", "", _text(value).lower())
+    if "copula" in text:
+        return "copula"
+    suffix = "zscorer" if "zscore" in text else "spread"
+    if text.startswith("ou") or "ornstein" in text:
+        return f"ou_{suffix}"
+    if "dyn" in text or "kalman" in text:
+        return f"dynamic_{suffix}"
+    if "static" in text:
+        return f"static_{suffix}"
+    return text
+
+
 def _timestamp_column(frame: pd.DataFrame, names: tuple[str, ...]) -> pd.Series:
     result = pd.Series(pd.NaT, index=frame.index, dtype="datetime64[ns, UTC]")
     for name in names:
@@ -136,16 +167,16 @@ def _text(value: object) -> str:
     return str(value).strip()
 
 
-def _probability(row: pd.Series, *names: str) -> float:
-    """Read a probability while respecting explicit ``*_pct`` dashboard fields."""
+def _probability_or_none(row: pd.Series, *names: str) -> float | None:
     for name in names:
         if name not in row.index:
             continue
         value = pd.to_numeric(pd.Series([row.get(name)]), errors="coerce").iloc[0]
         if pd.notna(value):
             numeric = float(value)
-            return numeric / 100.0 if name.endswith("_pct") else numeric / 100.0 if abs(numeric) > 1.0 else numeric
-    return 0.0
+            probability = numeric / 100.0 if name.endswith("_pct") or abs(numeric) > 1.0 else numeric
+            return probability if 0.0 <= probability <= 1.0 else None
+    return None
 
 
 def _state_is(row: pd.Series, column: str, *states: str) -> float:
@@ -158,16 +189,77 @@ def _has_text(value: object) -> float:
     return float(bool(text and text not in {"nan", "none", "null", "false", "0"}))
 
 
+def _boolish_float(value: object) -> float:
+    text = _text(value).lower()
+    if text in {"true", "1", "yes", "y", "available", "present"}:
+        return 1.0
+    if text in {"false", "0", "no", "n", "missing", "unavailable", "none", "nan", ""}:
+        return 0.0
+    return float(bool(value))
+
+
+def _source_evidence(snapshot: pd.Series) -> str:
+    for column in ("evidence_path", "page_detail_screenshot_path", "source_path", "scanner_snapshot_path"):
+        value = _text(snapshot.get(column))
+        if value:
+            return value
+    return ""
+
+
+def _snapshot_completeness(snapshot: pd.Series) -> float:
+    snapshot_mode = next(
+        (value for value in (_text(snapshot.get("strategy_label")), _text(snapshot.get("exact_mode"))) if value),
+        "",
+    )
+    values = [
+        _source_evidence(snapshot), snapshot_mode, _text(snapshot.get("copula_best_fit")),
+        _probability_or_none(snapshot, "copula_x_given_y_pct", "copula_x_given_y", "dependency_x_over_y"),
+        _probability_or_none(snapshot, "copula_y_given_x_pct", "copula_y_given_x", "dependency_y_over_x"),
+        snapshot.get("copula_correlation_rho"), snapshot.get("pearson_rho"), snapshot.get("spearman_rho"),
+        snapshot.get("kendall_tau"), snapshot.get("johansen_badge_state"), snapshot.get("engle_granger_badge_state"),
+        snapshot.get("ecm_x_available"), snapshot.get("ecm_y_available"), snapshot.get("ecm_strength_available"),
+        snapshot.get("copula_entry_lower"), snapshot.get("copula_entry_upper"),
+        snapshot.get("copula_exit_lower"), snapshot.get("copula_exit_upper"),
+    ]
+    populated = sum(
+        value is not None
+        and not (isinstance(value, float) and np.isnan(value))
+        and not (isinstance(value, str) and not value.strip())
+        for value in values
+    )
+    return round(populated / len(values), 6)
+
+
+def _snapshot_is_complete(snapshot: pd.Series) -> bool:
+    return bool(
+        _source_evidence(snapshot)
+        and _text(snapshot.get("copula_best_fit"))
+        and _probability_or_none(snapshot, "copula_x_given_y_pct", "copula_x_given_y", "dependency_x_over_y") is not None
+        and _probability_or_none(snapshot, "copula_y_given_x_pct", "copula_y_given_x", "dependency_y_over_x") is not None
+    )
+
+
 def _copula_feature_values(snapshot: pd.Series) -> dict[str, float]:
     best_fit = _text(snapshot.get("copula_best_fit", "")).lower().replace("-", "")
     signal = _text(snapshot.get("copula_signal_status", "")).lower()
     journal_status = _text(snapshot.get("copula_journal_status", "")).lower()
+    x_given_y = _probability_or_none(snapshot, "copula_x_given_y_pct", "copula_x_given_y", "dependency_x_over_y")
+    y_given_x = _probability_or_none(snapshot, "copula_y_given_x_pct", "copula_y_given_x", "dependency_y_over_x")
+    explicit_gap = _probability_or_none(snapshot, "copula_probability_gap_pct", "copula_probability_gap")
+    probability_gap = explicit_gap if explicit_gap is not None else abs(float(x_given_y) - float(y_given_x))
+    direction = _text(snapshot.get("copula_trade_direction")).lower()
+    student_t = best_fit in {"studentt", "student"}
+    gaussian = best_fit in {"gaussian", "normal"}
+    clayton = "clayton" in best_fit
+    gumbel = "gumbel" in best_fit
+    frank = "frank" in best_fit
+    joe = best_fit == "joe" or best_fit.startswith("joe")
     return {
         "wizard_copula_available": 1.0,
         "wizard_copula_stale_snapshot": 0.0,
-        "wizard_copula_x_given_y": _probability(snapshot, "copula_x_given_y_pct", "copula_x_given_y", "dependency_x_over_y"),
-        "wizard_copula_y_given_x": _probability(snapshot, "copula_y_given_x_pct", "copula_y_given_x", "dependency_y_over_x"),
-        "wizard_copula_probability_gap": _probability(snapshot, "copula_probability_gap_pct"),
+        "wizard_copula_x_given_y": float(x_given_y),
+        "wizard_copula_y_given_x": float(y_given_x),
+        "wizard_copula_probability_gap": probability_gap,
         "wizard_copula_correlation": _numeric(snapshot, "copula_correlation_rho", "correlation_value", "correlation_top", scale_percent=True),
         "wizard_copula_pearson": _numeric(snapshot, "pearson_rho", "pearson", scale_percent=True),
         "wizard_copula_spearman": _numeric(snapshot, "spearman_rho", "spearman", scale_percent=True),
@@ -183,14 +275,31 @@ def _copula_feature_values(snapshot: pd.Series) -> dict[str, float]:
         "wizard_copula_zscore_norm": _numeric(snapshot, "zscore_norm_value"),
         "wizard_copula_zscore_roll": _numeric(snapshot, "zscore_roll_value"),
         "wizard_copula_signal_strength": 1.0 if signal == "strong_asymmetric_dislocation" else 0.5 if signal == "asymmetric_dislocation" else 0.0,
+        "wizard_copula_snapshot_completeness": _snapshot_completeness(snapshot),
         "wizard_copula_johansen_confirmed": _state_is(snapshot, "johansen_badge_state", "confirmed", "green"),
         "wizard_copula_engle_granger_confirmed": _state_is(snapshot, "engle_granger_badge_state", "confirmed", "green"),
         "wizard_copula_engle_granger_trending": _state_is(snapshot, "engle_granger_badge_state", "trending", "orange"),
+        "wizard_copula_ecm_x_available": _boolish_float(snapshot.get("ecm_x_available")),
+        "wizard_copula_ecm_y_available": _boolish_float(snapshot.get("ecm_y_available")),
+        "wizard_copula_ecm_strength_available": _boolish_float(snapshot.get("ecm_strength_available")),
+        "wizard_copula_entry_lower": _numeric(snapshot, "copula_entry_lower"),
+        "wizard_copula_entry_upper": _numeric(snapshot, "copula_entry_upper"),
+        "wizard_copula_exit_lower": _numeric(snapshot, "copula_exit_lower"),
+        "wizard_copula_exit_upper": _numeric(snapshot, "copula_exit_upper"),
+        "wizard_copula_direction_short_x_long_y": float(direction == "short_x_long_y"),
+        "wizard_copula_direction_long_x_short_y": float(direction == "long_x_short_y"),
         "wizard_copula_research_only": float(journal_status == "research_only"),
         "wizard_copula_execution_blocked": _has_text(snapshot.get("copula_execution_blockers")),
-        "wizard_copula_model_studentt": float(best_fit in {"studentt", "student"}),
-        "wizard_copula_model_gaussian": float(best_fit in {"gaussian", "normal"}),
-        "wizard_copula_model_other": float(bool(best_fit and best_fit not in {"studentt", "student", "gaussian", "normal"})),
+        "wizard_copula_model_studentt": float(student_t),
+        "wizard_copula_model_gaussian": float(gaussian),
+        "wizard_copula_model_clayton": float(clayton),
+        "wizard_copula_model_gumbel": float(gumbel),
+        "wizard_copula_model_frank": float(frank),
+        "wizard_copula_model_joe": float(joe),
+        "wizard_copula_lower_tail_family": float(clayton or "lower" in best_fit),
+        "wizard_copula_upper_tail_family": float(gumbel or joe or "upper" in best_fit),
+        "wizard_copula_symmetric_family": float(student_t or gaussian or frank),
+        "wizard_copula_model_other": float(bool(best_fit and not any((student_t, gaussian, clayton, gumbel, frank, joe)))),
     }
 
 
@@ -216,7 +325,9 @@ def attach_copula_dashboard_features(
     enriched = candidates.copy()
     audit_columns = [
         "candidate_index", "pair", "timeframe", "feature_timestamp", "snapshot_timestamp",
-        "snapshot_age_hours", "join_status", "uses_future_data", "evidence_path",
+        "snapshot_age_hours", "candidate_mode", "snapshot_mode", "mode_match",
+        "snapshot_completeness", "source_evidence_present", "join_status",
+        "uses_future_data", "evidence_path",
     ]
     if enriched.empty:
         return enriched, pd.DataFrame(columns=audit_columns)
@@ -239,6 +350,11 @@ def attach_copula_dashboard_features(
     snapshots = journal.copy()
     snapshots["_pair_key"] = snapshots["pair"].map(_pair_key)
     snapshots["_timeframe_key"] = snapshots.get("timeframe", pd.Series("", index=snapshots.index)).map(_timeframe_key)
+    snapshots["_mode_key"] = snapshots.get(
+        "strategy_label", snapshots.get("exact_mode", pd.Series("", index=snapshots.index))
+    ).map(_mode_key)
+    snapshots["_journal_layer"] = snapshots.get("journal_layer", pd.Series("", index=snapshots.index)).astype(str).str.strip().str.lower()
+    snapshots["_capture_status"] = snapshots.get("capture_status", pd.Series("", index=snapshots.index)).astype(str).str.strip().str.lower()
     snapshots["_snapshot_timestamp"] = _timestamp_column(snapshots, ("detail_capture_timestamp_utc", "capture_timestamp_utc", "scanner_refresh_timestamp_utc"))
     snapshots = snapshots.dropna(subset=["_snapshot_timestamp"]).sort_values("_snapshot_timestamp")
 
@@ -248,6 +364,11 @@ def attach_copula_dashboard_features(
         feature_time = candidate_times.loc[index]
         pair_key = _pair_key(row.get("pair", ""))
         timeframe_key = _timeframe_key(row.get("timeframe", ""))
+        candidate_mode = ""
+        for mode_column in ("exact_mode", "wizard_exact_mode", "strategy_label"):
+            candidate_mode = _mode_key(row.get(mode_column))
+            if candidate_mode:
+                break
         audit_row = {
             "candidate_index": index,
             "pair": row.get("pair", ""),
@@ -255,6 +376,11 @@ def attach_copula_dashboard_features(
             "feature_timestamp": feature_time,
             "snapshot_timestamp": "",
             "snapshot_age_hours": "",
+            "candidate_mode": candidate_mode,
+            "snapshot_mode": "",
+            "mode_match": False,
+            "snapshot_completeness": 0.0,
+            "source_evidence_present": False,
             "join_status": "",
             "uses_future_data": False,
             "evidence_path": "",
@@ -265,22 +391,67 @@ def attach_copula_dashboard_features(
             audit_row["join_status"] = status
             audit_rows.append(audit_row)
             continue
-        eligible = snapshots[snapshots["_pair_key"].eq(pair_key)]
-        if timeframe_key and "_timeframe_key" in eligible:
-            eligible = eligible[eligible["_timeframe_key"].isin({"", timeframe_key})]
-        eligible = eligible[eligible["_snapshot_timestamp"].le(feature_time)]
+        if not timeframe_key:
+            status = "missing_candidate_timeframe"
+            enriched.at[index, "wizard_copula_join_status"] = status
+            audit_row["join_status"] = status
+            audit_rows.append(audit_row)
+            continue
+        if not candidate_mode:
+            status = "missing_candidate_exact_mode"
+            enriched.at[index, "wizard_copula_join_status"] = status
+            audit_row["join_status"] = status
+            audit_rows.append(audit_row)
+            continue
+        eligible = snapshots[
+            snapshots["_pair_key"].eq(pair_key)
+            & snapshots["_timeframe_key"].eq(timeframe_key)
+            & snapshots["_mode_key"].eq(candidate_mode)
+            & snapshots["_journal_layer"].eq("pair_detail_capture")
+            & snapshots["_capture_status"].eq("captured")
+            & snapshots["_snapshot_timestamp"].le(feature_time)
+        ].copy()
         if eligible.empty:
             status = "no_point_in_time_snapshot"
             enriched.at[index, "wizard_copula_join_status"] = status
             audit_row["join_status"] = status
             audit_rows.append(audit_row)
             continue
-        snapshot = eligible.iloc[-1]
+        eligible["_evidence_path"] = eligible.apply(_source_evidence, axis=1)
+        eligible["_snapshot_complete"] = eligible.apply(_snapshot_is_complete, axis=1)
+        eligible["_snapshot_completeness"] = eligible.apply(_snapshot_completeness, axis=1)
+        complete = eligible[eligible["_snapshot_complete"]].copy()
+        if complete.empty:
+            snapshot = eligible.iloc[-1]
+            snapshot_time = snapshot["_snapshot_timestamp"]
+            age_hours = float((feature_time - snapshot_time).total_seconds() / 3600.0)
+            evidence_path = _text(snapshot.get("_evidence_path"))
+            status = "incomplete_copula_snapshot" if evidence_path else "source_evidence_missing"
+            enriched.at[index, "wizard_copula_snapshot_timestamp"] = snapshot_time.isoformat()
+            enriched.at[index, "wizard_copula_evidence_path"] = evidence_path
+            enriched.at[index, "wizard_copula_join_status"] = status
+            audit_row.update({
+                "snapshot_timestamp": snapshot_time, "snapshot_age_hours": age_hours,
+                "snapshot_mode": snapshot.get("_mode_key", ""),
+                "mode_match": snapshot.get("_mode_key", "") == candidate_mode,
+                "snapshot_completeness": snapshot.get("_snapshot_completeness", 0.0),
+                "source_evidence_present": bool(evidence_path), "join_status": status,
+                "evidence_path": evidence_path,
+            })
+            audit_rows.append(audit_row)
+            continue
+        snapshot = complete.iloc[-1]
         snapshot_time = snapshot["_snapshot_timestamp"]
         age = feature_time - snapshot_time
         age_hours = float(age.total_seconds() / 3600.0)
-        evidence_path = _text(snapshot.get("evidence_path")) or _text(snapshot.get("page_route")) or _text(snapshot.get("scanner_snapshot_path"))
-        audit_row.update({"snapshot_timestamp": snapshot_time, "snapshot_age_hours": age_hours, "evidence_path": evidence_path})
+        evidence_path = _text(snapshot.get("_evidence_path"))
+        audit_row.update({
+            "snapshot_timestamp": snapshot_time, "snapshot_age_hours": age_hours,
+            "snapshot_mode": snapshot.get("_mode_key", ""),
+            "mode_match": snapshot.get("_mode_key", "") == candidate_mode,
+            "snapshot_completeness": snapshot.get("_snapshot_completeness", 0.0),
+            "source_evidence_present": bool(evidence_path), "evidence_path": evidence_path,
+        })
         if age > max_age:
             status = "stale_snapshot"
             values = _empty_copula_feature_values(stale=True)
@@ -325,6 +496,10 @@ def write_feature_schema(path: Path, columns: list[str] | None = None) -> Path:
         "copula_dashboard_policy": {
             "source": "point_in_time_wizard_journal",
             "requires_snapshot_at_or_before_feature_timestamp": True,
+            "requires_pair_detail_capture": True,
+            "requires_exact_pair_timeframe_mode_match": True,
+            "requires_complete_directional_probabilities_and_family": True,
+            "requires_source_evidence_path": True,
             "excludes_dashboard_return_and_sharpe": True,
         },
     }

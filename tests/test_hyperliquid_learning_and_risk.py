@@ -60,12 +60,14 @@ CANDIDATE_BINDING = {
     **BASE_CANDIDATE_BINDING,
 }
 
-ENTRY_CONTEXT = {
-    "feature_timestamp_utc": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
-    "regime": "range",
-    "trade_quality_score": 0.74,
-    "strategy_signal_id": "signal-1",
-}
+
+def _entry_context():
+    return {
+        "feature_timestamp_utc": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
+        "regime": "range",
+        "trade_quality_score": 0.74,
+        "strategy_signal_id": "signal-1",
+    }
 
 
 def _approval_window():
@@ -78,8 +80,9 @@ def _approval_window():
 
 def _write_testnet_candidate(active, *, generated_at_utc=None):
     receipt = dict(CANDIDATE_RECEIPT)
-    if generated_at_utc is not None:
-        receipt["generated_at_utc"] = generated_at_utc
+    receipt["generated_at_utc"] = generated_at_utc or (
+        datetime.now(UTC) - timedelta(minutes=2)
+    ).isoformat()
     candidate = seal_candidate_with_valid_queue(
         receipt=receipt, root=active.parents[1]
     )
@@ -126,7 +129,7 @@ def _write_approvable_payload(
             "approval_id": approval_id,
             **_approval_window(),
             "entry_context": {
-                **ENTRY_CONTEXT,
+                **_entry_context(),
                 "feature_timestamp_utc": feature_timestamp_utc
                 or (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
             },
@@ -318,12 +321,13 @@ def test_lifecycle_gate_requires_a_complete_bounded_receipt(tmp_path):
     )
     template = write_testnet_smoke_approval_template(root=tmp_path, config=config)
     approval = json.loads(template["approval"].read_text(encoding="utf-8"))
+    entry_context = _entry_context()
     approval.update(
         {
             "approved": True,
             "approval_id": "bounded-smoke-001",
             **_approval_window(),
-            "entry_context": ENTRY_CONTEXT,
+            "entry_context": entry_context,
             "legs": [
                 {"market": "BTC", "side": "BUY", "size": 0.0002, "limit_price": 60_000.0},
                 {"market": "ETH", "side": "SELL", "size": 0.004, "limit_price": 3_000.0},
@@ -437,7 +441,7 @@ def test_lifecycle_gate_requires_a_complete_bounded_receipt(tmp_path):
         "protocol_id": protocol.summary["protocol_id"],
         **CANDIDATE_BINDING,
         "risk_override_applied": False,
-        "entry_context": ENTRY_CONTEXT,
+        "entry_context": entry_context,
         "started_at_utc": "2026-08-08T12:00:00Z",
         "completed_at_utc": "2026-08-08T12:01:00Z",
         "events": events,
@@ -589,7 +593,7 @@ def test_signed_approval_binds_exact_leverage_margin_and_evidence_ids(tmp_path):
             "approved": True,
             "approval_id": "bounded-3x-001",
             **_approval_window(),
-            "entry_context": ENTRY_CONTEXT,
+            "entry_context": _entry_context(),
             "legs": [
                 {
                     "market": "BTC",
@@ -682,7 +686,7 @@ def test_lifecycle_gate_rejects_tampered_signed_payload(tmp_path):
             "approved": True,
             "approval_id": "bounded-smoke-001",
             **_approval_window(),
-            "entry_context": ENTRY_CONTEXT,
+            "entry_context": _entry_context(),
             "legs": [
                 {"market": "BTC", "side": "BUY", "size": 0.0002, "limit_price": 60_000.0},
                 {"market": "ETH", "side": "SELL", "size": 0.004, "limit_price": 3_000.0},

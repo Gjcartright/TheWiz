@@ -713,7 +713,7 @@ def refresh_wizard_pair_page_capture_from_matrices(root: Path = ROOT) -> Command
     frame["_capture_ts"] = pd.to_datetime(frame.get("capture_timestamp_utc", pd.Series(dtype=object)), utc=True, errors="coerce")
     frame = frame.sort_values(
         by=["_pair_key", "_interval_key", "_strategy_key", "_priority", "_capture_ts"],
-        ascending=[True, True, True, False, False],
+        ascending=[True, True, True, True, False],
         na_position="last",
     )
     frame = frame.drop_duplicates(subset=["_pair_key", "_interval_key", "_strategy_key"], keep="first")
@@ -928,6 +928,9 @@ def _build_detail_records(
                 "venue": "dydx",
                 "exchange_lane": "dydx",
                 "page_route": _clean_text(source_row.get("pair_page_url") or "pair/detail"),
+                "source_path": _clean_text(source_row.get("source_path")),
+                "evidence_path": _clean_text(source_row.get("evidence_path") or source_row.get("source_path")),
+                "capture_context": _clean_text(source_row.get("capture_context")),
                 "source_cycle_id": "wizard_research_refresh",
                 "source_run_type": "automation",
                 "normalized_pair": pair,
@@ -997,8 +1000,15 @@ def _build_detail_records(
                 "copula_correlation_rho": _clean_num(source_row.get("corr_copula")),
                 "copula_x_given_y": _clean_num(source_row.get("u1_given_u2")),
                 "copula_y_given_x": _clean_num(source_row.get("u2_given_u1")),
+                "ecm_x_available": _clean_bool(source_row.get("ecm_x_available")),
+                "ecm_y_available": _clean_bool(source_row.get("ecm_y_available")),
+                "ecm_strength_available": _clean_bool(source_row.get("ecm_strength_available")),
                 "copula_chart_mode": _clean_text(source_row.get("copula_chart_mode")),
                 "copula_direction_view": _clean_text(source_row.get("copula_direction_view")),
+                "copula_entry_lower": _clean_num(source_row.get("copula_entry_lower")),
+                "copula_entry_upper": _clean_num(source_row.get("copula_entry_upper")),
+                "copula_exit_lower": _clean_num(source_row.get("copula_exit_lower")),
+                "copula_exit_upper": _clean_num(source_row.get("copula_exit_upper")),
                 "secondary_chart_mode": _clean_text(source_row.get("secondary_chart_mode")),
                 "entry_long_operator": _clean_text(source_row.get("entry_long_operator")),
                 "entry_long_value": _clean_num(source_row.get("entry_long_value")),
@@ -1052,13 +1062,15 @@ def _build_detail_records(
         )
         record["strategy_family_from_row"] = _strategy_family(strategy)
         record["strategy_variant_from_row"] = _strategy_variant(strategy)
-        record["chart_right_mode"] = "zscore"
+        if not _clean_text(record.get("chart_right_mode")):
+            record["chart_right_mode"] = "zscore"
         parity = parity_lookup.get(key, {})
-        record["chart_right_latest_value"] = _clean_num(
-            parity.get("wizard_rolling_zscore_last")
-            if "zscorer" in strategy.lower()
-            else parity.get("wizard_zscore_last")
-        )
+        if _clean_num(record.get("chart_right_latest_value")) is None:
+            record["chart_right_latest_value"] = _clean_num(
+                parity.get("wizard_rolling_zscore_last")
+                if "zscorer" in strategy.lower()
+                else parity.get("wizard_zscore_last")
+            )
         record["zscore_norm_value"] = _clean_num(parity.get("wizard_zscore_last"))
         record["zscore_roll_value"] = _clean_num(parity.get("wizard_rolling_zscore_last"))
         record["zscore_green_source"] = _green_source(record.get("zscore_norm_value"), record.get("zscore_roll_value"))

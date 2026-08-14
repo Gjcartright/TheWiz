@@ -49,6 +49,7 @@ def youtube_brain_paths(root: Path = ROOT) -> dict[str, Path]:
         "collection_status": agents / "youtube_brain_collection_status.csv",
         "claims": processed / "claims.csv",
         "claims_parquet": processed / "claims.parquet",
+        "external_research_priors": processed / "external_research_priors.csv",
         "formulas": processed / "formulas.csv",
         "formulas_parquet": processed / "formulas.parquet",
         "strategy_memory": processed / "strategy_memory.csv",
@@ -201,13 +202,18 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
     formulas = _load_formula_catalog(root)
     video_registry = _read_csv(paths["video_registry"])
 
-    claims = _claim_rows(rows)
+    native_claims = _claim_rows(rows)
+    external_claims = _external_research_prior_claims(root)
+    claims = pd.concat([native_claims, external_claims], ignore_index=True, sort=False)
+    if not claims.empty:
+        claims = claims.drop_duplicates(subset=["claim_id"], keep="last").reset_index(drop=True)
     strategy_memory = _strategy_rows(claims)
     warning_memory = _warning_rows(claims)
     nodes, edges = _knowledge_graph(claims, formulas, video_registry)
     insights = build_youtube_caption_insights(root=root)
 
     _write_csv_and_parquet(claims, paths["claims"], paths["claims_parquet"])
+    _write_csv(external_claims, paths["external_research_priors"])
     _write_csv_and_parquet(formulas, paths["formulas"], paths["formulas_parquet"])
     _write_csv(strategy_memory, paths["strategy_memory"])
     _write_csv(warning_memory, paths["warning_memory"])
@@ -220,6 +226,11 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
                 "built_at": _now(),
                 "videos": len(video_registry),
                 "claims": len(claims),
+                "native_channel_claims": len(native_claims),
+                "external_research_priors": len(external_claims),
+                "hudson_thames_must_test_priors": int(
+                    external_claims.get("priority", pd.Series(dtype=str)).astype(str).eq("must_test").sum()
+                ),
                 "formulas": len(formulas),
                 "strategy_memories": len(strategy_memory),
                 "warning_memories": len(warning_memory),
@@ -238,6 +249,7 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
     return CommandResult(
         paths={
             "claims": paths["claims"],
+            "external_research_priors": paths["external_research_priors"],
             "formulas": paths["formulas"],
             "strategy_memory": paths["strategy_memory"],
             "warning_memory": paths["warning_memory"],
@@ -250,6 +262,7 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
         },
         summary={
             "claims": len(claims),
+            "external_research_priors": len(external_claims),
             "formulas": len(formulas),
             "nodes": len(nodes),
             "edges": len(edges),
@@ -768,6 +781,49 @@ def _claim_rows(rows: pd.DataFrame) -> pd.DataFrame:
     return frame.drop_duplicates(subset=["claim_id"], keep="last").reset_index(drop=True) if not frame.empty else frame
 
 
+def _external_research_prior_claims(root: Path) -> pd.DataFrame:
+    """Normalize reviewed external video research into non-authoritative priors."""
+    source = root / "reports" / "research" / "hudson_thames_youtube_recommendations.csv"
+    recommendations = _read_csv(source)
+    output: list[dict[str, object]] = []
+    for _, row in recommendations.iterrows():
+        recommendation = _text(row.get("recommendation"))
+        source_urls = _urls(_text(row.get("source_videos")))
+        if not recommendation or not source_urls:
+            continue
+        theme = _text(row.get("theme")).lower()
+        row_type = "risk_prior" if theme in {"validation", "risk", "execution"} else "strategy_hint"
+        source_id = _text(row.get("recommendation_id"))
+        output.append({
+            "schema_version": YOUTUBE_BRAIN_SCHEMA_VERSION,
+            "claim_id": _stable_id("ytx", source_id, recommendation, source_urls[0]),
+            "row_type": row_type,
+            "claim_text": recommendation,
+            "strategy_family": _text(row.get("strategy_families")),
+            "mode_preference": _text(row.get("strategy_families")),
+            "feature_name": theme,
+            "timeframe_preference": "",
+            "regime_condition": "",
+            "confidence": _number(row.get("confidence")),
+            "source_id": source_id,
+            "source_title": _text(row.get("theme_label")),
+            "source_channel": "Hudson & Thames",
+            "video_url": source_urls[0],
+            "source_urls": ";".join(source_urls),
+            "source_video_count": int(_number(row.get("source_video_count"))),
+            "priority": _text(row.get("priority")),
+            "interesting_suggestion": _text(row.get("interesting_suggestion")),
+            "local_validation_test": _text(row.get("local_validation_test")),
+            "evidence_basis": _text(row.get("evidence_basis")),
+            "evidence_path": str(source),
+            "review_status": _text(row.get("review_status")),
+            "lifecycle": "UNVERIFIED",
+            "promotion_authority": "none_research_only",
+            "trade_authorized": False,
+        })
+    return pd.DataFrame(output)
+
+
 def _strategy_rows(claims: pd.DataFrame) -> pd.DataFrame:
     if claims.empty:
         return claims.copy()
@@ -785,8 +841,11 @@ def _warning_rows(claims: pd.DataFrame) -> pd.DataFrame:
 def _knowledge_graph(claims: pd.DataFrame, formulas: pd.DataFrame, videos: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     nodes: list[dict[str, object]] = []
     edges: list[dict[str, object]] = []
+    video_node_ids: set[str] = set()
     for _, video in videos.iterrows():
-        nodes.append({"node_id": f"video:{video.get('video_id', '')}", "node_type": "video", "label": video.get("title", ""), "attributes": video.get("url", "")})
+        video_node_id = f"video:{video.get('video_id', '')}"
+        video_node_ids.add(video_node_id)
+        nodes.append({"node_id": video_node_id, "node_type": "video", "label": video.get("title", ""), "attributes": video.get("url", "")})
     for _, formula in formulas.iterrows():
         formula_id = _text(formula.get("formula_id"))
         nodes.append({"node_id": f"formula:{formula_id}", "node_type": "formula", "label": formula.get("formula_name", formula_id), "attributes": formula.get("math", "")})
@@ -797,8 +856,20 @@ def _knowledge_graph(claims: pd.DataFrame, formulas: pd.DataFrame, videos: pd.Da
     for _, claim in claims.iterrows():
         claim_id = _text(claim.get("claim_id"))
         nodes.append({"node_id": f"claim:{claim_id}", "node_type": "claim", "label": claim.get("claim_text", ""), "attributes": claim.get("row_type", "")})
-        video_id = _video_id_from_url(_text(claim.get("video_url")))
-        if video_id:
+        claim_video_urls = _urls(_text(claim.get("source_urls"))) or [_text(claim.get("video_url"))]
+        for claim_video_url in claim_video_urls:
+            video_id = _video_id_from_url(claim_video_url)
+            if not video_id:
+                continue
+            video_node_id = f"video:{video_id}"
+            if video_node_id not in video_node_ids:
+                video_node_ids.add(video_node_id)
+                nodes.append({
+                    "node_id": video_node_id,
+                    "node_type": "video",
+                    "label": claim.get("source_title", "external research video"),
+                    "attributes": claim_video_url,
+                })
             edges.append({"edge_id": _stable_id("yte", claim_id, video_id), "source_node": f"claim:{claim_id}", "target_node": f"video:{video_id}", "relation": "extracted_from"})
         for formula_id in _formula_matches(claim, formulas):
             edges.append({"edge_id": _stable_id("yte", claim_id, formula_id), "source_node": f"claim:{claim_id}", "target_node": f"formula:{formula_id}", "relation": "references"})

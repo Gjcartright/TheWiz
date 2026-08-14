@@ -1,0 +1,206 @@
+capture_layer,repeat_scope,field_name,field_type,required,description
+shared,per_record,capture_id,str,yes,Stable unique id for one captured record.
+shared,per_record,capture_timestamp_utc,datetime,yes,UTC timestamp when the record was written.
+shared,per_record,scanner_refresh_timestamp_utc,datetime,yes,UTC timestamp when the scanner refresh was pressed before review.
+shared,per_record,pair,str,yes,Normalized pair label.
+shared,per_record,asset_x,str,yes,Left or X asset symbol.
+shared,per_record,asset_y,str,yes,Right or Y asset symbol.
+shared,per_record,venue,str,yes,Displayed venue such as dydx.
+shared,per_record,exchange_lane,str,yes,Internal execution lane or venue lane.
+shared,per_record,page_route,str,yes,Source page route such as scanner or pair/4.
+shared,per_record,source_path,str,no,Repo-relative path of the immediate source artifact.
+shared,per_record,evidence_path,str,no,Repo-relative immutable or captured evidence path supporting the row.
+shared,per_record,capture_context,str,no,Capture method such as live browser pair page or matrix bridge.
+shared,per_record,source_cycle_id,str,yes,Automation or manual cycle id.
+shared,per_record,source_run_type,str,yes,manual or automation.
+scanner,per_pair,scanner_sort_mode,str,yes,Current sort dropdown selection.
+scanner,per_pair,scanner_cointegration_filter,str,yes,Current cointegration filter selection.
+scanner,per_pair,scanner_correlation_filter,str,yes,Current correlation filter selection.
+scanner,per_pair,scanner_hurst_filter,str,yes,Current hurst filter selection.
+scanner,per_pair,scanner_half_life_filter,str,yes,Current half-life filter selection.
+scanner,per_pair,scanner_copula_filter,str,yes,Current copula filter selection.
+scanner,per_pair,scanner_strategy_filter,str,yes,Current strategy filter selection.
+scanner,per_pair,scanner_exchange_filter,str,yes,Current exchange filter selection.
+scanner,per_pair,scanner_symbol_filter_text,str,no,Typed symbol filter text if any.
+scanner,per_pair,row_index,int,yes,Visible row index on scanner at capture time.
+scanner,per_pair,visible_row_count,int,yes,Visible candidate count at capture time.
+scanner,per_pair,asset_x_raw,str,no,Unnormalized raw X asset text from scanner.
+scanner,per_pair,asset_y_raw,str,no,Unnormalized raw Y asset text from scanner.
+scanner,per_pair,normalized_pair,str,yes,Canonical pair formatting used for joins.
+scanner,per_pair,pair_id,str,yes,Stable pair identifier used in downstream storage.
+scanner,per_pair,volume_x,float,no,Displayed X volume from scanner.
+scanner,per_pair,volume_y,float,no,Displayed Y volume from scanner.
+scanner,per_pair,updated_at_utc,datetime,no,Displayed update timestamp from scanner.
+scanner,per_pair,strategy_family_from_row,str,yes,Visible strategy family on scanner row.
+scanner,per_pair,strategy_variant_from_row,str,yes,Visible strategy variant on scanner row.
+scanner,per_pair,zscore_norm_value,float,no,Normal z-score shown on scanner.
+scanner,per_pair,zscore_roll_value,float,no,Rolling z-score shown on scanner.
+scanner,per_pair,zscore_green_source,str,yes,Which z-score subtype was highlighted green.
+scanner,per_pair,dependency_profile,float,no,Profile value shown in dependency block.
+scanner,per_pair,dependency_x_over_y,float,no,Conditional dependency x given y from scanner row.
+scanner,per_pair,dependency_y_over_x,float,no,Conditional dependency y given x from scanner row.
+scanner,per_pair,correlation_value,float,no,Displayed correlation on scanner row.
+scanner,per_pair,coint_johansen_flag,bool,yes,Whether Johansen flag is present.
+scanner,per_pair,coint_engle_granger_flag,bool,yes,Whether Engle-Granger flag is present.
+scanner,per_pair,johansen_badge_state,str,yes,Dashboard badge state: confirmed not_confirmed or unknown.
+scanner,per_pair,engle_granger_badge_state,str,yes,Dashboard badge state: confirmed trending not_confirmed or unknown.
+scanner,per_pair,hurst_value,float,no,Displayed hurst value on scanner row.
+scanner,per_pair,half_life_value,float,no,Displayed half-life value on scanner row.
+scanner,per_pair,sigma_0_count,int,no,Displayed 0 sigma count on scanner row.
+scanner,per_pair,sigma_1_count,int,no,Displayed 1 sigma count on scanner row if present.
+scanner,per_pair,sigma_2_count,int,no,Displayed 2 sigma count on scanner row.
+scanner,per_pair,var_99,float,no,Displayed VaR from scanner row.
+scanner,per_pair,cvar_99,float,no,Displayed CVaR from scanner row.
+scanner,per_pair,max_drawdown,float,no,Displayed max drawdown from scanner row.
+scanner,per_pair,return_total,float,no,Displayed total return from scanner row.
+scanner,per_pair,sharpe,float,no,Displayed sharpe from scanner row.
+scanner,per_pair,scanner_row_text_raw,str,yes,Raw flattened text of the scanner row.
+scanner,per_pair,scanner_row_screenshot_path,str,no,Path to row-level evidence screenshot.
+scanner,per_pair,scanner_snapshot_path,str,no,Path to page-one evidence screenshot.
+pair_detail,per_pair_timeframe_strategy,timeframe,str,yes,Selected timeframe on page two.
+pair_detail,per_pair_timeframe_strategy,strategy_label,str,yes,Selected strategy on page two.
+pair_detail,per_pair_timeframe_strategy,periods_input,int,yes,Manual period input value.
+pair_detail,per_pair_timeframe_strategy,periods_analyzed,int,yes,Displayed analyzed period count.
+pair_detail,per_pair_timeframe_strategy,detail_capture_timestamp_utc,datetime,yes,UTC timestamp when page-two state was captured.
+pair_detail,per_pair_timeframe_strategy,page_detail_screenshot_path,str,no,Path to visible page-two screenshot.
+pair_detail,per_pair_timeframe_strategy,page_detail_full_screenshot_path,str,no,Path to full page-two screenshot.
+pair_detail,per_pair_timeframe_strategy,changed_vs_last_capture,bool,yes,Whether this exact timeframe and strategy changed since prior capture.
+pair_detail,per_pair_timeframe_strategy,change_reason,str,no,Human or computed explanation of what changed.
+pair_detail,per_pair_timeframe_strategy,price_x,float,no,Displayed X price in top strip.
+pair_detail,per_pair_timeframe_strategy,price_y,float,no,Displayed Y price in top strip.
+pair_detail,per_pair_timeframe_strategy,return_x_pct,float,no,Displayed X return percent in top strip.
+pair_detail,per_pair_timeframe_strategy,return_y_pct,float,no,Displayed Y return percent in top strip.
+pair_detail,per_pair_timeframe_strategy,volume_x_top,float,no,Displayed X volume in top strip.
+pair_detail,per_pair_timeframe_strategy,volume_y_top,float,no,Displayed Y volume in top strip.
+pair_detail,per_pair_timeframe_strategy,lt_vol_x,float,no,Displayed long-term volatility for X.
+pair_detail,per_pair_timeframe_strategy,lt_vol_y,float,no,Displayed long-term volatility for Y.
+pair_detail,per_pair_timeframe_strategy,dependency_x_over_y_top,float,no,Displayed top-strip x given y dependency.
+pair_detail,per_pair_timeframe_strategy,dependency_y_over_x_top,float,no,Displayed top-strip y given x dependency.
+pair_detail,per_pair_timeframe_strategy,coint_johansen_top,bool,yes,Whether Johansen flag appears in top strip.
+pair_detail,per_pair_timeframe_strategy,coint_engle_granger_top,bool,yes,Whether Engle-Granger flag appears in top strip.
+pair_detail,per_pair_timeframe_strategy,johansen_badge_state,str,yes,Johansen dashboard badge state captured from the pair page.
+pair_detail,per_pair_timeframe_strategy,engle_granger_badge_state,str,yes,Engle-Granger dashboard badge state captured from the pair page.
+pair_detail,per_pair_timeframe_strategy,hurst_top,float,no,Displayed hurst in top strip.
+pair_detail,per_pair_timeframe_strategy,half_life_top,float,no,Displayed half-life in top strip.
+pair_detail,per_pair_timeframe_strategy,correlation_top,float,no,Displayed correlation in top strip.
+pair_detail,per_pair_timeframe_strategy,hedge_ratio_top,float,no,Displayed hedge ratio in top strip.
+pair_detail,per_pair_timeframe_strategy,lt_beta,float,no,Displayed long-term beta in top strip.
+pair_detail,per_pair_timeframe_strategy,max_drawdown_top,float,no,Displayed drawdown in top strip.
+pair_detail,per_pair_timeframe_strategy,return_total_top,float,no,Displayed returns in top strip.
+pair_detail,per_pair_timeframe_strategy,sharpe_top,float,no,Displayed sharpe in top strip.
+pair_detail,per_pair_timeframe_strategy,chart_left_mode,str,yes,Selected left chart mode such as cumulative returns.
+pair_detail,per_pair_timeframe_strategy,chart_left_latest_x_value,float,no,Latest visible X value on left chart.
+pair_detail,per_pair_timeframe_strategy,chart_left_latest_y_value,float,no,Latest visible Y value on left chart.
+pair_detail,per_pair_timeframe_strategy,chart_right_mode,str,yes,Selected right chart mode such as spread or rolling z-score.
+pair_detail,per_pair_timeframe_strategy,chart_right_latest_value,float,no,Latest visible value on right chart.
+pair_detail,per_pair_timeframe_strategy,ou_mu,float,no,OU parameter mu if visible.
+pair_detail,per_pair_timeframe_strategy,ou_alpha,float,no,OU parameter alpha if visible.
+pair_detail,per_pair_timeframe_strategy,ou_beta,float,no,OU parameter beta if visible.
+pair_detail,per_pair_timeframe_strategy,ou_B,float,no,OU parameter B if visible.
+pair_detail,per_pair_timeframe_strategy,ou_sigma,float,no,OU parameter sigma if visible.
+pair_detail,per_pair_timeframe_strategy,pearson_rho,float,no,Pearson correlation from returns block.
+pair_detail,per_pair_timeframe_strategy,spearman_rho,float,no,Spearman correlation from returns block.
+pair_detail,per_pair_timeframe_strategy,kendall_tau,float,no,Kendall tau from returns block.
+pair_detail,per_pair_timeframe_strategy,conditional_chart_value,float,no,Conditional chart value from returns block.
+pair_detail,per_pair_timeframe_strategy,copula_best_fit,str,no,Best fit family in copula block.
+pair_detail,per_pair_timeframe_strategy,copula_correlation_rho,float,no,Copula rho in copula block.
+pair_detail,per_pair_timeframe_strategy,copula_x_given_y,float,no,Copula x given y value.
+pair_detail,per_pair_timeframe_strategy,copula_y_given_x,float,no,Copula y given x value.
+pair_detail,per_pair_timeframe_strategy,ecm_x_available,bool,no,Whether the dashboard exposed the ECM-X diagnostic.
+pair_detail,per_pair_timeframe_strategy,ecm_y_available,bool,no,Whether the dashboard exposed the ECM-Y diagnostic.
+pair_detail,per_pair_timeframe_strategy,ecm_strength_available,bool,no,Whether the dashboard exposed ECM strength.
+pair_detail,per_pair_timeframe_strategy,copula_chart_mode,str,no,Selected copula chart input mode.
+pair_detail,per_pair_timeframe_strategy,copula_direction_view,str,no,Selected directional copula view.
+pair_detail,per_pair_timeframe_strategy,copula_entry_lower,float,no,Configured lower conditional-probability entry threshold.
+pair_detail,per_pair_timeframe_strategy,copula_entry_upper,float,no,Configured upper conditional-probability entry threshold.
+pair_detail,per_pair_timeframe_strategy,copula_exit_lower,float,no,Configured lower conditional-probability exit threshold.
+pair_detail,per_pair_timeframe_strategy,copula_exit_upper,float,no,Configured upper conditional-probability exit threshold.
+pair_detail,per_pair_timeframe_strategy,secondary_chart_mode,str,no,Selected mode for secondary diagnostics chart.
+pair_detail,per_pair_timeframe_strategy,entry_long_operator,str,yes,Comparator for long entry rule.
+pair_detail,per_pair_timeframe_strategy,entry_long_value,float,yes,Threshold for long entry rule.
+pair_detail,per_pair_timeframe_strategy,entry_long_unit,str,yes,Unit for long entry rule usually sigma.
+pair_detail,per_pair_timeframe_strategy,entry_short_operator,str,yes,Comparator for short entry rule.
+pair_detail,per_pair_timeframe_strategy,entry_short_value,float,yes,Threshold for short entry rule.
+pair_detail,per_pair_timeframe_strategy,entry_short_unit,str,yes,Unit for short entry rule usually sigma.
+pair_detail,per_pair_timeframe_strategy,exit_long_operator,str,yes,Comparator for long exit rule.
+pair_detail,per_pair_timeframe_strategy,exit_long_value,float,yes,Threshold for long exit rule.
+pair_detail,per_pair_timeframe_strategy,exit_long_unit,str,yes,Unit for long exit rule usually sigma.
+pair_detail,per_pair_timeframe_strategy,exit_short_operator,str,yes,Comparator for short exit rule.
+pair_detail,per_pair_timeframe_strategy,exit_short_value,float,yes,Threshold for short exit rule.
+pair_detail,per_pair_timeframe_strategy,exit_short_unit,str,yes,Unit for short exit rule usually sigma.
+pair_detail,per_pair_timeframe_strategy,close_n_periods_mode,str,no,Selected close-N-periods override mode.
+pair_detail,per_pair_timeframe_strategy,stop_loss_pct,float,no,Selected stop loss override percent.
+pair_detail,per_pair_timeframe_strategy,ecm_deviation_min_pct,float,no,Selected ECM deviation minimum override percent.
+pair_detail,per_pair_timeframe_strategy,corr_strength_min_pct,float,no,Selected correlation strength minimum override percent.
+pair_detail,per_pair_timeframe_strategy,capital_weighting_slider_value,float,no,Current capital weighting slider value.
+pair_detail,per_pair_timeframe_strategy,capital_weighting_asset,str,no,Asset named beside the capital weighting slider.
+pair_detail,per_pair_timeframe_strategy,sharpe_detail,float,no,Detailed sharpe in backtest block.
+pair_detail,per_pair_timeframe_strategy,sortino_detail,float,no,Detailed sortino in backtest block.
+pair_detail,per_pair_timeframe_strategy,net_return_detail,float,no,Detailed net return in backtest block.
+pair_detail,per_pair_timeframe_strategy,annualized_return_detail,float,no,Detailed annualized return in backtest block.
+pair_detail,per_pair_timeframe_strategy,mean_period_return_detail,float,no,Detailed mean period return in backtest block.
+pair_detail,per_pair_timeframe_strategy,win_rate,float,no,Detailed win rate in backtest block.
+pair_detail,per_pair_timeframe_strategy,closed_trades,int,no,Closed trade count in backtest block.
+pair_detail,per_pair_timeframe_strategy,max_drawdown_detail,float,no,Detailed drawdown in backtest block.
+pair_detail,per_pair_timeframe_strategy,var_99_detail,float,no,Detailed VaR at 99 percent.
+pair_detail,per_pair_timeframe_strategy,cvar_99_detail,float,no,Detailed CVaR at 99 percent.
+pair_detail,per_pair_timeframe_strategy,var_sim,float,no,Simulated VaR value.
+pair_detail,per_pair_timeframe_strategy,cvar_sim,float,no,Simulated CVaR value.
+pair_detail,per_pair_timeframe_strategy,bottom_chart_mode,str,no,Selected bottom chart mode such as returns.
+pair_detail,per_pair_timeframe_strategy,bottom_chart_latest_net_value,float,no,Latest visible NET value on bottom chart.
+pair_detail,per_pair_timeframe_strategy,bottom_chart_latest_x_value,float,no,Latest visible X series value on bottom chart.
+pair_detail,per_pair_timeframe_strategy,bottom_chart_latest_y_value,float,no,Latest visible Y series value on bottom chart.
+derived,per_pair_timeframe_strategy,readiness_label,str,yes,Computed state such as not_ready near_trigger triggered invalidated.
+derived,per_pair_timeframe_strategy,stationarity_summary,str,yes,Combined dashboard state: both_confirmed johansen_confirmed engle_granger_confirmed engle_granger_trending none_confirmed or badge_state_unknown.
+derived,per_pair_timeframe_strategy,copula_x_given_y_pct,float,no,Conditional probability of X given Y normalized to percent.
+derived,per_pair_timeframe_strategy,copula_y_given_x_pct,float,no,Conditional probability of Y given X normalized to percent.
+derived,per_pair_timeframe_strategy,copula_probability_gap_pct,float,no,Absolute gap between conditional probabilities in percentage points.
+derived,per_pair_timeframe_strategy,copula_signal_status,str,yes,Missing no_dislocation asymmetric_dislocation or strong_asymmetric_dislocation.
+derived,per_pair_timeframe_strategy,copula_rich_asset,str,no,Asset conditionally rich in the Copula reading.
+derived,per_pair_timeframe_strategy,copula_cheap_asset,str,no,Asset conditionally cheap in the Copula reading.
+derived,per_pair_timeframe_strategy,copula_trade_direction,str,no,Research direction such as short_x_long_y or long_x_short_y.
+derived,per_pair_timeframe_strategy,copula_entry_confirmation,str,no,Required confirmation before a paper entry.
+derived,per_pair_timeframe_strategy,copula_exit_condition,str,no,Conditional-probability mean-reversion exit rule.
+derived,per_pair_timeframe_strategy,copula_journal_status,str,yes,Research-only paper-candidate or incomplete-capture journal state.
+derived,per_pair_timeframe_strategy,copula_execution_blockers,str,no,Visible data or stationarity blockers preventing execution.
+derived,per_pair_timeframe_strategy,zscore_signal_type,str,yes,Computed source of z-score signal such as norm_only roll_only both none.
+derived,per_pair_timeframe_strategy,risk_gate_pass,bool,yes,Whether risk filters pass for this setup.
+derived,per_pair_timeframe_strategy,return_gate_pass,bool,yes,Whether return filters pass for this setup.
+derived,per_pair_timeframe_strategy,sharpe_gate_pass,bool,yes,Whether sharpe filter passes for this setup.
+derived,per_pair_timeframe_strategy,drawdown_gate_pass,bool,yes,Whether drawdown filter passes for this setup.
+derived,per_pair_timeframe_strategy,profit_factor_gate_pass,bool,yes,Whether profit factor filter passes for this setup.
+derived,per_pair_timeframe_strategy,paper_candidate_status,str,yes,Computed paper-trade status.
+derived,per_pair_timeframe_strategy,execution_compatible,bool,yes,Whether chosen venue can actually accept this setup.
+derived,per_pair_timeframe_strategy,account_state_blocked,bool,yes,Whether account state blocks paper-readiness.
+derived,per_pair_timeframe_strategy,orphan_leg_blocker,bool,yes,Whether an orphan leg blocks paper-readiness.
+delta,per_pair_timeframe_strategy,delta_zscore_norm,float,no,Change in normal z-score since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_zscore_roll,float,no,Change in rolling z-score since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_correlation,float,no,Change in correlation since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_hurst,float,no,Change in hurst since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_half_life,float,no,Change in half-life since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_hedge_ratio,float,no,Change in hedge ratio since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_return_total,float,no,Change in total return since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_sharpe,float,no,Change in sharpe since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_max_drawdown,float,no,Change in max drawdown since prior matching capture.
+delta,per_pair_timeframe_strategy,delta_capital_weighting,float,no,Change in capital weighting since prior matching capture.
+delta,per_pair_timeframe_strategy,rules_changed_flag,bool,yes,Whether any entry or exit rule changed since prior matching capture.
+delta,per_pair_timeframe_strategy,overrides_changed_flag,bool,yes,Whether any override changed since prior matching capture.
+delta,per_pair_timeframe_strategy,timeframe_checked_flag,bool,yes,Whether this timeframe was explicitly checked during the run.
+delta,per_pair_timeframe_strategy,timeframe_available_flag,bool,yes,Whether this timeframe was available on the page.
+delta,per_pair_timeframe_strategy,strategy_available_flag,bool,yes,Whether this strategy was available on the page.
+outcome,per_trade,paper_trade_id,str,no,Linked paper trade id if a paper trade was opened.
+outcome,per_trade,paper_entry_timestamp_utc,datetime,no,UTC time when paper trade opened.
+outcome,per_trade,paper_exit_timestamp_utc,datetime,no,UTC time when paper trade closed.
+outcome,per_trade,paper_entry_notional_usd,float,no,Entry notional in USD for paper trade.
+outcome,per_trade,paper_exit_notional_usd,float,no,Exit notional in USD for paper trade.
+outcome,per_trade,paper_realized_return,float,no,Realized return once trade closes.
+outcome,per_trade,paper_outcome_label,str,no,Outcome label such as win loss scratch.
+outcome,per_trade,paper_exit_reason,str,no,Reason trade was closed.
+failure,per_record,capture_status,str,yes,Overall capture result such as captured skipped blocked failed.
+failure,per_record,capture_blocker,str,no,Specific blocker text if capture did not complete.
+failure,per_record,pair_unavailable_flag,bool,yes,Whether pair disappeared before capture finished.
+failure,per_record,timeframe_unavailable_flag,bool,yes,Whether a required timeframe was not available.
+failure,per_record,strategy_unavailable_flag,bool,yes,Whether a required strategy was not available.
+failure,per_record,page_not_recognized_flag,bool,yes,Whether the pair detail page failed with unrecognized state.
+failure,per_record,no_data_flag,bool,yes,Whether page showed no data.
+failure,per_record,unchanged_alias_skipped_flag,bool,yes,Whether deep recapture was skipped because latest alias was unchanged.

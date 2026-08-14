@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -9,6 +10,7 @@ from quant_platform.wizard_research_journal import (
     _build_detail_records,
     _build_strategy_mode_capture_queue,
     _build_two_hour_copula_report,
+    refresh_wizard_pair_page_capture_from_matrices,
 )
 
 
@@ -29,6 +31,17 @@ def test_detail_records_preserve_top_metrics_separately_from_detail_metrics(tmp_
                 "returns_total_pct": 19.0,
                 "sharpe_top": 2.4,
                 "sharpe": 1.8,
+                "chart_right_mode": "spread",
+                "chart_right_latest_value": 2.25,
+                "ecm_x_available": True,
+                "ecm_y_available": False,
+                "ecm_strength_available": True,
+                "copula_entry_lower": 0.05,
+                "copula_entry_upper": 0.95,
+                "copula_exit_lower": 0.45,
+                "copula_exit_upper": 0.55,
+                "capture_context": "browser_page_two_capture",
+                "evidence_path": "reports/evidence/btc_eth.json",
             }
         ]
     ).to_csv(active / "crypto_wizards_pair_page_capture.csv", index=False)
@@ -51,6 +64,45 @@ def test_detail_records_preserve_top_metrics_separately_from_detail_metrics(tmp_
     assert row["annualized_return_detail"] == 19.0
     assert row["sharpe_top"] == 2.4
     assert row["sharpe_detail"] == 1.8
+    assert row["chart_right_mode"] == "spread"
+    assert row["chart_right_latest_value"] == 2.25
+    assert row["ecm_x_available"] == True
+    assert row["ecm_y_available"] == False
+    assert row["copula_entry_upper"] == 0.95
+    assert row["copula_exit_lower"] == 0.45
+    assert row["capture_context"] == "browser_page_two_capture"
+    assert row["evidence_path"] == "reports/evidence/btc_eth.json"
+
+
+def test_live_browser_capture_beats_matrix_bridge_for_same_pair_timeframe_and_mode(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame([{
+        "pair": "BTC-USD/ETH-USD",
+        "interval": "Daily",
+        "exact_mode": "OU (Spread)",
+        "copula": "StudentT",
+        "sharpe": 2.4,
+        "capture_context": "browser_page_two_capture",
+        "capture_timestamp_utc": "2026-08-14T10:00:00Z",
+        "evidence_path": "reports/evidence/live.json",
+    }]).to_csv(active / "crypto_wizards_pair_page_capture.csv", index=False)
+    matrix = [{
+        "pair": "BTC-USD/ETH-USD",
+        "timeframe": "Daily",
+        "strategy": "OU (Spread)",
+        "best_fit": "Gaussian",
+        "sharpe_metric": 9.9,
+    }]
+    (active / "pair1_priority_matrix.json").write_text(json.dumps(matrix), encoding="utf-8")
+
+    refresh_wizard_pair_page_capture_from_matrices(tmp_path)
+    result = pd.read_csv(active / "crypto_wizards_pair_page_capture.csv")
+
+    assert len(result) == 1
+    assert result.loc[0, "capture_context"] == "browser_page_two_capture"
+    assert result.loc[0, "copula"] == "StudentT"
+    assert result.loc[0, "sharpe"] == 2.4
 
 
 def test_journal_lineage_joins_exact_mode_configuration_without_inventing_old_hashes(tmp_path):

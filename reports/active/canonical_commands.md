@@ -1,0 +1,78 @@
+# Canonical Commands
+
+Runtime invariant: run every Python entry point through `uv run`. Direct
+`python` currently resolves to an incompatible system Anaconda NumPy/scikit-learn
+stack and is not an approved project runtime.
+
+- `uv run python -m quant_platform.cli system-check`
+- `uv run python -m quant_platform.cli build-artifact-index`
+- `uv run python -m quant_platform.cli current-state`
+- `uv run python -m quant_platform.cli complete-corrective-plan`
+- `uv run python -m quant_platform.cli build-scheduler-runtime-readiness`
+- `uv run python -m quant_platform.cli build-wizard-reset-readiness`
+- `uv run python -m quant_platform.cli build-stage4-handoff-readiness`
+- `uv run python -m quant_platform.cli build-corrective-agent-governance`
+- `uv run python -m quant_platform.cli run-corrective-l2-capture`
+- `uv run python scripts/build_corrective_checkpoint.py`
+- `uv run python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery`
+- `uv run python -m quant_platform.cli build-wizard-research-pack`
+- `uv run python -m quant_platform.cli build-wizard-mode-matrix-capture-queue`
+- `uv run python -m quant_platform.cli build-wizard-pair-settings-capture-template`
+- `uv run python -m quant_platform.cli build-wizard-mode-replay-capability`
+- `uv run python -m quant_platform.cli build-wizard-mode-comparison`
+- `uv run python -m quant_platform.cli build-wizard-exploratory-cost-sensitivity`
+- `uv run python -m quant_platform.cli refresh-hyperliquid-market-context`
+- `uv run python -m quant_platform.cli build-hyperliquid-research-bundle --max-pairs 5`
+- `uv run python -m quant_platform.cli build-hyperliquid-wizard-hypothesis-queue`
+- `uv run python -m quant_platform.cli run-hyperliquid-research-cycle`
+- `uv run python -m quant_platform.cli run-hyperliquid-research-cycle --collect-l2`
+- `uv run python -m quant_platform.cli run-hyperliquid-auxiliary-timeframe-validation --interval 4h --intraday-days 800`
+- `uv run python -m quant_platform.cli hyperliquid-testnet-margin-snapshot`
+- `uv run python -m quant_platform.cli hyperliquid-testnet-smoke-approval-template`
+- `uv run python -m quant_platform.cli hyperliquid-testnet-collateral-transfer-preflight --transfer-amount-usd 25`
+- `uv run python -m quant_platform.cli run-hyperliquid-testnet-collateral-transfer --transfer-preflight-id <immutable_preflight_id> --transfer-approval-id <signed_one_run_approval_id> --transfer-amount-usd 25`
+- `uv run python -m quant_platform.cli build-hyperliquid-testnet-lifecycle-gate`
+- `uv run python -m quant_platform.cli capture-hyperliquid-testnet-lifecycle-evidence`
+- `uv run python -m quant_platform.cli hyperliquid-testnet-recover-pair-state --order-approval-id <signed_one_run_approval_id>`
+- `uv run python -m quant_platform.cli run-hyperliquid-wizard-mode-proofs`
+- `uv run python -m quant_platform.cli refresh-hyperliquid-execution-cost-snapshot --max-pairs 5`
+- `uv run python -m quant_platform.cli build-hyperliquid-evidence-cadence`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-handoff`
+- `uv run python -m quant_platform.cli materialize-current-wizard-hyperliquid-history`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-canonical-replay`
+- `uv run python -m quant_platform.cli materialize-current-wizard-hyperliquid-cost-evidence`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-observed-cost-replay`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-walkforward`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-regime-attribution`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-robustness`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-concentration`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-failure-attribution`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-leverage-surface`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-learning-ledger`
+- `uv run python -m quant_platform.cli validate-current-wizard-hyperliquid-chain`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-operating-cadence`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-daily-pipeline`
+- `uv run python -m quant_platform.cli run-current-wizard-hyperliquid-daily-pipeline --execute-daily-pipeline`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-completion-audit`
+- `uv run python -m quant_platform.cli build-current-wizard-hyperliquid-storage-reclamation-plan`
+- `uv run python -m quant_platform.cli stage-current-wizard-hyperliquid-archive-copy --wizard-archive-destination /Volumes/<drive>/TheWizArchive --archive-copy-approval-id <one_run_approval_id>`
+- `uv run python -m quant_platform.cli plan-current-wizard-hyperliquid-archive-release`
+- `uv run python -m quant_platform.cli validate-current-wizard-hyperliquid-testnet-protocol`
+- `uv run python -m quant_platform.cli build-current-wizard-ou-optimal-overlay`
+- `uv run python -m quant_platform.cli build-market-venue-context`
+- `uv run python -m quant_platform.cli build-venue-lane-test-plan`
+- `uv run python -m quant_platform.cli build-multi-venue-history-readiness`
+- `uv run python -m quant_platform.cli build-venue-route-scorecard`
+- `uv run python -m quant_platform.cli hyperliquid-lane-readiness`
+- `uv run python -m quant_platform.cli build-pair-universe`
+- `uv run python -m quant_platform.cli build-trade-dataset`
+- `uv run python -m quant_platform.cli train-trade-gate`
+- `uv run python -m quant_platform.cli run-model-gated-backtest`
+- `uv run python -m quant_platform.cli export-trade-gate-model`
+- `uv run python -m quant_platform.cli build-command-dashboard`
+- `uv run python -m quant_platform.cli build-v2-preflight-run`
+- `uv run python -m quant_platform.cli validate-v2-run --run-id <run_id>`
+- `uv run python -m quant_platform.cli publish-v2-run-status --run-id <run_id>`
+- `uv run python -m quant_platform.cli apify-source-summary`
+- `uv run python -m quant_platform.cli refresh-apify-sources`
+- `uv run python -m quant_platform.cli archive-from-index --dry-run`
