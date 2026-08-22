@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -184,7 +188,7 @@ def build_hyperliquid_run_manifest(
     _atomic_json(manifest, manifest_path)
     _atomic_csv(candidates, candidate_path)
     _atomic_csv(validation, validation_path)
-    summary_path.write_text(_manifest_markdown(manifest, validation, candidates), encoding="utf-8")
+    atomic_write_text(summary_path, _manifest_markdown(manifest, validation, candidates), encoding="utf-8")
     return {
         **manifest,
         "manifest": manifest_path,
@@ -312,7 +316,7 @@ def build_hyperliquid_authority_state(*, root: Path = ROOT, now: datetime | None
     _atomic_csv(frame, authority_path)
     _atomic_csv(frame, layered_path)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
-    markdown_path.write_text(_authority_markdown(frame), encoding="utf-8")
+    atomic_write_text(markdown_path, _authority_markdown(frame), encoding="utf-8")
     return {**row, "authority": authority_path, "layered_readiness": layered_path, "summary": markdown_path}
 
 
@@ -458,14 +462,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

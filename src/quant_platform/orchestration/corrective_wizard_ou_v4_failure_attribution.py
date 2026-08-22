@@ -11,6 +11,7 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.corrective_wizard_ou_holdout import (
     _as_utc,
     _atomic_csv,
@@ -360,7 +361,7 @@ def _atomic_text(value: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     temporary.write_text(value, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _markdown(payload: dict[str, Any]) -> str:

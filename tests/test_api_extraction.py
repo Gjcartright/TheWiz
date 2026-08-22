@@ -91,6 +91,50 @@ def test_fetch_uses_crypto_wizards_api_key_header(monkeypatch, tmp_path):
     assert "Authorization" not in seen["headers"]
 
 
+def test_official_fetch_cannot_fall_through_generic_requests_without_authority(
+    monkeypatch,
+    tmp_path,
+):
+    direct_calls = []
+
+    def forbidden_direct_request(*args, **kwargs):
+        direct_calls.append((args, kwargs))
+        raise AssertionError("official Wizard request bypassed governed transport")
+
+    monkeypatch.setattr(requests, "request", forbidden_direct_request)
+    extractor = CryptoWizardsExtractor(
+        "https://api.cryptowizards.net",
+        api_key="secret",
+        archive_dir=tmp_path,
+    )
+
+    with pytest.raises(CryptoWizardsFetchError, match="reserved effect authority"):
+        extractor.fetch(EndpointSpec("prescanned", "/v1beta/prescanned"))
+
+    assert direct_calls == []
+
+
+def test_official_unknown_endpoint_fails_catalog_before_generic_requests(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(
+        requests,
+        "request",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("unknown official endpoint reached generic transport")
+        ),
+    )
+    extractor = CryptoWizardsExtractor(
+        "https://api.cryptowizards.net",
+        api_key="secret",
+        archive_dir=tmp_path,
+    )
+
+    with pytest.raises(CryptoWizardsFetchError, match="credit_contract_unknown"):
+        extractor.fetch(EndpointSpec("unknown", "/v1beta/not-reviewed"))
+
+
 def test_diagnose_endpoint_reports_dns_and_http_status(monkeypatch, tmp_path):
     class FakeResponse:
         ok = True

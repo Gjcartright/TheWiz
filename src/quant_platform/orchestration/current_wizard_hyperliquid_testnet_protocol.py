@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from copy import deepcopy
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -103,10 +107,10 @@ def validate_current_wizard_hyperliquid_testnet_protocol(
     for frame in (scenario_frame, transition_frame, candidate_coverage, validation):
         frame.insert(1, "protocol_id", protocol_id)
     paths = _paths(active)
-    scenario_frame.to_csv(paths["scenarios"], index=False)
-    transition_frame.to_csv(paths["transitions"], index=False)
-    candidate_coverage.to_csv(paths["candidate_coverage"], index=False)
-    validation.to_csv(paths["validation"], index=False)
+    atomic_write_csv(scenario_frame, paths["scenarios"], index=False)
+    atomic_write_csv(transition_frame, paths["transitions"], index=False)
+    atomic_write_csv(candidate_coverage, paths["candidate_coverage"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
     summary: dict[str, object] = {
         **identity_material,
         "as_of": as_of.isoformat(),
@@ -130,10 +134,8 @@ def validate_current_wizard_hyperliquid_testnet_protocol(
         "live_trading_authorized": False,
         "artifacts": {name: str(path.relative_to(root)) for name, path in paths.items()},
     }
-    paths["manifest"].write_text(
-        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(paths["manifest"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

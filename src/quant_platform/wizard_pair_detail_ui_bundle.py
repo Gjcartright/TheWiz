@@ -8,6 +8,10 @@ live-trading authority.
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import re
 from dataclasses import asdict
@@ -17,6 +21,7 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.economic_contract import CANONICAL_WIZARD_MODES
 from quant_platform.orchestration.corrective_wizard_browser_auth import (
     validate_wizard_browser_auth_observation,
 )
@@ -28,16 +33,8 @@ SCHEMA_VERSION = "wizard_pair_detail_ui_ledger.v1"
 BUNDLE_SCHEMA_VERSION = "wizard_pair_detail_ui_bundle.v2"
 LEGACY_BUNDLE_SCHEMA_VERSION = "wizard_pair_detail_ui_bundle.v1"
 ROUTE_UNAVAILABLE_SCHEMA_VERSION = "wizard_pair_detail_route_unavailable.v1"
-PAIR_PAGE_MODES = (
-    "Static (Spread)",
-    "Static (ZScoreR)",
-    "Dyn (Spread)",
-    "Dyn (ZScoreR)",
-    "OU (Spread)",
-    "OU (ZScoreR)",
-    "Copula",
-)
-PLANNED_MODES = (*PAIR_PAGE_MODES[:-1], "OU (Optimal)", PAIR_PAGE_MODES[-1])
+PAIR_PAGE_MODES = CANONICAL_WIZARD_MODES
+PLANNED_MODES = PAIR_PAGE_MODES
 ORIENTATIONS = ("original", "reverse")
 
 # These are verified current client defaults, not confirmed editable controls on
@@ -97,9 +94,9 @@ def ingest_wizard_pair_detail_ui_bundles(
         "capture_progress": active / "exhaustive_wizard_pair_detail_capture_progress.csv",
         "summary": active / "exhaustive_wizard_pair_detail_capture_summary.md",
     }
-    ledger.to_csv(paths["mode_ledger"], index=False)
-    validation.to_csv(paths["coverage_validation"], index=False)
-    progress.to_csv(paths["capture_progress"], index=False)
+    atomic_write_csv(ledger, paths["mode_ledger"], index=False)
+    atomic_write_csv(validation, paths["coverage_validation"], index=False)
+    atomic_write_csv(progress, paths["capture_progress"], index=False)
 
     captured = int(ledger["capture_status"].eq("CAPTURED").sum()) if not ledger.empty else 0
     pair_page_unavailable_cells = (
@@ -205,7 +202,7 @@ def ingest_wizard_pair_detail_ui_bundles(
         "queue_run_id": queue_run_id,
         "live_trading_authorized": False,
     }
-    paths["summary"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(paths["summary"], _summary_markdown(summary), encoding="utf-8")
     if queue_run_id:
         snapshot_dir = (
             root
@@ -223,14 +220,10 @@ def ingest_wizard_pair_detail_ui_bundles(
             "snapshot_capture_progress": snapshot_dir / "pair_detail_capture_progress.csv",
             "snapshot_summary": snapshot_dir / "pair_detail_capture_summary.md",
         }
-        snapshot_ledger.to_csv(snapshot_paths["snapshot_mode_ledger"], index=False)
-        snapshot_validation.to_csv(
-            snapshot_paths["snapshot_coverage_validation"], index=False
-        )
-        progress.to_csv(snapshot_paths["snapshot_capture_progress"], index=False)
-        snapshot_paths["snapshot_summary"].write_text(
-            _summary_markdown(summary), encoding="utf-8"
-        )
+        atomic_write_csv(snapshot_ledger, snapshot_paths["snapshot_mode_ledger"], index=False)
+        atomic_write_csv(snapshot_validation, snapshot_paths["snapshot_coverage_validation"], index=False)
+        atomic_write_csv(progress, snapshot_paths["snapshot_capture_progress"], index=False)
+        atomic_write_text(snapshot_paths["snapshot_summary"], _summary_markdown(summary), encoding="utf-8")
         paths.update(snapshot_paths)
     return CommandResult(paths=paths, summary=summary)
 

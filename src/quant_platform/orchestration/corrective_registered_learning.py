@@ -42,12 +42,17 @@ from quant_platform.orchestration.corrective_agent_governance import (
     build_corrective_agent_governance,
 )
 from quant_platform.orchestration.corrective_daily_scheduler import _acquire_lock
+from quant_platform.orchestration.corrective_redaction import (
+    safe_exception_code,
+    safe_validation_exception_code,
+)
 from quant_platform.orchestration.corrective_registered_learning_protocol import (
     validate_registered_stage5_protocol,
 )
 from quant_platform.orchestration.corrective_registered_rerun_executor import (
     _validate_execution_receipt,
 )
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
 from quant_platform.rl.rl_backtest import run_rl_research
 from quant_platform.rl.rl_learning_agent import _chronological_rl_partitions
@@ -396,7 +401,7 @@ def run_registered_learning_research(
         return _publish_status(
             status_path=status_path,
             status="BLOCKED_STAGE4",
-            blocker=f"{type(exc).__name__}:{exc}",
+            blocker=safe_validation_exception_code(exc),
             execute=execute,
         )
     if not _stage4_has_accepted_survivor(stage4):
@@ -446,7 +451,7 @@ def run_registered_learning_research(
         return _publish_status(
             status_path=status_path,
             status="BLOCKED_STAGE5_SUPPORT_POLICY",
-            blocker=f"{type(exc).__name__}:{exc}",
+            blocker=safe_validation_exception_code(exc),
             execute=execute,
         )
     try:
@@ -460,7 +465,7 @@ def run_registered_learning_research(
         return _publish_status(
             status_path=status_path,
             status="BLOCKED_STAGE5_PROTOCOL",
-            blocker=f"{type(exc).__name__}:{exc}",
+            blocker=safe_validation_exception_code(exc),
             execute=execute,
         )
     learning_id = (
@@ -654,7 +659,7 @@ def run_registered_learning_research(
         _publish_status(
             status_path=status_path,
             status="FAILED",
-            blocker=f"{type(exc).__name__}:{exc}",
+            blocker=f"{safe_exception_code(exc)}",
             execute=True,
         )
         raise
@@ -2826,7 +2831,7 @@ def latest_verified_registered_learning(*, root: Path = ROOT) -> dict[str, Any]:
         return {
             **base,
             "status": "BLOCKED_REGISTERED_LEARNING_EVIDENCE",
-            "blockers": [f"{type(exc).__name__}:{exc}"],
+            "blockers": [safe_validation_exception_code(exc)],
         }
 
     relative = _relative(receipt_path, root)
@@ -3042,14 +3047,14 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
         json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n",
         encoding="utf-8",
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_immutable_json(payload: dict[str, Any], path: Path) -> None:

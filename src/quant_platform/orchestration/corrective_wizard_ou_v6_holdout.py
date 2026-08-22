@@ -22,6 +22,7 @@ from quant_platform.crypto_wizards_history import (
     fetch_custom_series_backtest,
 )
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_wizard_api_credit_receipt import (
     publish_wizard_api_credit_receipt,
 )
@@ -494,7 +495,9 @@ def run_ou_v6_prospective_holdout(
         for binding in bindings
         if not (root / _text(binding.get("response_path"))).is_file()
     ]
-    key = api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
+    key = api_key or (
+        os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip() if execute else ""
+    )
     credits_used: int | None = None
     credit_receipt_id = ""
     credit_receipt_path: Path | None = None
@@ -538,7 +541,7 @@ def run_ou_v6_prospective_holdout(
                 else:
                     credits_used = usage.used
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                blocker = f"credit_preflight_failed:{type(exc).__name__}:{exc}"
+                blocker = f"credit_preflight_failed:{safe_exception_code(exc)}"
             if (
                 credits_used is not None
                 and credits_used + len(missing) * 2 > daily_credit_limit - reserved_credits
@@ -576,7 +579,7 @@ def run_ou_v6_prospective_holdout(
             try:
                 _write_or_validate_immutable_json(intent, intent_path)
             except (OSError, TypeError, ValueError) as exc:
-                errors.append(f"call_intent_persistence_failed:{type(exc).__name__}:{exc}")
+                errors.append(f"call_intent_persistence_failed:{safe_exception_code(exc)}")
                 break
             intent_paths.append(_relative(intent_path, root))
             calls_made += 1
@@ -601,7 +604,7 @@ def run_ou_v6_prospective_holdout(
                 completion_paths.append(_relative(completion_path, root))
                 responses_captured += 1
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                errors.append(f"vendor_capture_failed:{type(exc).__name__}:{exc}")
+                errors.append(f"vendor_capture_failed:{safe_exception_code(exc)}")
                 break
     attempt = {
         "schema_version": "thewiz.wizard_ou_v6_capture_attempt.v1",
@@ -701,7 +704,7 @@ def audit_ou_v6_capture_readiness(
             allow_responses=True,
         )
     except (OSError, TypeError, ValueError) as exc:
-        blockers.append(f"ou_v6_registration_invalid:{type(exc).__name__}:{exc}")
+        blockers.append(f"ou_v6_registration_invalid:{safe_exception_code(exc)}")
 
     bindings = contract.get("holdout_bindings", [])
     if not isinstance(bindings, list):

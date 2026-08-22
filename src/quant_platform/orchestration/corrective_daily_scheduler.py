@@ -20,10 +20,29 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
     ensure_runtime_temp_directory,
-    launch_agent_runtime_environment,
+    ensure_scheduler_log_directory,
+    scheduler_contract,
+    scheduler_launch_agent_plist,
+    scheduler_log_directory,
+    scheduler_python_path,
+    scheduler_run_identity,
     write_launch_agent_plist,
+)
+from quant_platform.orchestration.corrective_scheduler_lock import (
+    GovernedEvidenceLockBusy,
+    GovernedEvidenceMaintenanceActive,
+    acquire_scheduler_lock,
+    governed_evidence_write_lock,
+)
+from quant_platform.orchestration.corrective_scheduler_supervisor import (
+    supervise_scheduler_run,
+)
+from quant_platform.orchestration.corrective_scheduler_terminal import (
+    load_validated_scheduler_terminal_receipt_by_run,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
     MINIMUM_FREE_BYTES,
@@ -32,6 +51,9 @@ from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
 from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
     run_current_wizard_hyperliquid_daily_pipeline,
     stage3_forbidden_command_tokens,
+)
+from quant_platform.orchestration.effect_authority import (
+    current_publication_authority,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -60,8 +82,14 @@ def run_scheduled_research(
     stage_timeout_seconds: int = DEFAULT_STAGE_TIMEOUT_SECONDS,
     command_runner: Callable[..., subprocess.CompletedProcess[str]] | None = None,
     clock: Callable[[], datetime] | None = None,
+    require_launchd_provenance: bool = False,
 ) -> CommandResult:
     now = _as_utc(now)
+    runtime_identity = scheduler_run_identity(
+        root,
+        contract=scheduler_contract("daily_research"),
+        require_launchd=require_launchd_provenance,
+    )
     active = root / "reports" / "active"
     receipts = active / "daily_schedule_receipts"
     active.mkdir(parents=True, exist_ok=True)
@@ -82,6 +110,8 @@ def run_scheduled_research(
     try:
         _acquire_lock(lock_path, now=now, timeout_seconds=run_timeout_seconds)
         lock_acquired = True
+        if not runtime_identity["runtime_environment_valid"]:
+            raise SchedulerBlocked(";".join(runtime_identity["runtime_environment_blockers"]))
         existing_valid, _existing_blockers = _validate_daily_receipt(
             receipt_path,
             root=root,
@@ -96,24 +126,23 @@ def run_scheduled_research(
             if free_bytes < minimum_free_bytes:
                 raise SchedulerBlocked(f"insufficient_free_space:{free_bytes}<{minimum_free_bytes}")
             deadline = time.monotonic() + run_timeout_seconds
-            runner = command_runner or _timeout_runner(
-                deadline=deadline, stage_timeout_seconds=stage_timeout_seconds
-            )
             result = run_current_wizard_hyperliquid_daily_pipeline(
                 root=root,
                 execute=execute,
                 now=now,
                 minimum_free_bytes=minimum_free_bytes,
-                command_runner=runner,
+                command_runner=command_runner,
+                stage_timeout_seconds=stage_timeout_seconds,
+                run_deadline_monotonic=deadline,
             )
             run_status = str(result.summary.get("run_status", "BLOCKED"))
             if run_status not in {"PASS", "PLANNED"}:
                 blockers.append(f"daily_pipeline_status:{run_status}")
     except (SchedulerBlocked, FileExistsError) as exc:
-        blockers.append(str(exc))
+        blockers.append(safe_exception_code(exc))
         run_status = "BLOCKED"
     except Exception as exc:  # noqa: BLE001 - persist unexpected scheduler failures
-        blockers.append(f"scheduler_error:{type(exc).__name__}:{exc}")
+        blockers.append(f"scheduler_error:{safe_exception_code(exc)}")
         run_status = "FAILED"
     finally:
         if lock_acquired:
@@ -137,6 +166,7 @@ def run_scheduled_research(
     )
     receipt = {
         "schema_version": SCHEMA_VERSION,
+        **runtime_identity,
         "run_date": now.date().isoformat(),
         "started_at_utc": now.isoformat(),
         "completed_at_utc": completed_at.isoformat(),
@@ -156,6 +186,19 @@ def run_scheduled_research(
         "daily_run_status_sha256": _file_sha256(source_status),
         "source_evidence_immutable": _is_dated_daily_run_evidence(
             source_manifest, source_status, root=root
+        ),
+        "external_calls": _result_counter(result, "external_calls"),
+        "external_credits_reserved": _result_counter(
+            result,
+            "external_credits_reserved",
+        ),
+        "external_credits_consumed": _result_counter(
+            result,
+            "external_credits_consumed",
+        ),
+        "external_credits_reconciled": _result_counter(
+            result,
+            "external_credits_reconciled",
         ),
     }
     receipt_path = _publish_daily_receipt(receipt, root=root)
@@ -204,6 +247,19 @@ def run_scheduled_research(
             "research_board_current": current,
             "blockers": blockers,
             "qualifying_consecutive_daily_cycles": _acceptance_count(acceptance),
+            "external_calls": _result_counter(result, "external_calls"),
+            "external_credits_reserved": _result_counter(
+                result,
+                "external_credits_reserved",
+            ),
+            "external_credits_consumed": _result_counter(
+                result,
+                "external_credits_consumed",
+            ),
+            "external_credits_reconciled": _result_counter(
+                result,
+                "external_credits_reconciled",
+            ),
             "testnet_order_authority": False,
             "live_trading_authorized": False,
         },
@@ -306,6 +362,109 @@ def refresh_corrective_checkpoint_after_scheduled_run(
     return checkpoint
 
 
+def finalize_scheduled_research_checkpoint(
+    *,
+    result: CommandResult,
+    root: Path = ROOT,
+    now: datetime | None = None,
+    refresher: Callable[..., CommandResult] | None = None,
+) -> CommandResult:
+    """Refresh the checkpoint or publish a durable blocked handoff on failure."""
+
+    observed = _as_utc(now)
+    try:
+        checkpoint = refresh_corrective_checkpoint_after_scheduled_run(
+            result=result,
+            root=root,
+            now=observed,
+            refresher=refresher,
+        )
+    except Exception as exc:  # noqa: BLE001 - convert to governed business failure
+        blocker = f"post_run_checkpoint_refresh_failed:{type(exc).__name__}"
+        _publish_blocked_post_run_handoff(
+            result=result,
+            root=root,
+            now=observed,
+            blocker=blocker,
+        )
+        blockers = {
+            str(value).strip() for value in result.summary.get("blockers", []) if str(value).strip()
+        }
+        blockers.add(blocker)
+        result.summary.update(
+            {
+                "status": "BLOCKED",
+                "research_board_current": False,
+                "post_run_checkpoint_refreshed": False,
+                "post_run_operational_acceptance_status": "BLOCKED",
+                "blockers": sorted(blockers),
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            }
+        )
+        return result
+    if checkpoint is not None:
+        result.paths["post_run_seven_stage_checkpoint"] = checkpoint.paths["seven_stage_checkpoint"]
+        result.summary["post_run_checkpoint_refreshed"] = True
+        result.summary["post_run_operational_acceptance_status"] = checkpoint.summary.get(
+            "operational_acceptance_status", "BLOCKED"
+        )
+    return result
+
+
+def _publish_blocked_post_run_handoff(
+    *,
+    result: CommandResult,
+    root: Path,
+    now: datetime,
+    blocker: str,
+) -> Path:
+    active = root / "reports" / "active"
+    daily_receipt_path = Path(
+        result.paths.get("daily_receipt", active / "daily_schedule_receipt_missing.json")
+    )
+    daily_receipt = _read_json(daily_receipt_path)
+    payload = {
+        "schema_version": "thewiz.daily_post_run_handoff.v1",
+        "as_of_utc": now.isoformat(),
+        "daily_receipt_id": str(daily_receipt.get("receipt_id", "")),
+        "daily_receipt_path": _relative(daily_receipt_path, root),
+        "daily_receipt_sha256": _file_sha256(daily_receipt_path),
+        "daily_run_status": str(daily_receipt.get("run_status", "")),
+        "scheduler_key": str(daily_receipt.get("cadence_scheduler_key", "")),
+        "scheduler_run_id": str(daily_receipt.get("cadence_scheduler_run_id", "")),
+        "scheduler_intended_slot": str(daily_receipt.get("cadence_intended_slot", "")),
+        "checkpoint_path": "",
+        "checkpoint_sha256": "",
+        "operational_acceptance_status": "BLOCKED",
+        "registered_rerun_gate_path": "",
+        "registered_rerun_gate_sha256": "",
+        "registered_rerun_gate_status": "NOT_EVALUATED",
+        "registered_rerun_results_accounted": False,
+        "registered_rerun_conclusion_status": "INCOMPLETE",
+        "handoff_status": "BLOCKED_CHECKPOINT_REFRESH_FAILED",
+        "blockers": [blocker],
+        "order_submission_included": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+    handoff_id = "dailyhandoff_" + sha256(_canonical_json(payload).encode("utf-8")).hexdigest()[:20]
+    payload["handoff_id"] = handoff_id
+    handoff_path = active / "daily_post_run_handoffs" / f"{handoff_id}.json"
+    if handoff_path.is_file() and _read_json(handoff_path) != payload:
+        raise ValueError("immutable blocked daily post-run handoff mismatch")
+    _atomic_json(payload, handoff_path)
+    latest_path = active / "daily_post_run_handoff.json"
+    _atomic_json(
+        {**payload, "handoff_receipt_path": _relative(handoff_path, root)},
+        latest_path,
+    )
+    result.paths["post_run_handoff"] = handoff_path
+    result.paths["post_run_handoff_latest"] = latest_path
+    result.summary["post_run_handoff_id"] = handoff_id
+    return handoff_path
+
+
 def import_existing_complete_daily_run(*, root: Path = ROOT, now: datetime | None = None) -> Path:
     now = _as_utc(now)
     active = root / "reports" / "active"
@@ -381,6 +540,9 @@ def build_daily_cadence_acceptance(*, root: Path = ROOT, now: datetime | None = 
         semantic_proven, semantic_blockers, semantic_source = (
             _validate_daily_semantic_qualification(path, root=root)
         )
+        scheduler_proven, scheduler_blockers, scheduler_source = _validate_daily_scheduler_lineage(
+            receipt, root=root
+        )
         rows.append(
             {
                 "run_date": str(receipt.get("run_date", "")),
@@ -397,6 +559,9 @@ def build_daily_cadence_acceptance(*, root: Path = ROOT, now: datetime | None = 
                 "semantic_contract_status": "PASS" if semantic_proven else "BLOCKED",
                 "semantic_contract_blocker": ";".join(semantic_blockers),
                 "semantic_contract_source": semantic_source,
+                "scheduler_provenance_status": ("PASS" if scheduler_proven else "BLOCKED"),
+                "scheduler_provenance_blocker": ";".join(scheduler_blockers),
+                "scheduler_terminal_source": scheduler_source,
                 "receipt_path": _relative(path, root),
             }
         )
@@ -416,6 +581,9 @@ def build_daily_cadence_acceptance(*, root: Path = ROOT, now: datetime | None = 
             "semantic_contract_status",
             "semantic_contract_blocker",
             "semantic_contract_source",
+            "scheduler_provenance_status",
+            "scheduler_provenance_blocker",
+            "scheduler_terminal_source",
             "receipt_path",
         ],
     )
@@ -427,6 +595,7 @@ def build_daily_cadence_acceptance(*, root: Path = ROOT, now: datetime | None = 
             & frame["zero_execution_authority"]
             & frame["receipt_valid"]
             & frame["semantic_contract_status"].eq("PASS")
+            & frame["scheduler_provenance_status"].eq("PASS")
         )
         frame["qualifying_cycle"] = qualifying
         frame["consecutive_complete_cycles"] = _consecutive_counts(frame["run_date"], qualifying)
@@ -494,24 +663,27 @@ def run_daily_cadence_fault_tests(
 
 
 def install_daily_launch_agent(
-    *, root: Path = ROOT, hour: int = 6, minute: int = 15
+    *,
+    root: Path = ROOT,
+    hour: int = 6,
+    minute: int = 15,
+    system_path: Path | None = None,
 ) -> dict[str, Any]:
     if not 0 <= hour <= 23 or not 0 <= minute <= 59:
         raise ValueError("invalid daily schedule time")
-    python = root / ".venv312" / "bin" / "python"
+    python = scheduler_python_path(root)
     if not python.is_file():
         raise FileNotFoundError(f"scheduler Python missing: {python}")
-    logs = root / "reports" / "active" / "schedule_logs"
-    logs.mkdir(parents=True, exist_ok=True)
+    logs = ensure_scheduler_log_directory(root)
     ensure_runtime_temp_directory(root)
     payload = _launch_agent_plist(root=root, python=python, hour=hour, minute=minute, logs=logs)
     publication = write_launch_agent_plist(
         root=root,
         label=LAUNCH_AGENT_LABEL,
         payload=payload,
+        system_path=system_path,
     )
     return {
-        "status": "INSTALLED_NOT_STARTED",
         "label": LAUNCH_AGENT_LABEL,
         "plist": publication["workspace_plist"],
         **publication,
@@ -625,59 +797,7 @@ def _daily_scheduler_evidence_status(
 
 
 def _acquire_lock(path: Path, *, now: datetime, timeout_seconds: int) -> None:
-    if path.exists():
-        state: dict[str, Any] = {}
-        try:
-            state = _read_json(path)
-            started = pd.to_datetime(state.get("started_at_utc"), utc=True, errors="coerce")
-        except (OSError, TypeError, ValueError):
-            started = pd.NaT
-        owner_alive = _lock_owner_alive(state.get("pid"))
-        if (
-            pd.notna(started)
-            and started < pd.Timestamp(now - timedelta(seconds=timeout_seconds))
-            and not owner_alive
-        ):
-            path.unlink(missing_ok=True)
-        else:
-            raise FileExistsError("active_scheduler_lock_present")
-    descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        json.dump({"pid": os.getpid(), "started_at_utc": now.isoformat()}, handle)
-
-
-def _lock_owner_alive(raw_pid: Any) -> bool:
-    try:
-        pid = int(raw_pid)
-    except (TypeError, ValueError):
-        return False
-    if pid <= 0:
-        return False
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
-
-
-def _timeout_runner(
-    *, deadline: float, stage_timeout_seconds: int
-) -> Callable[..., subprocess.CompletedProcess[str]]:
-    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise subprocess.TimeoutExpired(command, 0)
-        check = bool(kwargs.pop("check", False))
-        return subprocess.run(
-            command,
-            timeout=min(stage_timeout_seconds, remaining),
-            check=check,
-            **kwargs,
-        )
-
-    return run
+    acquire_scheduler_lock(path, now=now, timeout_seconds=timeout_seconds)
 
 
 def _daily_run_evidence_paths(
@@ -757,6 +877,25 @@ def _publish_daily_receipt(receipt: dict[str, Any], *, root: Path) -> Path:
     """Archive every attempt and freeze the first valid PASS selected for a date."""
 
     receipt = dict(receipt)
+    session = current_publication_authority()
+    if session is not None and session.authority.issuer_id == "scheduler_supervisor:daily_research":
+        terminal_path = (
+            root
+            / "data"
+            / "research"
+            / "scheduler_terminal_receipts"
+            / "daily_research"
+            / f"{session.run_id}.json"
+        )
+        receipt.update(
+            {
+                "cadence_scheduler_key": "daily_research",
+                "cadence_scheduler_run_id": session.run_id,
+                "cadence_intended_slot": session.intended_slot_id,
+                "cadence_terminal_receipt_path": _relative(terminal_path, root),
+                "cadence_lineage_bound": True,
+            }
+        )
     run_date = _validated_run_date(receipt.get("run_date"))
     identity_sha256 = sha256(
         _canonical_json(_receipt_identity_payload(receipt)).encode("utf-8")
@@ -787,6 +926,71 @@ def _publish_daily_receipt(receipt: dict[str, Any], *, root: Path) -> Path:
         if not existing_pass:
             _atomic_json(receipt, selection_path)
     return selection_path
+
+
+def _validate_daily_scheduler_lineage(
+    receipt: dict[str, Any],
+    *,
+    root: Path,
+) -> tuple[bool, list[str], str]:
+    """Prove one daily receipt came from the exact credited launchd slot."""
+
+    blockers: list[str] = []
+    scheduler_key = str(receipt.get("cadence_scheduler_key", ""))
+    run_id = str(receipt.get("cadence_scheduler_run_id", ""))
+    intended_slot = str(receipt.get("cadence_intended_slot", ""))
+    source = str(receipt.get("cadence_terminal_receipt_path", ""))
+    if receipt.get("cadence_lineage_bound") is not True:
+        blockers.append("daily_receipt_scheduler_lineage_missing")
+    if scheduler_key != "daily_research":
+        blockers.append("daily_receipt_scheduler_key_invalid")
+    if not run_id or not intended_slot or not source:
+        blockers.append("daily_receipt_scheduler_identity_incomplete")
+    if blockers:
+        return False, sorted(set(blockers)), source
+    expected_path = (
+        root
+        / "data"
+        / "research"
+        / "scheduler_terminal_receipts"
+        / scheduler_key
+        / f"{run_id}.json"
+    )
+    if source != _relative(expected_path, root):
+        return False, ["daily_receipt_terminal_path_mismatch"], source
+    try:
+        terminal, terminal_path = load_validated_scheduler_terminal_receipt_by_run(
+            root,
+            scheduler_key=scheduler_key,
+            run_id=run_id,
+            require_launchd=True,
+        )
+    except (OSError, ValueError) as exc:
+        token = str(exc).split(":", 1)[0]
+        return False, [f"daily_receipt_terminal_invalid:{token}"], source
+    if terminal_path != expected_path:
+        blockers.append("daily_receipt_terminal_resolved_path_mismatch")
+    if terminal.get("intended_slot") != intended_slot:
+        blockers.append("daily_receipt_terminal_slot_mismatch")
+    if (
+        terminal.get("terminal_status") != "PASS"
+        or terminal.get("business_state") != "PASS"
+        or terminal.get("process_health") != "HEALTHY"
+        or terminal.get("intended_slot_credit") is not True
+        or terminal.get("blockers") != []
+    ):
+        blockers.append("daily_receipt_terminal_not_credited_pass")
+    for field in (
+        "source_fingerprint_sha256",
+        "configuration_fingerprint_sha256",
+        "dependency_fingerprint_sha256",
+        "interpreter_fingerprint_sha256",
+        "schedule_fingerprint_sha256",
+        "runtime_contract_sha256",
+    ):
+        if receipt.get(field) != terminal.get(field):
+            blockers.append(f"daily_receipt_terminal_identity_mismatch:{field}")
+    return not blockers, sorted(set(blockers)), _relative(terminal_path, root)
 
 
 def _reuse_daily_receipt(
@@ -856,10 +1060,26 @@ def _reuse_daily_receipt(
             "external_pipeline_invoked": False,
             "blockers": [],
             "qualifying_consecutive_daily_cycles": _acceptance_count(acceptance),
+            "external_calls": 0,
+            "external_credits_reserved": 0,
+            "external_credits_consumed": 0,
+            "external_credits_reconciled": 0,
             "testnet_order_authority": False,
             "live_trading_authorized": False,
         },
     )
+
+
+def _result_counter(result: CommandResult | None, field: str) -> int:
+    if result is None:
+        return 0
+    value = result.summary.get(field, 0)
+    if isinstance(value, bool):
+        return 0
+    try:
+        return max(int(value), 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 @contextmanager
@@ -991,8 +1211,7 @@ def _validate_daily_receipt(
     ):
         blockers.append("daily_receipt_stage_authority_present")
     if any(
-        _truthy(receipt.get(field)) or _truthy(manifest.get(field))
-        for field in authority_fields
+        _truthy(receipt.get(field)) or _truthy(manifest.get(field)) for field in authority_fields
     ):
         blockers.append("daily_receipt_execution_authority_present")
 
@@ -1394,44 +1613,16 @@ def _acceptance_count(path: Path) -> int:
 
 
 def _launch_agent_plist(*, root: Path, python: Path, hour: int, minute: int, logs: Path) -> str:
-    import xml.sax.saxutils as xml
-
-    environment = launch_agent_runtime_environment(root)
-    values = {
-        "label": LAUNCH_AGENT_LABEL,
-        "root": xml.escape(str(root)),
-        "python": xml.escape(str(python)),
-        "pythonpath": xml.escape(environment["PYTHONPATH"]),
-        "runtime_temp": xml.escape(environment["TMPDIR"]),
-        "stdout": xml.escape(str(logs / "daily.stdout.log")),
-        "stderr": xml.escape(str(logs / "daily.stderr.log")),
-    }
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>{values["label"]}</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>{values["python"]}</string>
-    <string>-m</string><string>quant_platform.orchestration.corrective_daily_scheduler</string>
-    <string>--execute</string>
-  </array>
-  <key>WorkingDirectory</key><string>{values["root"]}</string>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PYTHONPATH</key><string>{values["pythonpath"]}</string>
-    <key>TMPDIR</key><string>{values["runtime_temp"]}</string>
-    <key>TMP</key><string>{values["runtime_temp"]}</string>
-    <key>TEMP</key><string>{values["runtime_temp"]}</string>
-  </dict>
-  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>{hour}</integer><key>Minute</key><integer>{minute}</integer></dict>
-  <key>RunAtLoad</key><false/>
-  <key>StandardOutPath</key><string>{values["stdout"]}</string>
-  <key>StandardErrorPath</key><string>{values["stderr"]}</string>
-</dict>
-</plist>
-"""
+    if python != scheduler_python_path(root):
+        raise ValueError("daily scheduler interpreter must use canonical runtime")
+    if logs != scheduler_log_directory(root):
+        raise ValueError("daily scheduler logs must use canonical runtime")
+    return scheduler_launch_agent_plist(
+        root,
+        contract=scheduler_contract("daily_research"),
+        calendar_hour=hour,
+        calendar_minute=minute,
+    )
 
 
 def _canonical_json(payload: Any) -> str:
@@ -1443,17 +1634,19 @@ def _file_sha256(path: Path) -> str:
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    atomic_write_text(
+        path,
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        publication_scope="daily_research",
+    )
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    atomic_write_text(
+        path,
+        frame.to_csv(index=False),
+        publication_scope="daily_research",
+    )
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -1511,21 +1704,60 @@ def main() -> None:
     parser.add_argument("--install", action="store_true")
     args = parser.parse_args()
     if args.install:
-        result = build_corrective_daily_cadence(install=True)
-    else:
-        result = run_scheduled_research(execute=args.execute)
-        checkpoint = refresh_corrective_checkpoint_after_scheduled_run(
-            result=result,
-            now=datetime.now(UTC),
-        )
-        if checkpoint is not None:
-            result.paths["post_run_seven_stage_checkpoint"] = checkpoint.paths[
-                "seven_stage_checkpoint"
-            ]
-            result.summary["post_run_checkpoint_refreshed"] = True
-            result.summary["post_run_operational_acceptance_status"] = checkpoint.summary.get(
-                "operational_acceptance_status", "BLOCKED"
+        try:
+            with governed_evidence_write_lock(ROOT, blocking=False, scope="scheduler_config"):
+                result = build_corrective_daily_cadence(install=True)
+        except (GovernedEvidenceMaintenanceActive, GovernedEvidenceLockBusy) as exc:
+            print(
+                json.dumps(
+                    {
+                        "summary": {
+                            "status": "DEFERRED_PHASE00_OR_GOVERNED_LOCK",
+                            "blockers": [safe_exception_code(exc)],
+                            "live_trading_authorized": False,
+                        },
+                        "paths": {},
+                    },
+                    indent=2,
+                )
             )
+            return
+    else:
+
+        def _run_daily() -> CommandResult:
+            scheduled = run_scheduled_research(
+                execute=args.execute,
+                require_launchd_provenance=True,
+            )
+            return finalize_scheduled_research_checkpoint(
+                result=scheduled,
+                root=ROOT,
+                now=datetime.now(UTC),
+            )
+
+        supervised = supervise_scheduler_run(
+            root=ROOT,
+            contract_key="daily_research",
+            publication_scope="daily_research",
+            callback=_run_daily,
+            require_launchd_provenance=True,
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": supervised.result_summary,
+                    "paths": supervised.result_paths,
+                    "terminal_receipt": supervised.terminal_receipt,
+                    "terminal_paths": {
+                        key: str(value) for key, value in supervised.terminal_paths.items()
+                    },
+                },
+                indent=2,
+            )
+        )
+        if supervised.exit_code:
+            raise SystemExit(supervised.exit_code)
+        return
     print(
         json.dumps(
             {
@@ -1535,10 +1767,6 @@ def main() -> None:
             indent=2,
         )
     )
-    if not args.install:
-        exit_code = _scheduled_research_exit_code(result, execute=args.execute)
-        if exit_code:
-            raise SystemExit(exit_code)
 
 
 if __name__ == "__main__":

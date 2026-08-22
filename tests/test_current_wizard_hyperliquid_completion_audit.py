@@ -95,14 +95,14 @@ def _seed_audit_root(
     _json(
         active / "current_wizard_hyperliquid_canonical_replay_manifest.json",
         {
-            "experiments_accounted": 16,
-            "unique_experiment_ids": 16,
+            "experiments_accounted": 14,
+            "unique_experiment_ids": 14,
             "mapping_blocked_experiments": 0,
             "canonical_replay_leverage": 1.0,
             "train_only_parameter_fit": True,
             "test_only_performance_measurement": True,
-            "replay_status_count_total": 16,
-            "research_replays_complete": 16,
+            "replay_status_count_total": 14,
+            "research_replays_complete": 14,
             "research_rank_eligible_replays": 4,
             "blocked_point_in_time_history": 0,
             "order_submission_performed": False,
@@ -112,7 +112,7 @@ def _seed_audit_root(
     _json(
         active / "current_wizard_hyperliquid_leverage_manifest.json",
         {
-            "experiments_accounted": 16,
+            "experiments_accounted": 14,
             "one_x_research_survivors_selected": 0,
             "leverage_candidates_complete": 0,
             "scenario_rows": 0,
@@ -125,8 +125,8 @@ def _seed_audit_root(
     _json(
         active / "current_wizard_hyperliquid_learning_manifest.json",
         {
-            "records": 16,
-            "unique_experiment_ids": 16,
+            "records": 14,
+            "unique_experiment_ids": 14,
             "training_eligible_records": 0,
             "paper_label_records": 0,
             "live_label_records": 0,
@@ -142,7 +142,7 @@ def _seed_audit_root(
             "chain_status": "PASS",
             "checks": 1,
             "checks_passed": 1,
-            "experiment_authority_count": 16,
+            "experiment_authority_count": 14,
             "order_submission_performed": False,
             "live_trading_authorized": False,
         },

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import tempfile
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
@@ -12,6 +11,11 @@ from pathlib import Path
 from typing import Any
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_bytes,
+    atomic_write_text,
+    promote_staged_file,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.corrective_artifact_retention.v1"
@@ -47,8 +51,11 @@ def run_corrective_artifact_retention(
         files_scanned += len(files)
         protected_newest = {path.resolve() for path in files[:minimum_newest]}
         directory_candidates = 0
+        directory_reclaimable_bytes = 0
+        directory_retained_bytes = 0
         for path in files:
             relative = _relative(path, root)
+            source_size_bytes = path.stat().st_size
             modified = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
             referenced = relative in referenced_text
             eligible = bool(
@@ -69,13 +76,16 @@ def run_corrective_artifact_retention(
                         raise ValueError(f"retention archive collision: {archive_path}")
                     path.unlink()
                 else:
-                    os.replace(path, archive_path)
+                    promote_staged_file(path, archive_path)
                 moved = True
             directory_candidates += int(eligible)
+            directory_reclaimable_bytes += source_size_bytes if eligible else 0
+            directory_retained_bytes += source_size_bytes if not eligible else 0
             if eligible or referenced:
                 rows.append(
                     {
                         "source_path": relative,
+                        "source_size_bytes": source_size_bytes,
                         "source_sha256": (
                             _file_hash(archive_path if moved else path) if eligible else ""
                         ),
@@ -98,6 +108,8 @@ def run_corrective_artifact_retention(
                 "directory": str(relative_dir),
                 "files_scanned": len(files),
                 "archive_candidates": directory_candidates,
+                "projected_reclaimable_bytes": directory_reclaimable_bytes,
+                "projected_retained_bytes": directory_retained_bytes,
                 "minimum_newest_preserved": min(len(files), minimum_newest),
             }
         )
@@ -105,6 +117,14 @@ def run_corrective_artifact_retention(
     rotated_logs = _rotate_logs(root=root, policy=policy, apply=apply)
     candidates = sum(row["eligible"] for row in rows)
     archived = sum(row["action"] == "archived" for row in rows)
+    projected_reclaimable_bytes = sum(
+        int(row["projected_reclaimable_bytes"])
+        for row in directory_summaries
+    )
+    projected_retained_bytes = sum(
+        int(row["projected_retained_bytes"])
+        for row in directory_summaries
+    )
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "evaluated_at_utc": evaluated_at.isoformat(),
@@ -114,6 +134,10 @@ def run_corrective_artifact_retention(
         "files_scanned": files_scanned,
         "archive_candidates": candidates,
         "files_archived": archived,
+        "retention_horizon_days": int(policy["receipt_retention_days"]),
+        "projected_reclaimable_bytes": projected_reclaimable_bytes,
+        "projected_retained_bytes": projected_retained_bytes,
+        "capacity_forecast_status": "PASS_POLICY_BOUNDED",
         "logs_rotated": len(rotated_logs),
         "dry_run_moved_nothing": not apply and archived == 0,
         "scientific_evidence_directories_touched": [],
@@ -192,9 +216,12 @@ def _rotate_logs(*, root: Path, policy: dict[str, Any], apply: bool) -> list[dic
                     if index == keep:
                         source.unlink(missing_ok=True)
                     elif source.exists():
-                        os.replace(source, target)
-                shutil.copy2(path, path.with_name(f"{path.name}.1"))
-                path.write_text("", encoding="utf-8")
+                        promote_staged_file(source, target)
+                atomic_write_bytes(
+                    path.with_name(f"{path.name}.1"),
+                    path.read_bytes(),
+                )
+                atomic_write_text(path, "", encoding="utf-8")
                 entry["action"] = "rotated"
             rotated.append(entry)
     return rotated
@@ -249,7 +276,7 @@ def _atomic_text(path: Path, value: str) -> None:
             handle.write(value)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        promote_staged_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

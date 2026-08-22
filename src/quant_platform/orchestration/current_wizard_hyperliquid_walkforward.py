@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
@@ -17,6 +16,12 @@ from quant_platform.backtest import (
     CostModel,
     FundingPolicy,
     backtest_two_leg_spread_with_ledger,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
     _exposure_hedge_ratio,
@@ -37,13 +42,24 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward impo
 )
 from quant_platform.wizard_mode_replay import build_local_mode_signal
 
-
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_walkforward.v1"
 RESEARCH_ONLY_REASON = (
     "walk_forward_is_research_only;strict_l2_calibration_required;"
     "regime_robustness_not_run;parameter_sensitivity_not_run;"
     "local_formula_approximation;mode_fidelity_parity_not_proven"
+)
+IDENTITY_COLUMNS = (
+    "experiment_id",
+    "pair_group_key",
+    "pair",
+    "wizard_exchange",
+    "wizard_timeframe",
+    "hyperliquid_interval",
+    "exact_mode",
+    "orientation",
+    "asset_x",
+    "asset_y",
 )
 
 
@@ -118,8 +134,7 @@ def run_current_wizard_hyperliquid_walkforward(
     input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     pair_lookup = {_text(row.pair_group_key): row for row in pair_costs.itertuples()}
@@ -174,7 +189,7 @@ def run_current_wizard_hyperliquid_walkforward(
                 {
                     **base,
                     "walkforward_status": "BLOCKED_WALK_FORWARD_INPUTS",
-                    "walkforward_blocker": f"{type(exc).__name__}:{exc}",
+                    "walkforward_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -232,7 +247,7 @@ def run_current_wizard_hyperliquid_walkforward(
                 )
             except Exception as exc:
                 candidate_blocker = (
-                    f"fold_{fold['fold_number']}:{type(exc).__name__}:{exc}"
+                    f"fold_{fold['fold_number']}:{safe_exception_code(exc)}"
                 )
                 break
             fold_row = {
@@ -322,21 +337,39 @@ def run_current_wizard_hyperliquid_walkforward(
                     }
                     (trade_rows if ledger_type == "closed" else bar_rows).append(payload)
 
-    candidates = _add_statistical_selection_controls(pd.DataFrame(candidate_rows))
     status = pd.DataFrame(status_rows)
     if len(status) != len(observed) or status["experiment_id"].nunique() != len(observed):
         raise ValueError("Current walk-forward failed complete experiment accounting")
     statistical_columns = [
         "family_tests",
         "fold_return_raw_pvalue",
+        "fold_return_normal_proxy_status",
+        "block_bootstrap_return_pvalue",
+        "block_bootstrap_lower_95",
+        "block_bootstrap_upper_95",
+        "block_bootstrap_status",
+        "block_bootstrap_blocker",
+        "return_observations",
+        "probabilistic_sharpe_probability",
+        "probabilistic_sharpe_status",
+        "probabilistic_sharpe_blocker",
         "bh_qvalue",
         "false_discovery_rate",
         "hedge_ratio_cv",
         "parameter_stability_status",
+        "deflated_sharpe_probability",
+        "deflated_sharpe_benchmark",
         "deflated_sharpe_status",
         "statistical_selection_status",
         "statistical_selection_blocker",
     ]
+    raw_candidates = pd.DataFrame(candidate_rows)
+    if raw_candidates.empty:
+        raw_candidates = status.iloc[0:0].copy()
+    candidates = _add_statistical_selection_controls(raw_candidates)
+    for column in statistical_columns:
+        if column not in candidates.columns:
+            candidates[column] = pd.Series(dtype=object)
     if not candidates.empty:
         statistics = candidates.set_index("experiment_id")[statistical_columns]
         mask = status["experiment_id"].isin(statistics.index)
@@ -350,9 +383,18 @@ def run_current_wizard_hyperliquid_walkforward(
     status["statistical_selection_blocker"] = status.get(
         "statistical_selection_blocker", pd.Series(index=status.index, dtype=object)
     ).fillna("walk_forward_not_completed")
-    folds_frame = pd.DataFrame(fold_rows)
-    trades = pd.DataFrame(trade_rows)
-    bars = pd.DataFrame(bar_rows)
+    folds_frame = _with_empty_schema(
+        pd.DataFrame(fold_rows),
+        (*IDENTITY_COLUMNS, "schema_version", "walkforward_id", "fold_number"),
+    )
+    trades = _with_empty_schema(
+        pd.DataFrame(trade_rows),
+        (*IDENTITY_COLUMNS, "schema_version", "walkforward_id", "ledger_type", "entry_timestamp"),
+    )
+    bars = _with_empty_schema(
+        pd.DataFrame(bar_rows),
+        (*IDENTITY_COLUMNS, "schema_version", "walkforward_id", "ledger_type", "timestamp"),
+    )
     ranked = _rank_candidates(candidates)
     validation = _validation(observed, status, folds_frame, candidates)
     if not validation["status"].eq("PASS").all():
@@ -368,8 +410,8 @@ def run_current_wizard_hyperliquid_walkforward(
         (bars, "bars", "snapshot_bars"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     status_counts = status["walkforward_status"].value_counts().to_dict()
     summary: dict[str, object] = {
         **material,
@@ -395,10 +437,10 @@ def run_current_wizard_hyperliquid_walkforward(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -411,6 +453,15 @@ def _cost_model(pair_cost: object, *, timeframe: str) -> CostModel:
         bars_per_day=24 if _interval(timeframe) == "1h" else 1,
         funding_policy=FundingPolicy.SIGNED_REALIZED.value,
     )
+
+
+def _with_empty_schema(
+    frame: pd.DataFrame,
+    columns: tuple[str, ...],
+) -> pd.DataFrame:
+    if frame.empty and len(frame.columns) == 0:
+        return pd.DataFrame(columns=list(columns))
+    return frame
 
 
 def _status_base(

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
 import json
+from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
+import pytest
 import requests
 
+from quant_platform.api_extraction import CryptoWizardsFetchError
 from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
     _endpoint_params,
+    _fetch_endpoint,
     run_wizard_pair_detail_api_pilot,
 )
-
 
 PAIR_GROUP = "binance|daily|ETH|WIF"
 
@@ -95,6 +97,35 @@ def test_pair_detail_pilot_defaults_to_zero_credit_plan(tmp_path: Path) -> None:
     manifest = pd.read_csv(result.paths["manifest_csv"], keep_default_na=False)
     assert len(manifest) == 6
     assert manifest["status"].eq("PLANNED").all()
+
+
+def test_default_pair_detail_fetcher_requires_reserved_effect_authority(
+    monkeypatch,
+) -> None:
+    direct_calls = []
+
+    def forbidden_direct_get(*args, **kwargs):
+        direct_calls.append((args, kwargs))
+        raise AssertionError("pair-detail request bypassed governed transport")
+
+    monkeypatch.setattr(requests, "get", forbidden_direct_get)
+
+    with pytest.raises(CryptoWizardsFetchError, match="reserved effect authority"):
+        _fetch_endpoint(
+            endpoint_path="/v1beta/spread",
+            params={
+                "symbol_1": "BTCUSD",
+                "symbol_2": "ETHUSD",
+                "exchange": "Dydx",
+                "interval": "Daily",
+                "period": 365,
+            },
+            api_key="secret",
+            base_url="https://api.cryptowizards.net",
+            timeout=30.0,
+        )
+
+    assert direct_calls == []
 
 
 def test_pair_detail_pilot_archives_fields_and_observed_credit_delta(tmp_path: Path) -> None:
@@ -253,7 +284,7 @@ def test_single_endpoint_retry_merges_prior_successful_bundle(tmp_path: Path) ->
         root=tmp_path,
         execute=True,
         api_key="secret-test-key",
-        now=datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc),
+        now=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
         credits_fetcher=lambda **_: next(first_credits),
         endpoint_fetcher=endpoint_fetcher,
     )
@@ -262,7 +293,7 @@ def test_single_endpoint_retry_merges_prior_successful_bundle(tmp_path: Path) ->
         root=tmp_path,
         execute=True,
         api_key="secret-test-key",
-        now=datetime(2026, 8, 8, 12, 1, tzinfo=timezone.utc),
+        now=datetime(2026, 8, 8, 12, 1, tzinfo=UTC),
         endpoint_names=("backtest",),
         credits_fetcher=lambda **_: next(retry_credits),
         endpoint_fetcher=endpoint_fetcher,

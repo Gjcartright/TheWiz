@@ -1,0 +1,505 @@
+{
+  "schema_version": "thewiz.phase00_external_effect_policy.v1",
+  "policy_id": "phase00_external_effect_policy",
+  "effective_from_utc": "2026-08-01T00:00:00Z",
+  "review_required_at_utc": "2026-12-31T00:00:00Z",
+  "order_submission_included": false,
+  "providers": {
+    "crypto_wizards": {
+      "account_scope_id": "crypto_wizards:research",
+      "allowed_targets": [
+        "https://api.cryptowizards.net/v1beta/backtest",
+        "https://api.cryptowizards.net/v1beta/cointegration",
+        "https://api.cryptowizards.net/v1beta/copula",
+        "https://api.cryptowizards.net/v1beta/correlations",
+        "https://api.cryptowizards.net/v1beta/credits-used",
+        "https://api.cryptowizards.net/v1beta/prescanned",
+        "https://api.cryptowizards.net/v1beta/spread",
+        "https://api.cryptowizards.net/v1beta/zscores"
+      ],
+      "allowed_credential_keys": [
+        "CRYPTO_WIZARDS_API_KEY"
+      ],
+      "max_total_requests_per_run": 2048,
+      "max_total_credits_per_run": 1000,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "captured_local_provider_contract",
+        "source_locator": "src/quant_platform/crypto_wizards_catalog.py",
+        "captured_at_utc": "2026-08-20T00:00:00Z",
+        "effective_from_utc": "2026-08-01T00:00:00Z",
+        "evidence_status": "LOCAL_CONTRACT_REQUIRES_PERIODIC_PROVIDER_REVIEW",
+        "unit_definition": "Crypto Wizards API credits reserved before each request"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "backtest_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/backtest",
+          "credit_units": 6,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "cointegration_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/cointegration",
+          "credit_units": 5,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "copula_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/copula",
+          "credit_units": 5,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "correlations_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/correlations",
+          "credit_units": 5,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "credits_used_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/credits-used",
+          "credit_units": 0,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "prescanned_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/prescanned",
+          "credit_units": 10,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "spread_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/spread",
+          "credit_units": 5,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "zscores_get",
+          "method": "GET",
+          "target": "https://api.cryptowizards.net/v1beta/zscores",
+          "credit_units": 5,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "backtest_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/backtest",
+          "credit_units": 2,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "cointegration_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/cointegration",
+          "credit_units": 1,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "copula_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/copula",
+          "credit_units": 1,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "correlations_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/correlations",
+          "credit_units": 1,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "spread_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/spread",
+          "credit_units": 1,
+          "pricing_basis": "captured_endpoint_contract"
+        },
+        {
+          "operation": "zscores_post",
+          "method": "POST",
+          "target": "https://api.cryptowizards.net/v1beta/zscores",
+          "credit_units": 1,
+          "pricing_basis": "captured_endpoint_contract"
+        }
+      ]
+    },
+    "apify": {
+      "account_scope_id": "apify:research",
+      "allowed_targets": [
+        "https://api.apify.com"
+      ],
+      "allowed_credential_keys": [
+        "APIFY_API_TOKEN"
+      ],
+      "max_total_requests_per_run": 2048,
+      "max_total_credits_per_run": 1000,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "runtime_upper_bound_and_provider_reconciliation",
+        "source_locator": "src/quant_platform/apify_sources.py",
+        "captured_at_utc": "2026-08-20T00:00:00Z",
+        "effective_from_utc": "2026-08-01T00:00:00Z",
+        "evidence_status": "EXACT_ACTOR_PRICE_NOT_ASSUMED_RUNTIME_CEILING_REQUIRED",
+        "unit_definition": "Explicit actor credit ceiling reconciled to provider run usage"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "APIFY_ACTOR_START",
+          "method": "POST",
+          "target": "https://api.apify.com",
+          "credit_units": null,
+          "pricing_basis": "explicit_runtime_upper_bound_then_provider_reconciliation"
+        },
+        {
+          "operation": "APIFY_ACTOR_POLL",
+          "method": "GET",
+          "target": "https://api.apify.com",
+          "credit_units": 0,
+          "pricing_basis": "no_additional_internal_credit_reservation"
+        },
+        {
+          "operation": "APIFY_DATASET_FETCH",
+          "method": "GET",
+          "target": "https://api.apify.com",
+          "credit_units": 0,
+          "pricing_basis": "no_additional_internal_credit_reservation"
+        }
+      ]
+    },
+    "hyperliquid_public": {
+      "account_scope_id": "hyperliquid:public_research",
+      "allowed_targets": [
+        "https://api.hyperliquid.xyz/info",
+        "https://api.hyperliquid-testnet.xyz/info"
+      ],
+      "allowed_credential_keys": [],
+      "max_total_requests_per_run": 4096,
+      "max_total_credits_per_run": 0,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "captured_local_public_endpoint_contract",
+        "source_locator": "src/quant_platform/orchestration/corrective_hyperliquid_network.py",
+        "captured_at_utc": "2026-08-20T00:00:00Z",
+        "effective_from_utc": "2026-08-20T00:00:00Z",
+        "evidence_status": "PUBLIC_MAINNET_AND_TESTNET_INFO_ENDPOINTS_ZERO_PROVIDER_CREDITS",
+        "unit_definition": "One public-network permit per public POST; zero provider credit units"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "HYPERLIQUID_TESTNET_META",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_ALL_MIDS",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_META_AND_ASSET_CONTEXTS",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_L2_BOOK",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_CANDLE_SNAPSHOT",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_FUNDING_HISTORY",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_META_AND_ASSET_CONTEXTS",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_ALL_MIDS",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_L2_BOOK",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        }
+      ]
+    },
+    "hyperliquid_testnet_preflight": {
+      "account_scope_id": "hyperliquid:testnet:agent_preflight",
+      "allowed_targets": [
+        "https://api.hyperliquid-testnet.xyz/info"
+      ],
+      "allowed_credential_keys": [
+        "HYPERLIQUID_TESTNET_AGENT_KEYCHAIN"
+      ],
+      "max_total_requests_per_run": 1,
+      "max_total_credits_per_run": 0,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "captured_local_testnet_preflight_contract",
+        "source_locator": "src/quant_platform/hyperliquid_testnet.py",
+        "captured_at_utc": "2026-08-22T00:00:00Z",
+        "effective_from_utc": "2026-08-22T00:00:00Z",
+        "evidence_status": "TESTNET_USER_ROLE_ENDPOINT_ZERO_PROVIDER_CREDITS",
+        "unit_definition": "One credential permit and one public-network permit per user-role preflight"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "HYPERLIQUID_TESTNET_USER_ROLE",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "testnet_info_endpoint_no_provider_credit"
+        }
+      ]
+    },
+    "hyperliquid_live_preflight": {
+      "account_scope_id": "hyperliquid:mainnet:agent_preflight",
+      "allowed_targets": [
+        "https://api.hyperliquid.xyz/info"
+      ],
+      "allowed_credential_keys": [
+        "HYPERLIQUID_LIVE_AGENT_KEYCHAIN"
+      ],
+      "max_total_requests_per_run": 4,
+      "max_total_credits_per_run": 0,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "captured_local_mainnet_preflight_contract",
+        "source_locator": "src/quant_platform/orchestration/corrective_live_canary_executor.py",
+        "captured_at_utc": "2026-08-22T00:00:00Z",
+        "effective_from_utc": "2026-08-22T00:00:00Z",
+        "evidence_status": "MAINNET_READ_ONLY_PREFLIGHT_ZERO_PROVIDER_CREDITS",
+        "unit_definition": "One credential permit plus four exact public-network reads"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "HYPERLIQUID_MAINNET_USER_ROLE",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_META",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_OPEN_ORDERS",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        }
+      ]
+    },
+    "hyperliquid_testnet_execution": {
+      "account_scope_id": "hyperliquid:testnet:bounded_execution_reads",
+      "allowed_targets": [
+        "https://api.hyperliquid-testnet.xyz/info"
+      ],
+      "allowed_credential_keys": [
+        "HYPERLIQUID_TESTNET_AGENT_KEYCHAIN"
+      ],
+      "max_total_requests_per_run": 256,
+      "max_total_credits_per_run": 0,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "bounded_execution_read_contract",
+        "source_locator": "src/quant_platform/hyperliquid_testnet.py",
+        "captured_at_utc": "2026-08-22T00:00:00Z",
+        "effective_from_utc": "2026-08-22T00:00:00Z",
+        "evidence_status": "TESTNET_EXECUTION_READS_SEPARATE_FROM_ORDER_AUTHORITY",
+        "unit_definition": "Exact public-network reads and one credential permit; no order capability"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "HYPERLIQUID_TESTNET_USER_ROLE",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_META",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_ALL_MIDS",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_SPOT_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_OPEN_ORDERS",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_USER_FILLS_BY_TIME",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_TESTNET_USER_FUNDING",
+          "method": "POST",
+          "target": "https://api.hyperliquid-testnet.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        }
+      ]
+    },
+    "hyperliquid_live_execution": {
+      "account_scope_id": "hyperliquid:mainnet:bounded_execution_reads",
+      "allowed_targets": [
+        "https://api.hyperliquid.xyz/info"
+      ],
+      "allowed_credential_keys": [
+        "HYPERLIQUID_LIVE_AGENT_KEYCHAIN"
+      ],
+      "max_total_requests_per_run": 512,
+      "max_total_credits_per_run": 0,
+      "order_submission_included": false,
+      "pricing_provenance": {
+        "source_type": "bounded_execution_read_contract",
+        "source_locator": "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+        "captured_at_utc": "2026-08-22T00:00:00Z",
+        "effective_from_utc": "2026-08-22T00:00:00Z",
+        "evidence_status": "MAINNET_EXECUTION_READS_SEPARATE_FROM_ORDER_AUTHORITY",
+        "unit_definition": "Exact public-network reads and one credential permit; no order capability"
+      },
+      "endpoint_pricing": [
+        {
+          "operation": "HYPERLIQUID_MAINNET_USER_ROLE",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_META",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_ALL_MIDS",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_CLEARINGHOUSE_STATE",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_OPEN_ORDERS",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_USER_FILLS_BY_TIME",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        },
+        {
+          "operation": "HYPERLIQUID_MAINNET_USER_FUNDING",
+          "method": "POST",
+          "target": "https://api.hyperliquid.xyz/info",
+          "credit_units": 0,
+          "pricing_basis": "public_endpoint_no_provider_credit"
+        }
+      ]
+    }
+  }
+}

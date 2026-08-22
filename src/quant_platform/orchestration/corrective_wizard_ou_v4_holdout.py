@@ -22,6 +22,7 @@ from quant_platform.crypto_wizards_history import (
     fetch_custom_series_backtest,
 )
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_wizard_ou_holdout import (
     _aligned_candles,
     _as_utc,
@@ -580,7 +581,9 @@ def run_ou_v4_prospective_holdout(
         for item in bindings
         if not (root / _text(item.get("response_path"))).is_file()
     ]
-    key = api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
+    key = api_key or (
+        os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip() if execute else ""
+    )
     credits_used: int | None = None
     blocker = ""
     ambiguous_intent_blockers = (
@@ -609,7 +612,7 @@ def run_ou_v4_prospective_holdout(
                 else:
                     credits_used = usage.used
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                blocker = f"credit_preflight_failed:{type(exc).__name__}:{exc}"
+                blocker = f"credit_preflight_failed:{safe_exception_code(exc)}"
             required_credits = len(missing) * 2
             if (
                 credits_used is not None
@@ -655,7 +658,7 @@ def run_ou_v4_prospective_holdout(
             try:
                 _write_or_validate_immutable_json(intent, intent_path)
             except (OSError, TypeError, ValueError) as exc:
-                errors.append(f"call_intent_persistence_failed:{type(exc).__name__}:{exc}")
+                errors.append(f"call_intent_persistence_failed:{safe_exception_code(exc)}")
                 break
             call_attempt_intent_paths.append(_relative(intent_path, root))
             calls_made += 1
@@ -667,7 +670,7 @@ def run_ou_v4_prospective_holdout(
                 _write_or_validate_immutable_json(response, response_path)
                 responses_captured += 1
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                errors.append(f"vendor_capture_failed:{type(exc).__name__}:{exc}")
+                errors.append(f"vendor_capture_failed:{safe_exception_code(exc)}")
                 break
     attempt = {
         "schema_version": "thewiz.wizard_ou_v4_capture_attempt.v1",

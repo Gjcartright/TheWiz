@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from contextvars import copy_context
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Event
@@ -11,18 +13,74 @@ import pytest
 from quant_platform import wizard_credit_ledger
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.crypto_wizards_sweep import run_wizard_discovery_sweep
+from quant_platform.orchestration import corrective_runtime
+from quant_platform.orchestration.corrective_external_effects import (
+    external_effect_issuer_session,
+)
 from quant_platform.orchestration.corrective_wizard_proof_scheduler import (
     run_corrective_wizard_proof_cycle,
 )
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
+)
 from quant_platform.wizard_credit_ledger import (
     DISCOVERY_LANE,
+    DISCOVERY_REFRESH_LANE,
     PROOF_LANE,
     reconcile_wizard_credit_lane,
     reserve_wizard_credit_lane,
     validate_wizard_credit_lane_evidence,
 )
 
+
+def test_daily_discovery_refresh_uses_independent_shared_budget_lane(tmp_path: Path) -> None:
+    first = reserve_wizard_credit_lane(
+        root=tmp_path,
+        lane=DISCOVERY_LANE,
+        planned_credits=300,
+        now=datetime(2026, 8, 15, tzinfo=UTC),
+    )
+    refresh = reserve_wizard_credit_lane(
+        root=tmp_path,
+        lane=DISCOVERY_REFRESH_LANE,
+        planned_credits=150,
+        now=datetime(2026, 8, 15, 1, tzinfo=UTC),
+    )
+
+    assert first.summary["status"] == "PASS"
+    assert refresh.summary["status"] == "PASS"
+    assert refresh.summary["total_reserved_credits"] == 450
+    assert refresh.summary["lane"] == DISCOVERY_REFRESH_LANE
+
 NOW = datetime(2026, 8, 11, 0, 5, tzinfo=UTC)
+
+
+@contextmanager
+def _wizard_issuer(root: Path, *, run_id: str = "ledger-test-run"):
+    authority = EffectAuthority(
+        root=root,
+        secret=b"wizard-ledger-test-authority-secret",
+        issuer_id="wizard-ledger-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id=run_id,
+        intended_slot_id=f"{run_id}-slot",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="crypto_wizards",
+        account_scope_id="wizard-research-test-account",
+        allowed_targets=frozenset(
+            {"https://api.cryptowizards.net/v1beta/prescanned"}
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=100,
+        max_total_credits=1000,
+    ):
+        yield authority
 
 
 def test_credit_receipt_publication_never_leaves_partial_target(
@@ -31,10 +89,14 @@ def test_credit_receipt_publication_never_leaves_partial_target(
 ) -> None:
     target = tmp_path / "ledger" / "reservation.json"
 
-    def fail_publish(_source: Path, _destination: Path) -> None:
+    def fail_publish(
+        _source: Path,
+        _destination: Path,
+        **_kwargs: object,
+    ) -> None:
         raise OSError("simulated publication interruption")
 
-    monkeypatch.setattr(wizard_credit_ledger.os, "link", fail_publish)
+    monkeypatch.setattr(corrective_runtime.os, "link", fail_publish)
 
     with pytest.raises(OSError, match="simulated publication interruption"):
         wizard_credit_ledger._write_exclusive_json(
@@ -72,7 +134,7 @@ def test_shared_lanes_reserve_under_one_daily_ceiling_and_reuse_idempotently(tmp
     assert proof.summary["headroom_after_reservations"] == 532
     assert reused.summary["status"] == "REUSED"
     assert reused.summary["reservation_id"] == discovery.summary["reservation_id"]
-    assert discovery.summary["external_spend_authorized"] is True
+    assert discovery.summary["external_spend_authorized"] is False
     assert reused.summary["external_spend_authorized"] is False
     assert reused.summary["lane_external_authority_remaining_credits"] == 0
 
@@ -99,6 +161,7 @@ def test_concurrent_lane_reservations_are_serialized_under_shared_ceiling(
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         discovery_future = pool.submit(
+            copy_context().run,
             reserve_wizard_credit_lane,
             root=tmp_path,
             lane=DISCOVERY_LANE,
@@ -107,6 +170,7 @@ def test_concurrent_lane_reservations_are_serialized_under_shared_ceiling(
         )
         assert first_publication_entered.wait(timeout=5)
         proof_future = pool.submit(
+            copy_context().run,
             reserve_wizard_credit_lane,
             root=tmp_path,
             lane=PROOF_LANE,
@@ -141,7 +205,7 @@ def test_unreconciled_reservation_cannot_authorize_crash_retry_vendor_calls(tmp_
         planned_credits=300,
         now=NOW,
     )
-    assert first.summary["external_spend_authorized"] is True
+    assert first.summary["external_spend_authorized"] is False
     credit_calls: list[object] = []
     sweep_calls: list[object] = []
 
@@ -181,17 +245,44 @@ def test_reconciled_zero_attempt_reservation_can_retry_without_false_lockout(tmp
         now=NOW,
     )
 
-    retry = reserve_wizard_credit_lane(
-        root=tmp_path,
-        lane=PROOF_LANE,
-        planned_credits=68,
-        now=NOW + timedelta(minutes=1),
-    )
+    with _wizard_issuer(tmp_path, run_id="zero-attempt-retry"):
+        retry = reserve_wizard_credit_lane(
+            root=tmp_path,
+            lane=PROOF_LANE,
+            planned_credits=68,
+            now=NOW + timedelta(minutes=1),
+            max_external_requests=10,
+        )
 
     assert retry.summary["status"] == "REUSED"
     assert retry.summary["zero_attempt_reconciliation_retry"] is True
     assert retry.summary["external_spend_authorized"] is True
     assert retry.summary["lane_external_authority_remaining_credits"] == 68
+
+
+def test_fresh_reservation_requires_exact_supervisor_binding_for_spend(
+    tmp_path: Path,
+) -> None:
+    with _wizard_issuer(tmp_path) as authority:
+        reservation = reserve_wizard_credit_lane(
+            root=tmp_path,
+            lane=DISCOVERY_LANE,
+            planned_credits=300,
+            now=NOW,
+            max_external_requests=32,
+        )
+
+    accounting = authority.run_accounting(
+        run_id="ledger-test-run",
+        intended_slot_id="ledger-test-run-slot",
+    )
+    assert reservation.summary["external_spend_authorized"] is True
+    assert reservation.summary["effect_reservation_binding_id"].startswith(
+        "effectreservation_"
+    )
+    assert accounting["external_reservations"] == 1
+    assert accounting["external_requests_reserved"] == 32
+    assert accounting["external_credits_reserved"] == 300
 
 
 def test_conflicting_or_combined_over_budget_reservations_fail_closed(tmp_path):
@@ -257,11 +348,49 @@ def test_reconciliation_is_immutable_retry_safe_and_bounded(tmp_path):
         "completed_credits": 46,
         "external_requests": 28,
         "observed_used_before": 300,
+        "observed_used_after": 348,
+        "activity_rows": [
+            {
+                "lane": "two_credit_calls",
+                "external_requests": 20,
+                "credit_cost": 2,
+                "attempted_credits": 40,
+                "completed_credits": 38,
+            },
+            {
+                "lane": "one_credit_calls",
+                "external_requests": 8,
+                "credit_cost": 1,
+                "attempted_credits": 8,
+                "completed_credits": 8,
+            },
+        ],
         "now": NOW,
     }
     reconciled = reconcile_wizard_credit_lane(**kwargs)
     reused = reconcile_wizard_credit_lane(**kwargs)
-    mismatch = reconcile_wizard_credit_lane(**{**kwargs, "completed_credits": 44})
+    mismatch = reconcile_wizard_credit_lane(
+        **{
+            **kwargs,
+            "completed_credits": 44,
+            "activity_rows": [
+                {
+                    "lane": "two_credit_calls",
+                    "external_requests": 20,
+                    "credit_cost": 2,
+                    "attempted_credits": 40,
+                    "completed_credits": 36,
+                },
+                {
+                    "lane": "one_credit_calls",
+                    "external_requests": 8,
+                    "credit_cost": 1,
+                    "attempted_credits": 8,
+                    "completed_credits": 8,
+                },
+            ],
+        }
+    )
     overrun = reconcile_wizard_credit_lane(
         root=tmp_path,
         lane=PROOF_LANE,
@@ -271,6 +400,23 @@ def test_reconciliation_is_immutable_retry_safe_and_bounded(tmp_path):
         completed_credits=21,
         external_requests=11,
         observed_used_before=348,
+        observed_used_after=369,
+        activity_rows=[
+            {
+                "lane": "two_credit_calls",
+                "external_requests": 10,
+                "credit_cost": 2,
+                "attempted_credits": 20,
+                "completed_credits": 20,
+            },
+            {
+                "lane": "one_credit_calls",
+                "external_requests": 1,
+                "credit_cost": 1,
+                "attempted_credits": 1,
+                "completed_credits": 1,
+            },
+        ],
         now=NOW,
     )
 
@@ -291,7 +437,10 @@ def test_reconciliation_rejects_impossible_zero_credit_external_requests(tmp_pat
         now=NOW,
     )
 
-    with pytest.raises(ValueError, match="external_requests cannot exceed attempted_credits"):
+    with pytest.raises(
+        ValueError,
+        match="credit activity attempted credits do not match calls times cost",
+    ):
         reconcile_wizard_credit_lane(
             root=tmp_path,
             lane=PROOF_LANE,
@@ -300,6 +449,17 @@ def test_reconciliation_rejects_impossible_zero_credit_external_requests(tmp_pat
             attempted_credits=0,
             completed_credits=0,
             external_requests=1,
+            observed_used_before=0,
+            observed_used_after=0,
+            activity_rows=[
+                {
+                    "lane": "impossible_zero_credit_call",
+                    "external_requests": 1,
+                    "credit_cost": 1,
+                    "attempted_credits": 0,
+                    "completed_credits": 0,
+                }
+            ],
             now=NOW,
         )
 

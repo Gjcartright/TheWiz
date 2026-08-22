@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import hashlib
 import hmac
 import json
 import os
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -14,7 +18,18 @@ import pandas as pd
 import requests
 
 from quant_platform.execution import ExecutionMode, FillReport, OrderIntent
-
+from quant_platform.orchestration.corrective_order_authority import (
+    BINANCE_SPOT_TESTNET_ADAPTER_ID,
+    BINANCE_USDM_TESTNET_ADAPTER_ID,
+    ConsumedOrderAuthorization,
+    CorrectiveOrderAuthority,
+    OrderEffectSpec,
+    claim_effect_dispatch,
+    exact_notional,
+    require_order_authority,
+)
+from quant_platform.orchestration.effect_authority import EffectKind
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 
 ROOT = Path(__file__).resolve().parents[2]
 BINANCE_SPOT_TESTNET_URL = "https://testnet.binance.vision"
@@ -43,6 +58,8 @@ class BinanceTestnetConfig:
     api_secret: str | None = None
     submit_orders: bool = False
     recv_window_ms: int = 5_000
+    account_scope_id: str | None = None
+    order_approval_id: str | None = None
 
     @classmethod
     def spot_testnet(cls) -> "BinanceTestnetConfig":
@@ -63,6 +80,8 @@ class BinanceTestnetConfig:
             api_secret=os.getenv("BINANCE_SPOT_TESTNET_API_SECRET") or None,
             submit_orders=_env_truthy("BINANCE_SPOT_TESTNET_SUBMIT_ORDERS"),
             recv_window_ms=_env_int("BINANCE_SPOT_TESTNET_RECV_WINDOW_MS", base.recv_window_ms),
+            account_scope_id=os.getenv("BINANCE_SPOT_TESTNET_ACCOUNT_SCOPE_ID") or None,
+            order_approval_id=os.getenv("BINANCE_SPOT_TESTNET_ORDER_APPROVAL_ID") or None,
         )
 
     @classmethod
@@ -76,6 +95,8 @@ class BinanceTestnetConfig:
             api_secret=os.getenv("BINANCE_USDM_TESTNET_API_SECRET") or None,
             submit_orders=_env_truthy("BINANCE_USDM_TESTNET_SUBMIT_ORDERS"),
             recv_window_ms=_env_int("BINANCE_USDM_TESTNET_RECV_WINDOW_MS", base.recv_window_ms),
+            account_scope_id=os.getenv("BINANCE_USDM_TESTNET_ACCOUNT_SCOPE_ID") or None,
+            order_approval_id=os.getenv("BINANCE_USDM_TESTNET_ORDER_APPROVAL_ID") or None,
         )
 
     def paper_trading_blockers(self) -> list[str]:
@@ -90,19 +111,38 @@ class BinanceTestnetConfig:
             blockers.append("missing_api_key")
         if not self.api_secret:
             blockers.append("missing_api_secret")
+        if not str(self.account_scope_id or "").strip():
+            blockers.append("missing_account_scope_id")
+        if not str(self.order_approval_id or "").strip():
+            blockers.append("missing_order_approval_id")
         return blockers
 
 
 class _BinanceTestnetOrderAdapter:
     exchange_submission_capable = True
     record_only = False
+    gate00g_order_authority_enforced = True
     lane = ""
+    adapter_id = ""
 
-    def __init__(self, session: requests.Session | None = None) -> None:
-        self.session = session or requests.Session()
+    def __init__(
+        self,
+        session: requests.Session | None = None,
+        *,
+        order_authority: CorrectiveOrderAuthority | None = None,
+    ) -> None:
+        self.session = session
+        self.order_authority = order_authority
 
     def place_order(self, intent: OrderIntent, config: BinanceTestnetConfig | object | None = None) -> FillReport:
+        authority = require_order_authority(self.order_authority)
+        if not isinstance(config, BinanceTestnetConfig):
+            raise ValueError("gate00g_binance_explicit_config_required")
         resolved = self._resolve_config(config)
+        if float(intent.size) <= 0:
+            raise ValueError("gate00g_binance_order_size_invalid")
+        spec = self._order_effect_spec(authority, intent, resolved)
+        authorization = authority.consume(spec)
         blockers = resolved.paper_trading_blockers()
         if blockers:
             return FillReport(
@@ -115,18 +155,12 @@ class _BinanceTestnetOrderAdapter:
                 slippage_bps=0.0,
                 status=f"paper_blocked_{';'.join(blockers)}",
             )
-        if float(intent.size) <= 0:
-            return FillReport(
-                order_id="binance-testnet-invalid-size",
-                market=intent.market,
-                side=intent.side,
-                size=float(intent.size),
-                avg_price=float(intent.limit_price or 0.0),
-                fee=0.0,
-                slippage_bps=0.0,
-                status="paper_blocked_invalid_size",
-            )
-        payload = self._submit(intent, resolved)
+        payload = self._submit(
+            intent,
+            resolved,
+            spec=spec,
+            authorization=authorization,
+        )
         return FillReport(
             order_id=str(payload.get("orderId") or payload.get("clientOrderId") or "binance-testnet-submitted"),
             market=intent.market,
@@ -145,7 +179,20 @@ class _BinanceTestnetOrderAdapter:
             return BinanceTestnetConfig.spot_testnet_from_env()
         return BinanceTestnetConfig.usdm_testnet_from_env()
 
-    def _submit(self, intent: OrderIntent, config: BinanceTestnetConfig) -> dict[str, Any]:
+    def _submit(
+        self,
+        intent: OrderIntent,
+        config: BinanceTestnetConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> dict[str, Any]:
+        authority = require_order_authority(self.order_authority)
+        claim_effect_dispatch(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         params = self._order_params(intent, config)
         params["timestamp"] = int(datetime.now(timezone.utc).timestamp() * 1000)
         params["recvWindow"] = int(config.recv_window_ms)
@@ -155,7 +202,11 @@ class _BinanceTestnetOrderAdapter:
             encoded.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
-        response = self.session.post(
+        session = self.session
+        if session is None:
+            session = requests.Session()
+            self.session = session
+        response = session.post(
             f"{config.base_url.rstrip('/')}{self._order_path()}",
             params=params,
             headers={"X-MBX-APIKEY": str(config.api_key)},
@@ -184,11 +235,41 @@ class _BinanceTestnetOrderAdapter:
     def _order_path(self) -> str:
         raise NotImplementedError
 
+    def _order_effect_spec(
+        self,
+        authority: CorrectiveOrderAuthority,
+        intent: OrderIntent,
+        config: BinanceTestnetConfig,
+    ) -> OrderEffectSpec:
+        product_lane = (
+            VenueLane.BINANCE_SPOT
+            if config.lane == "spot"
+            else VenueLane.BINANCE_USDM_PERP
+        )
+        return authority.spec(
+            effect_kind=EffectKind.ORDER_SUBMISSION,
+            environment="testnet",
+            adapter_id=self.adapter_id,
+            target=f"{config.base_url.rstrip('/')}{self._order_path()}",
+            operation="place_order",
+            venue_id="binance",
+            product_lane_id=product_lane.value,
+            account_scope_id=str(config.account_scope_id or ""),
+            instrument_id=_normalize_market(intent.market, lane=config.lane),
+            side=str(intent.side).lower(),
+            size=intent.size,
+            notional=exact_notional(intent.size, intent.limit_price),
+            leverage=1,
+            reduce_only=bool(intent.reduce_only),
+            proposal_id=str(config.order_approval_id or ""),
+        )
+
 
 class BinanceSpotTestnetOrderAdapter(_BinanceTestnetOrderAdapter):
     """Signed Spot Testnet adapter. It cannot access production endpoints."""
 
     lane = "spot"
+    adapter_id = BINANCE_SPOT_TESTNET_ADAPTER_ID
 
     def _order_path(self) -> str:
         return "/api/v3/order"
@@ -198,6 +279,7 @@ class BinanceUsdmTestnetOrderAdapter(_BinanceTestnetOrderAdapter):
     """Signed USD-M Futures Testnet adapter. It cannot access production endpoints."""
 
     lane = "usdm_futures"
+    adapter_id = BINANCE_USDM_TESTNET_ADAPTER_ID
 
     def _order_path(self) -> str:
         return "/fapi/v1/order"
@@ -246,10 +328,10 @@ def binance_testnet_preflight(
     frame = pd.DataFrame(rows)
     output_dir = root / "reports" / "active"
     output_dir.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(output_dir / "binance_testnet_preflight.csv", index=False)
+    atomic_write_csv(frame, output_dir / "binance_testnet_preflight.csv", index=False)
     lines = ["# Binance Testnet Preflight", "", "Testnet and demo credentials are isolated from production keys.", ""]
     lines.append(frame.to_markdown(index=False))
-    (output_dir / "binance_testnet_preflight.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    atomic_write_text(output_dir / "binance_testnet_preflight.md", "\n".join(lines) + "\n", encoding="utf-8")
     return frame
 
 
@@ -325,7 +407,7 @@ def binance_testnet_pair_preflight(
     frame = pd.DataFrame(rows)
     output = root / "reports" / "active" / "binance_testnet_pair_preflight.csv"
     output.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -334,6 +416,7 @@ def execute_binance_testnet_pair(
     intents: tuple[OrderIntent, OrderIntent],
     config: BinanceTestnetConfig,
     adapter: _BinanceTestnetOrderAdapter | None = None,
+    order_authority: CorrectiveOrderAuthority | None = None,
     journal_path: Path = BINANCE_TESTNET_PAIR_EXECUTION_JOURNAL,
 ) -> BinancePairExecutionResult:
     """Submit a two-leg testnet plan and attempt to flatten any confirmed first leg on failure.
@@ -344,9 +427,12 @@ def execute_binance_testnet_pair(
 
     if len(intents) != 2:
         raise ValueError("Binance testnet pair execution requires exactly two intents")
-    client = adapter or (
-        BinanceSpotTestnetOrderAdapter() if config.lane == "spot" else BinanceUsdmTestnetOrderAdapter()
+    candidate = adapter or (
+        BinanceSpotTestnetOrderAdapter(order_authority=order_authority)
+        if config.lane == "spot"
+        else BinanceUsdmTestnetOrderAdapter(order_authority=order_authority)
     )
+    client = _require_gate00g_binance_pair_adapter(candidate)
     fills: list[FillReport] = []
     rollback_fills: list[FillReport] = []
     for intent in intents:
@@ -385,6 +471,17 @@ def execute_binance_testnet_pair(
     return result
 
 
+def _require_gate00g_binance_pair_adapter(
+    client: _BinanceTestnetOrderAdapter,
+) -> _BinanceTestnetOrderAdapter:
+    if type(client) not in {
+        BinanceSpotTestnetOrderAdapter,
+        BinanceUsdmTestnetOrderAdapter,
+    }:
+        raise ValueError("gate00g_binance_order_adapter_denied")
+    return client
+
+
 def _append_pair_execution_result(
     result: BinancePairExecutionResult,
     *,
@@ -405,7 +502,7 @@ def _append_pair_execution_result(
         ]
     )
     journal_path.parent.mkdir(parents=True, exist_ok=True)
-    row.to_csv(journal_path, mode="a", header=not journal_path.exists(), index=False)
+    atomic_write_csv(row, journal_path, mode="a", header=not journal_path.exists(), index=False)
 
 
 def _reverse_intent(intent: OrderIntent, *, lane: str) -> OrderIntent:

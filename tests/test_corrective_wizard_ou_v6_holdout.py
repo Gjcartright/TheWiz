@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import json
-import shutil
 from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from quant_platform.active_pipeline import _wizard_ou_v6_terminal_state_row
 from quant_platform.orchestration.corrective_wizard_ou_v4_holdout import (
     _ou_spread_candidate_v4,
 )
 from quant_platform.orchestration.corrective_wizard_ou_v6_holdout import (
     ATTRIBUTION_STATUS,
+    DEFAULT_HISTORY_BASE,
     DEFAULT_PAIR_SPECS,
     PRIOR_OU_ASSETS,
     V5_DERIVATION,
@@ -29,6 +31,9 @@ from quant_platform.orchestration.corrective_wizard_ou_v6_holdout import (
 from quant_platform.orchestration.corrective_wizard_ou_v6_supreme_review import (
     build_ou_v6_supreme_review,
 )
+from quant_platform.orchestration.corrective_wizard_ou_v6_terminal_closure import (
+    build_ou_v6_terminal_closure,
+)
 from quant_platform.wizard_hyperliquid_mode_proof import (
     refresh_activated_ou_v6_proofs,
 )
@@ -39,40 +44,150 @@ from quant_platform.wizard_ou_v6_comparator_activation import (
     load_validated_ou_v6_activation,
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+def _write_json(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
 
 
-def _copy_file(source: Path, *, root: Path, relative: Path | None = None) -> Path:
-    destination = root / (relative or source.relative_to(PROJECT_ROOT))
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, destination)
-    return destination
+def _file_sha256(path: Path) -> str:
+    return sha256(path.read_bytes()).hexdigest()
 
 
-def _copy_v6_registration_inputs(root: Path) -> None:
-    attribution_source = PROJECT_ROOT / ATTRIBUTION_STATUS
-    attribution = json.loads(attribution_source.read_text(encoding="utf-8"))
-    _copy_file(attribution_source, root=root)
-    immutable = PROJECT_ROOT / str(attribution["immutable_attribution_path"])
-    _copy_file(immutable, root=root)
-
-    for relative in (V5_DERIVATION, V5_EVALUATION):
-        source = PROJECT_ROOT / relative
-        _copy_file(source, root=root)
-        frame = pd.read_csv(source)
-        if "exact_mode" in frame:
-            frame = frame.loc[frame["exact_mode"].eq("OU (Spread)")]
-        for column in ("request_path", "response_path"):
-            for raw in frame[column].dropna().astype(str).unique():
-                _copy_file(PROJECT_ROOT / raw, root=root)
-
-    for spec in DEFAULT_PAIR_SPECS:
-        for field in ("asset_x_path", "asset_y_path"):
-            _copy_file(PROJECT_ROOT / spec[field], root=root)
+def _derivation_series(kind: int) -> tuple[np.ndarray, np.ndarray, bool, str]:
+    index = np.arange(80, dtype=float)
+    if kind == 0:
+        x = 10.0 + 0.1 * index + np.sin(index / 5.0)
+        y = 30.0 + 0.2 * index + 0.7 * np.sin(index / 7.0)
+        return x, y, True, "intercept"
+    if kind == 1:
+        x = 30.0 + 0.2 * index + np.sin(index / 5.0)
+        y = 10.0 + 0.1 * index + 0.7 * np.sin(index / 7.0)
+        return x, y, True, "zero_mean"
+    if kind == 2:
+        x = 0.2 + 0.001 * index + 0.02 * np.sin(index / 5.0)
+        y = 0.8 + 0.003 * index + 0.014 * np.sin(index / 7.0)
+        return x, y, False, "intercept"
+    x = 0.8 + 0.003 * index + 0.02 * np.sin(index / 5.0)
+    y = 0.2 + 0.001 * index + 0.014 * np.sin(index / 7.0)
+    return x, y, False, "zero_mean"
 
 
-def test_v6_derivation_uses_consumed_v5_rows_without_treating_them_as_validation() -> None:
-    frame = _build_derivation(PROJECT_ROOT)
+def _seed_v5_derivation_evidence(root: Path) -> None:
+    prior_rows = []
+    evaluation_rows = []
+    for index in range(14):
+        x, y, vendor_log_used, vendor_branch = _derivation_series(index % 4)
+        request_relative = Path(
+            f"data/research/test_fixtures/ou_v5/request_{index:02d}.json"
+        )
+        response_relative = Path(
+            f"data/research/test_fixtures/ou_v5/response_{index:02d}.json"
+        )
+        request_path = root / request_relative
+        response_path = root / response_relative
+        _write_json(
+            request_path,
+            {
+                "params": {
+                    "series_1_closes": x.tolist(),
+                    "series_2_closes": y.tolist(),
+                }
+            },
+        )
+        _write_json(response_path, {"fixture": "synthetic_ou_v5_response"})
+        common = {
+            "orientation": "original" if index % 2 == 0 else "reverse",
+            "request_path": request_relative.as_posix(),
+            "request_sha256": _file_sha256(request_path),
+            "response_path": response_relative.as_posix(),
+            "response_sha256": _file_sha256(response_path),
+            "vendor_log_used": vendor_log_used,
+            "vendor_inc_trend": False,
+        }
+        if index < 10:
+            prior_rows.append(
+                {
+                    **common,
+                    "cohort": "prior_consumed_derivation",
+                    "vendor_profile_branch": vendor_branch,
+                }
+            )
+        else:
+            evaluation_rows.append(
+                {
+                    **common,
+                    "exact_mode": "OU (Spread)",
+                    "inferred_vendor_profile_branch": vendor_branch,
+                }
+            )
+    derivation_path = root / V5_DERIVATION
+    evaluation_path = root / V5_EVALUATION
+    derivation_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(prior_rows).to_csv(derivation_path, index=False)
+    pd.DataFrame(evaluation_rows).to_csv(evaluation_path, index=False)
+
+    immutable_relative = Path(
+        "data/research/test_fixtures/ou_v5/failure_attribution.json"
+    )
+    immutable_path = root / immutable_relative
+    _write_json(immutable_path, {"fixture": "synthetic_ou_v5_attribution"})
+    _write_json(
+        root / ATTRIBUTION_STATUS,
+        {
+            "status": "PASS_FAILURE_ATTRIBUTION_COMPLETE",
+            "v5_holdout_reuse_allowed": False,
+            "immutable_attribution_path": immutable_relative.as_posix(),
+            "immutable_attribution_sha256": _file_sha256(immutable_path),
+        },
+    )
+
+
+def _pair_series(*, scale: float, observations: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(seed)
+    x = np.empty(observations)
+    residual = np.empty(observations)
+    x[0] = scale
+    residual[0] = scale * 0.15
+    for index in range(1, observations):
+        x[index] = x[index - 1] + scale * 0.001 + rng.normal(0.0, scale * 0.004)
+        residual[index] = 0.94 * residual[index - 1] + rng.normal(0.0, scale * 0.003)
+    return x, 2.0 * x + residual
+
+
+def _write_candles(path: Path, closes: np.ndarray) -> None:
+    timestamps = pd.date_range("2026-01-01", periods=len(closes), freq="h", tz="UTC")
+    _write_json(
+        path,
+        {
+            "candles": [
+                {
+                    "startedAt": timestamp.isoformat(),
+                    "open": float(closes[index] * 0.999),
+                    "close": float(closes[index]),
+                }
+                for index, timestamp in enumerate(timestamps)
+            ]
+        },
+    )
+
+
+def _seed_v6_registration_inputs(root: Path) -> None:
+    _seed_v5_derivation_evidence(root)
+    base = root / DEFAULT_HISTORY_BASE
+    apt, atom = _pair_series(scale=0.5, observations=400, seed=61)
+    arb, op = _pair_series(scale=10.0, observations=400, seed=67)
+    _write_candles(base / "APT_1d_candles.json", apt)
+    _write_candles(base / "ATOM_1d_candles.json", atom)
+    _write_candles(base / "ARB_1h_candles.json", arb)
+    _write_candles(base / "OP_1h_candles.json", op)
+
+
+def test_v6_derivation_uses_consumed_v5_rows_without_treating_them_as_validation(
+    tmp_path: Path,
+) -> None:
+    _seed_v6_registration_inputs(tmp_path)
+    frame = _build_derivation(tmp_path)
 
     assert len(frame) == 14
     assert frame["transform_rule_passed"].all()
@@ -85,7 +200,7 @@ def test_v6_derivation_uses_consumed_v5_rows_without_treating_them_as_validation
 def test_v6_registration_is_disjoint_prospective_terminal_and_idempotent(
     tmp_path: Path,
 ) -> None:
-    _copy_v6_registration_inputs(tmp_path)
+    _seed_v6_registration_inputs(tmp_path)
 
     first = register_ou_v6_prospective_holdout(root=tmp_path)
     repeated = register_ou_v6_prospective_holdout(root=tmp_path)
@@ -129,19 +244,15 @@ def test_v6_registration_is_disjoint_prospective_terminal_and_idempotent(
 
 
 def test_v6_registration_rejects_prior_ou_asset_overlap(tmp_path: Path) -> None:
-    _copy_v6_registration_inputs(tmp_path)
+    _seed_v6_registration_inputs(tmp_path)
     overlapping = [dict(item) for item in DEFAULT_PAIR_SPECS]
+    sol_path = tmp_path / DEFAULT_HISTORY_BASE / "SOL_1d_candles.json"
+    _write_candles(sol_path, _pair_series(scale=15.0, observations=400, seed=71)[0])
     overlapping[0] = {
         **overlapping[0],
         "pair": "SOL-ATOM",
         "asset_x": "SOL",
-        "asset_x_path": str(
-            PROJECT_ROOT / "reports/snapshots/current_wizard_hyperliquid/"
-            "ewapi_69a86274da721a941e36/"
-            "cwhandoff_61dc9e76532abd99c502/history_runs/"
-            "cwhistoryrun_20260812T115658834898Z_1d7a24ca/assets/"
-            "SOL_1d_candles.json"
-        ),
+        "asset_x_path": str(sol_path.relative_to(tmp_path)),
     }
 
     with pytest.raises(ValueError, match="overlap prior OU evidence"):
@@ -149,7 +260,7 @@ def test_v6_registration_rejects_prior_ou_asset_overlap(tmp_path: Path) -> None:
 
 
 def test_v6_review_activation_refresh_and_terminal_stage3_binding(tmp_path: Path) -> None:
-    _copy_v6_registration_inputs(tmp_path)
+    _seed_v6_registration_inputs(tmp_path)
     registration = register_ou_v6_prospective_holdout(root=tmp_path)
 
     result = run_ou_v6_prospective_holdout(
@@ -241,7 +352,7 @@ def test_v6_review_activation_refresh_and_terminal_stage3_binding(tmp_path: Path
 def test_v6_failed_holdout_is_terminal_and_cannot_activate_or_register_v7(
     tmp_path: Path,
 ) -> None:
-    _copy_v6_registration_inputs(tmp_path)
+    _seed_v6_registration_inputs(tmp_path)
     register_ou_v6_prospective_holdout(root=tmp_path)
     calls = 0
 
@@ -269,6 +380,7 @@ def test_v6_failed_holdout_is_terminal_and_cannot_activate_or_register_v7(
     packet = build_ou_v6_review_packet(root=tmp_path)
     supreme = build_ou_v6_supreme_review(root=tmp_path)
     activation = build_reviewed_ou_v6_activation(root=tmp_path)
+    closure = build_ou_v6_terminal_closure(root=tmp_path)
 
     assert calls == 8
     assert result.summary["evaluation_status"] == "FAIL"
@@ -279,6 +391,37 @@ def test_v6_failed_holdout_is_terminal_and_cannot_activate_or_register_v7(
     assert activation.summary["status"] == "BLOCKED"
     assert activation.summary["final_successor_iteration"] is True
     assert activation.summary["successor_after_v6_failure_allowed"] is False
+    assert closure.summary["status"] == "CLOSED_TERMINAL_FAILURE"
+    assert closure.summary["decision"] == (
+        "REJECT_GENERAL_OU_V6_KEEP_PASSING_CELLS_DIAGNOSTIC_ONLY"
+    )
+    assert closure.summary["passed_cells"] == 7
+    assert closure.summary["failed_cells"] == 1
+    assert closure.summary["evidence_locked"] is True
+    assert closure.summary["general_ou_v6_activation"] is False
+    assert closure.summary["v7_registration_authorized"] is False
+    assert len(pd.read_csv(closure.paths["failure_attribution"])) == 1
+    assert len(pd.read_csv(closure.paths["orientation_policy"])) == 4
+    assert len(pd.read_csv(closure.paths["journal_rows"])) == 8
+    v7_policy = json.loads(closure.paths["v7_policy"].read_text(encoding="utf-8"))
+    assert v7_policy["status"] == "BLOCKED_BY_TERMINAL_OU_V6_FAILURE"
+    assert not v7_policy["registration_authorized"]
+    assert not v7_policy["v6_rows_reusable_as_holdout"]
+    state = _wizard_ou_v6_terminal_state_row(tmp_path)
+    assert state["status"] == "terminal_failure_closed"
+    assert state["ready"] is False
+    assert state["blocker"] == "ou_v6_terminal_holdout_failed"
+    evaluation = pd.read_csv(result.paths["detail"])
+    response_path = tmp_path / str(evaluation.iloc[0]["response_path"])
+    response_path.chmod(0o600)
+    response_path.write_text("{}\n", encoding="utf-8")
+    tampered = build_ou_v6_terminal_closure(root=tmp_path)
+    assert tampered.summary["status"] == "BLOCKED_EVIDENCE_INVALID"
+    assert tampered.summary["evidence_locked"] is False
+    assert any(
+        str(blocker).startswith("ou_v6_closure_hash_mismatch")
+        for blocker in tampered.summary["blockers"]
+    )
     assert not list(
         (tmp_path / "data/research/wizard_ou_v6_comparator_activations").glob("*.json")
     )

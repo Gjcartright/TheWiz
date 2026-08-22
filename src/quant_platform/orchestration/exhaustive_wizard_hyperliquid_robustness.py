@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-import shutil
 
-import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
@@ -18,6 +16,13 @@ from quant_platform.backtest import (
     CostModel,
     FundingPolicy,
     backtest_two_leg_spread_with_ledger,
+)
+from quant_platform.economic_contract import y_on_x_log_spread
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
     _load_history,
@@ -37,7 +42,6 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_walkforward impo
     _walkforward_gate_blockers,
 )
 from quant_platform.wizard_mode_replay import build_local_mode_signal
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_robustness.v1"
@@ -147,8 +151,11 @@ def run_exhaustive_wizard_hyperliquid_robustness(
     snapshot_input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = snapshot_input_dir / f"{name}{source.suffix or '.dat'}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(
+            source,
+            snapshot_input_dir,
+            artifact_name=name,
+        )
         snapshot_inputs[name] = target
 
     paths = {
@@ -263,7 +270,7 @@ def run_exhaustive_wizard_hyperliquid_robustness(
                 {
                     **base,
                     "robustness_status": "BLOCKED_ROBUSTNESS_INPUTS",
-                    "robustness_blocker": f"{type(exc).__name__}:{exc}",
+                    "robustness_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -324,7 +331,7 @@ def run_exhaustive_wizard_hyperliquid_robustness(
                 except Exception as exc:
                     experiment_blocker = (
                         f"{scenario_name}:fold_{fold['fold_number']}:"
-                        f"{type(exc).__name__}:{exc}"
+                        f"{safe_exception_code(exc)}"
                     )
                     break
 
@@ -400,7 +407,7 @@ def run_exhaustive_wizard_hyperliquid_robustness(
             "robustness_status": "ROBUSTNESS_COMPLETE",
             "robustness_blocker": "",
             "acceptance_status": "BLOCKED",
-            "acceptance_reason": RESEARCH_ONLY_REASON,
+            "acceptance_reason": _downstream_acceptance_reason(candidate),
             "acceptance_eligible": False,
             "live_trading_authorized": False,
         }
@@ -448,8 +455,8 @@ def run_exhaustive_wizard_hyperliquid_robustness(
         (scenario_frame, paths["scenarios"], paths["snapshot_scenarios"]),
         (fold_frame, paths["folds"], paths["snapshot_folds"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = _status_counts(status_frame, "robustness_status")
     summary: dict[str, object] = {
@@ -490,10 +497,10 @@ def run_exhaustive_wizard_hyperliquid_robustness(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -544,7 +551,9 @@ def _scenario_settings(
             prices = prices.loc[
                 (prices["price_x"] > 0.0) & (prices["price_y"] > 0.0)
             ].dropna()
-            spread = np.log(prices["price_y"]) - beta * np.log(prices["price_x"])
+            spread = y_on_x_log_spread(
+                prices["price_x"], prices["price_y"], beta
+            )
             mu = float(spread.mean())
             sigma = float(spread.std(ddof=0))
             if not math.isfinite(mu) or not math.isfinite(sigma) or sigma <= 1e-12:
@@ -682,14 +691,42 @@ def _status_base(
         "robustness_id": robustness_id,
         "walkforward_id": _text(getattr(row, "walkforward_id", "")),
         "prior_walkforward_status": _text(getattr(row, "walkforward_status", "")),
+        "history_validation_lane": _text(
+            getattr(row, "history_validation_lane", "")
+        ),
+        "walkforward_rank_eligible": _truthy(
+            getattr(row, "walkforward_rank_eligible", False)
+        ),
+        "statistical_selection_status": _text(
+            getattr(row, "statistical_selection_status", "")
+        ),
+        "statistical_selection_blocker": _text(
+            getattr(row, "statistical_selection_blocker", "")
+        ),
         "robustness_status": "",
         "robustness_blocker": "",
         "acceptance_status": "BLOCKED",
-        "acceptance_reason": RESEARCH_ONLY_REASON,
+        "acceptance_reason": _downstream_acceptance_reason(row),
         "acceptance_eligible": False,
         "evidence_path": ";".join(_relative(Path(path), root) for path in evidence_paths),
         "live_trading_authorized": False,
     }
+
+
+def _downstream_acceptance_reason(row: object) -> str:
+    reasons: list[str] = []
+    if _text(getattr(row, "history_validation_lane", "")) == (
+        "SHORT_HISTORY_RESEARCH_ONLY"
+    ):
+        reasons.append("short_history_research_only")
+    reasons.append(RESEARCH_ONLY_REASON)
+    selection_status = _text(getattr(row, "statistical_selection_status", ""))
+    selection_blocker = _text(getattr(row, "statistical_selection_blocker", ""))
+    if selection_status and selection_status != "PASS":
+        reasons.append(f"statistical_selection_{selection_status.lower()}")
+    if selection_blocker:
+        reasons.append(selection_blocker)
+    return ";".join(dict.fromkeys(reason for reason in reasons if reason))
 
 
 def _identity_fields(row: object) -> dict[str, object]:
@@ -768,6 +805,12 @@ def _text(value: object) -> str:
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return ""
     return str(value).strip()
+
+
+def _truthy(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return _text(value).lower() in {"1", "true", "yes", "y"}
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

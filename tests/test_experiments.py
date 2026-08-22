@@ -41,9 +41,17 @@ def reconstructed_zscore_experiment_frame(n: int = 220) -> pd.DataFrame:
     frame["zscore_reconstructed"] = frame["spread"] * 2.5
     return frame
 
+
 def test_harness_runs_executable_strategies_and_marks_missing_ones_skipped():
     config = ExperimentConfig(
-        cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
+        cost_buckets=(
+            CostBucket(
+                "base",
+                CostModel(
+                    taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0
+                ),
+            ),
+        ),
         gate=AcceptanceGate(min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=1),
         min_rows=20,
     )
@@ -65,7 +73,14 @@ def test_harness_runs_executable_strategies_and_marks_missing_ones_skipped():
 
 def test_harness_marks_two_leg_backtest_mode_when_leg_prices_exist():
     config = ExperimentConfig(
-        cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
+        cost_buckets=(
+            CostBucket(
+                "base",
+                CostModel(
+                    taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0
+                ),
+            ),
+        ),
         gate=AcceptanceGate(min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=1),
         min_rows=20,
     )
@@ -83,9 +98,48 @@ def test_harness_marks_two_leg_backtest_mode_when_leg_prices_exist():
     assert evaluated["has_funding_y"].all()
 
 
+def test_harness_routes_incomplete_two_leg_inputs_to_spread_only_research():
+    frame = two_leg_experiment_frame().drop(columns=["hedge_ratio"])
+    config = ExperimentConfig(
+        cost_buckets=(
+            CostBucket(
+                "base",
+                CostModel(
+                    taker_fee_bps=0,
+                    slippage_bps=0,
+                    execution_risk_bps=0,
+                    funding_bps_per_day=0,
+                ),
+            ),
+        ),
+        gate=AcceptanceGate(
+            min_profit_factor=0.1,
+            min_sharpe=-99,
+            max_drawdown=1.0,
+            min_trades=1,
+        ),
+        min_rows=20,
+    )
+    harness = ExperimentHarness(strategies=(STRATEGIES[0],), config=config)
+
+    results = harness.run([PairDataset("ETH-BTC", frame)])
+    evaluated = results[results["status"] == "evaluated"]
+
+    assert not evaluated.empty
+    assert set(evaluated["backtest_mode"]) == {"spread"}
+    assert not evaluated["has_hedge_ratio"].any()
+
+
 def test_harness_accepts_reconstructed_zscore_when_provider_zscore_is_missing():
     config = ExperimentConfig(
-        cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
+        cost_buckets=(
+            CostBucket(
+                "base",
+                CostModel(
+                    taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0
+                ),
+            ),
+        ),
         gate=AcceptanceGate(min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=1),
         min_rows=20,
     )
@@ -141,8 +195,17 @@ def test_harness_writes_all_report_files(tmp_path):
 
 def test_acceptance_gate_rejects_under_sampled_results():
     config = ExperimentConfig(
-        cost_buckets=(CostBucket("base", CostModel(taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0)),),
-        gate=AcceptanceGate(min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=10_000),
+        cost_buckets=(
+            CostBucket(
+                "base",
+                CostModel(
+                    taker_fee_bps=0, slippage_bps=0, execution_risk_bps=0, funding_bps_per_day=0
+                ),
+            ),
+        ),
+        gate=AcceptanceGate(
+            min_profit_factor=0.1, min_sharpe=-99, max_drawdown=1.0, min_trades=10_000
+        ),
         min_rows=20,
     )
     harness = ExperimentHarness(strategies=(STRATEGIES[0],), config=config)
@@ -209,8 +272,12 @@ def test_strategy_acceptance_requires_multi_pair_and_required_cost_buckets():
     gate = AcceptanceGate()
 
     accepted = strategy_acceptance_report(accepted_strategy_rows(), gate)
-    missing_pair = strategy_acceptance_report(accepted_strategy_rows().query("pair == 'ETH-BTC'"), gate)
-    missing_stress = strategy_acceptance_report(accepted_strategy_rows().query("cost_bucket == 'base'"), gate)
+    missing_pair = strategy_acceptance_report(
+        accepted_strategy_rows().query("pair == 'ETH-BTC'"), gate
+    )
+    missing_stress = strategy_acceptance_report(
+        accepted_strategy_rows().query("cost_bucket == 'base'"), gate
+    )
 
     assert bool(accepted["production_eligible"].iloc[0]) is True
     assert bool(accepted["preferred_eligible"].iloc[0]) is True

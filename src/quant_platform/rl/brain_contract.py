@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import json
 import pandas as pd
 
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    atomic_write_csv,
+    atomic_write_text,
+)
 
 BRAIN_SCHEMA_VERSION = "brain_v1"
 BRAIN_ARTIFACT_VERSION = "brain_v1"
@@ -300,7 +305,7 @@ def write_suggestion_frame(frame: pd.DataFrame, path: Path) -> Path:
     normalized["schema_version"] = normalized["schema_version"].fillna(BRAIN_SCHEMA_VERSION).replace("", BRAIN_SCHEMA_VERSION)
     normalized["pair"] = normalized["pair"].map(normalize_pair)
     normalized = normalized[keep_columns]
-    normalized.to_csv(path, index=False)
+    atomic_write_csv(normalized, path, index=False)
     return path
 
 
@@ -312,7 +317,7 @@ def write_cycle_summary(path: Path, payload: dict[str, Any]) -> Path:
         "written_at": now_utc_iso(),
         **payload,
     }
-    path.write_text(json.dumps(summary, sort_keys=True, default=str), encoding="utf-8")
+    atomic_write_text(path, json.dumps(summary, sort_keys=True, default=str), encoding="utf-8")
     return path
 
 
@@ -322,8 +327,11 @@ def append_brain_memory(path: Path, event: dict[str, object]) -> None:
         event["timestamp"] = now_utc_iso()
     row = dict(event)
     row.setdefault("agent", BRAIN_MEMORY_AGENT)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(row, sort_keys=True, default=str) + "\n")
+    atomic_append_text(
+        path,
+        json.dumps(row, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )
 
 
 def valid_memory_event(event: dict[str, object]) -> tuple[bool, str]:
@@ -496,7 +504,7 @@ def build_overall_candidate_summary(frame: pd.DataFrame) -> pd.DataFrame:
 
 def write_three_brain_contract(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(THREE_BRAIN_CONTRACT, sort_keys=True, indent=2), encoding="utf-8")
+    atomic_write_text(path, json.dumps(THREE_BRAIN_CONTRACT, sort_keys=True, indent=2), encoding="utf-8")
     return path
 
 
@@ -555,18 +563,20 @@ def _validate_unit_interval(value: object, label: str) -> tuple[bool, str]:
 
 def _write_frame(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _append_jsonl_rows(path: Path, packets: list[dict[str, object]], validator: Any) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        for packet in packets:
-            ok, reason = validator(packet)
-            if not ok:
-                raise ValueError(reason)
-            handle.write(json.dumps(packet, sort_keys=True, default=str) + "\n")
+    encoded: list[str] = []
+    for packet in packets:
+        ok, reason = validator(packet)
+        if not ok:
+            raise ValueError(reason)
+        encoded.append(json.dumps(packet, sort_keys=True, default=str) + "\n")
+    if encoded:
+        atomic_append_text(path, "".join(encoded), encoding="utf-8")
     return path
 
 

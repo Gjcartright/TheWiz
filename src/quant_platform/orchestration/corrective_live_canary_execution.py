@@ -26,6 +26,9 @@ import requests
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
 from quant_platform.orchestration.corrective_live_canary_executor import (
     HyperliquidLiveCanaryConfig,
     read_live_agent_key_from_keychain,
@@ -35,6 +38,28 @@ from quant_platform.orchestration.corrective_live_canary_outcome import (
     EXECUTION_SCHEMA_VERSION,
     _identity,
 )
+from quant_platform.orchestration.corrective_order_authority import (
+    HYPERLIQUID_LIVE_CANARY_ADAPTER_ID,
+    ConsumedOrderAuthorization,
+    CorrectiveOrderAuthority,
+    OrderEffectSpec,
+    claim_effect_dispatch,
+    claim_effect_dispatch_all,
+    exact_notional,
+    require_consumed_authorization,
+    require_order_authority,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    create_exclusive_json,
+    promote_staged_file,
+)
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthorityError,
+    EffectKind,
+)
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 
 ROOT = Path(__file__).resolve().parents[3]
 AUTHORIZATION_SCHEMA_VERSION = "thewiz.live_canary_authorization.v5"
@@ -131,6 +156,7 @@ def run_live_canary_executor(
     keychain_reader: Callable[[str, str], str] | None = None,
     exchange_factory: Callable[[Any, HyperliquidLiveCanaryConfig], Any] | None = None,
     waiter: Callable[[float], None] | None = None,
+    order_authority: CorrectiveOrderAuthority | None = None,
 ) -> LiveCanaryExecutorResult:
     """Validate or execute one exact canary; default invocation cannot submit."""
 
@@ -183,7 +209,13 @@ def run_live_canary_executor(
             blockers=_unique(local_blockers),
         )
 
-    fetch = info_client or _default_info_client(resolved.base_url)
+    raw_fetch = info_client or _raw_hyperliquid_mainnet_info_client(
+        resolved.base_url
+    )
+    fetch = _authorized_hyperliquid_mainnet_info_client(
+        base_url=resolved.base_url,
+        raw_fetch=raw_fetch,
+    )
     runtime, runtime_blockers = _runtime_pre_reservation_checks(
         artifacts=artifacts,
         config=resolved,
@@ -254,6 +286,25 @@ def run_live_canary_executor(
                 status="BLOCKED_DURING_RUNTIME_RECHECK",
                 blockers=runtime_blockers,
             )
+        try:
+            authority = require_order_authority(order_authority)
+            initial_authorizations = _consume_initial_canary_authority(
+                authority=authority,
+                artifacts=artifacts,
+                config=resolved,
+                recover_only=recover_only,
+            )
+            _validate_canary_authorizations(
+                authority=authority,
+                authorizations=initial_authorizations,
+            )
+        except (EffectAuthorityError, ValueError) as exc:
+            return _status_result(
+                root=root,
+                as_of=as_of,
+                status="BLOCKED_BEFORE_KEY_ACCESS",
+                blockers=[safe_exception_code(exc)],
+            )
         if recover_only:
             return _recover_reserved_canary(
                 root=root,
@@ -263,6 +314,8 @@ def run_live_canary_executor(
                 fetch=fetch,
                 keychain_reader=keychain_reader,
                 exchange_factory=exchange_factory,
+                order_authority=authority,
+                setup_authorizations=initial_authorizations,
             )
 
         reservation = _reserve_approval(
@@ -291,16 +344,76 @@ def run_live_canary_executor(
         }
         _write_state(root, state)
         try:
-            wallet = _load_wallet(resolved, keychain_reader)
-            exchange = _build_exchange(wallet, resolved, exchange_factory)
+            setup_spec, setup_authorization = _canary_authorization(
+                authority=authority,
+                authorizations=initial_authorizations,
+                effect_kind=EffectKind.ORDER_SUBMISSION,
+                operation="bulk_orders",
+                instrument_id=_market(artifacts["approval"]["legs"][0]),
+            )
+            wallet = _load_wallet(
+                resolved,
+                keychain_reader,
+                order_authority=authority,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
+            exchange = _build_exchange(
+                wallet,
+                resolved,
+                exchange_factory,
+                order_authority=authority,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
             for leg in artifacts["approval"]["legs"]:
+                _raise_if_entry_approval_changed(
+                    root=root,
+                    authorization_sha256=authorization_sha256,
+                    approval_id=approval_id,
+                    acknowledgement=acknowledgement,
+                    config=resolved,
+                )
+                _claim_canary_authorization(
+                    authority=authority,
+                    authorizations=initial_authorizations,
+                    effect_kind=EffectKind.ACCOUNT_MUTATION,
+                    operation="update_leverage",
+                    instrument_id=_market(leg),
+                )
                 exchange.update_leverage(1, _market(leg), is_cross=True)
+            _raise_if_entry_approval_changed(
+                root=root,
+                authorization_sha256=authorization_sha256,
+                approval_id=approval_id,
+                acknowledgement=acknowledgement,
+                config=resolved,
+            )
             state["phase"] = "ENTRY_SUBMITTING_UNCONFIRMED"
             state["entry_submit_attempted"] = True
             _write_state(root, state)
-            entry_response = exchange.bulk_orders(
-                [_entry_order_request(leg) for leg in artifacts["approval"]["legs"]]
+            entry_order_authorizations = tuple(
+                _canary_authorization(
+                    authority=authority,
+                    authorizations=initial_authorizations,
+                    effect_kind=EffectKind.ORDER_SUBMISSION,
+                    operation="bulk_orders",
+                    instrument_id=_market(leg),
+                )
+                for leg in artifacts["approval"]["legs"]
             )
+            claim_effect_dispatch_all(
+                tuple(
+                    authorization
+                    for _, authorization in entry_order_authorizations
+                ),
+                owner=authority,
+                specs=tuple(spec for spec, _ in entry_order_authorizations),
+            )
+            entry_requests = [
+                _entry_order_request(leg) for leg in artifacts["approval"]["legs"]
+            ]
+            entry_response = exchange.bulk_orders(entry_requests)
             state["entry_response_summary"] = _response_summary(entry_response)
             _write_state(root, state)
         except Exception as exc:  # noqa: BLE001 - ambiguous submission must recover
@@ -313,6 +426,7 @@ def run_live_canary_executor(
                 exchange=locals().get("exchange"),
                 state=state,
                 incident=f"live_canary_entry_submission_ambiguous:{type(exc).__name__}",
+                order_authority=authority,
             )
 
         sleep = waiter or time.sleep
@@ -334,6 +448,7 @@ def run_live_canary_executor(
                 exchange=exchange,
                 state=state,
                 incident="live_canary_entry_not_exactly_filled_no_retry",
+                order_authority=authority,
             )
 
         try:
@@ -346,9 +461,35 @@ def run_live_canary_executor(
                 market_meta=meta,
                 maximum_slippage_bps=max_slippage,
             )
+            exit_specs = tuple(
+                _canary_order_effect_spec(
+                    authority=authority,
+                    config=resolved,
+                    approval_id=approval_id,
+                    operation="bulk_orders",
+                    market=str(request["coin"]),
+                    side="buy" if bool(request["is_buy"]) else "sell",
+                    size=request["sz"],
+                    reference_price=request["limit_px"],
+                    reduce_only=True,
+                    client_reference=f"{approval_id}:exit:{request['coin']}",
+                )
+                for request in exit_requests
+            )
+            exit_tokens = authority.consume_all(exit_specs)
+            exit_authorizations = tuple(zip(exit_specs, exit_tokens, strict=True))
+            _validate_canary_authorizations(
+                authority=authority,
+                authorizations=exit_authorizations,
+            )
             state["phase"] = "EXIT_SUBMITTING_UNCONFIRMED"
             state["exit_submit_attempted"] = True
             _write_state(root, state)
+            claim_effect_dispatch_all(
+                tuple(authorization for _, authorization in exit_authorizations),
+                owner=authority,
+                specs=tuple(spec for spec, _ in exit_authorizations),
+            )
             exit_response = exchange.bulk_orders(exit_requests)
             state["exit_response_summary"] = _response_summary(exit_response)
             _write_state(root, state)
@@ -362,6 +503,7 @@ def run_live_canary_executor(
                 exchange=exchange,
                 state=state,
                 incident=f"live_canary_exit_submission_ambiguous:{type(exc).__name__}",
+                order_authority=authority,
             )
 
         final_positions = _wait_for_positions(
@@ -385,6 +527,7 @@ def run_live_canary_executor(
                 exchange=exchange,
                 state=state,
                 incident="live_canary_exit_not_flat_or_order_free",
+                order_authority=authority,
             )
         return _finalize_success(
             root=root,
@@ -966,16 +1109,7 @@ def _reserve_approval(
     }
     payload["reservation_id"] = "livecanaryreservation_" + _payload_hash(payload)[:20]
     payload["receipt_sha256"] = _payload_hash(payload)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-    except Exception:
-        path.unlink(missing_ok=True)
-        raise
+    create_exclusive_json(path, payload)
     return payload
 
 
@@ -1074,14 +1208,17 @@ def _finalize_success(
 
 def _recover_after_anomaly(
     *, root: Path, as_of: datetime, artifacts: dict[str, Any], config: HyperliquidLiveCanaryConfig,
-    fetch: Callable[[dict[str, Any]], Any], exchange: Any, state: dict[str, Any], incident: str
+    fetch: Callable[[dict[str, Any]], Any], exchange: Any, state: dict[str, Any], incident: str,
+    order_authority: CorrectiveOrderAuthority,
 ) -> LiveCanaryExecutorResult:
     state["recovery_attempted"] = True
     state["phase"] = "RECOVERY_REQUIRED"
     _write_state(root, state)
     recovery_blockers = _recover_to_flat(
         config=config, fetch=fetch, exchange=exchange,
-        markets={_market(leg) for leg in artifacts["approval"].get("legs", [])},
+        legs=artifacts["approval"].get("legs", []),
+        approval_id=str(artifacts["approval"].get("approval_id", "")),
+        order_authority=order_authority,
     )
     return _incident_result(
         root=root, as_of=datetime.now(UTC), artifacts=artifacts, state=state,
@@ -1094,41 +1231,122 @@ def _recover_after_anomaly(
 def _recover_reserved_canary(
     *, root: Path, as_of: datetime, artifacts: dict[str, Any], config: HyperliquidLiveCanaryConfig,
     fetch: Callable[[dict[str, Any]], Any], keychain_reader: Callable[[str, str], str] | None,
-    exchange_factory: Callable[[Any, HyperliquidLiveCanaryConfig], Any] | None
+    exchange_factory: Callable[[Any, HyperliquidLiveCanaryConfig], Any] | None,
+    order_authority: CorrectiveOrderAuthority,
+    setup_authorizations: tuple[
+        tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+    ],
 ) -> LiveCanaryExecutorResult:
     try:
-        wallet = _load_wallet(config, keychain_reader)
-        exchange = _build_exchange(wallet, config, exchange_factory)
+        setup_spec, setup_authorization = _canary_authorization(
+            authority=order_authority,
+            authorizations=setup_authorizations,
+            effect_kind=EffectKind.ORDER_SUBMISSION,
+            operation="recovery_prepare",
+            instrument_id=_market(artifacts["approval"]["legs"][0]),
+        )
+        wallet = _load_wallet(
+            config,
+            keychain_reader,
+            order_authority=order_authority,
+            spec=setup_spec,
+            authorization=setup_authorization,
+        )
+        exchange = _build_exchange(
+            wallet,
+            config,
+            exchange_factory,
+            order_authority=order_authority,
+            spec=setup_spec,
+            authorization=setup_authorization,
+        )
     except Exception as exc:  # noqa: BLE001
         return _incident_result(
             root=root, as_of=as_of, artifacts=artifacts, state=_read_json(root / "reports" / "active" / STATE_PATH.name),
             incident=f"live_canary_recovery_setup_failed:{type(exc).__name__}",
             order_submission_performed=False, reconciled_flat=False,
         )
-    markets = {_market(leg) for leg in artifacts["approval"].get("legs", [])}
-    recovery_blockers = _recover_to_flat(config=config, fetch=fetch, exchange=exchange, markets=markets)
+    legs = artifacts["approval"].get("legs", [])
+    recovery_blockers = _recover_to_flat(
+        config=config,
+        fetch=fetch,
+        exchange=exchange,
+        legs=legs,
+        approval_id=str(artifacts["approval"].get("approval_id", "")),
+        order_authority=order_authority,
+    )
     return _incident_result(
         root=root, as_of=datetime.now(UTC), artifacts=artifacts,
         state=_read_json(root / "reports" / "active" / STATE_PATH.name),
         incident="live_canary_recovery_only_run" + (";" + ";".join(recovery_blockers) if recovery_blockers else ""),
-        order_submission_performed=bool(markets), reconciled_flat=not recovery_blockers,
+        order_submission_performed=bool(legs), reconciled_flat=not recovery_blockers,
     )
 
 
 def _recover_to_flat(
     *, config: HyperliquidLiveCanaryConfig, fetch: Callable[[dict[str, Any]], Any], exchange: Any,
-    markets: set[str]
+    legs: list[dict[str, Any]], approval_id: str,
+    order_authority: CorrectiveOrderAuthority,
 ) -> list[str]:
     if exchange is None:
         return ["live_canary_recovery_exchange_unavailable"]
+    markets = {_market(leg) for leg in legs}
+    legs_by_market = {_market(leg): leg for leg in legs}
     blockers: list[str] = []
     try:
         orders = _pair_open_orders(fetch({"type": "openOrders", "user": config.master_address}), markets)
         if orders:
-            exchange.bulk_cancel([{"coin": _market(row), "oid": int(row["oid"])} for row in orders])
+            cancel_requests = [
+                {"coin": _market(row), "oid": int(row["oid"])} for row in orders
+            ]
+            cancel_specs = tuple(
+                _canary_order_effect_spec(
+                    authority=order_authority,
+                    config=config,
+                    approval_id=approval_id,
+                    operation="bulk_cancel",
+                    market=str(request["coin"]),
+                    side=_recovery_order_side(
+                        order=row,
+                        leg=legs_by_market[str(request["coin"])],
+                    ),
+                    size=0,
+                    reduce_only=True,
+                    client_reference=(
+                        f"{approval_id}:cancel:{request['coin']}:{request['oid']}"
+                    ),
+                )
+                for row, request in zip(orders, cancel_requests, strict=True)
+            )
+            cancel_tokens = order_authority.consume_all(cancel_specs)
+            claim_effect_dispatch_all(
+                cancel_tokens,
+                owner=order_authority,
+                specs=cancel_specs,
+            )
+            exchange.bulk_cancel(cancel_requests)
         positions = _positions(fetch({"type": "clearinghouseState", "user": config.master_address}), markets)
         for market, size in positions.items():
             if abs(size) > 1e-12:
+                leg = legs_by_market[market]
+                close_spec = _canary_order_effect_spec(
+                    authority=order_authority,
+                    config=config,
+                    approval_id=approval_id,
+                    operation="market_close",
+                    market=market,
+                    side="sell" if size > 0 else "buy",
+                    size=abs(size),
+                    reference_price=leg["limit_price"],
+                    reduce_only=True,
+                    client_reference=f"{approval_id}:market_close:{market}:0.01",
+                )
+                close_authorization = order_authority.consume(close_spec)
+                claim_effect_dispatch(
+                    close_authorization,
+                    owner=order_authority,
+                    spec=close_spec,
+                )
                 exchange.market_close(market, sz=abs(size), slippage=0.01)
         final_positions = _positions(fetch({"type": "clearinghouseState", "user": config.master_address}), markets)
         final_orders = _pair_open_orders(fetch({"type": "openOrders", "user": config.master_address}), markets)
@@ -1137,7 +1355,9 @@ def _recover_to_flat(
         if final_orders:
             blockers.append("live_canary_recovery_open_order_remains")
     except Exception as exc:  # noqa: BLE001
-        blockers.append(f"live_canary_recovery_failed:{type(exc).__name__}")
+        blockers.append(
+            f"live_canary_recovery_failed:{safe_exception_code(exc)}"
+        )
     return _unique(blockers)
 
 
@@ -1265,6 +1485,220 @@ def _funding_total(rows: Any) -> float | None:
     return total
 
 
+def _consume_initial_canary_authority(
+    *,
+    authority: CorrectiveOrderAuthority,
+    artifacts: dict[str, Any],
+    config: HyperliquidLiveCanaryConfig,
+    recover_only: bool,
+) -> tuple[tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...]:
+    legs = artifacts["approval"].get("legs", [])
+    approval_id = str(artifacts["approval"].get("approval_id", ""))
+    if not isinstance(legs, list) or not legs:
+        raise EffectAuthorityError("gate00g_live_canary_legs_missing")
+    if recover_only:
+        specs = tuple(
+            _canary_order_effect_spec(
+                authority=authority,
+                config=config,
+                approval_id=approval_id,
+                operation="recovery_prepare",
+                market=_market(leg),
+                side=str(leg.get("side", "")).lower(),
+                size=leg.get("size", 0),
+                reduce_only=True,
+                client_reference=f"{approval_id}:recovery_prepare:{_market(leg)}",
+            )
+            for leg in legs
+        )
+    else:
+        leverage_specs = tuple(
+            _canary_leverage_effect_spec(
+                authority=authority,
+                config=config,
+                approval_id=approval_id,
+                market=_market(leg),
+            )
+            for leg in legs
+        )
+        entry_specs = tuple(
+            _canary_order_effect_spec(
+                authority=authority,
+                config=config,
+                approval_id=approval_id,
+                operation="bulk_orders",
+                market=_market(leg),
+                side=str(leg.get("side", "")).lower(),
+                size=leg["size"],
+                reference_price=leg["limit_price"],
+                reduce_only=False,
+                client_reference=f"{approval_id}:entry:{_market(leg)}",
+            )
+            for leg in legs
+        )
+        specs = leverage_specs + entry_specs
+    tokens = authority.consume_all(specs)
+    return tuple(zip(specs, tokens, strict=True))
+
+
+def _canary_leverage_effect_spec(
+    *,
+    authority: CorrectiveOrderAuthority,
+    config: HyperliquidLiveCanaryConfig,
+    approval_id: str,
+    market: str,
+) -> OrderEffectSpec:
+    return authority.spec(
+        effect_kind=EffectKind.ACCOUNT_MUTATION,
+        environment="live",
+        adapter_id=HYPERLIQUID_LIVE_CANARY_ADAPTER_ID,
+        target=f"{config.base_url.rstrip('/')}/exchange",
+        operation="update_leverage",
+        venue_id="hyperliquid",
+        product_lane_id=VenueLane.HYPERLIQUID_PERP.value,
+        account_scope_id=str(config.master_address or ""),
+        instrument_id=market,
+        leverage=1,
+        proposal_id=approval_id,
+    )
+
+
+def _canary_order_effect_spec(
+    *,
+    authority: CorrectiveOrderAuthority,
+    config: HyperliquidLiveCanaryConfig,
+    approval_id: str,
+    operation: str,
+    market: str,
+    side: str,
+    size: object,
+    reference_price: object | None = None,
+    reduce_only: bool,
+    client_reference: str,
+) -> OrderEffectSpec:
+    notional: object = 0
+    if operation in {"bulk_orders", "market_close"}:
+        if reference_price is None:
+            raise ValueError("gate00g_live_canary_reference_price_missing")
+        notional = exact_notional(size, reference_price)
+    return authority.spec(
+        effect_kind=EffectKind.ORDER_SUBMISSION,
+        environment="live",
+        adapter_id=HYPERLIQUID_LIVE_CANARY_ADAPTER_ID,
+        target=f"{config.base_url.rstrip('/')}/exchange",
+        operation=operation,
+        venue_id="hyperliquid",
+        product_lane_id=VenueLane.HYPERLIQUID_PERP.value,
+        account_scope_id=str(config.master_address or ""),
+        instrument_id=market,
+        side=side,
+        size=size,
+        notional=notional,
+        leverage=1,
+        reduce_only=reduce_only,
+        proposal_id=approval_id,
+        client_reference=client_reference,
+    )
+
+
+def _validate_canary_authorizations(
+    *,
+    authority: CorrectiveOrderAuthority,
+    authorizations: tuple[
+        tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+    ],
+) -> None:
+    if not authorizations:
+        raise EffectAuthorityError("gate00g_live_canary_authorizations_missing")
+    for spec, authorization in authorizations:
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
+
+
+def _canary_authorization(
+    *,
+    authority: CorrectiveOrderAuthority,
+    authorizations: tuple[
+        tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+    ],
+    effect_kind: EffectKind,
+    operation: str,
+    instrument_id: str,
+) -> tuple[OrderEffectSpec, ConsumedOrderAuthorization]:
+    for spec, authorization in authorizations:
+        if (
+            spec.effect_kind == effect_kind
+            and spec.operation == operation
+            and spec.instrument_id == instrument_id.upper()
+        ):
+            require_consumed_authorization(
+                authorization,
+                owner=authority,
+                spec=spec,
+            )
+            return spec, authorization
+    raise EffectAuthorityError("gate00g_live_canary_exact_authorization_missing")
+
+
+def _claim_canary_authorization(
+    *,
+    authority: CorrectiveOrderAuthority,
+    authorizations: tuple[
+        tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+    ],
+    effect_kind: EffectKind,
+    operation: str,
+    instrument_id: str,
+) -> None:
+    spec, authorization = _canary_authorization(
+        authority=authority,
+        authorizations=authorizations,
+        effect_kind=effect_kind,
+        operation=operation,
+        instrument_id=instrument_id,
+    )
+    claim_effect_dispatch(
+        authorization,
+        owner=authority,
+        spec=spec,
+    )
+
+
+def _raise_if_entry_approval_changed(
+    *,
+    root: Path,
+    authorization_sha256: str,
+    approval_id: str,
+    acknowledgement: str,
+    config: HyperliquidLiveCanaryConfig,
+) -> None:
+    blockers = _local_execution_blockers(
+        root=root,
+        artifacts=_load_artifacts(root),
+        as_of=_as_utc(_utc_now()),
+        authorization_sha256=authorization_sha256,
+        approval_id=approval_id,
+        acknowledgement=acknowledgement,
+        require_execution=True,
+        config=config,
+        permit_existing_reservation=True,
+    )
+    if blockers:
+        raise EffectAuthorityError(";".join(blockers))
+
+
+def _recovery_order_side(*, order: dict[str, Any], leg: dict[str, Any]) -> str:
+    raw = str(order.get("side", "")).strip().upper()
+    if raw in {"B", "BID", "BUY"}:
+        return "buy"
+    if raw in {"A", "ASK", "SELL"}:
+        return "sell"
+    return str(leg.get("side", "")).lower()
+
+
 def _entry_order_request(leg: dict[str, Any]) -> dict[str, Any]:
     return {
         "coin": _market(leg),
@@ -1368,9 +1802,21 @@ def _positive_mids(fetch: Callable[[dict[str, Any]], Any], markets: set[str]) ->
 def _load_wallet(
     config: HyperliquidLiveCanaryConfig,
     keychain_reader: Callable[[str, str], str] | None,
+    *,
+    order_authority: CorrectiveOrderAuthority,
+    spec: OrderEffectSpec,
+    authorization: ConsumedOrderAuthorization | None,
 ) -> Any:
-    reader = keychain_reader or read_live_agent_key_from_keychain
-    secret = reader(str(config.keychain_service), str(config.agent_address))
+    require_consumed_authorization(
+        authorization,
+        owner=order_authority,
+        spec=spec,
+    )
+    secret = read_live_agent_key_from_keychain(
+        str(config.keychain_service),
+        str(config.agent_address),
+        reader=keychain_reader,
+    )
     wallet = Account.from_key(secret)
     if wallet.address.lower() != str(config.agent_address).lower():
         raise ValueError("live_canary_agent_key_address_mismatch")
@@ -1381,7 +1827,16 @@ def _build_exchange(
     wallet: Any,
     config: HyperliquidLiveCanaryConfig,
     factory: Callable[[Any, HyperliquidLiveCanaryConfig], Any] | None,
+    *,
+    order_authority: CorrectiveOrderAuthority,
+    spec: OrderEffectSpec,
+    authorization: ConsumedOrderAuthorization | None,
 ) -> Any:
+    require_consumed_authorization(
+        authorization,
+        owner=order_authority,
+        spec=spec,
+    )
     if factory is not None:
         return factory(wallet, config)
     from hyperliquid.exchange import Exchange
@@ -1394,7 +1849,27 @@ def _build_exchange(
     )
 
 
-def _default_info_client(base_url: str) -> Callable[[dict[str, Any]], Any]:
+def _authorized_hyperliquid_mainnet_info_client(
+    *,
+    base_url: str,
+    raw_fetch: Callable[[dict[str, Any]], Any],
+) -> Callable[[dict[str, Any]], Any]:
+    target = f"{base_url.rstrip('/')}/info"
+
+    def fetch(payload: dict[str, Any]) -> Any:
+        return run_authorized_hyperliquid_info_call(
+            target=target,
+            payload=payload,
+            operation_prefix="HYPERLIQUID_MAINNET",
+            transport=lambda: raw_fetch(payload),
+        )
+
+    return fetch
+
+
+def _raw_hyperliquid_mainnet_info_client(
+    base_url: str,
+) -> Callable[[dict[str, Any]], Any]:
     session = requests.Session()
 
     def fetch(payload: dict[str, Any]) -> Any:
@@ -1477,12 +1952,7 @@ def _append_ledger(root: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if _ledger_has_approval(root, str(payload.get("approval_id", ""))):
         raise ValueError("live_canary_ledger_duplicate_approval")
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-    try:
-        os.write(descriptor, (_canonical_json(payload) + "\n").encode("utf-8"))
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+    atomic_append_text(path, _canonical_json(payload) + "\n")
 
 
 def _reservation_path(root: Path, approval_id: str) -> Path:
@@ -1615,7 +2085,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _relative(path: Path, root: Path) -> str:

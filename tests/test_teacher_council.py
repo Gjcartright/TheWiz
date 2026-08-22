@@ -40,7 +40,7 @@ def _proposal(
     action: TeacherAction = TeacherAction.SHORT_X_LONG_Y,
     authority: EvidenceAuthority = EvidenceAuthority.LOCAL_POINT_IN_TIME,
     source_system: str = "hyperliquid_local_replay",
-    math_version: str = "math-v2",
+    math_version: str = "math-v2.1-y-on-x",
 ) -> TeacherProposal:
     context = _context()
     return TeacherProposal(

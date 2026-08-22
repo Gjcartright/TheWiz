@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -141,17 +145,17 @@ def run_base_rl(root: Path = ROOT, pair_id: str = "") -> CommandResult:
 
     _write_json(reports["run_manifest"], manifest)
     _write_json(reports["run_manifest_snapshot"], manifest)
-    frozen_candidates.to_csv(reports["route_candidate_snapshot"], index=False)
-    frozen_candidates.to_csv(reports["candidate_set_snapshot"], index=False)
+    atomic_write_csv(frozen_candidates, reports["route_candidate_snapshot"], index=False)
+    atomic_write_csv(frozen_candidates, reports["candidate_set_snapshot"], index=False)
     _write_paper_readiness_files(root=root, coverage=coverage, pair_id=pair_id)
     _build_blocker_delta_report(root=root, current_manifest=manifest, previous_manifest=previous_manifest)
 
     reports["training_report"].parent.mkdir(parents=True, exist_ok=True)
-    training.to_csv(reports["training_report"], index=False)
-    evaluation.to_csv(reports["evaluation_report"], index=False)
-    coverage.to_csv(reports["pair_coverage"], index=False)
+    atomic_write_csv(training, reports["training_report"], index=False)
+    atomic_write_csv(evaluation, reports["evaluation_report"], index=False)
+    atomic_write_csv(coverage, reports["pair_coverage"], index=False)
     blocked.to_csv(reports["blocked_actions"], index=False)
-    reports["policy_summary"].write_text(json.dumps(policy_payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(reports["policy_summary"], json.dumps(policy_payload, indent=2, sort_keys=True), encoding="utf-8")
 
     # Refresh current-state aliases after the authoritative handoff artifact exists.
     from quant_platform.rl.brain_contract import build_phase1_readiness_surfaces
@@ -188,7 +192,7 @@ def evaluate_base_rl(root: Path = ROOT) -> CommandResult:
     _write_csv(promotion, reports["promotion_readiness_report"])
     _write_csv(blocker_report, reports["pair_blocker_report"])
 
-    coverage.to_csv(reports["pair_coverage"], index=False)
+    atomic_write_csv(coverage, reports["pair_coverage"], index=False)
     _write_promotion_decision_report(root=root, coverage=coverage, handoff=handoff)
     return CommandResult(
         paths={
@@ -382,7 +386,7 @@ def base_rl_paper_handoff_report(root: Path = ROOT) -> pd.DataFrame:
         ],
         columns=BASE_RL_STATUS_COLUMNS,
     )
-    frame.to_csv(reports["paper_handoff_status"], index=False)
+    atomic_write_csv(frame, reports["paper_handoff_status"], index=False)
     from quant_platform.active_pipeline import current_state
     from quant_platform.rl.brain_contract import build_phase1_readiness_surfaces
 
@@ -600,8 +604,8 @@ def refresh_base_rl_feedback(root: Path = ROOT) -> CommandResult:
     outcome = _build_outcome_training_dataset(root)
     feedback = _feedback_summary(outcome)
     reports["feedback_summary"].parent.mkdir(parents=True, exist_ok=True)
-    outcome.to_csv(reports["outcome_training_dataset"], index=False)
-    feedback.to_csv(reports["feedback_summary"], index=False)
+    atomic_write_csv(outcome, reports["outcome_training_dataset"], index=False)
+    atomic_write_csv(feedback, reports["feedback_summary"], index=False)
     return CommandResult(paths={"feedback_summary": reports["feedback_summary"], "outcome_training_dataset": reports["outcome_training_dataset"]}, summary={"rows": int(len(outcome)), "verified_outcomes": int(feedback.get("verified_outcomes", pd.Series([0])).iloc[0]) if not feedback.empty else 0})
 
 
@@ -1030,12 +1034,12 @@ def _build_blocker_delta_report(root: Path, current_manifest: dict[str, object],
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _parse_top_pairs_entered(value: str) -> dict[str, int]:

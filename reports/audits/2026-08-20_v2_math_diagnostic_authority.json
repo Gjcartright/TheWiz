@@ -1,0 +1,99 @@
+{
+  "artifacts": {
+    "diagnostic_checks": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic_checks.csv",
+      "sha256": "16a89b1be3575c5ceae7dbc79b92b4e6ffe6dd540c50fd19ca19363087f1f918"
+    },
+    "error_ledger": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic_error_ledger.csv",
+      "sha256": "e0ede8938f6e4a5f790e10c1d2860512f712d3cbff7bd5e14e867443fc0f4116"
+    },
+    "formula_inventory": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic_formula_inventory.csv",
+      "sha256": "7f8a5acc87583659d46b13119296ec2cf33844d36c5bc3e8bd27b50169ea571f"
+    },
+    "historical_impact": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic_historical_impact.csv",
+      "sha256": "885bdb83d00618e41c52c3772de44c2baae6616faa254e7518be3d036afe7dae"
+    },
+    "math_comparison": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic_comparison.csv",
+      "sha256": "1a5e83cf5ef7d83cf926d4aa81d254c31d611085901c09682173611973ca757d"
+    },
+    "report": {
+      "path": "reports/audits/2026-08-20_v2_math_diagnostic.md",
+      "sha256": "174660a6664ccba1e31a38ffc3f8666475c4dab8c903c51337a6c16f06414ff0"
+    }
+  },
+  "comparison_rows": 15,
+  "corrected_incidents": 18,
+  "economic_contract_version": "wizard-seven-mode-economic-contract.v2",
+  "formula_rows": 54,
+  "generated_at_utc": "2026-08-20T20:34:13.904832+00:00",
+  "historical_canonical_replay": "REEVALUATED_AND_SUPERSEDED",
+  "historical_derived_outputs": "PARTIAL_RERUN_DESCENDANTS_STILL_BLOCKED",
+  "historical_impact_rows": 13,
+  "historical_reevaluation": {
+    "eligibility_gained": 0,
+    "eligibility_lost": 148,
+    "experiments_compared": 6880,
+    "new_canonical_replay_id": "cwcanonical_20260820T195534377849Z_71317401",
+    "new_trade_ledger_rows": 23675,
+    "old_canonical_replay_id": "cwcanonical_20260816T102828160670Z_680d2eaf",
+    "old_trade_ledger_rows": 29597,
+    "replay_status_changes": 378,
+    "rows_with_metric_changes": 473
+  },
+  "incident_rows": 24,
+  "input_hashes": {
+    "pyproject.toml": "3d575e03dc152ad9058fdce8c7f686f3573837e2193593831c93640939287ee8",
+    "reports/active/hyperliquid_wizard_vendor_mode_proofs.csv": "07be5f521ce80adff9345cbca6ff02f170d551091eddf77cb245bf79d105efbc",
+    "src/quant_platform/backtest.py": "0a060a6541ca24b9e5c310e3d632ed36283fd69fb9ad063dcf99a6b3059ce75d",
+    "src/quant_platform/cli.py": "c9df61ccff2313d2b9c92463c414aadec1565d3e5223e9b6068274a7fac1a16c",
+    "src/quant_platform/dydx_candles.py": "6762dc8fe8d628c2343f190401567d8c8118b2f1eebae6ea042e001316893d4d",
+    "src/quant_platform/economic_contract.py": "68c056da893f75b35890b65896f5b24ab4366344da081b937401d415f524d8c8",
+    "src/quant_platform/experiments.py": "3f33f7a593a42856f5efce896f0ceb8fd27905e974d4bc09ec21bb704c966fb2",
+    "src/quant_platform/fixture_ingestion.py": "990f5c549c14513e9541ef2515deca0dab9996088fe7e1e0c5adaa4f41cef0f7",
+    "src/quant_platform/formula_registry.py": "20b03bf025a175c348c736b705d45445672ce37d57b2b9aad803e7f764432dca",
+    "src/quant_platform/math_v2_acceptance.py": "49d4ec55bc82d25dc9354a4319d3ef450c3f52754c003c67ded7bd4eafc6f58b",
+    "src/quant_platform/ml_filter.py": "3bafc608bba87715f78ba8150f144e65c885d594375482f6bf42c8366556568d",
+    "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py": "f28783cd6abfa34414c057b75e62051ae6efa9e6e11369f2f385cc7d84049d4a",
+    "src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py": "a76319c5ccccaf6ce90c2aec4e66e9c8c8015aff451c73d07dbd24e26877bebd",
+    "src/quant_platform/orchestration/hyperliquid_research_validation.py": "e9f1200658435997f1a4af3871791fd7fa98ab5f1b177bff2a6d2c9d99a9f2d2",
+    "src/quant_platform/orchestration/teacher_evidence_materializer.py": "7ff0e1d6b27d4ba100e7d71506c43ba73a8e63752259bd5486f7e010e6a8e324",
+    "src/quant_platform/performance_math.py": "59d7107be24495da625e92224cafc331ef88d5c8b8832ddda270d8bdffffb68f",
+    "src/quant_platform/statistics/math_v2.py": "140a36a04812959002b5865562d3ef44c422449a1ff5312d8a998c604930e187",
+    "src/quant_platform/trade_ledger.py": "2999c8b1c9bff950722f24fb43e64c46bb73e0eaebb2d4c8c4be401d5ed85621",
+    "src/quant_platform/wizard_mode_replay.py": "775e0a59735974984a9a4fecef6ca5afa97396e58ffe3e5d78fb4beb9887aec7",
+    "uv.lock": "e6f47bd21e575780a7e4f8992fed01edfe2ecd44067bf4ca345603709d2b0f4a"
+  },
+  "live_trading_authorized": false,
+  "local_core_checks_passed": 30,
+  "local_core_checks_total": 30,
+  "local_core_status": "PASS",
+  "math_version": "math-v2.1-y-on-x",
+  "model_authority": "RESEARCH_ONLY_BLOCKED_PENDING_REBUILD",
+  "open_or_blocked_incidents": 6,
+  "paper_or_live_authority": false,
+  "promotion_authority": false,
+  "reason": "Corrected local math passes its executable contract and the frozen canonical replay was re-evaluated, but all descendants still require controlled rebuilding and exact Wizard Dynamic, OU, Copula, and performance-accounting parity remain unproven.",
+  "release_decision": "BLOCKED_PENDING_CONTROLLED_REGENERATION",
+  "runtime": {
+    "numpy": "2.5.1",
+    "pandas": "3.0.3",
+    "scipy": "1.17.1",
+    "statsmodels": "0.14.6"
+  },
+  "schema_version": "thewiz.v2_math_diagnostic.v2",
+  "source_root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625",
+  "supersedes": [
+    "reports/active/math_v2_acceptance.json when math_version=math-v2",
+    "reports/audits/2026-08-15_full_math_revalidation.md local-core 19/19 conclusion"
+  ],
+  "testnet_order_authority": false,
+  "wizard_copula_formula_parity": "BLOCKED",
+  "wizard_dynamic_parity": "BLOCKED",
+  "wizard_ou_parity": "BLOCKED",
+  "wizard_performance_accounting_parity": "BLOCKED",
+  "wizard_static_reconstruction": "PASS_DIAGNOSTIC_ONLY"
+}

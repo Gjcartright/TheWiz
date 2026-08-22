@@ -6,6 +6,7 @@ from enum import StrEnum
 import numpy as np
 import pandas as pd
 
+from quant_platform.economic_contract import normalized_two_leg_weights
 from quant_platform.performance_math import MATH_VERSION, calculate_annualized_sharpe
 from quant_platform.trade_ledger import TradeLedgerResult, build_trade_ledger
 
@@ -26,6 +27,26 @@ class CostModel:
     partial_fill_fraction: float = 0.5
     partial_fill_penalty_bps: float = 2.0
     funding_policy: str = FundingPolicy.CONSERVATIVE_ABSOLUTE_DRAG.value
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "taker_fee_bps",
+            "slippage_bps",
+            "execution_risk_bps",
+            "partial_fill_penalty_bps",
+        ):
+            value = float(getattr(self, field_name))
+            if not np.isfinite(value) or value < 0.0:
+                raise ValueError(f"{field_name} must be finite and nonnegative")
+        if not np.isfinite(float(self.funding_bps_per_day)):
+            raise ValueError("funding_bps_per_day must be finite")
+        if int(self.bars_per_day) <= 0:
+            raise ValueError("bars_per_day must be positive")
+        for field_name in ("partial_fill_probability", "partial_fill_fraction"):
+            value = float(getattr(self, field_name))
+            if not np.isfinite(value) or not 0.0 <= value <= 1.0:
+                raise ValueError(f"{field_name} must be within [0, 1]")
+        self.normalized_funding_policy()
 
     def round_trip_cost(self) -> float:
         bps = 2 * (self.taker_fee_bps + self.slippage_bps + self.execution_risk_bps)
@@ -72,9 +93,15 @@ class BacktestResult:
 
 
 def max_drawdown(equity: pd.Series) -> float:
-    peak = equity.cummax()
-    drawdown = (peak - equity) / peak.replace(0, np.nan)
-    return float(drawdown.fillna(0.0).max())
+    values = pd.to_numeric(equity, errors="coerce").dropna().to_numpy(dtype=float)
+    if not len(values):
+        return 0.0
+    # The first observed equity value is already the result of the first bar.
+    # Prepend the initial unit of capital or an immediate loss is understated.
+    path = np.concatenate(([1.0], values))
+    peaks = np.maximum.accumulate(path)
+    drawdown = np.divide(peaks - path, peaks, out=np.zeros_like(path), where=peaks != 0.0)
+    return float(np.nanmax(drawdown))
 
 
 def annualized_sharpe(
@@ -96,7 +123,10 @@ def annualized_sharpe(
 
 def _series_or_default(frame: pd.DataFrame, column: str, default: float) -> pd.Series:
     if column in frame.columns:
-        return pd.to_numeric(frame[column], errors="coerce").fillna(default)
+        values = pd.to_numeric(frame[column], errors="coerce")
+        if bool((~np.isfinite(values)).any()):
+            raise ValueError(f"{column} contains missing or nonfinite values")
+        return values.astype("float64")
     return pd.Series(default, index=frame.index, dtype="float64")
 
 
@@ -173,22 +203,27 @@ def backtest_two_leg_spread_with_ledger(
     """
 
     costs = cost_model or CostModel()
-    required = {"price_x", "price_y"}
+    required = {"price_x", "price_y", "hedge_ratio"}
     missing = sorted(required.difference(frame.columns))
     if missing:
         raise ValueError(f"missing two-leg price columns: {missing}")
 
     data = frame.copy()
     data["signal"] = signal.reindex(data.index).fillna(0.0).astype(float)
-    price_x = pd.to_numeric(data["price_x"], errors="coerce").ffill()
-    price_y = pd.to_numeric(data["price_y"], errors="coerce").ffill()
+    price_x = pd.to_numeric(data["price_x"], errors="coerce")
+    price_y = pd.to_numeric(data["price_y"], errors="coerce")
+    invalid_prices = (
+        (~np.isfinite(price_x)) | (~np.isfinite(price_y)) | price_x.le(0.0) | price_y.le(0.0)
+    )
+    if bool(invalid_prices.any()):
+        raise ValueError("two-leg prices must be complete, finite, and positive")
     returns_x = price_x.pct_change().fillna(0.0)
     returns_y = price_y.pct_change().fillna(0.0)
-    hedge_ratio = _series_or_default(data, "hedge_ratio", 1.0)
+    hedge_ratio = _series_or_default(data, "hedge_ratio", float("nan"))
+    if bool(hedge_ratio.le(0.0).any()):
+        raise ValueError("hedge_ratio must be finite and positive")
 
-    gross_scale = 1.0 + hedge_ratio.abs()
-    target_weight_y = data["signal"] / gross_scale
-    target_weight_x = -data["signal"] * hedge_ratio / gross_scale
+    target_weight_x, target_weight_y = normalized_two_leg_weights(data["signal"], hedge_ratio)
     weight_x = target_weight_x.shift(1).fillna(0.0)
     weight_y = target_weight_y.shift(1).fillna(0.0)
     gross_exposure = weight_x.abs() + weight_y.abs()
@@ -322,7 +357,7 @@ def _backtest_result(
     equity = (1.0 + net_return).cumprod()
     sharpe = calculate_annualized_sharpe(net_return, interval=interval, timestamps=timestamps)
     return BacktestResult(
-        trades=int(len(closed_returns)),
+        trades=len(closed_returns),
         profit_factor=profit_factor,
         expectancy=expectancy,
         sharpe=sharpe.value,
@@ -336,7 +371,7 @@ def _backtest_result(
         total_execution_risk=float(ledger.bar_ledger["execution_risk"].sum()),
         total_partial_fill_cost=float(ledger.bar_ledger["partial_fill"].sum()),
         avg_gross_exposure=float(gross_exposure.mean()),
-        open_trades=int(len(ledger.open_trades)),
+        open_trades=len(ledger.open_trades),
         interval=sharpe.interval or "",
         periods_per_year=sharpe.periods_per_year,
         sharpe_status=sharpe.status if sharpe.status == "valid" else f"blocked:{sharpe.reason}",

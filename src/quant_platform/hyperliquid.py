@@ -1,17 +1,23 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import json
-from pathlib import Path
+import math
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextvars import copy_context
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import requests
 
-from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.dydx_candles import build_pair_history_from_candles
-
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
+from quant_platform.runtime_types import ROOT, CommandResult
 
 HYPERLIQUID_INFO_URL = "https://api.hyperliquid.xyz/info"
 SUPPORTED_INTERVALS = {"1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "8h", "12h", "1d", "3d", "1w", "1M"}
@@ -170,6 +176,31 @@ HYPERLIQUID_PAIR_COST_MODEL_COLUMNS = [
     "next_step",
     "evidence_path",
 ]
+HYPERLIQUID_CAPACITY_CURVE_COLUMNS = [
+    "pair",
+    "asset_x",
+    "asset_y",
+    "venue",
+    "leg_notional_usd",
+    "window_start_at",
+    "window_end_at",
+    "required_samples",
+    "samples_x",
+    "samples_y",
+    "slippage_x_p95_bps",
+    "slippage_y_p95_bps",
+    "pair_one_way_slippage_bps",
+    "taker_fee_bps",
+    "execution_risk_bps",
+    "estimated_pair_round_trip_cost_bps",
+    "funding_coverage_pct",
+    "funding_ready",
+    "depth_cost_ready",
+    "capacity_acceptance_ready",
+    "capacity_status",
+    "blocker",
+    "evidence_path",
+]
 HYPERLIQUID_EVIDENCE_CADENCE_COLUMNS = [
     "pair",
     "venue",
@@ -202,10 +233,49 @@ HYPERLIQUID_EVIDENCE_CADENCE_COLUMNS = [
     "next_step",
     "evidence_path",
 ]
-DEFAULT_SLIPPAGE_NOTIONALS = (250.0, 1_000.0, 5_000.0)
+DEFAULT_SLIPPAGE_NOTIONALS = (100.0, 500.0, 1_000.0, 5_000.0, 10_000.0)
 DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES = 12
 DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS = 2
 DEFAULT_SLIPPAGE_CALIBRATION_CADENCE_MINUTES = 10
+DEFAULT_L2_FETCH_MAX_WORKERS = 12
+
+
+def _raw_hyperliquid_mainnet_info_http_result(
+    *,
+    info_url: str,
+    payload: dict[str, object],
+    timeout: int,
+) -> dict[str, Any]:
+    """Private HTTP adapter; callers must install the public-network permit."""
+
+    response = requests.post(
+        info_url,
+        json=payload,
+        headers={"Content-Type": "application/json"},
+        timeout=timeout,
+    )
+    return {
+        "status_code": int(response.status_code),
+        "retry_after": response.headers.get("Retry-After"),
+        "payload": response.json(),
+    }
+
+
+def _raw_hyperliquid_mainnet_info_call(
+    *,
+    info_url: str,
+    payload: dict[str, object],
+    timeout: int,
+) -> Any:
+    result = _raw_hyperliquid_mainnet_info_http_result(
+        info_url=info_url,
+        payload=payload,
+        timeout=timeout,
+    )
+    status_code = int(result["status_code"])
+    if status_code >= 400:
+        raise requests.HTTPError(f"hyperliquid_info_http_status_{status_code}")
+    return result["payload"]
 
 
 def fetch_hyperliquid_candles(
@@ -232,9 +302,16 @@ def fetch_hyperliquid_candles(
             "endTime": int(end_dt.timestamp() * 1000),
         },
     }
-    response = requests.post(info_url, json=body, headers={"Content-Type": "application/json"}, timeout=timeout)
-    response.raise_for_status()
-    payload = response.json()
+    payload = run_authorized_hyperliquid_info_call(
+        target=info_url,
+        payload=body,
+        operation_prefix="HYPERLIQUID_MAINNET",
+        transport=lambda: _raw_hyperliquid_mainnet_info_call(
+            info_url=info_url,
+            payload=body,
+            timeout=timeout,
+        ),
+    )
     candles = normalize_hyperliquid_candles(payload, coin=clean_coin, interval=interval)
     if not candles:
         raise ValueError(f"no Hyperliquid candles returned for {clean_coin} {interval}")
@@ -252,9 +329,9 @@ def fetch_hyperliquid_candles(
         "snapshot_path": str(snapshot),
     }
     serialized = json.dumps(record, indent=2, sort_keys=True)
-    output.write_text(serialized, encoding="utf-8")
+    atomic_write_text(output, serialized, encoding="utf-8")
     snapshot.parent.mkdir(parents=True, exist_ok=True)
-    snapshot.write_text(serialized, encoding="utf-8")
+    atomic_write_text(snapshot, serialized, encoding="utf-8")
     return output
 
 
@@ -304,33 +381,38 @@ def fetch_hyperliquid_funding_history(
             "startTime": next_start,
             "endTime": end_ms,
         }
-        response = None
+        response: dict[str, Any] | None = None
         for attempt in range(max_retries + 1):
-            response = requests.post(
-                info_url,
-                json=request_body,
-                headers={"Content-Type": "application/json"},
-                timeout=timeout,
+            response = run_authorized_hyperliquid_info_call(
+                target=info_url,
+                payload=request_body,
+                operation_prefix="HYPERLIQUID_MAINNET",
+                transport=lambda: _raw_hyperliquid_mainnet_info_http_result(
+                    info_url=info_url,
+                    payload=request_body,
+                    timeout=timeout,
+                ),
             )
-            if response.status_code != 429:
+            if response["status_code"] != 429:
                 break
             if attempt >= max_retries:
                 break
-            retry_after = _safe_float(response.headers.get("Retry-After"))
+            retry_after = _safe_float(response.get("retry_after"))
             delay = retry_after if retry_after > 0 else min(30.0, 1.5 * (2**attempt))
             time.sleep(delay)
         if response is None:
             raise RuntimeError("Hyperliquid fundingHistory request did not produce a response")
-        response.raise_for_status()
-        page = response.json()
+        status_code = int(response["status_code"])
+        if status_code >= 400:
+            raise requests.HTTPError(f"hyperliquid_info_http_status_{status_code}")
+        page = response["payload"]
         if not isinstance(page, list):
             raise ValueError("Hyperliquid fundingHistory response must be a list")
         requests_made.append({**request_body, "rows": len(page)})
         page_records = [row for row in page if isinstance(row, dict)]
         records.extend(page_records)
         output_base.mkdir(parents=True, exist_ok=True)
-        checkpoint_path.write_text(
-            json.dumps(
+        atomic_write_text(checkpoint_path, json.dumps(
                 {
                     "source": "hyperliquid_public_funding_history",
                     "info_url": info_url,
@@ -342,9 +424,7 @@ def fetch_hyperliquid_funding_history(
                 },
                 indent=2,
                 sort_keys=True,
-            ),
-            encoding="utf-8",
-        )
+            ), encoding="utf-8")
         page_times = [int(row["time"]) for row in page_records if row.get("time") is not None]
         if not page_times or len(page_records) < 500:
             break
@@ -521,19 +601,20 @@ def refresh_hyperliquid_market_context(
     captured = _utc_datetime(captured_at or datetime.now(timezone.utc))
     request_body = {"type": "metaAndAssetCtxs"}
     if payload is None:
-        response = requests.post(
-            info_url,
-            json=request_body,
-            headers={"Content-Type": "application/json"},
-            timeout=timeout,
+        payload = run_authorized_hyperliquid_info_call(
+            target=info_url,
+            payload=request_body,
+            operation_prefix="HYPERLIQUID_MAINNET",
+            transport=lambda: _raw_hyperliquid_mainnet_info_call(
+                info_url=info_url,
+                payload=request_body,
+                timeout=timeout,
+            ),
         )
-        response.raise_for_status()
-        payload = response.json()
 
     raw_path = root / "data" / "raw" / "hyperliquid_market_snapshots" / f"{captured.strftime('%Y-%m-%d_%H%M%S')}.json"
     raw_path.parent.mkdir(parents=True, exist_ok=True)
-    raw_path.write_text(
-        json.dumps(
+    atomic_write_text(raw_path, json.dumps(
             {
                 "source": "hyperliquid_public_info",
                 "info_url": info_url,
@@ -543,9 +624,7 @@ def refresh_hyperliquid_market_context(
             },
             indent=2,
             sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     evidence_path = _rel(raw_path, root)
     rows = normalize_hyperliquid_market_context(payload, captured_at=captured, evidence_path=evidence_path)
     frame = pd.DataFrame(rows, columns=HYPERLIQUID_MARKET_CONTEXT_COLUMNS)
@@ -796,20 +875,21 @@ def fetch_hyperliquid_l2_book(
     captured = _utc_datetime(captured_at or datetime.now(timezone.utc))
     request_body = {"type": "l2Book", "coin": clean_coin}
     if payload is None:
-        response = requests.post(
-            info_url,
-            json=request_body,
-            headers={"Content-Type": "application/json"},
-            timeout=timeout,
+        payload = run_authorized_hyperliquid_info_call(
+            target=info_url,
+            payload=request_body,
+            operation_prefix="HYPERLIQUID_MAINNET",
+            transport=lambda: _raw_hyperliquid_mainnet_info_call(
+                info_url=info_url,
+                payload=request_body,
+                timeout=timeout,
+            ),
         )
-        response.raise_for_status()
-        payload = response.json()
     _l2_book_levels(payload)
     output_base = Path(output_dir or ROOT / "data" / "raw" / "hyperliquid_l2_books")
     output = output_base / captured.strftime("%Y-%m-%d_%H%M%S") / f"{clean_coin}_l2_book.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(
+    atomic_write_text(output, json.dumps(
             {
                 "source": "hyperliquid_public_info",
                 "info_url": info_url,
@@ -819,9 +899,7 @@ def fetch_hyperliquid_l2_book(
             },
             indent=2,
             sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return output
 
 
@@ -837,6 +915,7 @@ def refresh_hyperliquid_execution_cost_snapshot(
     candidate_path: str | Path | None = None,
     min_samples: int = DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES,
     window_hours: float = DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS,
+    max_workers: int = DEFAULT_L2_FETCH_MAX_WORKERS,
 ) -> CommandResult:
     """Append public L2 depth samples and rebuild pair cost/slippage evidence.
 
@@ -848,6 +927,8 @@ def refresh_hyperliquid_execution_cost_snapshot(
         raise ValueError("at least one positive notional is required")
     if min_samples <= 0 or window_hours <= 0:
         raise ValueError("min_samples and window_hours must be positive")
+    if max_workers <= 0:
+        raise ValueError("max_workers must be positive")
     candidates = _hyperliquid_research_candidates(
         root,
         max_pairs=max_pairs,
@@ -859,18 +940,33 @@ def refresh_hyperliquid_execution_cost_snapshot(
     capture = _utc_datetime(captured_at or datetime.now(timezone.utc))
     book_dir = root / "data" / "raw" / "hyperliquid_l2_books"
     books: dict[str, Path | Exception] = {}
-    for asset in sorted({_coin(value) for candidate in candidates for value in (candidate["asset_x"], candidate["asset_y"])}):
-        try:
-            books[asset] = fetch_hyperliquid_l2_book(
+    assets = sorted(
+        {
+            _coin(value)
+            for candidate in candidates
+            for value in (candidate["asset_x"], candidate["asset_y"])
+        }
+    )
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(assets))) as executor:
+        futures = {
+            executor.submit(
+                copy_context().run,
+                fetch_hyperliquid_l2_book,
                 coin=asset,
                 output_dir=book_dir,
                 payload=(book_payloads or {}).get(asset),
                 captured_at=capture,
                 info_url=info_url,
                 timeout=timeout,
-            )
-        except Exception as exc:  # A thin or remapped market should not block other pairs.
-            books[asset] = exc
+            ): asset
+            for asset in assets
+        }
+        for future in as_completed(futures):
+            asset = futures[future]
+            try:
+                books[asset] = future.result()
+            except Exception as exc:  # A thin market should not block other assets.
+                books[asset] = exc
 
     rows: list[dict[str, object]] = []
     for candidate in candidates:
@@ -916,6 +1012,15 @@ def refresh_hyperliquid_execution_cost_snapshot(
         as_of=model_as_of,
         candidate_path=candidate_path,
     )
+    capacity = build_hyperliquid_capacity_curve(
+        root=root,
+        max_pairs=max_pairs,
+        notionals=clean_notionals,
+        min_samples=min_samples,
+        window_hours=window_hours,
+        as_of=model_as_of,
+        candidate_path=candidate_path,
+    )
     sample_markdown = root / "reports" / "active" / "hyperliquid_l2_slippage_samples.md"
     _write_text(
         sample_markdown,
@@ -931,6 +1036,7 @@ def refresh_hyperliquid_execution_cost_snapshot(
             "hyperliquid_l2_slippage_samples": sample_report,
             "hyperliquid_l2_slippage_samples_md": sample_markdown,
             **model.paths,
+            **capacity.paths,
         },
         summary={
             "pairs": len(candidates),
@@ -938,6 +1044,159 @@ def refresh_hyperliquid_execution_cost_snapshot(
             "unique_samples": len(samples),
             "model_as_of": model_as_of.isoformat(),
             **model.summary,
+            **{f"capacity_{key}": value for key, value in capacity.summary.items()},
+        },
+    )
+
+
+def build_hyperliquid_capacity_curve(
+    root: Path = ROOT,
+    max_pairs: int = 5,
+    *,
+    notionals: tuple[float, ...] = DEFAULT_SLIPPAGE_NOTIONALS,
+    min_samples: int = DEFAULT_SLIPPAGE_CALIBRATION_MIN_SAMPLES,
+    window_hours: float = DEFAULT_SLIPPAGE_CALIBRATION_WINDOW_HOURS,
+    as_of: datetime | None = None,
+    candidate_path: str | Path | None = None,
+) -> CommandResult:
+    """Build per-pair cost and funding readiness at each requested leg notional."""
+
+    clean_notionals = tuple(sorted({float(value) for value in notionals if float(value) > 0}))
+    if not clean_notionals:
+        raise ValueError("at least one positive capacity notional is required")
+    if min_samples <= 0 or window_hours <= 0:
+        raise ValueError("min_samples and window_hours must be positive")
+    candidates = _hyperliquid_research_candidates(
+        root,
+        max_pairs=max_pairs,
+        candidate_path=Path(candidate_path) if candidate_path else None,
+    )
+    samples_path = root / "data" / "processed" / "hyperliquid_l2_slippage_samples.csv"
+    funding_path = root / "reports" / "active" / "hyperliquid_funding_coverage.csv"
+    samples = _read_csv(samples_path)
+    funding = _read_csv(funding_path)
+    profile, profile_path = _hyperliquid_cost_profile(root)
+    now = _utc_datetime(as_of or datetime.now(timezone.utc))
+    window_end = pd.Timestamp(now)
+    window_start = window_end - pd.Timedelta(hours=window_hours)
+    funding_lookup = {
+        _pair_key(row.get("asset_x"), row.get("asset_y")): row
+        for row in funding.to_dict("records")
+    }
+    rows: list[dict[str, object]] = []
+    for candidate in candidates:
+        pair = str(candidate.get("pair", ""))
+        asset_x = _coin(candidate.get("asset_x", ""))
+        asset_y = _coin(candidate.get("asset_y", ""))
+        funding_row = funding_lookup.get(_pair_key(asset_x, asset_y), {})
+        funding_coverage = _safe_float(funding_row.get("funding_coverage_pct"))
+        funding_ready = _truthy(funding_row.get("funding_ready"))
+        for notional in clean_notionals:
+            leg_x = _qualifying_slippage_samples(
+                samples,
+                pair=pair,
+                asset=asset_x,
+                notional_usd=notional,
+                start_at=window_start,
+                end_at=window_end,
+            )
+            leg_y = _qualifying_slippage_samples(
+                samples,
+                pair=pair,
+                asset=asset_y,
+                notional_usd=notional,
+                start_at=window_start,
+                end_at=window_end,
+            )
+            count_x = len(leg_x)
+            count_y = len(leg_y)
+            p95_x = (
+                float(leg_x["_slippage_bps"].quantile(0.95)) if count_x else float("nan")
+            )
+            p95_y = (
+                float(leg_y["_slippage_bps"].quantile(0.95)) if count_y else float("nan")
+            )
+            pair_slippage = (
+                float((p95_x + p95_y) / 2.0)
+                if math.isfinite(p95_x) and math.isfinite(p95_y)
+                else float("nan")
+            )
+            fee_bps = _safe_float(profile.get("taker_fee_bps"))
+            execution_risk_bps = _safe_float(profile.get("execution_risk_bps"))
+            depth_ready = bool(
+                count_x >= min_samples
+                and count_y >= min_samples
+                and math.isfinite(pair_slippage)
+            )
+            round_trip = (
+                2.0 * (fee_bps + pair_slippage + execution_risk_bps)
+                if depth_ready
+                else float("nan")
+            )
+            blockers: list[str] = []
+            if count_x < min_samples:
+                blockers.append(f"asset_x_l2_samples<{min_samples}")
+            if count_y < min_samples:
+                blockers.append(f"asset_y_l2_samples<{min_samples}")
+            if not funding_ready:
+                blockers.append("funding_coverage_not_ready")
+            acceptance_ready = depth_ready and funding_ready
+            rows.append(
+                {
+                    "pair": pair,
+                    "asset_x": asset_x,
+                    "asset_y": asset_y,
+                    "venue": "hyperliquid",
+                    "leg_notional_usd": notional,
+                    "window_start_at": window_start.isoformat(),
+                    "window_end_at": window_end.isoformat(),
+                    "required_samples": min_samples,
+                    "samples_x": count_x,
+                    "samples_y": count_y,
+                    "slippage_x_p95_bps": p95_x,
+                    "slippage_y_p95_bps": p95_y,
+                    "pair_one_way_slippage_bps": pair_slippage,
+                    "taker_fee_bps": fee_bps,
+                    "execution_risk_bps": execution_risk_bps,
+                    "estimated_pair_round_trip_cost_bps": round_trip,
+                    "funding_coverage_pct": funding_coverage,
+                    "funding_ready": funding_ready,
+                    "depth_cost_ready": depth_ready,
+                    "capacity_acceptance_ready": acceptance_ready,
+                    "capacity_status": "READY" if acceptance_ready else "BLOCKED",
+                    "blocker": ";".join(blockers),
+                    "evidence_path": ";".join(
+                        value
+                        for value in (
+                            str(samples_path),
+                            str(funding_path),
+                            str(profile_path),
+                            str(candidate.get("evidence_path", "")),
+                        )
+                        if value
+                    ),
+                }
+            )
+    frame = pd.DataFrame(rows, columns=HYPERLIQUID_CAPACITY_CURVE_COLUMNS)
+    if not frame.empty:
+        frame = frame.sort_values(["pair", "leg_notional_usd"]).reset_index(drop=True)
+    output = root / "reports" / "active" / "hyperliquid_capacity_curve.csv"
+    markdown = root / "reports" / "active" / "hyperliquid_capacity_curve.md"
+    _write_csv(frame, output)
+    _write_text(markdown, _hyperliquid_capacity_curve_markdown(frame))
+    return CommandResult(
+        paths={"hyperliquid_capacity_curve": output, "hyperliquid_capacity_curve_md": markdown},
+        summary={
+            "rows": len(frame),
+            "pairs": int(frame["pair"].nunique()) if not frame.empty else 0,
+            "depth_ready_rows": int(frame["depth_cost_ready"].map(_truthy).sum())
+            if not frame.empty
+            else 0,
+            "acceptance_ready_rows": int(
+                frame["capacity_acceptance_ready"].map(_truthy).sum()
+            )
+            if not frame.empty
+            else 0,
         },
     )
 
@@ -1641,7 +1900,17 @@ def _hyperliquid_pair_cost_model_markdown(frame: pd.DataFrame) -> str:
         ]
     )
     view = frame[
-        ["pair", "leg_notional_usd", "taker_fee_bps", "pair_one_way_slippage_bps", "slippage_samples_x", "slippage_samples_y", "slippage_model_status", "blocker", "next_step"]
+        [
+            "pair",
+            "leg_notional_usd",
+            "taker_fee_bps",
+            "pair_one_way_slippage_bps",
+            "slippage_samples_x",
+            "slippage_samples_y",
+            "slippage_model_status",
+            "blocker",
+            "next_step",
+        ]
     ]
     return "\n".join(
         [
@@ -1655,6 +1924,55 @@ def _hyperliquid_pair_cost_model_markdown(frame: pd.DataFrame) -> str:
             summary.to_markdown(index=False),
             "",
             "## Pair Models",
+            "",
+            view.to_markdown(index=False),
+            "",
+        ]
+    )
+
+
+def _hyperliquid_capacity_curve_markdown(frame: pd.DataFrame) -> str:
+    if frame.empty:
+        return "# Hyperliquid Capacity Curve\n\nNo capacity rows are available.\n"
+    summary = pd.DataFrame(
+        [
+            {"metric": "pairs", "value": frame["pair"].nunique()},
+            {"metric": "notional_rows", "value": len(frame)},
+            {
+                "metric": "depth_cost_ready_rows",
+                "value": int(frame["depth_cost_ready"].map(_truthy).sum()),
+            },
+            {
+                "metric": "funding_and_depth_ready_rows",
+                "value": int(frame["capacity_acceptance_ready"].map(_truthy).sum()),
+            },
+        ]
+    )
+    view = frame[
+        [
+            "pair",
+            "leg_notional_usd",
+            "samples_x",
+            "samples_y",
+            "pair_one_way_slippage_bps",
+            "estimated_pair_round_trip_cost_bps",
+            "funding_coverage_pct",
+            "capacity_status",
+            "blocker",
+        ]
+    ]
+    return "\n".join(
+        [
+            "# Hyperliquid Capacity Curve",
+            "",
+            "Executable capacity is based on repeated complete public L2 samples at each leg notional. It is not inferred from 24-hour volume.",
+            "Funding readiness remains a separate required acceptance input.",
+            "",
+            "## Summary",
+            "",
+            summary.to_markdown(index=False),
+            "",
+            "## Notional Surface",
             "",
             view.to_markdown(index=False),
             "",
@@ -1972,9 +2290,9 @@ def _write_hyperliquid_funding_record(
         "snapshot_path": str(snapshot),
     }
     serialized = json.dumps(payload, indent=2, sort_keys=True)
-    output.write_text(serialized, encoding="utf-8")
+    atomic_write_text(output, serialized, encoding="utf-8")
     snapshot.parent.mkdir(parents=True, exist_ok=True)
-    snapshot.write_text(serialized, encoding="utf-8")
+    atomic_write_text(snapshot, serialized, encoding="utf-8")
     return output
 
 
@@ -2012,9 +2330,11 @@ def _merge_hyperliquid_funding_into_pair_histories(
         pair_key = _pair_key(asset_x, asset_y)
         matching: list[tuple[Path, dict[str, Any]]] = []
         for path in sorted((root / "data" / "raw" / "pair_details").glob("*hyperliquid*derived_history.json")):
+            if path.name.startswith((".", "._")):
+                continue
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
                 continue
             if not isinstance(payload, dict) or str(payload.get("exchange", "")).lower() != "hyperliquid":
                 continue
@@ -2071,7 +2391,7 @@ def _merge_hyperliquid_funding_into_pair_histories(
             payload["funding_alignment"] = "same_utc_day_no_future_fill"
             payload["funding_cost_policy"] = "conservative_absolute_leg_drag"
             payload["funding_evidence_path"] = _rel(funding_path, root)
-            history_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+            atomic_write_text(history_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
             rows.append(
                 _hyperliquid_funding_coverage_row(
                     candidate=candidate,
@@ -2298,7 +2618,7 @@ def _rewrite_pair_history_as_hyperliquid(path: Path) -> None:
         "Derived from Hyperliquid candleSnapshot candles. This is Hyperliquid research evidence only; "
         "do not use it to promote dYdX execution. Funding and slippage must be merged from Hyperliquid-specific sources."
     )
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _hyperliquid_lane_markdown(frame: pd.DataFrame) -> str:
@@ -2371,13 +2691,13 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _write_text(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")
     return path
 
 

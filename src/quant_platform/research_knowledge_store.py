@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 
 import pandas as pd
@@ -53,7 +57,7 @@ def build_research_knowledge_store(root: Path = ROOT) -> CommandResult:
     written: dict[str, Path] = {}
     for key, filename in KNOWLEDGE_OUTPUTS.items():
         output = base / filename
-        outputs[key].to_csv(output, index=False)
+        atomic_write_csv(outputs[key], output, index=False)
         written[key] = output
     summary_csv = root / "reports" / "research" / "research_knowledge_summary.csv"
     summary_md = root / "reports" / "research" / "research_knowledge_summary.md"
@@ -62,11 +66,11 @@ def build_research_knowledge_store(root: Path = ROOT) -> CommandResult:
         [{"table": key, "rows": int(len(frame)), "path": str(written[key])} for key, frame in outputs.items()],
         columns=["table", "rows", "path"],
     )
-    summary.to_csv(summary_csv, index=False)
-    summary_md.write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_csv(summary, summary_csv, index=False)
+    atomic_write_text(summary_md, _summary_markdown(summary), encoding="utf-8")
     source_summary_path = root / "reports" / "research" / "research_knowledge_source_summary.csv"
     source_summary = _source_summary(combined)
-    source_summary.to_csv(source_summary_path, index=False)
+    atomic_write_csv(source_summary, source_summary_path, index=False)
     return CommandResult(
         paths={
             **written,

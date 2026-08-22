@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -97,10 +101,10 @@ def _write_comparison_view(root: Path) -> tuple[Path, Path]:
     frame = load_copula_comparison_events(root)
     if not frame.empty:
         frame = frame.sort_values(["source_timestamp", "event_id"]).reset_index(drop=True)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     markdown = output.with_suffix(".md")
     body = frame.to_markdown(index=False) if not frame.empty else "No immutable Copula comparison events have been recorded."
-    markdown.write_text("# Copula Shadow Comparison Events\n\n" + body + "\n", encoding="utf-8")
+    atomic_write_text(markdown, "# Copula Shadow Comparison Events\n\n" + body + "\n", encoding="utf-8")
     return output, markdown
 
 

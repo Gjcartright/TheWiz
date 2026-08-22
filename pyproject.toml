@@ -4,23 +4,26 @@ version = "0.1.0"
 description = "Research-first statistical arbitrage platform for crypto pair trading."
 requires-python = ">=3.11"
 dependencies = [
-  # Python 3.12 numerical versions are bound by the Wizard comparator contract.
+  # Numerical versions are bound by the Wizard comparator and Math V2 contracts.
   "numpy>=1.26,<2.5; python_version < '3.12'",
   "numpy==2.5.1; python_version >= '3.12'",
   "pandas>=2.1,<3.0.4; python_version < '3.12'",
   "pandas==3.0.3; python_version >= '3.12'",
   "pyarrow>=16.0",
   "pydantic>=2.6",
-  "scipy>=1.11,<1.18; python_version < '3.12'",
-  "scipy==1.18.0; python_version >= '3.12'",
+  # statsmodels 0.14.6 imports scipy._lib._util._lazywhere, removed in SciPy 1.18.
+  "scipy>=1.11,<1.18",
   "scikit-learn>=1.3",
   "statsmodels>=0.14",
   "requests>=2.31",
+  # Phase 00 public-market evidence contract requires exact client semantics.
+  "ccxt==4.4.26",
   "eth-account>=0.13,<0.14",
   "hyperliquid-python-sdk>=0.23,<0.24",
   "pyyaml>=6.0",
   "langgraph>=0.2",
   "tabulate>=0.9",
+  "pypdf>=5.0,<7.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +40,8 @@ youtube = [
 dev = [
   "pytest>=8.0",
   "ruff>=0.5",
+  # The full suite imports the dYdX adapter contract even when execution is disabled.
+  "dydx-v4-client>=1.1.5",
 ]
 
 [build-system]
@@ -48,6 +53,9 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+markers = [
+  "external_network: explicitly permits a test to access an external network service",
+]
 
 [tool.ruff]
 line-length = 100

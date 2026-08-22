@@ -1,0 +1,556 @@
+review_version: paper_adversarial_review_v1
+reviewed_at: "2026-08-16"
+review_basis: full_text_adversarial_screen
+review_authority: research_only
+papers:
+  paper_f0b8fced125866b5:
+    relevance: direct
+    strategy_families: [cointegration, reinforcement_learning, entry_exit, risk]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: A recurrent RL agent with temporal attention and a mean-variance reward can trade a cointegrated pair less frequently and with better risk-adjusted results than the tested baselines.
+    claim_locator: risk-aware reward
+    good: Uses rolling train-validation-test windows, transaction costs, activity metrics, and an ablation of the recurrent representation and risk reward.
+    bad: The empirical study uses one selected daily US equity pair and approximately 1006 observations; the displayed Sharpe definition divides by variance rather than standard deviation.
+    do: Test temporal state encoders and risk-aware rewards as research-only challengers against deterministic strategies.
+    dont: Do not import the reported Sharpe values, pair selection, or model weights as validated evidence.
+    neither: The human-expertise analogy is narrative and creates no operational permission.
+    gap: Reproduce the reward timing, cost coefficient, hedge construction, and Sharpe calculation on crypto perpetual data with purged walk-forward folds.
+    gap_severity: critical
+    premortem: The agent appears stable in backtests but learned one pair's path and suppresses trading rather than learning transferable entry and exit logic.
+    warning: Performance collapses when the original pair or best rolling windows are removed, or take-rate approaches zero.
+    mitigation: Use multiple pairs, nested walk-forward selection, minimum take-rate, pair concentration limits, and deterministic baselines.
+    red_attack: Recompute every reported metric with the standard Sharpe denominator and challenge the bidirectional encoder for decision-time leakage.
+    red_test: Shift all features by one bar, remove the best fold, replace the reward with matched mean-variance controls, and run seed dispersion.
+    math_focus: Verify U(r)=log(1+r), its quadratic approximation, the alpha scaling, reward horizon, and whether V denotes variance or volatility.
+    hypothesis: A causal recurrent state encoder plus an explicitly scaled downside-risk reward can reduce unnecessary pair turnover without collapsing after-cost take-rate.
+    data_needed: Point-in-time Hyperliquid candles, funding, fees, observed spread/slippage, multiple pairs, and exact action logs.
+    confidence: 0.72
+
+  paper_9acd25bc0eb74b5f:
+    relevance: high
+    strategy_families: [reinforcement_learning, tail_risk, risk]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Peaks-over-threshold extreme-value estimates can improve policy-gradient control of rare catastrophic cumulative losses when empirical tail observations are scarce.
+    claim_locator: peaks-over-threshold
+    good: Targets a real weakness of variance-only rewards and exposes threshold selection and generalized Pareto assumptions.
+    bad: Evidence is simulation and option-hedging focused, while the finite-difference gradient is limited to low-dimensional policies.
+    do: Use EVT estimates as a risk critic or veto candidate, separate from alpha generation.
+    dont: Do not treat fitted tail estimates from a small crypto sample as stable or use them without threshold diagnostics.
+    neither: Option-pricing performance does not establish pairs-trading profitability.
+    gap: Establish enough independent tail exceedances, threshold stability, and online update behavior for pair PnL and liquidation loss.
+    gap_severity: high
+    premortem: The tail model becomes unstable precisely during regime change and gives a false sense of protection.
+    warning: Shape estimates change sign across nearby thresholds or CVaR estimates swing sharply with one observation.
+    mitigation: Use threshold ensembles, uncertainty bounds, conservative fallback limits, and deterministic liquidation controls.
+    red_attack: Replace the tail with mixtures and clustered losses that violate iid generalized-Pareto approximations.
+    red_test: Block-bootstrap exceedances, vary thresholds, inject structural breaks, and compare against empirical CVaR plus hard limits.
+    math_focus: Reproduce POT threshold selection, GPD likelihood, CVaR approximation, and finite-difference policy gradient.
+    hypothesis: An EVT tail-risk critic can improve RL sizing or vetoes beyond empirical CVaR without degrading ordinary-regime opportunity capture.
+    data_needed: Long costed trade-level PnL, drawdowns, liquidation distances, and regime labels.
+    confidence: 0.7
+
+  paper_d4fcf1eb3a126f63:
+    relevance: contextual
+    strategy_families: [sentiment, regime]
+    evidence_verdict: mixed
+    guidance: monitor
+    primary_claim: Social-network attention herding and sentiment contain information about retail trading and subsequent equity returns.
+    claim_locator: attention herding
+    good: Distinguishes stock-specific attention from forum-wide herding and uses a large, manually seeded text classification exercise.
+    bad: The setting is US equities and WallStreetBets, includes exceptional meme-stock episodes, and depends on platform and holdings data not available for Hyperliquid.
+    do: Treat broad attention concentration as a possible crowded-trade or crisis-regime feature.
+    dont: Do not transfer equity return coefficients or contrarian direction directly to crypto.
+    neither: Forum sentiment by itself does not select a hedge ratio or pair direction.
+    gap: Build point-in-time crypto attention data and test incremental value beyond funding, volume, volatility, and open interest.
+    gap_severity: medium
+    premortem: A sentiment feature chases already-completed moves and increases entries at maximum crowding.
+    warning: Signal value disappears after publication delays and realistic timestamping.
+    mitigation: Timestamp every post, impose availability lags, and use sentiment only as a conditional regime feature.
+    red_attack: Remove GME and AMC, split by platform era, and control for contemporaneous volatility and turnover.
+    red_test: Run embargoed event studies and placebo timestamps on crypto attention series.
+    math_focus: Audit portfolio formation, factor adjustment, classifier calibration, and overlapping-return inference.
+    hypothesis: Crypto-wide attention concentration may identify regimes in which mean-reversion entries should be reduced or delayed.
+    data_needed: Point-in-time crypto social data with immutable timestamps and market-control features.
+    confidence: 0.58
+
+  paper_03e6cc68db1b1e83:
+    relevance: contextual
+    strategy_families: [data_quality, graph_learning]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Graph representations improve grouped record matching and decision support in bank reconciliation.
+    claim_locator: graph-based decision-support
+    good: Directly compares graph and non-graph representations and discusses prediction instability and refresh cost.
+    bad: The task, labels, graph semantics, and operating cadence differ from market prediction.
+    do: Reuse the graph-reconciliation idea for evidence lineage, symbol mapping, and multi-source entity matching.
+    dont: Do not use bank-reconciliation accuracy as evidence for trading alpha or pair dependence.
+    neither: Bookkeeper workflow findings are not market features.
+    gap: Define TheWiz graph entities, relation types, temporal validity, and confidence-aware match review.
+    gap_severity: medium
+    premortem: Incorrect graph links merge unrelated symbols or venues and contaminate every downstream dataset.
+    warning: One asset maps to multiple canonical entities without a reviewable reason.
+    mitigation: Require deterministic identifiers, temporal edges, confidence thresholds, and human-review queues.
+    red_attack: Inject ambiguous tickers, renamed tokens, bridged assets, and conflicting venue metadata.
+    red_test: Measure precision and recall on a hand-labeled crypto entity-resolution set.
+    math_focus: Verify similarity construction, threshold selection, calibration, and grouped-match metrics.
+    hypothesis: A temporal evidence graph can reduce symbol and source-reconciliation errors without granting signal authority.
+    data_needed: Hand-labeled cross-venue symbol, contract, chain, and source mappings.
+    confidence: 0.64
+
+  paper_c4eb8bf2cfaae346:
+    relevance: not_applicable
+    strategy_families: [macro_context]
+    evidence_verdict: not_applicable
+    guidance: neither
+    primary_claim: Digital technology, literacy, regulation, and neighboring-country effects relate to national financial inclusion.
+    claim_locator: spatial Durbin
+    good: Demonstrates spatial dependence and mediation analysis across countries.
+    bad: Sparse country-year observations and constructed inclusion indices do not match liquid crypto trading horizons.
+    do: Retain as background knowledge only.
+    dont: Do not create pair signals or execution rules from country-level coefficients.
+    neither: The findings do not resolve any current pair-selection or Hyperliquid question.
+    gap: No defensible mapping exists from the paper's units and horizon to the project.
+    gap_severity: low
+    premortem: Macro coefficients are forced into a short-horizon signal and create meaningless precision.
+    warning: Features require interpolation across years to score intraday markets.
+    mitigation: Keep the source knowledge-only and outside feature eligibility.
+    red_attack: Challenge index construction, spatial-weight choices, and causal interpretation.
+    red_test: No trading replication is warranted unless a separately specified macro hypothesis exists.
+    math_focus: Spatial Durbin estimates are educational but outside the active strategy math.
+    hypothesis: ""
+    data_needed: ""
+    confidence: 0.9
+
+  paper_7c68291b9b6a61fe:
+    relevance: contextual
+    strategy_families: [data_quality, anomaly_detection, risk]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: An ensemble anomaly framework can identify unusual high-value payment activity in real time.
+    claim_locator: anomaly detection
+    good: Emphasizes unsupervised detection, operational monitoring, and evaluation under severe class imbalance.
+    bad: Payment-system anomalies are not market anomalies and labels or costs do not transfer.
+    do: Adapt the monitoring architecture to stale candles, venue outages, abnormal funding, and order-flow discontinuities.
+    dont: Do not interpret a data anomaly score as an alpha signal.
+    neither: Payment-value patterns have no direct pair direction implication.
+    gap: Define incident labels, false-positive cost, recovery behavior, and separate data-health from market-regime anomalies.
+    gap_severity: medium
+    premortem: The detector fires on genuine volatility and blocks the best opportunities, or misses slow data corruption.
+    warning: Alerts cluster around every large market move with no confirmed data incident.
+    mitigation: Use source-consistency checks, incident taxonomies, calibrated thresholds, and shadow evaluation.
+    red_attack: Inject stale, duplicated, reordered, and cross-source inconsistent observations.
+    red_test: Replay known outages and synthetic corruptions while preserving genuine crisis events.
+    math_focus: Audit ensemble scoring, threshold calibration, class-imbalance metrics, and alert latency.
+    hypothesis: A dedicated data-health anomaly ensemble can reduce contaminated backtests and unsafe testnet actions.
+    data_needed: Labeled source outages, stale-data events, API errors, and clean volatile-market controls.
+    confidence: 0.68
+
+  paper_a628a8153b2dc59f:
+    relevance: contextual
+    strategy_families: [graph_learning, risk]
+    evidence_verdict: mixed
+    guidance: monitor
+    primary_claim: Heterogeneous graph neural networks can improve money-laundering detection from customer and transaction relationships.
+    claim_locator: heterogeneous graph
+    good: Models typed entities and relations rather than flattening network structure.
+    bad: Supervised AML labels, bank transaction graphs, and regulatory objectives do not transfer to pair alpha.
+    do: Preserve the typed-graph concept for wallet or counterparty risk research if lawful labeled data becomes available.
+    dont: Do not infer criminality or trading direction from graph embeddings.
+    neither: AML classification performance is unrelated to spread mean reversion.
+    gap: TheWiz lacks lawful labels, graph coverage, temporal leakage controls, and an operational use case.
+    gap_severity: medium
+    premortem: A graph score embeds biased labels and incorrectly blocks assets or wallets.
+    warning: Performance depends on identity or future-neighbor information unavailable at decision time.
+    mitigation: Keep this research-only, use temporal splits, and require fairness and provenance review.
+    red_attack: Remove high-degree nodes, delay edge availability, and test unseen subgraphs.
+    red_test: Temporal inductive evaluation with degree-matched baselines.
+    math_focus: Verify message passing, negative sampling, temporal edge availability, and class-imbalance metrics.
+    hypothesis: ""
+    data_needed: ""
+    confidence: 0.72
+
+  paper_7468991d65d1c213:
+    relevance: not_applicable
+    strategy_families: [volatility, derivatives]
+    evidence_verdict: not_applicable
+    guidance: neither
+    primary_claim: Coupled GARCH-PDE finite-difference solvers can price options under stochastic volatility efficiently.
+    claim_locator: finite difference
+    good: Provides numerical stability and convergence analysis for a hybrid volatility model.
+    bad: The target is European option pricing, not perpetual-pair signal generation or execution.
+    do: Retain as mathematical reference if an options lane is added.
+    dont: Do not use option-pricing accuracy as evidence for spread predictability.
+    neither: PDE solver performance does not alter current entries, exits, or pair ranking.
+    gap: The current project has no option instrument, implied-volatility surface, or risk-neutral pricing requirement.
+    gap_severity: low
+    premortem: Complex option machinery is added to a perpetual strategy without an economic role.
+    warning: New features cannot be computed from available Hyperliquid data.
+    mitigation: Keep outside the active pipeline.
+    red_attack: Challenge boundary conditions, calibration stability, and discretization errors only if options become scoped.
+    red_test: No current trading test required.
+    math_focus: Preserve the PDE and convergence methods as reference, not production code.
+    hypothesis: ""
+    data_needed: ""
+    confidence: 0.94
+
+  paper_fa0c8fdb8806dc71:
+    relevance: contextual
+    strategy_families: [microstructure, information_risk]
+    evidence_verdict: mixed
+    guidance: monitor
+    primary_claim: Past aggressive institutional trading predicts future information advantage and a cross-sectional equity return premium.
+    claim_locator: information asymmetry
+    good: Uses holdings-based measures intended to observe informed-versus-uninformed wealth transfers directly.
+    bad: Shanghai equity holdings and institutional classifications are unavailable and structurally different from pseudonymous perpetual markets.
+    do: Treat information asymmetry as motivation for liquidity and adverse-selection controls.
+    dont: Do not map the reported 10.8 percent equity spread into crypto expected returns.
+    neither: The finding does not identify cointegration or a pair spread.
+    gap: Construct lawful point-in-time proxies such as order-book toxicity, spread, depth, and liquidation flow.
+    gap_severity: medium
+    premortem: A noisy toxicity proxy blocks liquid mean-reversion opportunities or follows price rather than predicts risk.
+    warning: The proxy has no incremental effect after volatility and spread controls.
+    mitigation: Pre-register incremental tests and use it as an execution-risk covariate only.
+    red_attack: Lag holdings and controls realistically, and separate information effects from illiquidity.
+    red_test: Test adverse-selection proxies against post-entry slippage, not raw return alone.
+    math_focus: Audit portfolio sorts, controls, overlapping inference, and predictor availability.
+    hypothesis: Order-book toxicity may predict pair-entry execution loss independently of the spread signal.
+    data_needed: Point-in-time Hyperliquid L2, trades, fills, spread, depth, and liquidation events.
+    confidence: 0.57
+
+  paper_ce12da98cbbace4d:
+    relevance: high
+    strategy_families: [crypto, portfolio, tail_risk, sizing]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: A pessimistic Choquet-integral portfolio using higher moments and CVaR can improve crypto tail-risk outcomes relative to mean-variance and naive allocations.
+    claim_locator: Choquet portfolio
+    good: Directly studies cryptocurrency, nonlinear dependence, tail risk, and interpretable contribution measures.
+    bad: Portfolio allocation is not pair-entry evidence; optimizer stability, turnover, and live execution assumptions require independent verification.
+    do: Test Choquet or CVaR concepts as portfolio-level pair sizing and concentration controls.
+    dont: Do not use Shapley or LIME explanations as causal proof or permit the allocator to create signals.
+    neither: Reported cumulative portfolio returns do not validate any Wizard mode.
+    gap: Reproduce the capacity construction, higher-moment estimation, rebalance costs, and stability on pair-strategy returns rather than coin returns.
+    gap_severity: high
+    premortem: Estimated nonlinear capacities overfit a small crypto universe and flip weights after minor data changes.
+    warning: Large allocation changes occur under nearby windows or bootstrap samples.
+    mitigation: Shrink capacities, cap concentration and turnover, and compare against simple CVaR and equal-risk baselines.
+    red_attack: Perturb returns, remove BTC, vary rebalance dates, and impose stressed costs and funding.
+    red_test: Nested walk-forward allocation using only realized pair-strategy returns available at rebalance time.
+    math_focus: Reproduce the Choquet capacity, alpha-CVaR formulation, higher moments, Shapley attribution, and constraint set.
+    hypothesis: A conservative nonlinear allocator can reduce portfolio tail loss across validated pair strategies without unstable concentration.
+    data_needed: Point-in-time strategy returns, covariance and tail estimates, funding, costs, and capacity constraints.
+    confidence: 0.69
+
+  paper_c5cc04c898f6e7c9:
+    relevance: not_applicable
+    strategy_families: [credit_risk]
+    evidence_verdict: not_applicable
+    guidance: neither
+    primary_claim: Combining credit and debit behavior improves hierarchical Bayesian prediction of credit-card delinquency.
+    claim_locator: hierarchical Bayesian
+    good: Demonstrates that related data domains can add predictive information and supports interpretable heterogeneity.
+    bad: Consumer delinquency labels, interventions, and economics are unrelated to pair trading.
+    do: Retain only the general lesson that incremental data should be tested against a strong incumbent baseline.
+    dont: Do not transfer coefficients, labels, or reported savings to trading.
+    neither: The application offers no current feature or execution rule.
+    gap: No defensible mapping to TheWiz exists.
+    gap_severity: low
+    premortem: Domain-irrelevant methodology is added because it reports strong predictive accuracy.
+    warning: Proposed features cannot be defined at a market timestamp.
+    mitigation: Keep outside feature and hypothesis eligibility.
+    red_attack: Challenge the small delinquent holdout and bank-specific baseline, but not for trading promotion.
+    red_test: No current trading replication required.
+    math_focus: Hierarchical Bayesian structure is educational only.
+    hypothesis: ""
+    data_needed: ""
+    confidence: 0.92
+
+  paper_c60e9f5f6a175ce5:
+    relevance: high
+    strategy_families: [graph_learning, dependency, pair_discovery]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Explicit graph modeling of financial interdependencies improves prediction of sovereign spread states, especially extreme movements.
+    claim_locator: interdependencies
+    good: Uses a structurally comparable feed-forward baseline to isolate the value of graph convolution.
+    bad: Sovereign macro graphs, labels, and frequency differ from dynamic crypto dependency and tradable spread formation.
+    do: Test temporal dependency graphs as a pair-discovery representation.
+    dont: Do not interpret graph proximity as cointegration, copula arbitrage, or execution eligibility.
+    neither: Sovereign classification accuracy does not set pair entries or exits.
+    gap: Define causal, point-in-time crypto edges and compare dynamic graphs with simple correlation and sector baselines.
+    gap_severity: high
+    premortem: The graph encodes contemporaneous returns and leaks the target while appearing to learn interdependence.
+    warning: Performance vanishes when edges are lagged or the graph is frozen before the test window.
+    mitigation: Timestamp edges, use inductive unseen-asset tests, and ablate every edge family.
+    red_attack: Randomize edges, use degree-matched graphs, lag macro features, and test new assets.
+    red_test: Walk-forward graph construction followed by independent local pair-strategy validation.
+    math_focus: Verify graph adjacency, normalization, message passing, label timing, and probability calibration.
+    hypothesis: A point-in-time crypto dependency graph can improve candidate discovery beyond correlation without becoming acceptance authority.
+    data_needed: Historical venue, ecosystem, return, funding, liquidity, and token-relation edges.
+    confidence: 0.66
+
+  paper_5202676052f4c33f:
+    relevance: high
+    strategy_families: [regime, volatility, distribution]
+    evidence_verdict: inconclusive
+    guidance: monitor
+    primary_claim: High-frequency return-distribution sequences have low-dimensional, time-varying multifractal structure measurable with Wasserstein distance and Renyi indices.
+    claim_locator: Wasserstein distance
+    good: Treats the full return distribution as an evolving object and compares against a Gaussian benchmark.
+    bad: The study is descriptive; it does not establish point-in-time predictive value, tradability, or robustness across venues.
+    do: Test the metrics as regime descriptors alongside simpler volatility and tail features.
+    dont: Do not infer alpha from attractive UMAP clusters or fractal labels.
+    neither: Two-dimensional cluster shape is visualization, not a trading rule.
+    gap: Define causal windows, estimator uncertainty, update cost, and incremental predictive value for pair outcomes.
+    gap_severity: high
+    premortem: Complex multifractal features reproduce volatility under a new name and overfit tiny windows.
+    warning: They add no value after mean, volatility, skew, and kurtosis controls.
+    mitigation: Benchmark against simple features, bootstrap stability, and pre-register target outcomes.
+    red_attack: Use Gaussian and GARCH surrogates with matched moments to see whether the metric is genuinely new.
+    red_test: Purged walk-forward prediction of strategy failure, not contemporaneous crisis classification.
+    math_focus: Reproduce Wasserstein distances, correlation dimension, generalized dimension, and Renyi-index estimators.
+    hypothesis: Distribution-shape features may identify regimes in which spread reversion becomes less reliable beyond standard volatility measures.
+    data_needed: High-frequency point-in-time returns across many Hyperliquid assets and matched surrogate processes.
+    confidence: 0.6
+
+  paper_9d33d77526db17f3:
+    relevance: high
+    strategy_families: [execution_costs, exit, sizing]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: With transaction costs, optimal portfolio rebalancing occurs at the boundary of a time-varying no-trade region rather than on a fixed schedule.
+    claim_locator: no-trade region
+    good: Provides a clear economic mechanism for hysteresis and explicitly includes transaction costs.
+    bad: Market-variability results are simulation-heavy and concern asset-class portfolios, not two-leg perpetual execution.
+    do: Test no-trade bands for pair rehedging, scaling, and exit hysteresis.
+    dont: Do not assume the theoretical boundary survives funding, discrete sizes, leverage, and asynchronous fills.
+    neither: Claims about aggregate market variability do not validate TheWiz profitability.
+    gap: Derive the boundary under two-leg costs, funding, minimum sizes, margin, and observed Hyperliquid execution.
+    gap_severity: high
+    premortem: The band is too wide during drift and turns cost savings into uncontrolled hedge error.
+    warning: Exposure and drawdown rise while turnover falls.
+    mitigation: Add maximum hedge-error, time, and regime exits with dynamic cost estimates.
+    red_attack: Stress nonstationary volatility, jumps, asymmetric costs, and one-leg fill delays.
+    red_test: Compare continuous rehedging, fixed cadence, static bands, and dynamic bands after observed costs.
+    math_focus: Reproduce the utility objective, transaction-cost boundary, and inhomogeneous drift-volatility extension.
+    hypothesis: A dynamic cost-aware no-trade region can reduce unnecessary rehedging without increasing hedge error or tail loss.
+    data_needed: Position-level pair exposures, L2-derived costs, funding, fills, and volatility forecasts.
+    confidence: 0.74
+
+  paper_bd860d3475116e96:
+    relevance: direct
+    strategy_families: [pairs_trading, ou, deep_learning, crypto]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Panel-trained time-series models that forecast factor residual direction can outperform a classical OU relative-value baseline with lower turnover across equity and crypto samples.
+    claim_locator: transaction cost sensitivity
+    good: Includes crypto, rolling factor residuals, survivorship-aware equity membership, cost sensitivity, block-bootstrap Sharpe intervals, and false-discovery control; code is identified.
+    bad: Uses daily data and a basic proportional cost model that explicitly omits bid-ask spread; deployability is disclaimed and dataset/code reproduction is still required.
+    do: Prioritize a bounded reproduction of the panel residual-direction gate using the simplest model first.
+    dont: Do not start with large transformers or accept reported Sharpe ratios before reproducing timestamps, universe formation, and costs.
+    neither: Architecture rankings among overlapping confidence intervals should not drive model choice.
+    gap: Verify code-data parity, exact splits, residual construction, crypto universe survivorship, funding, spread, slippage, and pair-leg neutrality.
+    gap_severity: critical
+    premortem: A high-capacity model learns cross-sectional membership and market beta, then fails on new assets and intraday perpetual data.
+    warning: Gains disappear under unseen-pair tests, simple logistic baselines, or observed execution costs.
+    mitigation: Begin with linear and shallow models, use pair and time embargoes, and require incremental value over TheWiz signals.
+    red_attack: Hold out entire assets and regimes, neutralize beta, include funding and bid-ask costs, and test stale-universe leakage.
+    red_test: Reproduce published daily results first, then run nested Hyperliquid walk-forward with unseen-pair folds.
+    math_focus: Reconcile PCA factor residuals, OU equations, signal thresholds, annualization, turnover, cost subtraction, bootstrap, and FDR procedures.
+    hypothesis: A low-capacity panel model predicting next-bar residual direction can gate existing spread entries and improve after-cost results without losing neutrality.
+    data_needed: Reproduction code and data, point-in-time crypto universe, Hyperliquid candles, funding, L2 costs, and exact factor snapshots.
+    confidence: 0.82
+
+  paper_c1676ff9fff1cd97:
+    relevance: contextual
+    strategy_families: [research_governance]
+    evidence_verdict: inconclusive
+    guidance: neither
+    primary_claim: Conference discussants identify design and interpretation weaknesses across several AI and capital-market studies.
+    claim_locator: discussant
+    good: Demonstrates the value of formal criticism, alternative explanations, and external discussants.
+    bad: It is a discussion compilation, not one replicable empirical study or trading method.
+    do: Use its critique style as a model for Supreme Team reviews.
+    dont: Do not extract secondary descriptions as validated primary evidence.
+    neither: Discussed paper results create no feature or signal permission.
+    gap: Retrieve any underlying paper separately before using a substantive claim.
+    gap_severity: low
+    premortem: A discussant's summary is mistaken for the underlying study and loses methodological context.
+    warning: A claim has no direct primary-source page or dataset.
+    mitigation: Require primary-source linkage and mark discussion-only evidence.
+    red_attack: Compare every extracted claim with the underlying paper.
+    red_test: No strategy test until primary evidence is ingested.
+    math_focus: No active trading equation should be imported from this secondary source.
+    hypothesis: ""
+    data_needed: ""
+    confidence: 0.86
+
+  paper_83bedd65a3817a87:
+    relevance: direct
+    strategy_families: [fractional_cointegration, regime, structural_break]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Fractional cointegration combined with structural-break detection reveals persistent but regime-dependent equilibrium and leadership relationships.
+    claim_locator: structural break
+    good: Supplies FCVAR settings, weekly sampling conventions, currency robustness, and explicit structural-break analysis.
+    bad: The universe is five tobacco equities; break-event interpretation may be hindsight, and no costed trading strategy is validated.
+    do: Test fractional integration and break-aware acceptance as diagnostics alongside Engle-Granger and Johansen.
+    dont: Do not use full-sample break dates or leadership assignments in live features.
+    neither: Tobacco-sector leadership has no direct crypto direction implication.
+    gap: Implement one-sided break detection, rolling fractional estimates, estimator uncertainty, and trade-level incremental tests.
+    gap_severity: critical
+    premortem: Full-sample break detection leaks future regimes and creates an unrealistically clean filter.
+    warning: Performance vanishes when break dates are detected only with data available at the time.
+    mitigation: Use sequential detection delays, frozen windows, and compare with simpler stability tests.
+    red_attack: Shift break dates, change currency, sampling day, lag order, and integration bounds.
+    red_test: One-sided rolling FCVAR and break detection followed by untouched costed pair replay.
+    math_focus: Reproduce FCVAR rank, fractional parameter bounds, lag selection, adjustment coefficients, and Bai-Perron dating.
+    hypothesis: Point-in-time fractional persistence and structural-break warnings can reject unstable pairs missed by ordinary cointegration tests.
+    data_needed: Long synchronized Hyperliquid price histories and one-sided structural-break implementations.
+    confidence: 0.79
+
+  paper_52dc8767f30a86f9:
+    relevance: high
+    strategy_families: [symbolic_regression, teacher_student, feature_discovery]
+    evidence_verdict: inconclusive
+    guidance: monitor
+    primary_claim: Symbolic modeling can discover shared interpretable functional forms across asset-pricing datasets with dataset-specific coefficients.
+    claim_locator: Symbolic Modeling
+    good: Pursues explicit formulas rather than opaque predictions and separates shared structure from fitted coefficients.
+    bad: Symbolic search has enormous multiple-testing and expression-selection risk; asset-pricing fit does not establish tradable pair edge.
+    do: Use symbolic search as a teacher that proposes compact formulas for preregistered testing.
+    dont: Do not allow discovered expressions to self-promote or use the discovery sample for final evaluation.
+    neither: A visually interpretable formula is not automatically economically meaningful.
+    gap: Define expression complexity penalties, search budgets, nested validation, dimensional consistency, and stability across pairs.
+    gap_severity: high
+    premortem: The teacher discovers a persuasive but spurious formula that exploits repeated search over the full dataset.
+    warning: Expressions change radically across seeds or neighboring samples.
+    mitigation: Log every candidate, correct for search, require unit consistency, and validate on sealed pair and time holdouts.
+    red_attack: Randomize labels, scramble units, and compare against matched-complexity linear baselines.
+    red_test: Nested symbolic discovery with a permanently sealed final evaluation set.
+    math_focus: Reproduce the expression grammar, objective, coefficient fitting, complexity regularization, and alpha calculation.
+    hypothesis: Complexity-constrained symbolic regression can propose interpretable regime or spread features that survive sealed tests better than opaque feature expansion.
+    data_needed: Versioned feature panels, unit metadata, search ledgers, and sealed pair-time holdouts.
+    confidence: 0.61
+
+  paper_94da77f36f3abdc6:
+    relevance: high
+    strategy_families: [defi, event_risk, regime]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Public DeFi crime events are associated with negative governance-token price effects and increased trading activity, with large indirect costs.
+    claim_locator: crime events
+    good: Provides an event dataset, difference-in-differences framing, and a reproducible mapping effort.
+    bad: Event discovery, token matching, treatment timing, contamination, and post-event measurement can embed hindsight; a disclosed analytics-company relationship deserves attention.
+    do: Use confirmed event timestamps as a post-event crisis or exclusion feature and evaluate detection latency.
+    dont: Do not use retrospectively compiled crime labels before their first public availability.
+    neither: Aggregate indirect-cost estimates do not choose a pair or hedge ratio.
+    gap: Build immutable first-public timestamps, affected-asset mappings, concurrent-event controls, and a false-rumor policy.
+    gap_severity: critical
+    premortem: The backtest enters a safety regime before the event was publicly knowable and reports impossible protection.
+    warning: Event timestamps reflect incident occurrence rather than first actionable disclosure.
+    mitigation: Store occurrence, discovery, public-report, ingestion, and confirmation timestamps separately.
+    red_attack: Delay treatment timestamps, remove largest events, vary controls, and include market-wide crypto shocks.
+    red_test: Point-in-time event replay measuring protection after realistic detection and confirmation latency.
+    math_focus: Audit abnormal returns, DiD assumptions, matching, clustered inference, and indirect-cost construction.
+    hypothesis: Confirmed DeFi security events can improve post-event risk controls for exposed assets without hindsight timing.
+    data_needed: Immutable event disclosures, token-contract mappings, contemporaneous controls, and Hyperliquid availability.
+    confidence: 0.77
+
+  paper_d07fd68e59dc78f4:
+    relevance: high
+    strategy_families: [topic_modeling, pair_discovery, dependency]
+    evidence_verdict: mixed
+    guidance: monitor
+    primary_claim: Dynamic topic models applied to company reports can construct tradable latent topic indices representing evolving risk-factor exposures.
+    claim_locator: topic indices
+    good: Treats industry relationships as dynamic, documents parameter selection, and includes stability tests.
+    bad: Corporate filings, long horizons, bag-of-words assumptions, and index implementability differ sharply from crypto assets and perpetual pairs.
+    do: Explore point-in-time protocol-document or ecosystem-topic embeddings for discovery only.
+    dont: Do not use future document revisions or topic labels as cointegration evidence.
+    neither: Semantic similarity alone does not imply a mean-reverting spread.
+    gap: Define crypto documents, publication timestamps, token mappings, rebalance cadence, and independent acceptance tests.
+    gap_severity: high
+    premortem: Topic clusters look intuitive but merely encode market-cap, sector labels, or future documentation.
+    warning: Gains vanish after controlling for ecosystem and liquidity categories.
+    mitigation: Timestamp documents, freeze vocabularies, compare with simple categorical baselines, and keep discovery separate.
+    red_attack: Remove labels and names, lag documents, perturb topics, and hold out whole ecosystems.
+    red_test: Evaluate whether topic proximity improves future local pair acceptance, not same-sample returns.
+    math_focus: Reproduce dynamic LDA, normal-basis transformation, index weights, parameter fit, and stability tests.
+    hypothesis: Point-in-time protocol-topic proximity can expand candidate discovery beyond price correlation while local tests retain promotion authority.
+    data_needed: Versioned protocol documents, announcements, token mappings, and publication timestamps.
+    confidence: 0.63
+
+  paper_2dda18bfbe5c0988:
+    relevance: high
+    strategy_families: [crisis_regime, dependency, tail_risk]
+    evidence_verdict: inconclusive
+    guidance: monitor
+    primary_claim: The proportion of event-based Bell-inequality violations tracks three major equity crises and may provide a smoother or earlier stress indicator than conventional correlations.
+    claim_locator: violation proportion
+    good: Proposes a dependency measure that is not ordinary Pearson correlation and compares it with VIX and CDS series.
+    bad: Only three known crises are emphasized; causal hypotheses, event discretization, thresholds, and rolling-window choices may be selected with hindsight.
+    do: Reproduce it as an experimental regime feature against simpler dependence and volatility measures.
+    dont: Do not call it an early-warning signal until prospective detection delay and false alarms are measured.
+    neither: Quantum terminology adds no trading authority.
+    gap: Specify events, windows, thresholds, cross-sectional sampling, alarm policy, and out-of-sample crises before testing.
+    gap_severity: critical
+    premortem: The indicator is tuned to famous crises, fires continually in crypto, and blocks ordinary opportunities.
+    warning: High false-positive duration or no lead after causal publication delays.
+    mitigation: Freeze parameters, use placebo periods, compare simpler baselines, and score alarm burden.
+    red_attack: Exclude one crisis at a time, scramble assets, vary event bins, and test volatility-matched non-crisis periods.
+    red_test: Prospective rolling reconstruction on crypto with predeclared alert thresholds and untouched stress windows.
+    math_focus: Reproduce event probabilities, causal assumptions, S1 inequalities, violation proportion, and uncertainty intervals.
+    hypothesis: Bell-violation features may add crisis-regime information beyond volatility and rank dependence for entry suppression.
+    data_needed: Broad synchronized crypto returns, frozen event definitions, and independently labeled stress periods.
+    confidence: 0.56
+
+  paper_a2e2cdcb8d0f2fac:
+    relevance: direct
+    strategy_families: [pairs_trading, clustering, pair_discovery]
+    evidence_verdict: mixed
+    guidance: conditional
+    primary_claim: Agglomerative clustering using firm characteristics and price information improves equity pair selection and remains profitable under several cost and robustness checks.
+    claim_locator: transaction costs
+    good: Long equity sample, monthly point-in-time clustering, delisting and size robustness, 10/20 bps cost cases, factor controls, and parameter sensitivity.
+    bad: Firm characteristics have no direct crypto equivalent; very high historical performance may depend on microcaps, short-term reversal, portfolio breadth, and equity-specific implementation.
+    do: Translate the concept into crypto-native characteristics for discovery and compare with price-only clustering.
+    dont: Do not transfer the reported Sharpe, cluster count, thresholds, or equity characteristics directly.
+    neither: Agglomerative clustering is not itself proof of cointegration or a trade trigger.
+    gap: Define point-in-time crypto characteristics, short availability, funding, borrow constraints, capacity, and venue-level costs.
+    gap_severity: critical
+    premortem: Crypto characteristics mostly proxy liquidity and produce crowded, highly correlated but non-mean-reverting pairs.
+    warning: Discovery gains disappear after matching on liquidity and sector or after local acceptance testing.
+    mitigation: Ablate feature families, freeze monthly clusters, and require independent stationarity and costed replay.
+    red_attack: Exclude lowest-liquidity assets, impose realistic short/funding costs, randomize characteristics, and hold out ecosystems.
+    red_test: Compare price-only, characteristics-only, and combined discovery on future local acceptance and trade outcomes.
+    math_focus: Reproduce feature normalization, PCA, clustering distances, outlier treatment, pair formation, and portfolio accounting.
+    hypothesis: Crypto-native characteristic clustering can improve candidate discovery beyond price similarity without weakening local acceptance standards.
+    data_needed: Point-in-time market cap, liquidity, funding, open interest, ecosystem, venue, contract, and return features.
+    confidence: 0.8
+
+  paper_8ee8ed6d01c3aa01:
+    relevance: direct
+    strategy_families: [pairs_trading, clustering, reinforcement_learning]
+    evidence_verdict: contradicted
+    guidance: dont
+    primary_claim: Autoencoder clustering followed by recurrent PPO can produce adaptive, beta-neutral pair trading without stationarity assumptions.
+    claim_locator: train the CAE
+    good: Separates discovery and policy stages, uses a held-out RL trading period, and exposes nonlinear pair representations as a research idea.
+    bad: The autoencoder and pair-selection stage uses September 2020 to January 2023 data while the reported RL test runs April 2017 to December 2022, creating direct look-ahead leakage; only 13 sampled pairs are reported and realistic trading costs are not established.
+    do: Preserve only the architecture as a quarantined hypothesis that must be rebuilt with causal discovery snapshots.
+    dont: Do not use any reported return, Sharpe, pair, cluster, or adaptation claim as evidence.
+    neither: Beta near zero does not prove dollar neutrality, stationarity, or arbitrage.
+    gap: Rebuild pair discovery entirely before every test fold, include costs, compare deterministic baselines, and hold out pairs and regimes.
+    gap_severity: critical
+    premortem: The project reproduces impressive performance because future test information remains in the latent pair-selection representation.
+    warning: Selected pairs change materially when the autoencoder is restricted to pre-test data.
+    mitigation: Quarantine reported results, enforce timestamp lineage on every discovery feature, and write leakage tests first.
+    red_attack: Train the autoencoder only through April 2017 and rerun pair selection, costs, seeds, and all baselines.
+    red_test: Causal nested walk-forward discovery plus unseen-pair evaluation and observed-cost replay.
+    math_focus: Audit autoencoder sample dates, cluster formation, action normalization, cumulative-return reward, beta calculation, and portfolio accounting.
+    hypothesis: A causally trained nonlinear representation may help discovery, but the supplied paper provides no valid performance evidence for that hypothesis.
+    data_needed: Fully timestamped features, causal pair snapshots, Hyperliquid costs, funding, and repeated seeds.
+    confidence: 0.98

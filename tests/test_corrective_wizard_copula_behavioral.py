@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
+from quant_platform.crypto_wizards_catalog import BASE_URL
 from quant_platform.crypto_wizards_history import fetch_custom_series_copula
+from quant_platform.orchestration.corrective_effect_guard import phase00_effect_guard
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    external_effect_authority_session,
+    read_authorized_credential,
+)
 from quant_platform.orchestration.corrective_wizard_copula_behavioral import (
     register_copula_behavioral_v2,
     run_copula_behavioral_proofs,
@@ -17,6 +25,43 @@ from quant_platform.orchestration.corrective_wizard_copula_behavioral import (
 from quant_platform.orchestration.corrective_wizard_parity import (
     build_wizard_mode_evidence_completion,
 )
+from quant_platform.orchestration.effect_authority import EffectAuthority
+
+
+@contextmanager
+def _wizard_effects(root: Path):
+    authority = EffectAuthority(
+        root=root,
+        secret=b"w" * 32,
+        issuer_id="wizard-copula-behavioral-test",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    with (
+        external_effect_authority_session(
+            authority=authority,
+            run_id="wizard-copula-behavioral-run",
+            intended_slot_id="wizard-copula-behavioral-slot",
+            source_fingerprint_sha256="a" * 64,
+            runtime_fingerprint_sha256="a" * 64,
+            configuration_fingerprint_sha256="a" * 64,
+            provider_id="crypto_wizards",
+            account_scope_id="crypto_wizards:research:test",
+            reservation_id="wizard-copula-behavioral-reservation",
+            reservation_sha256=hashlib.sha256(
+                b"wizard-copula-behavioral-reservation"
+            ).hexdigest(),
+            allowed_targets=frozenset({f"{BASE_URL}/v1beta/copula"}),
+            allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+            max_total_requests=8,
+            max_total_credits=100,
+        ),
+        phase00_effect_guard(),
+    ):
+        read_authorized_credential(
+            "CRYPTO_WIZARDS_API_KEY",
+            reader=lambda _key: "key",
+        )
+        yield
 
 
 def _write_contract(root: Path) -> None:
@@ -466,13 +511,17 @@ def test_real_copula_client_signature_is_compatible_with_evaluator(
     monkeypatch.setattr(
         "quant_platform.crypto_wizards_history.requests.post", fake_post
     )
-    result = run_copula_behavioral_proofs(
-        root=tmp_path,
-        execute=True,
-        api_key="key",
-        fetcher=fetch_custom_series_copula,
-        credits_fetcher=lambda **_: {"credits_used": 0, "credit_limit": 1000},
-    )
+    with _wizard_effects(tmp_path):
+        result = run_copula_behavioral_proofs(
+            root=tmp_path,
+            execute=True,
+            api_key="key",
+            fetcher=fetch_custom_series_copula,
+            credits_fetcher=lambda **_: {
+                "credits_used": 0,
+                "credit_limit": 1000,
+            },
+        )
 
     assert result.summary["status"] == "PASS"
     assert len(posts) == 8

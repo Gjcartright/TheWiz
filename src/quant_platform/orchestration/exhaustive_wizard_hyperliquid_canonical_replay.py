@@ -2,22 +2,27 @@
 
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.backtest import CostModel, backtest_two_leg_spread_with_ledger
+from quant_platform.economic_contract import (
+    ECONOMIC_CONTRACT_VERSION,
+    tail_actions,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 from quant_platform.wizard_mode_replay import build_local_mode_signal
 
-
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_canonical_replay.v1"
+SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_canonical_replay.v2"
 PROVISIONAL_COST_REASON = (
     "provisional_costs;observed_funding_not_attached;observed_slippage_not_attached;"
     "walk_forward_not_run;local_formula_approximation"
@@ -78,6 +83,7 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
     cost_payload = asdict(costs)
     material = {
         "schema_version": SCHEMA_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "run_id": run_id,
         "preflight_id": preflight_id,
         "history_run_id": history_run_id,
@@ -132,7 +138,11 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
                 }
             )
             continue
-        if pair_row is None or _text(pair_row.history_status) != "READY_FOR_CANONICAL_REPLAY":
+        allowed_history_statuses = {
+            "READY_FOR_CANONICAL_REPLAY",
+            "READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY",
+        }
+        if pair_row is None or _text(pair_row.history_status) not in allowed_history_statuses:
             blocker = (
                 _text(getattr(pair_row, "history_blocker", ""))
                 if pair_row is not None
@@ -146,6 +156,19 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
                 }
             )
             continue
+        history_lane = _text(getattr(pair_row, "history_lane", ""))
+        base.update(
+            {
+                "history_validation_lane": history_lane,
+                "history_rows": int(_number(getattr(pair_row, "history_rows", 0)) or 0),
+                "history_acceptance_ready": _truthy(
+                    getattr(pair_row, "acceptance_history_ready", False)
+                ),
+                "history_research_ready": _truthy(
+                    getattr(pair_row, "research_history_ready", False)
+                ),
+            }
+        )
         if mode_row is None or _text(mode_row.capture_status) != "CAPTURED":
             result_rows.append(
                 {
@@ -204,17 +227,22 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
                 {
                     **base,
                     "replay_status": "BLOCKED_REPLAY_ERROR",
-                    "replay_blocker": f"{type(exc).__name__}:{exc}",
+                    "replay_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
 
         metrics = asdict(result)
+        short_history = history_lane == "SHORT_HISTORY_RESEARCH_ONLY"
         result_rows.append(
             {
                 **base,
                 **metrics,
-                "replay_status": "RESEARCH_REPLAY_COMPLETE",
+                "replay_status": (
+                    "SHORT_HISTORY_RESEARCH_REPLAY_COMPLETE"
+                    if short_history
+                    else "RESEARCH_REPLAY_COMPLETE"
+                ),
                 "replay_blocker": "",
                 "metric_name": mode_result.metric_name,
                 "mode_fidelity_status": mode_result.mode_fidelity_status,
@@ -222,7 +250,11 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
                 "mode_setting_source": setting_source,
                 "computation_notes": ";".join(mode_result.computation_notes),
                 "acceptance_status": "BLOCKED",
-                "acceptance_reason": PROVISIONAL_COST_REASON,
+                "acceptance_reason": (
+                    f"short_history_research_only;{PROVISIONAL_COST_REASON}"
+                    if short_history
+                    else PROVISIONAL_COST_REASON
+                ),
                 "local_replay_completed": True,
             }
         )
@@ -234,6 +266,7 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
                 trade_rows.append(
                     {
                         "schema_version": SCHEMA_VERSION,
+                        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
                         "exhaustive_run_id": run_id,
                         "canonical_replay_id": replay_id,
                         "experiment_id": _text(experiment.experiment_id),
@@ -255,11 +288,15 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
         raise ValueError("Canonical replay failed complete experiment accounting")
     results["research_rank_eligible"] = False
     results["research_rank_blocker"] = "replay_not_complete"
-    completed_mask = results["replay_status"].eq("RESEARCH_REPLAY_COMPLETE")
+    completed_statuses = {
+        "RESEARCH_REPLAY_COMPLETE",
+        "SHORT_HISTORY_RESEARCH_REPLAY_COMPLETE",
+    }
+    completed_mask = results["replay_status"].isin(completed_statuses)
     rank_blockers = results.loc[completed_mask].apply(_research_rank_blocker, axis=1)
     results.loc[completed_mask, "research_rank_blocker"] = rank_blockers
     results.loc[completed_mask, "research_rank_eligible"] = rank_blockers.eq("")
-    completed = results.loc[results["replay_status"].eq("RESEARCH_REPLAY_COMPLETE")].copy()
+    completed = results.loc[results["replay_status"].isin(completed_statuses)].copy()
     if completed.empty:
         ranked = completed
     else:
@@ -282,12 +319,13 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
         (ranked, paths["ranked"], paths["snapshot_ranked"]),
         (trades, paths["trades"], paths["snapshot_trades"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = results["replay_status"].value_counts().to_dict()
     summary: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "run_id": run_id,
         "replay_preflight_id": preflight_id,
         "history_run_id": history_run_id,
@@ -295,7 +333,16 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
         "created_at": as_of.isoformat(),
         "experiments": int(len(results)),
         "unique_experiment_ids": int(results["experiment_id"].nunique()),
-        "research_replays_complete": int(status_counts.get("RESEARCH_REPLAY_COMPLETE", 0)),
+        "research_replays_complete": int(
+            status_counts.get("RESEARCH_REPLAY_COMPLETE", 0)
+            + status_counts.get("SHORT_HISTORY_RESEARCH_REPLAY_COMPLETE", 0)
+        ),
+        "full_history_research_replays_complete": int(
+            status_counts.get("RESEARCH_REPLAY_COMPLETE", 0)
+        ),
+        "short_history_research_replays_complete": int(
+            status_counts.get("SHORT_HISTORY_RESEARCH_REPLAY_COMPLETE", 0)
+        ),
         "blocked_point_in_time_history": int(status_counts.get("BLOCKED_POINT_IN_TIME_HISTORY", 0)),
         "blocked_dynamic_exposure_rule": int(status_counts.get("BLOCKED_DYNAMIC_EXPOSURE_RULE", 0)),
         "blocked_mode_inputs": int(status_counts.get("BLOCKED_MODE_INPUTS", 0)),
@@ -318,10 +365,10 @@ def run_exhaustive_wizard_hyperliquid_canonical_replay(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -339,6 +386,7 @@ def _base_result_row(
     asset_y = _text(experiment.asset_y)
     return {
         "schema_version": SCHEMA_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "exhaustive_run_id": _text(experiment.exhaustive_run_id),
         "replay_preflight_id": _text(experiment.replay_preflight_id),
         "history_run_id": history_run_id,
@@ -356,6 +404,10 @@ def _base_result_row(
         "replay_asset_x": asset_y if orientation == "reverse" else asset_x,
         "replay_asset_y": asset_x if orientation == "reverse" else asset_y,
         "scanner_cutoff_at": _text(experiment.scanner_cutoff_at),
+        "history_validation_lane": "",
+        "history_rows": 0,
+        "history_acceptance_ready": False,
+        "history_research_ready": False,
         "preflight_status": _text(experiment.preflight_status),
         "preflight_blocker": _text(experiment.preflight_blocker),
         "canonical_replay_leverage": 1.0,
@@ -398,15 +450,21 @@ def _base_result_row(
 
 def _mode_settings(mode_row: object, *, paired_ou: object | None) -> tuple[dict[str, object], str]:
     exact_mode = _text(mode_row.exact_mode)
+    copula_direction_view = "u1_given_u2"
+    lower_action, upper_action = tail_actions(
+        exact_mode,
+        copula_direction_view=copula_direction_view,
+    )
     settings: dict[str, object] = {
         "exact_mode": exact_mode,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "capture_confirmed": True,
         "entry_long_operator": _text(getattr(mode_row, "entry_long_operator", "")),
         "entry_long_value": getattr(mode_row, "entry_long", ""),
-        "entry_long_position": "long_x_short_y",
+        "entry_long_position": lower_action.value,
         "entry_short_operator": _text(getattr(mode_row, "entry_short_operator", "")),
         "entry_short_value": getattr(mode_row, "entry_short", ""),
-        "entry_short_position": "short_x_long_y",
+        "entry_short_position": upper_action.value,
         "exit_long_operator": _text(getattr(mode_row, "exit_long_operator", "")),
         "exit_long_value": getattr(mode_row, "exit_long", ""),
         "exit_short_operator": _text(getattr(mode_row, "exit_short_operator", "")),
@@ -415,7 +473,7 @@ def _mode_settings(mode_row: object, *, paired_ou: object | None) -> tuple[dict[
         "zscore_window": getattr(mode_row, "rolling_window", ""),
         "copula_family": _text(getattr(mode_row, "copula_family", "")),
         "copula_signal_type": "conditional_cdf_tail_dislocation",
-        "copula_direction_view": "u1_given_u2",
+        "copula_direction_view": copula_direction_view,
         "copula_entry_lower": getattr(mode_row, "entry_long", ""),
         "copula_entry_upper": getattr(mode_row, "entry_short", ""),
         "copula_exit_lower": getattr(mode_row, "exit_long", ""),
@@ -485,6 +543,8 @@ def _unique_mode_rows(
 
 def _research_rank_blocker(row: pd.Series) -> str:
     blockers: list[str] = []
+    if _text(row.get("history_validation_lane")) == "SHORT_HISTORY_RESEARCH_ONLY":
+        blockers.append("short_history_research_only")
     trades = int(_number(row.get("trades")) or 0)
     profit_factor = _number(row.get("profit_factor"))
     total_return = _number(row.get("total_return"))
@@ -519,6 +579,8 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Canonical replay: `{summary['canonical_replay_id']}`",
             f"- Experiments accounted: {summary['unique_experiment_ids']} / {summary['experiments']}",
             f"- Research replays complete: {summary['research_replays_complete']}",
+            f"- Full-history research replays: {summary['full_history_research_replays_complete']}",
+            f"- Short-history research replays: {summary['short_history_research_replays_complete']}",
             f"- Point-in-time history blocked: {summary['blocked_point_in_time_history']}",
             f"- Dynamic exposure rule blocked: {summary['blocked_dynamic_exposure_rule']}",
             f"- Mode inputs blocked: {summary['blocked_mode_inputs']}",
@@ -530,7 +592,7 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Cost evidence: `{summary['cost_evidence_status']}`",
             f"- Live trading authorized: `{str(summary['live_trading_authorized']).lower()}`",
             "",
-            "Ranks are research diagnostics only. Observed Hyperliquid funding and slippage, purged walk-forward evidence, stability tests, and deterministic acceptance gates remain required.",
+            "Ranks are research diagnostics only. Short-history replays are always rank-ineligible and acceptance-blocked. Observed Hyperliquid funding and slippage, purged walk-forward evidence, stability tests, and deterministic acceptance gates remain required.",
             "",
         ]
     )
@@ -573,6 +635,10 @@ def _text(value: object) -> str:
     except (TypeError, ValueError):
         pass
     return str(value).strip()
+
+
+def _truthy(value: object) -> bool:
+    return _text(value).lower() in {"1", "true", "yes", "y"}
 
 
 def _as_utc(value: datetime) -> datetime:

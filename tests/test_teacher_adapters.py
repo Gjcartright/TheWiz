@@ -42,7 +42,7 @@ def _write_complete_inputs(root):
                 "required_regime": "all",
                 "source_system": "hyperliquid_local_replay",
                 "formula_version": "formula-v2",
-                "math_version": "math-v2",
+                "math_version": "math-v2.1-y-on-x",
                 "mode_fidelity_status": "local_validated_estimator",
                 "point_in_time_status": "confirmed",
                 "history_hash": "history-hash-1",

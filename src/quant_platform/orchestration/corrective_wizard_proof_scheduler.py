@@ -6,26 +6,55 @@ import argparse
 import json
 import os
 from collections.abc import Callable
+from contextlib import ExitStack
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 from quant_platform.active_pipeline import CommandResult
-from quant_platform.env import load_env_file
+from quant_platform.crypto_wizards_history import (
+    CryptoWizardsFetchError,
+    fetch_credits_used,
+)
+from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.env import load_selected_env_keys
 from quant_platform.orchestration.corrective_canonical_status import (
     SCHEDULER_EXECUTION_POINTER,
     publish_scheduler_status_pointers,
 )
 from quant_platform.orchestration.corrective_daily_scheduler import _acquire_lock
+from quant_platform.orchestration.corrective_external_effects import (
+    ExternalEffectSession,
+    current_external_effect_issuer,
+    current_external_effect_session,
+    read_authorized_credential,
+    reserved_external_effect_session,
+)
 from quant_platform.orchestration.corrective_program import complete_corrective_plan
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_registered_rerun_executor import (
     run_registered_research_rerun,
 )
 from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
     ensure_runtime_temp_directory,
-    launch_agent_runtime_environment,
+    ensure_scheduler_log_directory,
+    scheduler_contract,
+    scheduler_launch_agent_plist,
+    scheduler_log_directory,
+    scheduler_python_path,
+    scheduler_run_identity,
+    write_immutable_json,
     write_launch_agent_plist,
+)
+from quant_platform.orchestration.corrective_scheduler_lock import (
+    GovernedEvidenceLockBusy,
+    GovernedEvidenceMaintenanceActive,
+    governed_evidence_write_lock,
+)
+from quant_platform.orchestration.corrective_scheduler_supervisor import (
+    supervise_scheduler_run,
 )
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     build_corrective_wizard_capture_manifest,
@@ -76,6 +105,7 @@ from quant_platform.orchestration.corrective_wizard_ou_v6_supreme_review import 
 from quant_platform.orchestration.corrective_wizard_parity import (
     build_corrective_wizard_parity,
 )
+from quant_platform.orchestration.effect_authority import EffectAuthorityError
 from quant_platform.wizard_credit_budget import (
     COPULA_POST_CREDIT_COST,
     DEFAULT_PROOF_MAX_BATCHES,
@@ -123,6 +153,10 @@ from quant_platform.wizard_ou_v6_comparator_activation import (
 )
 
 ROOT = Path(__file__).resolve().parents[3]
+WIZARD_API_BASE = "https://api.cryptowizards.net"
+WIZARD_BACKTEST_ENDPOINT = f"{WIZARD_API_BASE}/v1beta/backtest"
+WIZARD_COPULA_ENDPOINT = f"{WIZARD_API_BASE}/v1beta/copula"
+WIZARD_CREDITS_ENDPOINT = f"{WIZARD_API_BASE}/v1beta/credits-used"
 SCHEMA_VERSION = "thewiz.corrective_wizard_proof_scheduler.v1"
 LAUNCH_AGENT_LABEL = "com.thewiz.corrective-wizard-proof"
 DEFAULT_INTERVAL_SECONDS = 10 * 60
@@ -296,6 +330,8 @@ def run_corrective_wizard_proof_cycle(
     ou_v6_proof_refresher: Callable[..., CommandResult] | None = (refresh_activated_ou_v6_proofs),
     credit_reserver: Callable[..., CommandResult] = reserve_wizard_credit_lane,
     credit_reconciler: Callable[..., CommandResult] = reconcile_wizard_credit_lane,
+    credits_fetcher: Callable[..., Any] | None = None,
+    credential_reader: Callable[[str], str | None] | None = None,
 ) -> CommandResult:
     """Run one daily, credit-reserved proof cycle and persist its full decision receipt."""
 
@@ -305,6 +341,7 @@ def run_corrective_wizard_proof_cycle(
         raise ValueError(f"max_proofs_per_batch must be between 1 and {REQUEST_CAP}")
     if internal_continuation_only and (not execute or force):
         raise ValueError("internal_continuation_only requires execute=True and force=False")
+    credits_fetcher = credits_fetcher or fetch_credits_used
 
     started_at = _as_utc(now)
     active = root / "reports" / "active"
@@ -464,6 +501,8 @@ def run_corrective_wizard_proof_cycle(
     proof_lane_attempted_credits = 0
     proof_lane_completed_credits = 0
     proof_lane_uncompleted_attempted_credits = 0
+    observed_used_before: int | None = None
+    observed_used_after: int | None = None
     status = "BLOCKED"
     parity_status = "NOT_REFRESHED"
     checkpoint_status = "NOT_REFRESHED"
@@ -531,6 +570,7 @@ def run_corrective_wizard_proof_cycle(
     credit_reservation_blocker = ""
     credit_reservation_id = ""
     credit_reservation_path = ""
+    external_effect_reservation_binding_id = ""
     credit_reconciliation_status = "NOT_REQUESTED"
     credit_reconciliation_blocker = ""
     credit_reconciliation_id = ""
@@ -595,16 +635,19 @@ def run_corrective_wizard_proof_cycle(
     formula_proofs_expected = 0
     accepted_mode_evidence_cells = 0
     lock_acquired = False
+    external_stack = ExitStack()
+    external_effect_session: ExternalEffectSession | None = None
+    external_effect_authority_status = "NOT_REQUIRED"
+    external_effect_reservation_sha256 = ""
+    authorized_api_key: str | None = None
     env_security: dict[str, Any] = {
         "api_key_present": False,
-        "key_source": "not_checked_non_execute",
+        "key_source": (
+            "not_checked_before_reservation" if execute else "not_checked_non_execute"
+        ),
         "check_performed": False,
-        "insecure_secret_files": [],
+        "insecure_secret_files": _insecure_secret_files(root),
     }
-    if execute:
-        # This is a local-only preflight. It proves the LaunchAgent can load
-        # credentials before the capture window without making a vendor call.
-        env_security = _load_and_validate_environment(root)
     try:
         _acquire_lock(
             lock_path,
@@ -880,9 +923,6 @@ def run_corrective_wizard_proof_cycle(
         elif execute and env_security["insecure_secret_files"]:
             status = "BLOCKED_ENVIRONMENT"
             blockers.append("secret_file_permissions_too_open")
-        elif execute and not env_security["api_key_present"]:
-            status = "BLOCKED_ENVIRONMENT"
-            blockers.append("CRYPTO_WIZARDS_API_KEY_missing")
         elif (
             execute
             and not force
@@ -934,7 +974,7 @@ def run_corrective_wizard_proof_cycle(
                 prior_accounting_verified = False
                 credit_reservation_status = "BLOCKED"
                 credit_reservation_blocker = (
-                    f"shared_credit_reservation_failed:{type(exc).__name__}:{exc}"
+                    f"shared_credit_reservation_failed:{safe_exception_code(exc)}"
                 )
             external_attempt_made = True
             if prior_accounting_verified:
@@ -966,12 +1006,27 @@ def run_corrective_wizard_proof_cycle(
                                 budget.summary.get("daily_credit_limit", 0) or 0
                             ),
                             protected_reserve=int(budget.summary.get("reserved_credits", 0) or 0),
+                            max_external_requests=_external_request_ceiling(
+                                max_batches=max_batches,
+                                exact_mode_calls=exact_mode_manifest_call_limit,
+                                ou_v3_calls=ou_v3_manifest_call_limit,
+                                ou_v4_calls=ou_v4_manifest_call_limit,
+                                ou_v5_calls=ou_v5_manifest_call_limit,
+                                ou_v6_calls=ou_v6_manifest_call_limit,
+                                copula_calls=copula_manifest_call_limit,
+                            ),
                         )
                         credit_reservation_status = str(
                             reservation.summary.get("status", "BLOCKED")
                         )
                         credit_reservation_blocker = str(reservation.summary.get("blocker", ""))
                         credit_reservation_id = str(reservation.summary.get("reservation_id", ""))
+                        external_effect_reservation_binding_id = str(
+                            reservation.summary.get(
+                                "effect_reservation_binding_id",
+                                "",
+                            )
+                        )
                         credit_reservation_path = (
                             _relative(Path(reservation.paths["reservation"]), root)
                             if "reservation" in reservation.paths
@@ -980,11 +1035,8 @@ def run_corrective_wizard_proof_cycle(
                         remaining_lane_credits = int(
                             reservation.summary.get("lane_remaining_reserved_credits", 0) or 0
                         )
-                        external_spend_authorized = bool(
-                            reservation.summary.get(
-                                "external_spend_authorized",
-                                credit_reservation_status == "PASS",
-                            )
+                        external_spend_authorized = (
+                            reservation.summary.get("external_spend_authorized") is True
                         )
                         reservation_ready = bool(
                             credit_reservation_status in {"PASS", "REUSED"}
@@ -995,7 +1047,7 @@ def run_corrective_wizard_proof_cycle(
                         reservation_ready = False
                         credit_reservation_status = "BLOCKED"
                         credit_reservation_blocker = (
-                            f"shared_credit_reservation_failed:{type(exc).__name__}:{exc}"
+                            f"shared_credit_reservation_failed:{safe_exception_code(exc)}"
                         )
                     if not reservation_ready:
                         status = "BLOCKED_SHARED_CREDIT_RESERVATION"
@@ -1003,8 +1055,110 @@ def run_corrective_wizard_proof_cycle(
                             credit_reservation_blocker or "insufficient_lane_reservation_remaining"
                         )
                 if reservation_ready:
+                    external_effect_required = bool(
+                        execute
+                        and not internal_continuation_only
+                        and any(
+                            value > 0
+                            for value in (
+                                exact_mode_manifest_call_limit,
+                                ou_v3_manifest_call_limit,
+                                ou_v4_manifest_call_limit,
+                                ou_v5_manifest_call_limit,
+                                ou_v6_manifest_call_limit,
+                                copula_manifest_call_limit,
+                            )
+                        )
+                    )
+                    if external_effect_required:
+                        try:
+                            if current_external_effect_issuer() is None:
+                                raise EffectAuthorityError(
+                                    "wizard_external_effect_issuer_missing"
+                                )
+                            (
+                                external_effect_reservation_sha256,
+                                reservation_artifact,
+                            ) = _validate_external_reservation(
+                                root=root,
+                                reservation_path=credit_reservation_path,
+                                reservation_id=credit_reservation_id,
+                            )
+                            external_effect_session = external_stack.enter_context(
+                                reserved_external_effect_session(
+                                    reservation_id=credit_reservation_id,
+                                    reservation_sha256=(
+                                        external_effect_reservation_sha256
+                                    ),
+                                    max_total_requests=_external_request_ceiling(
+                                        max_batches=max_batches,
+                                        exact_mode_calls=(
+                                            exact_mode_manifest_call_limit
+                                        ),
+                                        ou_v3_calls=ou_v3_manifest_call_limit,
+                                        ou_v4_calls=ou_v4_manifest_call_limit,
+                                        ou_v5_calls=ou_v5_manifest_call_limit,
+                                        ou_v6_calls=ou_v6_manifest_call_limit,
+                                        copula_calls=copula_manifest_call_limit,
+                                    ),
+                                    max_total_credits=(
+                                        credit_reservation_planned_credits
+                                    ),
+                                    reservation_binding_id=(
+                                        external_effect_reservation_binding_id
+                                        or None
+                                    ),
+                                )
+                            )
+                            authorized_api_key = read_authorized_credential(
+                                API_KEY_ENV,
+                                reader=(
+                                    credential_reader
+                                    or (
+                                        lambda key: _deferred_credential_reader(
+                                            root, key
+                                        )
+                                    )
+                                ),
+                            )
+                            env_security.update(
+                                {
+                                    "api_key_present": True,
+                                    "key_source": (
+                                        "injected_authorized_reader"
+                                        if credential_reader is not None
+                                        else "authorized_selected_environment"
+                                    ),
+                                    "check_performed": True,
+                                    "reservation_artifact": _relative(
+                                        reservation_artifact, root
+                                    ),
+                                }
+                            )
+                            external_effect_authority_status = "PASS"
+                        except (
+                            EffectAuthorityError,
+                            OSError,
+                            TypeError,
+                            ValueError,
+                            json.JSONDecodeError,
+                        ) as exc:
+                            reservation_ready = False
+                            external_effect_authority_status = "BLOCKED"
+                            status = "BLOCKED_EXTERNAL_EFFECT_AUTHORITY"
+                            blockers.append(
+                                "wizard_external_effect_authority_failed:"
+                                f"{safe_exception_code(exc)}"
+                            )
+                    else:
+                        external_effect_authority_status = (
+                            "NOT_REQUIRED_INTERNAL_CONTINUATION"
+                            if internal_continuation_only
+                            else "NOT_REQUIRED_NO_EXTERNAL_CALLS"
+                        )
+                if reservation_ready:
                     external_lanes_authorized_this_cycle = bool(
-                        execute and not internal_continuation_only
+                        external_effect_session is not None
                     )
                     exact_mode_external_authorized = bool(
                         external_lanes_authorized_this_cycle and exact_mode_manifest_call_limit > 0
@@ -1045,6 +1199,7 @@ def run_corrective_wizard_proof_cycle(
                             completed_before=completed_before,
                             responses_captured_before=responses_captured_before,
                             proof_runner=proof_runner,
+                            api_key=authorized_api_key,
                             batch_summaries=batch_summaries,
                             blockers=blockers,
                         )
@@ -1092,7 +1247,7 @@ def run_corrective_wizard_proof_cycle(
                         except Exception as exc:  # noqa: BLE001 - fail closed
                             dynamic_review_packet_status = "EVALUATION_FAILED"
                             blockers.append(
-                                f"dynamic_v2_review_packet_failed:{type(exc).__name__}:{exc}"
+                                f"dynamic_v2_review_packet_failed:{safe_exception_code(exc)}"
                             )
                     try:
                         activation = dynamic_activation_planner(
@@ -1112,7 +1267,7 @@ def run_corrective_wizard_proof_cycle(
                         )
                     except Exception as exc:  # noqa: BLE001 - fail closed on lineage
                         dynamic_activation_status = "EVALUATION_FAILED"
-                        blockers.append(f"dynamic_v2_activation_failed:{type(exc).__name__}:{exc}")
+                        blockers.append(f"dynamic_v2_activation_failed:{safe_exception_code(exc)}")
                 if dynamic_proof_refresher is not None:
                     try:
                         refresh = dynamic_proof_refresher(
@@ -1139,20 +1294,28 @@ def run_corrective_wizard_proof_cycle(
                     except Exception as exc:  # noqa: BLE001 - retain raw evidence
                         dynamic_proof_refresh_status = "EVALUATION_FAILED"
                         blockers.append(
-                            f"dynamic_v2_proof_refresh_failed:{type(exc).__name__}:{exc}"
+                            f"dynamic_v2_proof_refresh_failed:{safe_exception_code(exc)}"
                         )
             except Exception as exc:  # noqa: BLE001 - retain captured proof evidence
                 dynamic_holdout_status = "EVALUATION_FAILED"
-                blockers.append(f"dynamic_v2_holdout_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"dynamic_v2_holdout_failed:{safe_exception_code(exc)}")
 
         ou_v3_contract = root / "config" / "wizard_ou_comparator_v3_holdout.json"
         if ou_v3_holdout_runner is not None and ou_v3_contract.is_file():
             try:
-                ou_v3 = ou_v3_holdout_runner(
-                    root=root,
-                    now=started_at,
-                    execute=ou_v3_external_authorized,
-                    api_key=os.getenv(API_KEY_ENV, "").strip() or None,
+                ou_v3 = _run_external_lane(
+                    authorized=ou_v3_external_authorized,
+                    target=WIZARD_BACKTEST_ENDPOINT,
+                    operation="POST_OU_V3_HOLDOUT_WITH_CREDIT_PREFLIGHT",
+                    lane="ou_v3_holdout",
+                    call_limit=ou_v3_manifest_call_limit,
+                    credit_cost_per_call=OU_V3_CUSTOM_SERIES_CREDIT_COST,
+                    callback=lambda: ou_v3_holdout_runner(
+                        root=root,
+                        now=started_at,
+                        execute=ou_v3_external_authorized,
+                        api_key=authorized_api_key,
+                    ),
                 )
                 ou_v3_status = str(ou_v3.summary.get("status", "BLOCKED"))
                 ou_v3_evaluation_status = str(
@@ -1187,7 +1350,7 @@ def run_corrective_wizard_proof_cycle(
                     external_attempt_made = True
             except Exception as exc:  # noqa: BLE001 - preserve preregistered evidence
                 ou_v3_status = "EVALUATION_FAILED"
-                blockers.append(f"ou_v3_holdout_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"ou_v3_holdout_failed:{safe_exception_code(exc)}")
 
             if ou_v3_supersession_gate_builder is not None:
                 try:
@@ -1198,7 +1361,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v3_supersession_gate_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v3_supersession_gate_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v3_supersession_gate_failed:{safe_exception_code(exc)}")
             if ou_v3_review_packet_builder is not None:
                 try:
                     ou_packet = ou_v3_review_packet_builder(
@@ -1212,7 +1375,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v3_review_packet_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v3_review_packet_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v3_review_packet_failed:{safe_exception_code(exc)}")
             if ou_v3_activation_planner is not None:
                 try:
                     ou_activation = ou_v3_activation_planner(
@@ -1232,7 +1395,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v3_activation_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v3_activation_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v3_activation_failed:{safe_exception_code(exc)}")
             if ou_v3_proof_refresher is not None:
                 try:
                     ou_refresh = ou_v3_proof_refresher(
@@ -1258,15 +1421,23 @@ def run_corrective_wizard_proof_cycle(
                         )
                 except Exception as exc:  # noqa: BLE001 - retain raw evidence
                     ou_v3_proof_refresh_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v3_proof_refresh_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v3_proof_refresh_failed:{safe_exception_code(exc)}")
 
         if ou_v4_holdout_runner is not None and ou_v4_contract.is_file():
             try:
-                ou_v4 = ou_v4_holdout_runner(
-                    root=root,
-                    now=started_at,
-                    execute=ou_v4_external_authorized,
-                    api_key=os.getenv(API_KEY_ENV, "").strip() or None,
+                ou_v4 = _run_external_lane(
+                    authorized=ou_v4_external_authorized,
+                    target=WIZARD_BACKTEST_ENDPOINT,
+                    operation="POST_OU_V4_HOLDOUT_WITH_CREDIT_PREFLIGHT",
+                    lane="ou_v4_holdout",
+                    call_limit=ou_v4_manifest_call_limit,
+                    credit_cost_per_call=OU_V4_CUSTOM_SERIES_CREDIT_COST,
+                    callback=lambda: ou_v4_holdout_runner(
+                        root=root,
+                        now=started_at,
+                        execute=ou_v4_external_authorized,
+                        api_key=authorized_api_key,
+                    ),
                 )
                 ou_v4_status = str(ou_v4.summary.get("status", "BLOCKED"))
                 ou_v4_evaluation_status = str(
@@ -1313,7 +1484,7 @@ def run_corrective_wizard_proof_cycle(
                     )
             except Exception as exc:  # noqa: BLE001 - preserve frozen v4 evidence
                 ou_v4_status = "EVALUATION_FAILED"
-                blockers.append(f"ou_v4_holdout_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"ou_v4_holdout_failed:{safe_exception_code(exc)}")
 
             if ou_v4_supersession_gate_builder is not None:
                 try:
@@ -1324,7 +1495,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v4_supersession_gate_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v4_supersession_gate_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v4_supersession_gate_failed:{safe_exception_code(exc)}")
             if ou_v4_review_packet_builder is not None:
                 try:
                     v4_packet = ou_v4_review_packet_builder(
@@ -1338,7 +1509,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v4_review_packet_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v4_review_packet_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v4_review_packet_failed:{safe_exception_code(exc)}")
             if ou_v4_supreme_reviewer is not None:
                 try:
                     v4_supreme = ou_v4_supreme_reviewer(
@@ -1354,7 +1525,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - advisory fails closed
                     ou_v4_supreme_review_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v4_supreme_review_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v4_supreme_review_failed:{safe_exception_code(exc)}")
             if ou_v4_activation_planner is not None:
                 try:
                     v4_activation = ou_v4_activation_planner(
@@ -1374,7 +1545,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed on lineage
                     ou_v4_activation_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v4_activation_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v4_activation_failed:{safe_exception_code(exc)}")
             if ou_v4_proof_refresher is not None:
                 try:
                     v4_refresh = ou_v4_proof_refresher(
@@ -1400,15 +1571,23 @@ def run_corrective_wizard_proof_cycle(
                         )
                 except Exception as exc:  # noqa: BLE001 - retain raw evidence
                     ou_v4_proof_refresh_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v4_proof_refresh_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v4_proof_refresh_failed:{safe_exception_code(exc)}")
 
         if ou_v5_holdout_runner is not None and ou_v5_contract.is_file():
             try:
-                ou_v5 = ou_v5_holdout_runner(
-                    root=root,
-                    now=started_at,
-                    execute=ou_v5_external_authorized,
-                    api_key=os.getenv(API_KEY_ENV, "").strip() or None,
+                ou_v5 = _run_external_lane(
+                    authorized=ou_v5_external_authorized,
+                    target=WIZARD_BACKTEST_ENDPOINT,
+                    operation="POST_OU_V5_HOLDOUT_WITH_CREDIT_PREFLIGHT",
+                    lane="ou_v5_holdout",
+                    call_limit=ou_v5_manifest_call_limit,
+                    credit_cost_per_call=OU_V5_CUSTOM_SERIES_CREDIT_COST,
+                    callback=lambda: ou_v5_holdout_runner(
+                        root=root,
+                        now=started_at,
+                        execute=ou_v5_external_authorized,
+                        api_key=authorized_api_key,
+                    ),
                 )
                 ou_v5_status = str(ou_v5.summary.get("status", "BLOCKED"))
                 ou_v5_evaluation_status = str(
@@ -1450,7 +1629,7 @@ def run_corrective_wizard_proof_cycle(
                     blockers.extend([blocker or "ou_v5_capture_not_complete", *errors])
             except Exception as exc:  # noqa: BLE001 - preserve frozen v5 evidence
                 ou_v5_status = "EVALUATION_FAILED"
-                blockers.append(f"ou_v5_holdout_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"ou_v5_holdout_failed:{safe_exception_code(exc)}")
 
             if ou_v5_evaluation_status == "PASS":
                 ou_v5_failure_attribution_status = "NOT_REQUIRED_HOLDOUT_PASS"
@@ -1473,7 +1652,7 @@ def run_corrective_wizard_proof_cycle(
                         blockers.append("ou_v5_failure_attribution_incomplete")
                 except Exception as exc:  # noqa: BLE001 - preserve negative evidence
                     ou_v5_failure_attribution_status = "ATTRIBUTION_FAILED"
-                    blockers.append(f"ou_v5_failure_attribution_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_failure_attribution_failed:{safe_exception_code(exc)}")
 
             if ou_v5_supersession_gate_builder is not None:
                 try:
@@ -1484,7 +1663,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v5_supersession_gate_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v5_supersession_gate_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_supersession_gate_failed:{safe_exception_code(exc)}")
             if ou_v5_review_packet_builder is not None:
                 try:
                     v5_packet = ou_v5_review_packet_builder(root=root, now=started_at)
@@ -1495,7 +1674,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v5_review_packet_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v5_review_packet_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_review_packet_failed:{safe_exception_code(exc)}")
             if ou_v5_supreme_reviewer is not None:
                 try:
                     v5_supreme = ou_v5_supreme_reviewer(root=root, now=started_at)
@@ -1508,7 +1687,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - advisory fails closed
                     ou_v5_supreme_review_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v5_supreme_review_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_supreme_review_failed:{safe_exception_code(exc)}")
             if ou_v5_activation_planner is not None:
                 try:
                     v5_activation = ou_v5_activation_planner(
@@ -1528,7 +1707,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed on lineage
                     ou_v5_activation_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v5_activation_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_activation_failed:{safe_exception_code(exc)}")
             if ou_v5_proof_refresher is not None:
                 try:
                     v5_refresh = ou_v5_proof_refresher(
@@ -1554,15 +1733,23 @@ def run_corrective_wizard_proof_cycle(
                         )
                 except Exception as exc:  # noqa: BLE001 - retain raw evidence
                     ou_v5_proof_refresh_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v5_proof_refresh_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v5_proof_refresh_failed:{safe_exception_code(exc)}")
 
         if ou_v6_holdout_runner is not None and ou_v6_contract.is_file():
             try:
-                ou_v6 = ou_v6_holdout_runner(
-                    root=root,
-                    now=started_at,
-                    execute=ou_v6_external_authorized,
-                    api_key=os.getenv(API_KEY_ENV, "").strip() or None,
+                ou_v6 = _run_external_lane(
+                    authorized=ou_v6_external_authorized,
+                    target=WIZARD_BACKTEST_ENDPOINT,
+                    operation="POST_OU_V6_HOLDOUT_WITH_CREDIT_PREFLIGHT",
+                    lane="ou_v6_holdout",
+                    call_limit=ou_v6_manifest_call_limit,
+                    credit_cost_per_call=OU_V6_CUSTOM_SERIES_CREDIT_COST,
+                    callback=lambda: ou_v6_holdout_runner(
+                        root=root,
+                        now=started_at,
+                        execute=ou_v6_external_authorized,
+                        api_key=authorized_api_key,
+                    ),
                 )
                 ou_v6_status = str(ou_v6.summary.get("status", "BLOCKED"))
                 ou_v6_evaluation_status = str(
@@ -1604,7 +1791,7 @@ def run_corrective_wizard_proof_cycle(
                     blockers.append("ou_v6_terminal_failure_exact_local_ou_parity_rejected")
             except Exception as exc:  # noqa: BLE001 - preserve frozen v6 evidence
                 ou_v6_status = "EVALUATION_FAILED"
-                blockers.append(f"ou_v6_holdout_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"ou_v6_holdout_failed:{safe_exception_code(exc)}")
 
             if ou_v6_supersession_gate_builder is not None:
                 try:
@@ -1615,7 +1802,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v6_supersession_gate_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v6_supersession_gate_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v6_supersession_gate_failed:{safe_exception_code(exc)}")
             if ou_v6_review_packet_builder is not None:
                 try:
                     v6_packet = ou_v6_review_packet_builder(root=root, now=started_at)
@@ -1626,7 +1813,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed
                     ou_v6_review_packet_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v6_review_packet_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v6_review_packet_failed:{safe_exception_code(exc)}")
             if ou_v6_supreme_reviewer is not None:
                 try:
                     v6_supreme = ou_v6_supreme_reviewer(root=root, now=started_at)
@@ -1639,7 +1826,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - advisory fails closed
                     ou_v6_supreme_review_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v6_supreme_review_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v6_supreme_review_failed:{safe_exception_code(exc)}")
             if ou_v6_activation_planner is not None:
                 try:
                     v6_activation = ou_v6_activation_planner(
@@ -1659,7 +1846,7 @@ def run_corrective_wizard_proof_cycle(
                     )
                 except Exception as exc:  # noqa: BLE001 - fail closed on lineage
                     ou_v6_activation_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v6_activation_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v6_activation_failed:{safe_exception_code(exc)}")
             if ou_v6_proof_refresher is not None:
                 try:
                     v6_refresh = ou_v6_proof_refresher(
@@ -1685,7 +1872,7 @@ def run_corrective_wizard_proof_cycle(
                         )
                 except Exception as exc:  # noqa: BLE001 - retain raw evidence
                     ou_v6_proof_refresh_status = "EVALUATION_FAILED"
-                    blockers.append(f"ou_v6_proof_refresh_failed:{type(exc).__name__}:{exc}")
+                    blockers.append(f"ou_v6_proof_refresh_failed:{safe_exception_code(exc)}")
 
         copula_v2_contract = root / "config" / "wizard_copula_behavioral_parity_v2.json"
         copula_contract = (
@@ -1695,11 +1882,19 @@ def run_corrective_wizard_proof_cycle(
         )
         if copula_behavioral_runner is not None and copula_contract.is_file():
             try:
-                copula_behavioral = copula_behavioral_runner(
-                    root=root,
-                    now=started_at,
-                    execute=copula_external_authorized,
-                    api_key=os.getenv(API_KEY_ENV, "").strip() or None,
+                copula_behavioral = _run_external_lane(
+                    authorized=copula_external_authorized,
+                    target=WIZARD_COPULA_ENDPOINT,
+                    operation="POST_COPULA_BEHAVIORAL_WITH_CREDIT_PREFLIGHT",
+                    lane="copula_behavioral",
+                    call_limit=copula_manifest_call_limit,
+                    credit_cost_per_call=COPULA_POST_CREDIT_COST,
+                    callback=lambda: copula_behavioral_runner(
+                        root=root,
+                        now=started_at,
+                        execute=copula_external_authorized,
+                        api_key=authorized_api_key,
+                    ),
                 )
                 copula_behavioral_status = str(copula_behavioral.summary.get("status", "BLOCKED"))
                 copula_behavioral_expected_cells = int(
@@ -1775,7 +1970,7 @@ def run_corrective_wizard_proof_cycle(
                     blockers.append("copula_behavioral_pass_missing_valid_immutable_cohort")
             except Exception as exc:  # noqa: BLE001 - retain proof evidence and fail closed
                 copula_behavioral_status = "EVALUATION_FAILED"
-                blockers.append(f"copula_behavioral_evaluation_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"copula_behavioral_evaluation_failed:{safe_exception_code(exc)}")
 
         exact_mode_requests_attempted = sum(
             int(batch.get("external_proof_requests", 0) or 0) for batch in batch_summaries
@@ -1901,7 +2096,7 @@ def run_corrective_wizard_proof_cycle(
                 except (OSError, TypeError, ValueError) as exc:
                     capture_reconciliation_status = "BLOCKED_EVIDENCE"
                     capture_reconciliation_blockers = [
-                        f"capture_reconciliation_failed:{type(exc).__name__}:{exc}"
+                        f"capture_reconciliation_failed:{safe_exception_code(exc)}"
                     ]
             capture_reconciliation_current_status = capture_reconciliation_status
             current_reconciliation_complete = bool(
@@ -1988,8 +2183,80 @@ def run_corrective_wizard_proof_cycle(
             proof_lane_attempted_credits - proof_lane_completed_credits,
             0,
         )
+        observed_used_before = (
+            _first_observed_credit_usage(batch_summaries)
+            if _first_observed_credit_usage(batch_summaries) is not None
+            else ou_v3_credits_used_before
+            if ou_v3_credits_used_before is not None
+            else ou_v4_credits_used_before
+            if ou_v4_credits_used_before is not None
+            else ou_v5_credits_used_before
+            if ou_v5_credits_used_before is not None
+            else ou_v6_credits_used_before
+        )
+        observed_used_after = observed_used_before
+        if proof_lane_attempted_credits > 0:
+            try:
+                if not authorized_api_key:
+                    raise ValueError("post_run_credit_usage_api_key_missing")
+                after_payload = credits_fetcher(api_key=authorized_api_key)
+                after_usage = parse_wizard_credit_usage(after_payload)
+                if not after_usage.known or after_usage.used is None:
+                    raise ValueError("post_run_credit_usage_unknown")
+                observed_used_after = after_usage.used
+            except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
+                credit_reconciliation_status = "BLOCKED"
+                credit_reconciliation_blocker = (
+                    f"vendor_credit_after_fetch_failed:{safe_exception_code(exc)}"
+                )
         if execute and credit_reservation_id and not skip_credit_reconciliation_this_cycle:
             try:
+                if credit_reconciliation_blocker:
+                    raise ValueError(credit_reconciliation_blocker)
+                activity_rows = [
+                    {
+                        "lane": "exact_mode",
+                        "external_requests": exact_mode_requests_attempted,
+                        "credit_cost": CUSTOM_SERIES_CREDIT_COST,
+                        "attempted_credits": exact_mode_attempted_credits,
+                        "completed_credits": exact_mode_completed_credits,
+                    },
+                    {
+                        "lane": "copula_behavioral",
+                        "external_requests": copula_behavioral_endpoint_calls,
+                        "credit_cost": COPULA_POST_CREDIT_COST,
+                        "attempted_credits": copula_behavioral_attempted_credits,
+                        "completed_credits": copula_behavioral_completed_credits,
+                    },
+                    {
+                        "lane": "ou_v3",
+                        "external_requests": ou_v3_calls_made,
+                        "credit_cost": OU_V3_CUSTOM_SERIES_CREDIT_COST,
+                        "attempted_credits": ou_v3_attempted_credits,
+                        "completed_credits": ou_v3_completed_credits,
+                    },
+                    {
+                        "lane": "ou_v4",
+                        "external_requests": ou_v4_calls_made,
+                        "credit_cost": OU_V4_CUSTOM_SERIES_CREDIT_COST,
+                        "attempted_credits": ou_v4_attempted_credits,
+                        "completed_credits": ou_v4_completed_credits,
+                    },
+                    {
+                        "lane": "ou_v5",
+                        "external_requests": ou_v5_calls_made,
+                        "credit_cost": OU_V5_CUSTOM_SERIES_CREDIT_COST,
+                        "attempted_credits": ou_v5_attempted_credits,
+                        "completed_credits": ou_v5_completed_credits,
+                    },
+                    {
+                        "lane": "ou_v6",
+                        "external_requests": ou_v6_calls_made,
+                        "credit_cost": OU_V6_CUSTOM_SERIES_CREDIT_COST,
+                        "attempted_credits": ou_v6_attempted_credits,
+                        "completed_credits": ou_v6_completed_credits,
+                    },
+                ]
                 reconciliation = credit_reconciler(
                     root=root,
                     lane=PROOF_LANE,
@@ -2003,16 +2270,11 @@ def run_corrective_wizard_proof_cycle(
                         + ou_v3_calls_made
                         + ou_v4_calls_made
                         + ou_v5_calls_made
+                        + ou_v6_calls_made
                     ),
-                    observed_used_before=(
-                        _first_observed_credit_usage(batch_summaries)
-                        if _first_observed_credit_usage(batch_summaries) is not None
-                        else ou_v3_credits_used_before
-                        if ou_v3_credits_used_before is not None
-                        else ou_v4_credits_used_before
-                        if ou_v4_credits_used_before is not None
-                        else ou_v5_credits_used_before
-                    ),
+                    observed_used_before=observed_used_before,
+                    observed_used_after=observed_used_after,
+                    activity_rows=activity_rows,
                     now=started_at,
                 )
                 credit_reconciliation_status = str(reconciliation.summary.get("status", "BLOCKED"))
@@ -2025,8 +2287,8 @@ def run_corrective_wizard_proof_cycle(
                 )
             except (OSError, TypeError, ValueError) as exc:
                 credit_reconciliation_status = "BLOCKED"
-                credit_reconciliation_blocker = (
-                    f"credit_reconciliation_failed:{type(exc).__name__}:{exc}"
+                credit_reconciliation_blocker = credit_reconciliation_blocker or (
+                    f"credit_reconciliation_failed:{safe_exception_code(exc)}"
                 )
             if credit_reconciliation_status not in {
                 "PASS_RECONCILED",
@@ -2062,14 +2324,14 @@ def run_corrective_wizard_proof_cycle(
                 parity_status = str(parity.summary.get("status", "BLOCKED"))
             except Exception as exc:  # noqa: BLE001 - receipt must retain proof progress
                 parity_status = "REFRESH_FAILED"
-                blockers.append(f"parity_refresh_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"parity_refresh_failed:{safe_exception_code(exc)}")
         elif queue_eligible > 0 and responses_captured_after >= queue_eligible:
             try:
                 parity = parity_refresher(root=root)
                 parity_status = str(parity.summary.get("status", "BLOCKED"))
             except Exception as exc:  # noqa: BLE001 - recover a completed proof queue
                 parity_status = "REFRESH_FAILED"
-                blockers.append(f"parity_refresh_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"parity_refresh_failed:{safe_exception_code(exc)}")
         if ou_v6_terminal_failure:
             status = "BLOCKED_OU_V6_TERMINAL_FAILURE"
         elif (
@@ -2100,12 +2362,13 @@ def run_corrective_wizard_proof_cycle(
                 f"{accepted_mode_evidence_cells}_of_{queue_eligible}"
             )
     except FileExistsError as exc:
-        blockers.append(str(exc))
+        blockers.append(safe_exception_code(exc))
         status = "BLOCKED_LOCK"
     except Exception as exc:  # noqa: BLE001 - persist a fail-closed scheduler receipt
-        blockers.append(f"wizard_proof_scheduler_error:{type(exc).__name__}:{exc}")
+        blockers.append(f"wizard_proof_scheduler_error:{safe_exception_code(exc)}")
         status = "FAILED"
     finally:
+        external_stack.close()
         if lock_acquired:
             lock_path.unlink(missing_ok=True)
 
@@ -2130,6 +2393,10 @@ def run_corrective_wizard_proof_cycle(
 
     receipt = {
         "schema_version": SCHEMA_VERSION,
+        **scheduler_run_identity(
+            root,
+            contract=scheduler_contract("wizard_proof"),
+        ),
         "attempt_date_utc": started_at.date().isoformat(),
         "started_at_utc": started_at.isoformat(),
         "completed_at_utc": datetime.now(UTC).isoformat(),
@@ -2278,6 +2545,43 @@ def run_corrective_wizard_proof_cycle(
         "proof_lane_attempted_credits": proof_lane_attempted_credits,
         "proof_lane_completed_credits": proof_lane_completed_credits,
         "proof_lane_uncompleted_attempted_credits": (proof_lane_uncompleted_attempted_credits),
+        "vendor_credits_used_before": observed_used_before,
+        "vendor_credits_used_after": observed_used_after,
+        "vendor_credits_used_delta": (
+            observed_used_after - observed_used_before
+            if observed_used_after is not None and observed_used_before is not None
+            else None
+        ),
+        "external_effect_authority_status": external_effect_authority_status,
+        "external_effect_session_established": external_effect_session is not None,
+        "external_effect_reservation_sha256": (
+            external_effect_reservation_sha256
+        ),
+        "external_effect_authorized_request_units": (
+            external_effect_session.consumed_requests
+            if external_effect_session is not None
+            else 0
+        ),
+        "external_effect_authorized_credit_units": (
+            external_effect_session.consumed_credits
+            if external_effect_session is not None
+            else 0
+        ),
+        "external_effect_credential_permits": (
+            len(external_effect_session.credential_receipts)
+            if external_effect_session is not None
+            else 0
+        ),
+        "external_effect_network_permits": (
+            len(external_effect_session.network_receipts)
+            if external_effect_session is not None
+            else 0
+        ),
+        "external_effect_credit_permits": (
+            len(external_effect_session.credit_receipts)
+            if external_effect_session is not None
+            else 0
+        ),
         "external_lanes_authorized_this_cycle": (external_lanes_authorized_this_cycle),
         "capture_manifest_runtime_lane_enforcement": capture_manifest_enforced,
         "exact_mode_external_authorized": exact_mode_external_authorized,
@@ -2357,6 +2661,9 @@ def run_corrective_wizard_proof_cycle(
         "credit_reservation_blocker": credit_reservation_blocker,
         "credit_reservation_id": credit_reservation_id,
         "credit_reservation_path": credit_reservation_path,
+        "effect_reservation_binding_id": (
+            external_effect_reservation_binding_id
+        ),
         "credit_reconciliation_status": credit_reconciliation_status,
         "credit_reconciliation_blocker": credit_reconciliation_blocker,
         "credit_reconciliation_id": credit_reconciliation_id,
@@ -2494,7 +2801,7 @@ def run_corrective_wizard_proof_cycle(
             checkpoint_status = "REFRESH_FAILED"
             checkpoint_pre_rerun_status = checkpoint_status
             checkpoint_refresh_phase = "PRE_REGISTERED_RERUN"
-            blockers.append(f"checkpoint_refresh_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"checkpoint_refresh_failed:{safe_exception_code(exc)}")
         receipt["checkpoint_refresh_status"] = checkpoint_status
         receipt["checkpoint_pre_rerun_status"] = checkpoint_pre_rerun_status
         receipt["checkpoint_post_rerun_status"] = checkpoint_post_rerun_status
@@ -2541,7 +2848,7 @@ def run_corrective_wizard_proof_cycle(
             registered_rerun_handoff_ready = False
             registered_rerun_status = "BLOCKED_IMMUTABLE_STAGE3_RECEIPT"
             blockers.append(
-                f"pre_registered_rerun_immutable_receipt_failed:{type(exc).__name__}:{exc}"
+                f"pre_registered_rerun_immutable_receipt_failed:{safe_exception_code(exc)}"
             )
             receipt["registered_rerun_status"] = registered_rerun_status
             receipt["blockers"] = blockers
@@ -2579,7 +2886,7 @@ def run_corrective_wizard_proof_cycle(
             )
         except Exception as exc:  # noqa: BLE001 - proof evidence must remain durable
             registered_rerun_status = "FAILED"
-            blockers.append(f"registered_rerun_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"registered_rerun_failed:{safe_exception_code(exc)}")
         if checkpoint_refresher is not None:
             try:
                 checkpoint = checkpoint_refresher(root=root, now=started_at)
@@ -2596,7 +2903,7 @@ def run_corrective_wizard_proof_cycle(
                 checkpoint_status = checkpoint_post_rerun_status
                 checkpoint_refresh_phase = "POST_REGISTERED_RERUN"
                 blockers.append(
-                    f"post_registered_rerun_checkpoint_refresh_failed:{type(exc).__name__}:{exc}"
+                    f"post_registered_rerun_checkpoint_refresh_failed:{safe_exception_code(exc)}"
                 )
         receipt["registered_rerun_status"] = registered_rerun_status
         receipt["registered_rerun_receipt_path"] = registered_rerun_receipt_path
@@ -2719,6 +3026,84 @@ def _manifest_lane_calls(lane_totals: dict[str, dict[str, int]], lane: str) -> i
     return max(calls, 0)
 
 
+def _validate_external_reservation(
+    *,
+    root: Path,
+    reservation_path: str,
+    reservation_id: str,
+) -> tuple[str, Path]:
+    if not reservation_path.strip() or not reservation_id.strip():
+        raise ValueError("external_reservation_identity_or_path_missing")
+    candidate = Path(reservation_path)
+    resolved = (
+        candidate.resolve() if candidate.is_absolute() else (root / candidate).resolve()
+    )
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as exc:
+        raise ValueError("external_reservation_path_outside_repository") from exc
+    if not resolved.is_file():
+        raise ValueError("external_reservation_artifact_missing")
+    payload = json.loads(resolved.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise TypeError("external_reservation_payload_not_object")
+    if str(payload.get("reservation_id", "")) != reservation_id:
+        raise ValueError("external_reservation_identity_mismatch")
+    return sha256(resolved.read_bytes()).hexdigest(), resolved
+
+
+def _external_request_ceiling(
+    *,
+    max_batches: int,
+    exact_mode_calls: int,
+    ou_v3_calls: int,
+    ou_v4_calls: int,
+    ou_v5_calls: int,
+    ou_v6_calls: int,
+    copula_calls: int,
+) -> int:
+    calls = (
+        exact_mode_calls,
+        ou_v3_calls,
+        ou_v4_calls,
+        ou_v5_calls,
+        ou_v6_calls,
+        copula_calls,
+    )
+    if max_batches <= 0 or any(value < 0 for value in calls):
+        raise ValueError("external request ceiling inputs are invalid")
+    request_calls = sum(calls)
+    exact_credit_preflights = min(max_batches, exact_mode_calls)
+    other_credit_preflights = sum(value > 0 for value in calls[1:])
+    post_run_credit_reconciliation = 1
+    return (
+        request_calls
+        + exact_credit_preflights
+        + other_credit_preflights
+        + post_run_credit_reconciliation
+    )
+
+
+def _run_external_lane(
+    *,
+    authorized: bool,
+    target: str,
+    operation: str,
+    lane: str,
+    call_limit: int,
+    credit_cost_per_call: int,
+    callback: Callable[[], CommandResult],
+) -> CommandResult:
+    if not authorized:
+        return callback()
+    if call_limit <= 0 or credit_cost_per_call <= 0:
+        raise ValueError("authorized external lane requires positive call and credit limits")
+    if current_external_effect_session() is None:
+        raise EffectAuthorityError("wizard_external_effect_session_missing")
+    _ = (target, operation, lane)
+    return callback()
+
+
 def _run_batches(
     *,
     root: Path,
@@ -2732,6 +3117,7 @@ def _run_batches(
     completed_before: int,
     responses_captured_before: int,
     proof_runner: Callable[..., CommandResult],
+    api_key: str | None,
     batch_summaries: list[dict[str, Any]],
     blockers: list[str],
 ) -> tuple[str, int, int, bool, int]:
@@ -2755,15 +3141,24 @@ def _run_batches(
                     external_attempt_made,
                     selected_slots,
                 )
-            result = proof_runner(
-                root=root,
-                max_pairs=min(max_proofs_per_batch, remaining_manifest_calls),
-                execute=execute,
-                api_key=os.getenv(API_KEY_ENV, "").strip() or None,
-                now=started_at,
-                queue_path=queue_path,
-                reserved_credits=DEFAULT_RESERVED_CREDITS,
-            )
+            batch_call_limit = min(max_proofs_per_batch, remaining_manifest_calls)
+
+            def run_batch(
+                *, batch_call_limit: int = batch_call_limit
+            ) -> CommandResult:
+                return proof_runner(
+                    root=root,
+                    max_pairs=batch_call_limit,
+                    execute=execute,
+                    api_key=api_key,
+                    now=started_at,
+                    queue_path=queue_path,
+                    reserved_credits=DEFAULT_RESERVED_CREDITS,
+                )
+
+            if execute and current_external_effect_session() is None:
+                raise EffectAuthorityError("wizard_external_effect_session_missing")
+            result = run_batch()
             summary = _sanitized_batch_summary(result.summary, batch_number=batch_number)
             batch_summaries.append(summary)
             selected = int(summary["selected"])
@@ -2772,6 +3167,22 @@ def _run_batches(
             selected_request_failed = int(summary["selected_request_failed"])
             selected_failures_quarantined = bool(summary["selected_failures_quarantined"])
             credit_status = str(summary["credit_preflight_status"])
+            bounded_counts = (
+                selected,
+                selected_responses_captured,
+                external_proof_requests,
+                selected_request_failed,
+            )
+            if any(value < 0 for value in bounded_counts):
+                raise ValueError("proof_batch_summary_contains_negative_count")
+            if selected > batch_call_limit:
+                raise ValueError("proof_batch_selected_exceeds_requested_cap")
+            if selected_responses_captured > selected:
+                raise ValueError("proof_batch_responses_exceed_selected")
+            if external_proof_requests > selected:
+                raise ValueError("proof_batch_external_requests_exceed_selected")
+            if selected_request_failed > selected:
+                raise ValueError("proof_batch_failures_exceed_selected")
             selected_slots += selected
             if execute and external_proof_requests > 0:
                 external_attempt_made = True
@@ -2874,17 +3285,19 @@ def _run_batches(
 
 
 def install_corrective_wizard_proof_launch_agent(
-    *, root: Path = ROOT, interval_seconds: int = DEFAULT_INTERVAL_SECONDS
+    *,
+    root: Path = ROOT,
+    interval_seconds: int = DEFAULT_INTERVAL_SECONDS,
+    system_path: Path | None = None,
 ) -> dict[str, Any]:
     """Install, but do not bootstrap, the bounded proof scheduler."""
 
     if interval_seconds < 60:
         raise ValueError("proof scheduler interval must be at least 60 seconds")
-    python = root / ".venv312" / "bin" / "python"
+    python = scheduler_python_path(root)
     if not python.is_file():
         raise FileNotFoundError(f"scheduler Python missing: {python}")
-    logs = root / "reports" / "active" / "schedule_logs"
-    logs.mkdir(parents=True, exist_ok=True)
+    logs = ensure_scheduler_log_directory(root)
     ensure_runtime_temp_directory(root)
     payload = _launch_agent_plist(
         root=root,
@@ -2896,9 +3309,9 @@ def install_corrective_wizard_proof_launch_agent(
         root=root,
         label=LAUNCH_AGENT_LABEL,
         payload=payload,
+        system_path=system_path,
     )
     return {
-        "status": "INSTALLED_NOT_STARTED",
         "label": LAUNCH_AGENT_LABEL,
         "plist": publication["workspace_plist"],
         **publication,
@@ -2911,35 +3324,31 @@ def install_corrective_wizard_proof_launch_agent(
     }
 
 
-def _load_and_validate_environment(root: Path) -> dict[str, Any]:
-    key_was_present = bool(os.getenv(API_KEY_ENV, "").strip())
-    key_source = "process_environment" if key_was_present else "missing"
+def _insecure_secret_files(root: Path) -> list[str]:
+    """Check private-file modes without reading credential values."""
+
     insecure: list[str] = []
-    candidates = (".env.local", ".env")
-    for name in candidates:
+    for name in (".env.local", ".env"):
         path = root / name
-        declares_key = _file_declares_key(path, API_KEY_ENV)
-        if declares_key and path.stat().st_mode & 0o077:
+        if path.is_file() and path.stat().st_mode & 0o077:
             insecure.append(_relative(path, root))
-    if insecure:
-        return {
-            "api_key_present": key_was_present,
-            "key_source": key_source,
-            "check_performed": True,
-            "insecure_secret_files": insecure,
-        }
-    for name in candidates:
+    return insecure
+
+
+def _deferred_credential_reader(root: Path, key: str) -> str | None:
+    value = os.getenv(key, "").strip()
+    if value:
+        return value
+    for name in (".env.local", ".env"):
         path = root / name
-        loaded = load_env_file(path, override=False)
-        if API_KEY_ENV in loaded and not key_was_present:
-            key_source = name
-            key_was_present = True
-    return {
-        "api_key_present": bool(os.getenv(API_KEY_ENV, "").strip()),
-        "key_source": key_source,
-        "check_performed": True,
-        "insecure_secret_files": insecure,
-    }
+        loaded = load_selected_env_keys(
+            path,
+            allowed_keys={key},
+            override=False,
+        )
+        if key in loaded:
+            return os.getenv(key, "").strip() or None
+    return None
 
 
 def _file_declares_key(path: Path, key: str) -> bool:
@@ -3067,46 +3476,15 @@ def _first_observed_credit_usage(batch_summaries: list[dict[str, Any]]) -> int |
 
 
 def _launch_agent_plist(*, root: Path, python: Path, logs: Path, interval_seconds: int) -> str:
-    import xml.sax.saxutils as xml
-
-    environment = launch_agent_runtime_environment(root)
-    values = {
-        "label": LAUNCH_AGENT_LABEL,
-        "root": xml.escape(str(root)),
-        "python": xml.escape(str(python)),
-        "pythonpath": xml.escape(environment["PYTHONPATH"]),
-        "runtime_temp": xml.escape(environment["TMPDIR"]),
-        "stdout": xml.escape(str(logs / "wizard_proof.stdout.log")),
-        "stderr": xml.escape(str(logs / "wizard_proof.stderr.log")),
-    }
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>{values["label"]}</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>{values["python"]}</string>
-    <string>-m</string><string>quant_platform.orchestration.corrective_wizard_proof_launcher</string>
-    <string>--execute</string>
-  </array>
-  <key>WorkingDirectory</key><string>{values["root"]}</string>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PYTHONPATH</key><string>{values["pythonpath"]}</string>
-    <key>TMPDIR</key><string>{values["runtime_temp"]}</string>
-    <key>TMP</key><string>{values["runtime_temp"]}</string>
-    <key>TEMP</key><string>{values["runtime_temp"]}</string>
-  </dict>
-  <key>StartInterval</key><integer>{interval_seconds}</integer>
-  <key>RunAtLoad</key><false/>
-  <key>ProcessType</key><string>Background</string>
-  <key>LowPriorityIO</key><true/>
-  <key>StandardOutPath</key><string>{values["stdout"]}</string>
-  <key>StandardErrorPath</key><string>{values["stderr"]}</string>
-</dict>
-</plist>
-"""
+    if python != scheduler_python_path(root):
+        raise ValueError("proof scheduler interpreter must use canonical runtime")
+    if logs != scheduler_log_directory(root):
+        raise ValueError("proof scheduler logs must use canonical runtime")
+    return scheduler_launch_agent_plist(
+        root,
+        contract=scheduler_contract("wizard_proof"),
+        interval_seconds=interval_seconds,
+    )
 
 
 def _canonical_json(payload: Any) -> str:
@@ -3114,10 +3492,11 @@ def _canonical_json(payload: Any) -> str:
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    atomic_write_text(
+        path,
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        publication_scope="wizard_external_research",
+    )
 
 
 def _write_final_immutable_scheduler_receipt(
@@ -3143,19 +3522,11 @@ def _write_final_immutable_scheduler_receipt(
     immutable = (
         root / "data" / "research" / "wizard_proof_scheduler_receipts" / f"{receipt_id}.json"
     )
-    immutable.parent.mkdir(parents=True, exist_ok=True)
-    if immutable.exists():
-        if immutable.read_bytes() != encoded:
-            raise ValueError(f"immutable scheduler receipt collision: {immutable}")
-        return immutable
-    try:
-        with immutable.open("xb") as handle:
-            handle.write(encoded)
-            handle.flush()
-            os.fsync(handle.fileno())
-    except FileExistsError:
-        if immutable.read_bytes() != encoded:
-            raise ValueError(f"immutable scheduler receipt collision: {immutable}")
+    write_immutable_json(
+        immutable,
+        receipt,
+        publication_scope="wizard_external_research",
+    )
     if immutable.read_bytes() != encoded:
         raise ValueError("immutable scheduler receipt verification failed")
     return immutable
@@ -3193,17 +3564,44 @@ def main() -> None:
     parser.add_argument("--install", action="store_true")
     args = parser.parse_args()
     if args.install:
-        result: Any = install_corrective_wizard_proof_launch_agent()
+        try:
+            with governed_evidence_write_lock(
+                ROOT, blocking=False, scope="scheduler_config"
+            ):
+                result: Any = install_corrective_wizard_proof_launch_agent()
+        except (GovernedEvidenceMaintenanceActive, GovernedEvidenceLockBusy) as exc:
+            result = {
+                "summary": {
+                    "status": "DEFERRED_PHASE00_OR_GOVERNED_LOCK",
+                    "blockers": [safe_exception_code(exc)],
+                    "live_trading_authorized": False,
+                },
+                "paths": {},
+            }
     else:
-        cycle = run_corrective_wizard_proof_cycle(
-            execute=args.execute,
-            force=args.force,
-            internal_continuation_only=args.internal_continuation_only,
+        supervised = supervise_scheduler_run(
+            root=ROOT,
+            contract_key="wizard_proof",
+            publication_scope="wizard_external_research",
+            callback=lambda: run_corrective_wizard_proof_cycle(
+                execute=args.execute,
+                force=args.force,
+                internal_continuation_only=args.internal_continuation_only,
+            ),
+            require_launchd_provenance=True,
         )
         result = {
-            "summary": cycle.summary,
-            "paths": {key: str(value) for key, value in cycle.paths.items()},
+            "summary": supervised.result_summary,
+            "paths": supervised.result_paths,
+            "terminal_receipt": supervised.terminal_receipt,
+            "terminal_paths": {
+                key: str(value) for key, value in supervised.terminal_paths.items()
+            },
         }
+        print(json.dumps(result, indent=2, default=str))
+        if supervised.exit_code:
+            raise SystemExit(supervised.exit_code)
+        return
     print(json.dumps(result, indent=2, default=str))
 
 

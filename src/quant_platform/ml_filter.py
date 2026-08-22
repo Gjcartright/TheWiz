@@ -21,8 +21,17 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from quant_platform.backtest import CostModel, max_drawdown
+from quant_platform.backtest import (
+    CostModel,
+    backtest_two_leg_spread_with_ledger,
+    max_drawdown,
+)
 from quant_platform.experiments import PairDataset
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_bytes,
+    atomic_write_csv,
+    atomic_write_text,
+)
 from quant_platform.strategies import STRATEGIES, STRATEGY_REQUIRED_COLUMNS, StrategySpec
 
 try:
@@ -112,9 +121,7 @@ ML_DATASET_COLUMNS = [
 
 TARGET_COLUMN = "label_profitable"
 GLOBAL_PURGED_SPLIT_SCHEME = "globally_purged_embargoed_pair_aware_timestamp_groups_v2"
-MODEL_SELECTION_ISOLATION_SCHEME = (
-    "chronological_model_selection_then_untouched_evaluation_v1"
-)
+MODEL_SELECTION_ISOLATION_SCHEME = "chronological_model_selection_then_untouched_evaluation_v1"
 MODEL_SELECTION_PHASE = "model_selection"
 UNTOUCHED_EVALUATION_PHASE = "untouched_evaluation"
 MODEL_SELECTION_BOUNDARY_SCHEME = "label_complete_chronology_gap_v1"
@@ -303,12 +310,9 @@ def _chronology_isolated_fold_partitions(
     selection_fold_count = max(1, len(eligible_fold_numbers) // 2)
     if selection_fold_count >= len(eligible_fold_numbers):
         raise ValueError(
-            "model selection isolation requires separate selection and "
-            "untouched evaluation folds"
+            "model selection isolation requires separate selection and untouched evaluation folds"
         )
-    selection_fold_numbers = set(
-        eligible_fold_numbers[:selection_fold_count]
-    )
+    selection_fold_numbers = set(eligible_fold_numbers[:selection_fold_count])
     selection_label_ends = [
         pd.to_datetime(
             ordered.iloc[splits[fold_number - 1][1]]["exit_timestamp"],
@@ -340,9 +344,7 @@ def _chronology_isolated_fold_partitions(
         for fold_number in evaluation_fold_numbers
         if fold_number >= first_evaluation_fold
     }
-    chronology_gap_fold_numbers = set(remaining_fold_numbers).difference(
-        evaluation_fold_numbers
-    )
+    chronology_gap_fold_numbers = set(remaining_fold_numbers).difference(evaluation_fold_numbers)
     evaluation_start = min(
         pd.to_datetime(
             ordered.iloc[splits[fold_number - 1][1]][TIMESTAMP_COLUMN],
@@ -352,9 +354,7 @@ def _chronology_isolated_fold_partitions(
         for fold_number in evaluation_fold_numbers
     )
     if selection_label_end >= evaluation_start:
-        raise ValueError(
-            "model selection outcomes overlap untouched evaluation"
-        )
+        raise ValueError("model selection outcomes overlap untouched evaluation")
     return (
         selection_fold_numbers,
         evaluation_fold_numbers,
@@ -376,9 +376,7 @@ def expected_walkforward_prediction_membership(
     required = {"trade_id", TARGET_COLUMN, TIMESTAMP_COLUMN, "exit_timestamp"}
     missing = sorted(required - set(dataset.columns))
     if missing:
-        raise ValueError(
-            "walk-forward membership dataset missing columns: " + ",".join(missing)
-        )
+        raise ValueError("walk-forward membership dataset missing columns: " + ",".join(missing))
     ordered = dataset.copy()
     ordered[TIMESTAMP_COLUMN] = pd.to_datetime(
         ordered[TIMESTAMP_COLUMN], utc=True, errors="coerce", format="mixed"
@@ -446,9 +444,7 @@ def expected_walkforward_prediction_membership(
     if not rows:
         raise ValueError("walk-forward membership has no eligible evidence rows")
     return (
-        pd.concat(rows, ignore_index=True)
-        .sort_values(["fold", "trade_id"])
-        .reset_index(drop=True)
+        pd.concat(rows, ignore_index=True).sort_values(["fold", "trade_id"]).reset_index(drop=True)
     )
 
 
@@ -504,12 +500,8 @@ def walkforward_prediction_membership_matches(
                 .eq(merged[f"{field}_expected"].fillna("").astype(str))
             )
         else:
-            observed_values = pd.to_numeric(
-                merged[f"{field}_observed"], errors="coerce"
-            )
-            expected_values = pd.to_numeric(
-                merged[f"{field}_expected"], errors="coerce"
-            )
+            observed_values = pd.to_numeric(merged[f"{field}_observed"], errors="coerce")
+            expected_values = pd.to_numeric(merged[f"{field}_expected"], errors="coerce")
             matches = observed_values.notna() & observed_values.eq(expected_values)
         if not matches.all():
             return False
@@ -701,18 +693,12 @@ def train_trade_filter_walkforward(
                 "minimum_train_rows_requested": int(min_train_rows),
                 "selection_phase": selection_phase,
                 "selection_isolation_scheme": MODEL_SELECTION_ISOLATION_SCHEME,
-                "selection_evaluation_boundary_scheme": (
-                    MODEL_SELECTION_BOUNDARY_SCHEME
-                ),
+                "selection_evaluation_boundary_scheme": (MODEL_SELECTION_BOUNDARY_SCHEME),
                 "chronology_gap_folds": ";".join(
                     str(value) for value in sorted(chronology_gap_fold_numbers)
                 ),
-                "selection_label_end_boundary": (
-                    selection_label_end_boundary.isoformat()
-                ),
-                "untouched_evaluation_start_boundary": (
-                    evaluation_start_boundary.isoformat()
-                ),
+                "selection_label_end_boundary": (selection_label_end_boundary.isoformat()),
+                "untouched_evaluation_start_boundary": (evaluation_start_boundary.isoformat()),
                 **split_audit,
                 "train_rows": int(len(train)),
                 "test_rows": int(len(test)),
@@ -721,9 +707,7 @@ def train_trade_filter_walkforward(
                 "threshold_calibration_scheme": THRESHOLD_CALIBRATION_SCHEME,
                 "minimum_training_take_rate": MINIMUM_TRAINING_TAKE_RATE,
                 "training_take_rate_at_threshold": training_take_rate,
-                "training_take_rate_floor_pass": (
-                    training_take_rate >= MINIMUM_TRAINING_TAKE_RATE
-                ),
+                "training_take_rate_floor_pass": (training_take_rate >= MINIMUM_TRAINING_TAKE_RATE),
                 "precision": precision,
                 "recall": recall,
                 "auc": auc,
@@ -788,16 +772,10 @@ def train_trade_filter_walkforward(
             prediction_frame = test[prediction_columns].copy()
             prediction_frame["model_name"] = spec.name
             prediction_frame["fold"] = fold_number
-            prediction_frame["walkforward_splits_requested"] = max(
-                2, int(n_splits)
-            )
-            prediction_frame["minimum_train_rows_requested"] = int(
-                min_train_rows
-            )
+            prediction_frame["walkforward_splits_requested"] = max(2, int(n_splits))
+            prediction_frame["minimum_train_rows_requested"] = int(min_train_rows)
             prediction_frame["selection_phase"] = selection_phase
-            prediction_frame["selection_isolation_scheme"] = (
-                MODEL_SELECTION_ISOLATION_SCHEME
-            )
+            prediction_frame["selection_isolation_scheme"] = MODEL_SELECTION_ISOLATION_SCHEME
             prediction_frame["selection_evaluation_boundary_scheme"] = (
                 MODEL_SELECTION_BOUNDARY_SCHEME
             )
@@ -813,15 +791,9 @@ def train_trade_filter_walkforward(
             prediction_frame["probability_profitable"] = test_probability
             prediction_frame["shadow_take"] = test_probability >= threshold
             prediction_frame["threshold"] = threshold
-            prediction_frame["threshold_calibration_scheme"] = (
-                THRESHOLD_CALIBRATION_SCHEME
-            )
-            prediction_frame["minimum_training_take_rate"] = (
-                MINIMUM_TRAINING_TAKE_RATE
-            )
-            prediction_frame["training_take_rate_at_threshold"] = (
-                training_take_rate
-            )
+            prediction_frame["threshold_calibration_scheme"] = THRESHOLD_CALIBRATION_SCHEME
+            prediction_frame["minimum_training_take_rate"] = MINIMUM_TRAINING_TAKE_RATE
+            prediction_frame["training_take_rate_at_threshold"] = training_take_rate
             prediction_frame["training_take_rate_floor_pass"] = (
                 training_take_rate >= MINIMUM_TRAINING_TAKE_RATE
             )
@@ -858,9 +830,7 @@ def train_trade_filter_walkforward(
             or pd.isna(evaluation_start)
             or selection_label_end >= evaluation_start
         ):
-            raise ValueError(
-                "model selection outcomes overlap untouched evaluation"
-            )
+            raise ValueError("model selection outcomes overlap untouched evaluation")
         aggregate = {
             "model_name": spec.name,
             "model_family": spec.family,
@@ -868,9 +838,7 @@ def train_trade_filter_walkforward(
             "selection_folds": int(len(selection_frame)),
             "untouched_evaluation_folds": int(len(evaluation_frame)),
             "selection_isolation_scheme": MODEL_SELECTION_ISOLATION_SCHEME,
-            "selection_evaluation_boundary_scheme": (
-                MODEL_SELECTION_BOUNDARY_SCHEME
-            ),
+            "selection_evaluation_boundary_scheme": (MODEL_SELECTION_BOUNDARY_SCHEME),
             "chronology_gap_folds": ";".join(
                 str(value) for value in sorted(chronology_gap_fold_numbers)
             ),
@@ -882,58 +850,32 @@ def train_trade_filter_walkforward(
             "median_baseline_profit_factor": float(
                 selection_frame["baseline_profit_factor"].median()
             ),
-            "median_baseline_sharpe": float(
-                selection_frame["baseline_sharpe"].median()
-            ),
-            "worst_baseline_drawdown": float(
-                selection_frame["baseline_drawdown"].max()
-            ),
-            "median_baseline_expectancy": float(
-                selection_frame["baseline_expectancy"].median()
-            ),
-            "total_baseline_trades": int(
-                selection_frame["baseline_trade_count"].sum()
-            ),
+            "median_baseline_sharpe": float(selection_frame["baseline_sharpe"].median()),
+            "worst_baseline_drawdown": float(selection_frame["baseline_drawdown"].max()),
+            "median_baseline_expectancy": float(selection_frame["baseline_expectancy"].median()),
+            "total_baseline_trades": int(selection_frame["baseline_trade_count"].sum()),
             "median_filtered_profit_factor": float(
                 selection_frame["filtered_profit_factor"].median()
             ),
-            "median_filtered_sharpe": float(
-                selection_frame["filtered_sharpe"].median()
-            ),
-            "worst_filtered_drawdown": float(
-                selection_frame["filtered_drawdown"].max()
-            ),
-            "median_filtered_expectancy": float(
-                selection_frame["filtered_expectancy"].median()
-            ),
-            "total_filtered_trades": int(
-                selection_frame["filtered_trade_count"].sum()
-            ),
+            "median_filtered_sharpe": float(selection_frame["filtered_sharpe"].median()),
+            "worst_filtered_drawdown": float(selection_frame["filtered_drawdown"].max()),
+            "median_filtered_expectancy": float(selection_frame["filtered_expectancy"].median()),
+            "total_filtered_trades": int(selection_frame["filtered_trade_count"].sum()),
             "median_precision": float(selection_frame["precision"].median()),
             "median_recall": float(selection_frame["recall"].median()),
             "median_auc": float(selection_frame["auc"].median()),
-            "median_take_rate": float(
-                selection_frame["filtered_take_rate"].median()
-            ),
+            "median_take_rate": float(selection_frame["filtered_take_rate"].median()),
             "minimum_selection_training_take_rate": float(
                 selection_frame["training_take_rate_at_threshold"].min()
             ),
             "selection_training_take_rate_floor_pass": bool(
                 selection_frame["training_take_rate_floor_pass"].all()
             ),
-            "profit_factor_delta": float(
-                selection_frame["profit_factor_delta"].median()
-            ),
+            "profit_factor_delta": float(selection_frame["profit_factor_delta"].median()),
             "sharpe_delta": float(selection_frame["sharpe_delta"].median()),
-            "drawdown_delta": float(
-                selection_frame["drawdown_delta"].median()
-            ),
-            "expectancy_delta": float(
-                selection_frame["expectancy_delta"].median()
-            ),
-            "trade_count_delta": int(
-                round(float(selection_frame["trade_count_delta"].median()))
-            ),
+            "drawdown_delta": float(selection_frame["drawdown_delta"].median()),
+            "expectancy_delta": float(selection_frame["expectancy_delta"].median()),
+            "trade_count_delta": int(round(float(selection_frame["trade_count_delta"].median()))),
             "promising": _promising_fold_frame(selection_frame),
             "evaluation_median_baseline_profit_factor": float(
                 evaluation_frame["baseline_profit_factor"].median()
@@ -944,9 +886,7 @@ def train_trade_filter_walkforward(
             "evaluation_worst_baseline_drawdown": float(
                 evaluation_frame["baseline_drawdown"].max()
             ),
-            "evaluation_total_baseline_trades": int(
-                evaluation_frame["baseline_trade_count"].sum()
-            ),
+            "evaluation_total_baseline_trades": int(evaluation_frame["baseline_trade_count"].sum()),
             "evaluation_median_filtered_profit_factor": float(
                 evaluation_frame["filtered_profit_factor"].median()
             ),
@@ -956,12 +896,8 @@ def train_trade_filter_walkforward(
             "evaluation_worst_filtered_drawdown": float(
                 evaluation_frame["filtered_drawdown"].max()
             ),
-            "evaluation_total_filtered_trades": int(
-                evaluation_frame["filtered_trade_count"].sum()
-            ),
-            "evaluation_median_take_rate": float(
-                evaluation_frame["filtered_take_rate"].median()
-            ),
+            "evaluation_total_filtered_trades": int(evaluation_frame["filtered_trade_count"].sum()),
+            "evaluation_median_take_rate": float(evaluation_frame["filtered_take_rate"].median()),
             "minimum_evaluation_training_take_rate": float(
                 evaluation_frame["training_take_rate_at_threshold"].min()
             ),
@@ -971,12 +907,8 @@ def train_trade_filter_walkforward(
             "evaluation_profit_factor_delta": float(
                 evaluation_frame["profit_factor_delta"].median()
             ),
-            "evaluation_sharpe_delta": float(
-                evaluation_frame["sharpe_delta"].median()
-            ),
-            "evaluation_drawdown_delta": float(
-                evaluation_frame["drawdown_delta"].median()
-            ),
+            "evaluation_sharpe_delta": float(evaluation_frame["sharpe_delta"].median()),
+            "evaluation_drawdown_delta": float(evaluation_frame["drawdown_delta"].median()),
             "dependency_note": spec.unavailable_reason,
             "evaluation_scheme": GLOBAL_PURGED_SPLIT_SCHEME,
             "embargo_periods": max(0, int(embargo_periods)),
@@ -996,9 +928,7 @@ def train_trade_filter_walkforward(
             "threshold": float(full_threshold),
             "threshold_calibration_scheme": THRESHOLD_CALIBRATION_SCHEME,
             "minimum_training_take_rate": MINIMUM_TRAINING_TAKE_RATE,
-            "training_take_rate_at_threshold": float(
-                (full_probability >= full_threshold).mean()
-            ),
+            "training_take_rate_at_threshold": float((full_probability >= full_threshold).mean()),
             "feature_columns": feature_columns,
             "numeric_features": numeric_features,
             "categorical_features": categorical_features,
@@ -1007,16 +937,10 @@ def train_trade_filter_walkforward(
             "dependency_note": spec.unavailable_reason,
             "evaluation_scheme": GLOBAL_PURGED_SPLIT_SCHEME,
             "selection_isolation_scheme": MODEL_SELECTION_ISOLATION_SCHEME,
-            "selection_evaluation_boundary_scheme": (
-                MODEL_SELECTION_BOUNDARY_SCHEME
-            ),
+            "selection_evaluation_boundary_scheme": (MODEL_SELECTION_BOUNDARY_SCHEME),
             "chronology_gap_folds": tuple(sorted(chronology_gap_fold_numbers)),
-            "selection_label_end_boundary": (
-                selection_label_end_boundary.isoformat()
-            ),
-            "untouched_evaluation_start_boundary": (
-                evaluation_start_boundary.isoformat()
-            ),
+            "selection_label_end_boundary": (selection_label_end_boundary.isoformat()),
+            "untouched_evaluation_start_boundary": (evaluation_start_boundary.isoformat()),
             "embargo_periods": max(0, int(embargo_periods)),
         }
         model_artifacts.append(artifact)
@@ -1033,16 +957,14 @@ def train_trade_filter_walkforward(
     best_model_path = output / "ml_trade_filter_best_model.pkl"
     manifest_path = output / "ml_trade_filter_manifest.json"
 
-    ordered.to_csv(dataset_path, index=False)
-    pd.DataFrame(fold_rows).sort_values(["model_name", "fold"]).to_csv(fold_path, index=False)
-    predictions_frame = pd.DataFrame(prediction_rows).sort_values(
-        ["model_name", "entry_timestamp"]
-    )
-    predictions_frame.to_csv(prediction_path, index=False)
+    atomic_write_csv(ordered, dataset_path, index=False)
+    atomic_write_csv(pd.DataFrame(fold_rows).sort_values(["model_name", "fold"]), fold_path, index=False)
+    predictions_frame = pd.DataFrame(prediction_rows).sort_values(["model_name", "entry_timestamp"])
+    atomic_write_csv(predictions_frame, prediction_path, index=False)
     leaderboard = model_selection_leaderboard(predictions_frame)
     if leaderboard.empty:
         raise ValueError("model selection leaderboard could not be replayed")
-    leaderboard.to_csv(leaderboard_path, index=False)
+    atomic_write_csv(leaderboard, leaderboard_path, index=False)
     summary_frame = pd.DataFrame(aggregate_rows).sort_values(
         ["promising", "selection_score", "expectancy_delta", "profit_factor_delta", "sharpe_delta"],
         ascending=[False, False, False, False, False],
@@ -1055,19 +977,14 @@ def train_trade_filter_walkforward(
     chosen_artifact = artifact_index.get(chosen_model_name)
     if chosen_artifact is None:
         raise ValueError(f"chosen model artifact missing for {chosen_model_name}")
-    summary_frame.to_csv(summary_path, index=False)
+    atomic_write_csv(summary_frame, summary_path, index=False)
 
-    with best_model_path.open("wb") as handle:
-        pickle.dump(chosen_artifact, handle)
+    atomic_write_bytes(best_model_path, pickle.dumps(chosen_artifact))
     best_model_sha256 = sha256(best_model_path.read_bytes()).hexdigest()
     manifest = {
         "chosen_model": chosen_artifact["model_name"],
-        "chosen_model_selection_eligible": bool(
-            leaderboard.iloc[0]["promising"]
-        ),
-        "selection_eligible_models": int(
-            leaderboard["promising"].astype(bool).sum()
-        ),
+        "chosen_model_selection_eligible": bool(leaderboard.iloc[0]["promising"]),
+        "selection_eligible_models": int(leaderboard["promising"].astype(bool).sum()),
         "selection_outcome": (
             "ELIGIBLE_MODEL_SELECTED"
             if bool(leaderboard.iloc[0]["promising"])
@@ -1076,15 +993,9 @@ def train_trade_filter_walkforward(
         "trained_until": chosen_artifact["trained_until"],
         "best_model_sha256": best_model_sha256,
         "threshold": chosen_artifact["threshold"],
-        "threshold_calibration_scheme": chosen_artifact[
-            "threshold_calibration_scheme"
-        ],
-        "minimum_training_take_rate": chosen_artifact[
-            "minimum_training_take_rate"
-        ],
-        "training_take_rate_at_threshold": chosen_artifact[
-            "training_take_rate_at_threshold"
-        ],
+        "threshold_calibration_scheme": chosen_artifact["threshold_calibration_scheme"],
+        "minimum_training_take_rate": chosen_artifact["minimum_training_take_rate"],
+        "training_take_rate_at_threshold": chosen_artifact["training_take_rate_at_threshold"],
         "artifacts_written": [
             str(path)
             for path in (
@@ -1099,25 +1010,17 @@ def train_trade_filter_walkforward(
         "models_evaluated": [artifact["model_name"] for artifact in model_artifacts],
         "evaluation_scheme": GLOBAL_PURGED_SPLIT_SCHEME,
         "selection_isolation_scheme": MODEL_SELECTION_ISOLATION_SCHEME,
-        "selection_evaluation_boundary_scheme": (
-            MODEL_SELECTION_BOUNDARY_SCHEME
-        ),
+        "selection_evaluation_boundary_scheme": (MODEL_SELECTION_BOUNDARY_SCHEME),
         "chronology_gap_folds": sorted(chronology_gap_fold_numbers),
-        "selection_label_end_boundary": (
-            selection_label_end_boundary.isoformat()
-        ),
-        "untouched_evaluation_start_boundary": (
-            evaluation_start_boundary.isoformat()
-        ),
+        "selection_label_end_boundary": (selection_label_end_boundary.isoformat()),
+        "untouched_evaluation_start_boundary": (evaluation_start_boundary.isoformat()),
         "selection_folds": int(preferred_summary["selection_folds"]),
-        "untouched_evaluation_folds": int(
-            preferred_summary["untouched_evaluation_folds"]
-        ),
+        "untouched_evaluation_folds": int(preferred_summary["untouched_evaluation_folds"]),
         "embargo_periods": max(0, int(embargo_periods)),
         "walkforward_splits_requested": max(2, int(n_splits)),
         "minimum_train_rows_requested": int(min_train_rows),
     }
-    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(manifest_path, json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
     return {
         "dataset": dataset_path,
         "folds": fold_path,
@@ -1184,7 +1087,7 @@ def shadow_trade_filter_predictions(
     shadow["trained_until"] = artifact.get("trained_until", "")
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    shadow.to_csv(output, index=False)
+    atomic_write_csv(shadow, output, index=False)
     return output
 
 
@@ -1519,62 +1422,26 @@ def _detailed_backtest_frame(
         .abs()
     )
 
-    if {"price_x", "price_y"}.issubset(data.columns):
+    if {"price_x", "price_y", "hedge_ratio"}.issubset(data.columns):
         backtest_mode = "two_leg"
-        price_x = pd.to_numeric(data["price_x"], errors="coerce").ffill().bfill()
-        price_y = pd.to_numeric(data["price_y"], errors="coerce").ffill().bfill()
-        returns_x = price_x.pct_change().fillna(0.0)
-        returns_y = price_y.pct_change().fillna(0.0)
-        hedge_ratio = pd.to_numeric(data.get("hedge_ratio", 1.0), errors="coerce").fillna(1.0)
-        beta = (
-            pd.to_numeric(data.get("beta", 1.0), errors="coerce").replace(0, 1.0).fillna(1.0).abs()
+        _, ledger = backtest_two_leg_spread_with_ledger(
+            data,
+            data["signal_target"],
+            cost_model,
+            interval=(
+                _normalize_timeframe(data["interval"].dropna().iloc[0])
+                if "interval" in data.columns and not data["interval"].dropna().empty
+                else None
+            ),
         )
-        signal_position = data["signal_target"].shift(1).fillna(0.0)
-        gross_scale = 1.0 + hedge_ratio.abs() * beta
-        target_weight_y = data["signal_target"] / gross_scale
-        target_weight_x = -data["signal_target"] * hedge_ratio * beta / gross_scale
-        weight_y = signal_position / gross_scale
-        weight_x = -signal_position * hedge_ratio * beta / gross_scale
-        turnover_x = target_weight_x.diff().abs().fillna(target_weight_x.abs())
-        turnover_y = target_weight_y.diff().abs().fillna(target_weight_y.abs())
-        turnover = turnover_x + turnover_y
-        gross_return = weight_x * returns_x + weight_y * returns_y
-        fee_cost = turnover * cost_model.taker_fee_bps / 10_000.0
-        slippage_cost = turnover * cost_model.slippage_bps / 10_000.0
-        execution_risk_cost = turnover * cost_model.execution_risk_bps / 10_000.0
-        partial_fill_cost = (
-            turnover
-            * cost_model.partial_fill_probability
-            * (1.0 - cost_model.partial_fill_fraction)
-            * cost_model.partial_fill_penalty_bps
-            / 10_000.0
-        )
-        default_funding = pd.Series(
-            float(cost_model.funding_bps_per_day),
-            index=data.index,
-        )
-        funding_x = pd.to_numeric(
-            data.get("funding_x_bps", default_funding), errors="coerce"
-        ).fillna(float(cost_model.funding_bps_per_day))
-        funding_y = pd.to_numeric(
-            data.get("funding_y_bps", default_funding), errors="coerce"
-        ).fillna(float(cost_model.funding_bps_per_day))
-        funding_cost = (
-            weight_x.abs() * funding_x.abs() / 10_000.0 / cost_model.bars_per_day
-            + weight_y.abs() * funding_y.abs() / 10_000.0 / cost_model.bars_per_day
-        )
-        net_return = (
-            gross_return
-            - fee_cost
-            - slippage_cost
-            - execution_risk_cost
-            - partial_fill_cost
-            - funding_cost
-        )
+        gross_return = ledger.bar_ledger["gross_return"].reset_index(drop=True)
+        net_return = ledger.bar_ledger["net_return"].reset_index(drop=True)
         cost_drag = (
-            fee_cost + slippage_cost + execution_risk_cost + partial_fill_cost + funding_cost
+            ledger.bar_ledger[["fees", "slippage", "funding", "execution_risk", "partial_fill"]]
+            .sum(axis=1)
+            .reset_index(drop=True)
         )
-    else:
+    elif "spread" in data.columns:
         backtest_mode = "spread"
         spread_return = data["spread"].diff().fillna(0.0)
         signal_position = data["signal_target"].shift(1).fillna(0.0)
@@ -1584,6 +1451,10 @@ def _detailed_backtest_frame(
         funding_cost = signal_position.abs() * cost_model.funding_per_bar()
         net_return = gross_return - trading_cost - funding_cost
         cost_drag = trading_cost + funding_cost
+    else:
+        raise ValueError(
+            "candidate labels require spread or complete price_x/price_y/hedge_ratio inputs"
+        )
 
     data["gross_return"] = gross_return.astype(float)
     data["net_return"] = net_return.astype(float)
@@ -1672,7 +1543,7 @@ def _trade_metric_summary(returns: pd.Series) -> dict[str, float]:
         profit_factor = float("inf") if not wins.empty else 0.0
     else:
         profit_factor = float(wins.sum() / abs(losses.sum()))
-    std = float(series.std(ddof=0))
+    std = float(series.std(ddof=1)) if len(series) >= 2 else 0.0
     sharpe = 0.0 if std == 0.0 else float(np.sqrt(len(series)) * series.mean() / std)
     equity = (1.0 + series).cumprod()
     return {
@@ -1825,27 +1696,20 @@ def model_selection_leaderboard(predictions: pd.DataFrame) -> pd.DataFrame:
     if predictions.empty or not required.issubset(predictions.columns):
         return pd.DataFrame(columns=columns)
     rows: list[dict[str, Any]] = []
-    for model_name, model_rows in predictions.groupby(
-        "model_name", sort=True, dropna=False
-    ):
+    for model_name, model_rows in predictions.groupby("model_name", sort=True, dropna=False):
         selection = model_rows.loc[
             model_rows["selection_phase"].astype(str).eq(MODEL_SELECTION_PHASE)
         ].copy()
         evaluation = model_rows.loc[
-            model_rows["selection_phase"]
-            .astype(str)
-            .eq(UNTOUCHED_EVALUATION_PHASE)
+            model_rows["selection_phase"].astype(str).eq(UNTOUCHED_EVALUATION_PHASE)
         ].copy()
         if selection.empty or evaluation.empty:
             continue
         fold_rows: list[dict[str, Any]] = []
         for _, fold in selection.groupby("fold", sort=True, dropna=False):
-            baseline_returns = pd.to_numeric(
-                fold[RETURN_COLUMN], errors="coerce"
-            ).dropna()
+            baseline_returns = pd.to_numeric(fold[RETURN_COLUMN], errors="coerce").dropna()
             taken_mask = fold["shadow_take"].map(
-                lambda value: str(value).strip().lower()
-                in {"1", "true", "yes", "pass", "ready"}
+                lambda value: str(value).strip().lower() in {"1", "true", "yes", "pass", "ready"}
             )
             filtered_returns = pd.to_numeric(
                 fold.loc[taken_mask, RETURN_COLUMN], errors="coerce"
@@ -1855,23 +1719,15 @@ def model_selection_leaderboard(predictions: pd.DataFrame) -> pd.DataFrame:
             training_floor = fold.get(
                 "training_take_rate_floor_pass",
                 pd.Series(True, index=fold.index),
-            ).map(
-                lambda value: str(value).strip().lower()
-                in {"1", "true", "yes", "pass", "ready"}
-            )
+            ).map(lambda value: str(value).strip().lower() in {"1", "true", "yes", "pass", "ready"})
             fold_rows.append(
                 {
-                    "profit_factor_delta": filtered["profit_factor"]
-                    - baseline["profit_factor"],
+                    "profit_factor_delta": filtered["profit_factor"] - baseline["profit_factor"],
                     "sharpe_delta": filtered["sharpe"] - baseline["sharpe"],
-                    "drawdown_delta": filtered["drawdown"]
-                    - baseline["drawdown"],
-                    "expectancy_delta": filtered["expectancy"]
-                    - baseline["expectancy"],
+                    "drawdown_delta": filtered["drawdown"] - baseline["drawdown"],
+                    "expectancy_delta": filtered["expectancy"] - baseline["expectancy"],
                     "filtered_drawdown": filtered["drawdown"],
-                    "filtered_take_rate": (
-                        float(taken_mask.mean()) if len(fold) else 0.0
-                    ),
+                    "filtered_take_rate": (float(taken_mask.mean()) if len(fold) else 0.0),
                     "training_take_rate_floor_pass": bool(
                         not training_floor.empty and training_floor.all()
                     ),
@@ -1881,33 +1737,22 @@ def model_selection_leaderboard(predictions: pd.DataFrame) -> pd.DataFrame:
         if fold_frame.empty:
             continue
         aggregate = {
-            "profit_factor_delta": float(
-                fold_frame["profit_factor_delta"].median()
-            ),
+            "profit_factor_delta": float(fold_frame["profit_factor_delta"].median()),
             "sharpe_delta": float(fold_frame["sharpe_delta"].median()),
             "drawdown_delta": float(fold_frame["drawdown_delta"].median()),
-            "expectancy_delta": float(
-                fold_frame["expectancy_delta"].median()
-            ),
-            "worst_filtered_drawdown": float(
-                fold_frame["filtered_drawdown"].max()
-            ),
+            "expectancy_delta": float(fold_frame["expectancy_delta"].median()),
+            "worst_filtered_drawdown": float(fold_frame["filtered_drawdown"].max()),
             "promising": _promising_fold_frame(fold_frame),
         }
         taken = selection["shadow_take"].map(
-            lambda value: str(value).strip().lower()
-            in {"1", "true", "yes", "pass", "ready"}
+            lambda value: str(value).strip().lower() in {"1", "true", "yes", "pass", "ready"}
         )
         rows.append(
             {
                 "model_name": str(model_name),
-                "selection_isolation_scheme": (
-                    MODEL_SELECTION_ISOLATION_SCHEME
-                ),
+                "selection_isolation_scheme": (MODEL_SELECTION_ISOLATION_SCHEME),
                 "selection_folds": int(selection["fold"].nunique()),
-                "untouched_evaluation_folds": int(
-                    evaluation["fold"].nunique()
-                ),
+                "untouched_evaluation_folds": int(evaluation["fold"].nunique()),
                 "selection_rows": int(len(selection)),
                 "selection_taken_rows": int(taken.sum()),
                 "selection_take_rate": float(taken.mean()),
@@ -1921,17 +1766,21 @@ def model_selection_leaderboard(predictions: pd.DataFrame) -> pd.DataFrame:
         )
     if not rows:
         return pd.DataFrame(columns=columns)
-    result = pd.DataFrame(rows).sort_values(
-        [
-            "promising",
-            "selection_score",
-            "expectancy_delta",
-            "profit_factor_delta",
-            "sharpe_delta",
-            "model_name",
-        ],
-        ascending=[False, False, False, False, False, True],
-    ).reset_index(drop=True)
+    result = (
+        pd.DataFrame(rows)
+        .sort_values(
+            [
+                "promising",
+                "selection_score",
+                "expectancy_delta",
+                "profit_factor_delta",
+                "sharpe_delta",
+                "model_name",
+            ],
+            ascending=[False, False, False, False, False, True],
+        )
+        .reset_index(drop=True)
+    )
     result.insert(0, "chosen_model", False)
     result.insert(0, "selection_rank", result.index + 1)
     result.loc[result.index[0], "chosen_model"] = True

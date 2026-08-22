@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 from pathlib import Path
 
 from quant_platform.active_pipeline import CommandResult, ROOT
@@ -19,11 +21,8 @@ def train_ppo_research_policy(root: Path = ROOT, pair_id: str = "") -> CommandRe
         status = "missing"
         blocker = "missing_optional_rl_dependency:stable-baselines3"
     report.parent.mkdir(parents=True, exist_ok=True)
-    report.write_text(
-        "dependency,status,blocker,live_enabled\n"
-        f"stable-baselines3,{status},{blocker},False\n",
-        encoding="utf-8",
-    )
+    atomic_write_text(report, "dependency,status,blocker,live_enabled\n"
+        f"stable-baselines3,{status},{blocker},False\n", encoding="utf-8")
     result.paths["ppo_dependency_report"] = report
     result.summary["ppo_dependency_status"] = status
     return result

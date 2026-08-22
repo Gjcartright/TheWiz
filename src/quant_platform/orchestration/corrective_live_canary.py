@@ -23,6 +23,7 @@ from quant_platform.orchestration.corrective_live_canary_executor import (
 from quant_platform.orchestration.corrective_live_canary_outcome import (
     evaluate_live_canary_outcome,
 )
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 ROOT = Path(__file__).resolve().parents[3]
 POLICY_SCHEMA_VERSION = "thewiz.live_canary_policy.v2"
@@ -1086,14 +1087,14 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

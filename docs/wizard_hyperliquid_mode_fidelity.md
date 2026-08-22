@@ -1,8 +1,8 @@
 # Wizard and Hyperliquid Mode Fidelity
 
 - Required mode/orientation cells: `14`
-- Golden dashboard captures: `14`
-- Missing vendor-mode captures: `0`
+- Golden dashboard captures: `0`
+- Missing vendor-mode captures: `14`
 - Vendor formula parity proven: `4`
 - Vendor Copula behavioral parity proven: `2`
 - Live trading authorized: `false`

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -351,8 +355,8 @@ def build_current_wizard_hyperliquid_operating_cadence(
         ),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     daily_ready = bool(storage_ready and key_ready and chain_ready)
     summary: dict[str, object] = {
@@ -402,9 +406,9 @@ def build_current_wizard_hyperliquid_operating_cadence(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
     for key in ("manifest", "snapshot_manifest"):
-        paths[key].write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(paths[key], manifest_text, encoding="utf-8")
     for key in ("summary_md", "snapshot_summary_md"):
-        paths[key].write_text(summary_text, encoding="utf-8")
+        atomic_write_text(paths[key], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

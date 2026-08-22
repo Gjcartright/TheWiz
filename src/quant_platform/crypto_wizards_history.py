@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,12 @@ from urllib.parse import urlencode
 import requests
 
 from quant_platform.api_extraction import CryptoWizardsFetchError
-from quant_platform.crypto_wizards_catalog import BASE_URL
+from quant_platform.crypto_wizards_catalog import (
+    BASE_URL,
+    ENDPOINT_CREDIT_CONTRACT_VERSION,
+    endpoint_contract,
+)
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
 from quant_platform.wizard_run_config import WizardRunConfiguration, canonical_exact_mode
 
 PRESCANNED_ROW_FEATURES = (
@@ -249,6 +255,7 @@ def fetch_prescanned_payload(
     interval: str = "Min5",
     asset: str | None = None,
     timeout: float = 30.0,
+    result_recorder: Callable[[dict[str, Any] | list[Any]], str] | None = None,
 ) -> dict[str, Any] | list[Any]:
     params: dict[str, object] = {
         "priority": priority,
@@ -263,6 +270,7 @@ def fetch_prescanned_payload(
         params=params,
         api_key=api_key,
         timeout=timeout,
+        result_recorder=result_recorder,
     )
 
 
@@ -282,12 +290,14 @@ def fetch_credits_used(
     api_key: str | None = None,
     base_url: str = BASE_URL,
     timeout: float = 30.0,
+    result_recorder: Callable[[dict[str, Any] | list[Any]], str] | None = None,
 ) -> dict[str, Any] | list[Any]:
     return _get_json(
         f"{base_url.rstrip('/')}/v1beta/credits-used",
         params={},
         api_key=api_key,
         timeout=timeout,
+        result_recorder=result_recorder,
     )
 
 
@@ -573,7 +583,7 @@ def write_zscores_pair_payload(
     )
     output = Path(output_dir) / f"pair_{_safe_filename(payload['pair_id'])}_{request.interval.lower()}_cw_zscores_history.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -593,7 +603,7 @@ def write_backtest_pair_payload(
     )
     output = Path(output_dir) / f"pair_{_safe_filename(payload['pair_id'])}_{request.interval.lower()}_cw_backtest_history.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -903,14 +913,67 @@ def _request_template_row(
     }
 
 
-def _get_json(url: str, *, params: dict[str, object], api_key: str | None, timeout: float) -> dict[str, Any] | list[Any]:
+def fetch_crypto_wizards_json(
+    *,
+    method: str,
+    url: str,
+    api_key: str | None,
+    timeout: float,
+    params: dict[str, object] | None = None,
+    payload: dict[str, object] | None = None,
+) -> dict[str, Any] | list[Any]:
+    """Use the one cataloged, permit-bound transport for an official API call."""
+
+    normalized_method = method.strip().upper()
+    endpoint_contract(normalized_method, url)
+    if normalized_method == "GET":
+        if payload is not None:
+            raise ValueError("Crypto Wizards GET payload is not supported")
+        return _get_json(
+            url,
+            params=params or {},
+            api_key=api_key,
+            timeout=timeout,
+        )
+    if normalized_method == "POST":
+        if params:
+            raise ValueError("Crypto Wizards POST query parameters are not supported")
+        return _post_json(
+            url,
+            payload=payload or {},
+            api_key=api_key,
+            timeout=timeout,
+        )
+    raise ValueError(f"Unsupported Crypto Wizards method: {normalized_method}")
+
+
+def _get_json(
+    url: str,
+    *,
+    params: dict[str, object],
+    api_key: str | None,
+    timeout: float,
+    result_recorder: Callable[[dict[str, Any] | list[Any]], str] | None = None,
+) -> dict[str, Any] | list[Any]:
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["X-api-key"] = api_key
-    try:
+
+    def request() -> dict[str, Any] | list[Any]:
         response = requests.get(url, params=params, headers=headers, timeout=timeout)
         response.raise_for_status()
         return response.json()
+
+    try:
+        return _run_governed_wizard_request(
+            method="GET",
+            url=url,
+            params=params,
+            payload=None,
+            timeout=timeout,
+            callback=request,
+            result_recorder=result_recorder,
+        )
     except requests.exceptions.RequestException as exc:
         raise CryptoWizardsFetchError(f"Crypto Wizards API request failed at {url}: {exc}") from exc
     except ValueError as exc:
@@ -921,18 +984,77 @@ def _post_json(url: str, *, payload: dict[str, object], api_key: str | None, tim
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["X-api-key"] = api_key
-    try:
+
+    response: object | None = None
+
+    def request() -> dict[str, Any] | list[Any]:
+        nonlocal response
         response = requests.post(url, json=payload, headers=headers, timeout=timeout)
         response.raise_for_status()
         return response.json()
+
+    try:
+        return _run_governed_wizard_request(
+            method="POST",
+            url=url,
+            params=None,
+            payload=payload,
+            timeout=timeout,
+            callback=request,
+        )
     except requests.exceptions.RequestException as exc:
-        detail = _http_error_detail(response if "response" in locals() else None)
+        detail = _http_error_detail(response)
         suffix = f"; vendor_response={detail}" if detail else ""
         raise CryptoWizardsFetchError(
             f"Crypto Wizards API request failed at {url}: {exc}{suffix}"
         ) from exc
     except ValueError as exc:
         raise CryptoWizardsFetchError(f"Crypto Wizards API response was not JSON at {url}: {exc}") from exc
+
+
+def _run_governed_wizard_request(
+    *,
+    method: str,
+    url: str,
+    params: dict[str, object] | None,
+    payload: dict[str, object] | None,
+    timeout: float,
+    callback,
+    result_recorder: Callable[[dict[str, Any] | list[Any]], str] | None = None,
+) -> dict[str, Any] | list[Any]:
+    from quant_platform.orchestration.corrective_external_effects import (
+        current_external_effect_session,
+        run_authorized_credit_call,
+    )
+
+    contract = endpoint_contract(method, url)
+    if current_external_effect_session() is None:
+        raise CryptoWizardsFetchError(
+            "official Crypto Wizards API request requires reserved effect authority"
+        )
+    request_material = {
+        "contract_version": ENDPOINT_CREDIT_CONTRACT_VERSION,
+        "method": method.upper(),
+        "url": url,
+        "params": params,
+        "payload": payload,
+        "timeout_seconds": timeout,
+    }
+    return run_authorized_credit_call(
+        target=url,
+        operation=contract.name,
+        method=method,
+        request_payload=json.dumps(
+            request_material,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8"),
+        request_count=1,
+        credit_cost=contract.credits,
+        callback=callback,
+        result_recorder=result_recorder,
+    )
 
 
 def _http_error_detail(response: object | None) -> str:

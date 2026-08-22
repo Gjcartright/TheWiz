@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
+from itertools import count
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from eth_account import Account
@@ -12,6 +15,7 @@ from eth_account.messages import encode_defunct
 
 from quant_platform.orchestration import corrective_live_canary_execution as live_execution
 from quant_platform.orchestration import corrective_live_canary_executor as preflight
+from quant_platform.orchestration import corrective_order_authority as order_gate
 from quant_platform.orchestration.corrective_live_canary import (
     _canonical_json,
     _payload_hash,
@@ -25,9 +29,24 @@ from quant_platform.orchestration.corrective_live_canary_execution import (
     live_canary_executor_contract,
     run_live_canary_executor,
 )
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    external_effect_authority_session,
+)
+from quant_platform.orchestration.corrective_order_authority import (
+    CorrectiveOrderAuthority,
+    OrderAuthorityIdentity,
+    issue_gate00g_permit,
+)
 from quant_platform.orchestration.corrective_release_gates import (
     CANDIDATE_SCHEMA_VERSION,
 )
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthority,
+    EffectAuthorityProfile,
+    EffectKind,
+)
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 from tests.candidate_queue_support import seal_candidate_with_valid_queue
 from tests.test_corrective_live_canary import (
     NOW,
@@ -38,12 +57,54 @@ from tests.test_corrective_live_canary import (
     _write_parity,
 )
 
+_KEYCHAIN_SESSION_SEQUENCE = count(1)
+
+
+@contextmanager
+def _live_keychain_authority(root: Path, *, label: str):
+    instance = f"{label}-{next(_KEYCHAIN_SESSION_SEQUENCE)}"
+    material = f"{root}:{instance}".encode("utf-8")
+    authority = EffectAuthority(
+        root=root,
+        secret=b"live-canary-test-keychain-authority",
+        issuer_id="live-canary-test-keychain-supervisor",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    with external_effect_authority_session(
+        authority=authority,
+        run_id=f"live-keychain-{instance}",
+        intended_slot_id=f"live-keychain-slot-{instance}",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="hyperliquid_live_adapter_test",
+        account_scope_id="hyperliquid:live:test",
+        reservation_id=f"live-keychain-reservation-{instance}",
+        reservation_sha256=sha256(material).hexdigest(),
+        allowed_targets=frozenset({preflight.HYPERLIQUID_MAINNET_INFO_URL}),
+        allowed_credential_keys=frozenset(
+            {preflight.HYPERLIQUID_LIVE_AGENT_KEYCHAIN_CREDENTIAL_ID}
+        ),
+        max_total_requests=128,
+        max_total_credits=0,
+    ):
+        yield
+
 
 class SimulatedMainnet:
-    def __init__(self, master_address: str, *, partial_entry: bool = False) -> None:
+    def __init__(
+        self,
+        master_address: str,
+        *,
+        partial_entry: bool = False,
+        after_leverage=None,
+        open_orders: list[dict[str, object]] | None = None,
+    ) -> None:
         self.master_address = master_address
         self.partial_entry = partial_entry
+        self.after_leverage = after_leverage
         self.positions = {"BTC": 0.0, "ETH": 0.0}
+        self.open_orders = list(open_orders or [])
         self.fills: list[dict[str, object]] = []
         self.bulk_requests: list[list[dict[str, object]]] = []
         self.leverage_updates: list[tuple[int, str, bool]] = []
@@ -75,7 +136,7 @@ class SimulatedMainnet:
                 ],
             }
         if request_type == "openOrders":
-            return []
+            return list(self.open_orders)
         if request_type == "userFillsByTime":
             return [
                 row
@@ -92,6 +153,8 @@ class SimulatedMainnet:
         class Exchange:
             def update_leverage(self, leverage, coin, is_cross):
                 outer.leverage_updates.append((leverage, coin, is_cross))
+                if outer.after_leverage is not None:
+                    outer.after_leverage(len(outer.leverage_updates))
                 return {"status": "ok"}
 
             def bulk_orders(self, requests):
@@ -137,6 +200,12 @@ class SimulatedMainnet:
 
             def bulk_cancel(self, requests):
                 outer.cancels.append(requests)
+                cancelled = {int(row["oid"]) for row in requests}
+                outer.open_orders = [
+                    row
+                    for row in outer.open_orders
+                    if int(row["oid"]) not in cancelled
+                ]
                 return {"status": "ok"}
 
             def market_close(self, coin, sz=None, slippage=None):
@@ -249,15 +318,16 @@ def _authorized_fixture(tmp_path, monkeypatch):
         keychain_service="thewiz-live-canary-test",
     )
     market = SimulatedMainnet(str(config.master_address))
-    preflight.build_live_canary_executor_preflight(
-        root=tmp_path,
-        now=NOW,
-        candidate=candidate,
-        policy_id=_policy_id(policy),
-        config=config,
-        info_client=market.info,
-        keychain_reader=lambda service, address: signer.key.hex(),
-    )
+    with _live_keychain_authority(tmp_path, label="preflight"):
+        preflight.build_live_canary_executor_preflight(
+            root=tmp_path,
+            now=NOW,
+            candidate=candidate,
+            policy_id=_policy_id(policy),
+            config=config,
+            info_client=market.info,
+            keychain_reader=lambda service, address: signer.key.hex(),
+        )
     ready = _build(
         tmp_path,
         candidate_valid=True,
@@ -278,23 +348,219 @@ def _authorized_fixture(tmp_path, monkeypatch):
     }
 
 
-def _execute(tmp_path, fixture, monkeypatch, *, market=None, key_reader=None):
+class GateClock:
+    def __init__(self, now: datetime) -> None:
+        self.now = now
+
+    def __call__(self) -> datetime:
+        return self.now
+
+
+def _live_order_gate(
+    tmp_path,
+    fixture,
+    monkeypatch,
+    *,
+    market=None,
+    now: datetime = NOW,
+    ttl_seconds: int = 120,
+):
+    def policy(lane: str):
+        assert lane == VenueLane.HYPERLIQUID_PERP.value
+        return SimpleNamespace(
+            venue="hyperliquid",
+            activation_enabled=True,
+            live_enabled=True,
+            authenticated_access_allowed=True,
+            order_submission_allowed=True,
+            account_mutation_allowed=True,
+            testnet_progression_allowed=False,
+            allowed_testnet_adapters=(),
+        )
+
+    monkeypatch.setattr(order_gate, "venue_policy", policy)
+    clock = GateClock(now)
+    primitive = EffectAuthority(
+        root=tmp_path / "gate00g_live_canary",
+        secret=b"l" * 32,
+        issuer_id="live-canary-gate00g-test",
+        profile=EffectAuthorityProfile(
+            name="GATE00G_LIVE_CANARY_TEST_ONLY",
+            allowed_effects=frozenset(
+                {EffectKind.ORDER_SUBMISSION, EffectKind.ACCOUNT_MUTATION}
+            ),
+            max_ttl_seconds=300,
+        ),
+        clock=clock,
+    )
+    identity = OrderAuthorityIdentity(
+        run_id="run-live-canary-gate00g",
+        intended_slot_id="slot-live-canary-gate00g",
+        account_scope_id=str(fixture["config"].master_address),
+        proposal_id=str(fixture["approval"]["approval_id"]),
+        model_version="model-live-canary-gate00g",
+        formula_version="formula-live-canary-gate00g",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+    )
+    draft = CorrectiveOrderAuthority(
+        authority=primitive,
+        identity=identity,
+        permits=(),
+    )
+    config = fixture["config"]
+    approval_id = str(fixture["approval"]["approval_id"])
+    legs = fixture["approval"]["legs"]
+    specs = [
+        live_execution._canary_leverage_effect_spec(
+            authority=draft,
+            config=config,
+            approval_id=approval_id,
+            market=live_execution._market(leg),
+        )
+        for leg in legs
+    ]
+    specs.extend(
+        live_execution._canary_order_effect_spec(
+            authority=draft,
+            config=config,
+            approval_id=approval_id,
+            operation="bulk_orders",
+            market=live_execution._market(leg),
+            side=str(leg["side"]).lower(),
+            size=leg["size"],
+            reference_price=leg["limit_price"],
+            reduce_only=False,
+            client_reference=f"{approval_id}:entry:{live_execution._market(leg)}",
+        )
+        for leg in legs
+    )
+    exit_requests = live_execution._exit_order_requests(
+        legs=legs,
+        mids={"BTC": 60_000.0, "ETH": 3_000.0},
+        market_meta={
+            "BTC": {"szDecimals": 5},
+            "ETH": {"szDecimals": 4},
+        },
+        maximum_slippage_bps=float(fixture["approval"]["maximum_slippage_bps"]),
+    )
+    specs.extend(
+        live_execution._canary_order_effect_spec(
+            authority=draft,
+            config=config,
+            approval_id=approval_id,
+            operation="bulk_orders",
+            market=str(request["coin"]),
+            side="buy" if bool(request["is_buy"]) else "sell",
+            size=request["sz"],
+            reference_price=request["limit_px"],
+            reduce_only=True,
+            client_reference=f"{approval_id}:exit:{request['coin']}",
+        )
+        for request in exit_requests
+    )
+    specs.extend(
+        live_execution._canary_order_effect_spec(
+            authority=draft,
+            config=config,
+            approval_id=approval_id,
+            operation="recovery_prepare",
+            market=live_execution._market(leg),
+            side=str(leg["side"]).lower(),
+            size=leg["size"],
+            reduce_only=True,
+            client_reference=(
+                f"{approval_id}:recovery_prepare:{live_execution._market(leg)}"
+            ),
+        )
+        for leg in legs
+    )
+    specs.extend(
+        live_execution._canary_order_effect_spec(
+            authority=draft,
+            config=config,
+            approval_id=approval_id,
+            operation="market_close",
+            market=live_execution._market(leg),
+            side="sell" if str(leg["side"]).upper() == "BUY" else "buy",
+            size=leg["size"],
+            reference_price=leg["limit_price"],
+            reduce_only=True,
+            client_reference=(
+                f"{approval_id}:market_close:{live_execution._market(leg)}:0.01"
+            ),
+        )
+        for leg in legs
+    )
+    selected_market = market or fixture["market"]
+    legs_by_market = {
+        live_execution._market(leg): leg for leg in fixture["approval"]["legs"]
+    }
+    for order in selected_market.open_orders:
+        market_name = live_execution._market(order)
+        leg = legs_by_market[market_name]
+        specs.append(
+            live_execution._canary_order_effect_spec(
+                authority=draft,
+                config=config,
+                approval_id=approval_id,
+                operation="bulk_cancel",
+                market=market_name,
+                side=live_execution._recovery_order_side(order=order, leg=leg),
+                size=0,
+                reduce_only=True,
+                client_reference=(
+                    f"{approval_id}:cancel:{market_name}:{int(order['oid'])}"
+                ),
+            )
+        )
+    permits = tuple(
+        issue_gate00g_permit(
+            authority=primitive,
+            spec=spec,
+            ttl_seconds=ttl_seconds,
+        )
+        for spec in specs
+    )
+    return (
+        CorrectiveOrderAuthority(
+            authority=primitive,
+            identity=identity,
+            permits=permits,
+        ),
+        clock,
+        tuple(specs),
+    )
+
+
+def _execute(
+    tmp_path,
+    fixture,
+    monkeypatch,
+    *,
+    market=None,
+    key_reader=None,
+    order_authority=None,
+):
     monkeypatch.setenv(LIVE_ENABLE_ENV, "true")
     monkeypatch.setattr(live_execution, "_utc_now", lambda: NOW)
     selected_market = market or fixture["market"]
-    return run_live_canary_executor(
-        root=tmp_path,
-        execute=True,
-        authorization_sha256=fixture["authorization_sha256"],
-        approval_id=fixture["approval"]["approval_id"],
-        acknowledgement=LIVE_ACKNOWLEDGEMENT,
-        config=fixture["config"],
-        info_client=selected_market.info,
-        keychain_reader=key_reader
-        or (lambda service, address: fixture["signer"].key.hex()),
-        exchange_factory=selected_market.exchange,
-        waiter=lambda seconds: None,
-    )
+    with _live_keychain_authority(tmp_path, label="execute"):
+        return run_live_canary_executor(
+            root=tmp_path,
+            execute=True,
+            authorization_sha256=fixture["authorization_sha256"],
+            approval_id=fixture["approval"]["approval_id"],
+            acknowledgement=LIVE_ACKNOWLEDGEMENT,
+            config=fixture["config"],
+            info_client=selected_market.info,
+            keychain_reader=key_reader
+            or (lambda service, address: fixture["signer"].key.hex()),
+            exchange_factory=selected_market.exchange,
+            waiter=lambda seconds: None,
+            order_authority=order_authority,
+        )
 
 
 def test_executor_contract_rotates_when_any_internal_module_changes(
@@ -686,9 +952,72 @@ def test_existing_process_lock_fails_closed_without_reservation_or_key_access(
     ).exists()
 
 
+@pytest.mark.parametrize(
+    ("scenario", "expected"),
+    (
+        ("missing", "authority_missing"),
+        ("stale", "expired"),
+        ("replayed", "consumed"),
+        ("tampered", "signature_invalid"),
+    ),
+)
+def test_gate00g_adversarial_authority_blocks_before_key_sdk_or_effect(
+    tmp_path,
+    monkeypatch,
+    scenario,
+    expected,
+):
+    fixture = _authorized_fixture(tmp_path, monkeypatch)
+    gate, clock, specs = _live_order_gate(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        ttl_seconds=1 if scenario == "stale" else 120,
+    )
+    if scenario == "missing":
+        selected_gate = None
+    elif scenario == "stale":
+        clock.now += timedelta(seconds=2)
+        selected_gate = gate
+    elif scenario == "replayed":
+        gate.consume(specs[0])
+        selected_gate = gate
+    else:
+        permits = list(gate.permits)
+        permits[0] = permits[0].model_copy(update={"signature": "0" * 64})
+        selected_gate = CorrectiveOrderAuthority(
+            authority=gate.authority,
+            identity=gate.identity,
+            permits=tuple(permits),
+        )
+    key_reads: list[str] = []
+
+    result = _execute(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        key_reader=lambda _service, account: key_reads.append(account) or "",
+        order_authority=selected_gate,
+    )
+
+    assert result.status == "BLOCKED_BEFORE_KEY_ACCESS"
+    assert expected in ";".join(result.blockers).lower()
+    assert key_reads == []
+    assert fixture["market"].leverage_updates == []
+    assert fixture["market"].bulk_requests == []
+    assert fixture["market"].cancels == []
+    assert fixture["market"].market_closes == []
+
+
 def test_exact_ioc_entry_reduce_only_exit_and_replay_block(tmp_path, monkeypatch):
     fixture = _authorized_fixture(tmp_path, monkeypatch)
-    result = _execute(tmp_path, fixture, monkeypatch)
+    gate, _, _ = _live_order_gate(tmp_path, fixture, monkeypatch)
+    result = _execute(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        order_authority=gate,
+    )
 
     assert result.status == "EXECUTED_ONE_CANARY_PENDING_SUPREME_REVIEW"
     assert result.order_submission_performed is True
@@ -748,6 +1077,7 @@ def test_exact_ioc_entry_reduce_only_exit_and_replay_block(tmp_path, monkeypatch
         fixture,
         monkeypatch,
         key_reader=forbidden_key,
+        order_authority=gate,
     )
     assert replay.status == "BLOCKED_BEFORE_KEY_ACCESS"
     assert "live_canary_approval_already_reserved_or_used" in replay.blockers
@@ -759,7 +1089,19 @@ def test_partial_entry_never_retries_and_recovers_flat(tmp_path, monkeypatch):
     partial = SimulatedMainnet(
         str(fixture["config"].master_address), partial_entry=True
     )
-    result = _execute(tmp_path, fixture, monkeypatch, market=partial)
+    gate, _, _ = _live_order_gate(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        market=partial,
+    )
+    result = _execute(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        market=partial,
+        order_authority=gate,
+    )
 
     assert result.status == "INCIDENT_RECOVERED_FLAT"
     assert result.order_submission_performed is True
@@ -780,6 +1122,45 @@ def test_partial_entry_never_retries_and_recovers_flat(tmp_path, monkeypatch):
     assert incident["reconciled_flat"] is True
     assert state["entry_retry_allowed"] is False
     assert state["entry_submit_attempted"] is True
+
+
+def test_signed_approval_revocation_between_leverage_legs_stops_second_effect(
+    tmp_path,
+    monkeypatch,
+):
+    fixture = _authorized_fixture(tmp_path, monkeypatch)
+
+    def revoke_after_first_leverage(call_count):
+        if call_count != 1:
+            return
+        approval_path = tmp_path / "reports" / "active" / "live_canary_user_approval.json"
+        approval = json.loads(approval_path.read_text(encoding="utf-8"))
+        approval["approved"] = False
+        _write_json(approval_path, approval)
+
+    market = SimulatedMainnet(
+        str(fixture["config"].master_address),
+        after_leverage=revoke_after_first_leverage,
+    )
+    gate, _, _ = _live_order_gate(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        market=market,
+    )
+
+    result = _execute(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        market=market,
+        order_authority=gate,
+    )
+
+    assert result.status == "INCIDENT_RECOVERED_FLAT"
+    assert market.leverage_updates == [(1, "BTC", True)]
+    assert market.bulk_requests == []
+    assert market.market_closes == []
 
 
 def test_recovery_only_uses_frozen_reservation_after_active_authority_expires(
@@ -833,25 +1214,38 @@ def test_recovery_only_uses_frozen_reservation_after_active_authority_expires(
     )
     recovery_market = SimulatedMainnet(str(fixture["config"].master_address))
     recovery_market.positions["BTC"] = 0.0002
+    recovery_market.open_orders = [
+        {"coin": "ETH", "oid": 77, "side": "A"}
+    ]
     monkeypatch.setenv(LIVE_ENABLE_ENV, "true")
-
-    result = run_live_canary_executor(
-        root=tmp_path,
-        execute=True,
-        recover_only=True,
-        authorization_sha256=fixture["authorization_sha256"],
-        approval_id=approval_id,
-        acknowledgement=LIVE_ACKNOWLEDGEMENT,
+    gate, _, _ = _live_order_gate(
+        tmp_path,
+        fixture,
+        monkeypatch,
+        market=recovery_market,
         now=NOW + timedelta(days=1),
-        config=fixture["config"],
-        info_client=recovery_market.info,
-        keychain_reader=lambda service, address: fixture["signer"].key.hex(),
-        exchange_factory=recovery_market.exchange,
-        waiter=lambda seconds: None,
     )
+
+    with _live_keychain_authority(tmp_path, label="recovery"):
+        result = run_live_canary_executor(
+            root=tmp_path,
+            execute=True,
+            recover_only=True,
+            authorization_sha256=fixture["authorization_sha256"],
+            approval_id=approval_id,
+            acknowledgement=LIVE_ACKNOWLEDGEMENT,
+            now=NOW + timedelta(days=1),
+            config=fixture["config"],
+            info_client=recovery_market.info,
+            keychain_reader=lambda service, address: fixture["signer"].key.hex(),
+            exchange_factory=recovery_market.exchange,
+            waiter=lambda seconds: None,
+            order_authority=gate,
+        )
 
     assert result.status == "INCIDENT_RECOVERED_FLAT"
     assert result.reconciled_flat is True
     assert recovery_market.market_closes == ["BTC"]
+    assert recovery_market.cancels == [[{"coin": "ETH", "oid": 77}]]
     assert recovery_market.positions == {"BTC": 0.0, "ETH": 0.0}
     assert len(recovery_market.bulk_requests) == 0

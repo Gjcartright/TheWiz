@@ -1,0 +1,194 @@
+{
+  "schema_version": "thewiz.phase00_ccxt_evidence_contract.v1",
+  "contract_version": "2026-08-21.1",
+  "governing_reference": {
+    "title": "CCXT Manual",
+    "url": "https://github.com/ccxt/ccxt/wiki/manual",
+    "review_scope": "public load_markets and fetch_ohlcv behavior only"
+  },
+  "package": {
+    "name": "ccxt",
+    "pinned_version": "4.4.26",
+    "version_policy": "exact"
+  },
+  "phase00": {
+    "public_data_only": true,
+    "credentials_allowed": false,
+    "sandbox_allowed": false,
+    "account_eligibility_authority": false,
+    "order_authority": false
+  },
+  "methods": {
+    "allowed_public": [
+      "load_markets",
+      "fetch_ohlcv"
+    ],
+    "forbidden": [
+      "private_get",
+      "private_post",
+      "create_order",
+      "create_orders",
+      "cancel_order",
+      "cancel_orders",
+      "cancel_all_orders",
+      "transfer",
+      "deposit",
+      "withdraw",
+      "set_sandbox_mode"
+    ]
+  },
+  "runtime": {
+    "enable_rate_limit": true,
+    "timeout_ms": 120000,
+    "market_cache_max_age_ms": 3600000
+  },
+  "ohlcv": {
+    "default_page_limit": 500,
+    "minimum_page_limit": 1,
+    "maximum_page_limit": 1000,
+    "maximum_pages": 100,
+    "maximum_history_bars": 50000,
+    "end_boundary": "exclusive",
+    "deduplication": "timestamp_then_canonical_row_hash",
+    "conflicting_duplicate_policy": "fail",
+    "gap_policy": "fail",
+    "incomplete_current_bar_policy": "exclude"
+  },
+  "volume": {
+    "standard_ohlcv_volume_field": "base_volume",
+    "quote_volume_policy": "null_unless_returned_separately",
+    "usd_notional_policy": "null_unless_source_identified"
+  },
+  "lanes": {
+    "hyperliquid_perp": {
+      "exchange_id": "hyperliquid",
+      "parameter_registry_id": "hyperliquid_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": null
+    },
+    "dydx_perp": {
+      "exchange_id": "dydx",
+      "parameter_registry_id": "dydx_perp_public_v1",
+      "exchange_options": {},
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": null
+    },
+    "binance_us_spot": {
+      "exchange_id": "binanceus",
+      "parameter_registry_id": "binance_us_spot_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "spot"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": "endTime"
+    },
+    "binance_spot": {
+      "exchange_id": "binance",
+      "parameter_registry_id": "binance_spot_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "spot"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": "endTime"
+    },
+    "binance_margin": {
+      "exchange_id": "binance",
+      "parameter_registry_id": "binance_margin_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "margin"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": "endTime"
+    },
+    "binance_usdm_perp": {
+      "exchange_id": "binanceusdm",
+      "parameter_registry_id": "binance_usdm_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": "endTime"
+    },
+    "binance_coinm_perp": {
+      "exchange_id": "binancecoinm",
+      "parameter_registry_id": "binance_coinm_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": "endTime"
+    },
+    "bybit_spot": {
+      "exchange_id": "bybit",
+      "parameter_registry_id": "bybit_spot_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "spot"
+        }
+      },
+      "fetch_ohlcv_params": {
+        "category": "spot"
+      },
+      "end_boundary_parameter": null
+    },
+    "bybit_linear_perp": {
+      "exchange_id": "bybit",
+      "parameter_registry_id": "bybit_linear_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {
+        "category": "linear"
+      },
+      "end_boundary_parameter": null
+    },
+    "bybit_inverse_perp": {
+      "exchange_id": "bybit",
+      "parameter_registry_id": "bybit_inverse_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {
+        "category": "inverse"
+      },
+      "end_boundary_parameter": null
+    },
+    "coinbase_advanced_spot": {
+      "exchange_id": "coinbaseadvanced",
+      "parameter_registry_id": "coinbase_advanced_spot_public_v1",
+      "exchange_options": {},
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": null
+    },
+    "coinbase_advanced_perp": {
+      "exchange_id": "coinbaseadvanced",
+      "parameter_registry_id": "coinbase_advanced_perp_public_v1",
+      "exchange_options": {
+        "options": {
+          "defaultType": "swap"
+        }
+      },
+      "fetch_ohlcv_params": {},
+      "end_boundary_parameter": null
+    }
+  }
+}

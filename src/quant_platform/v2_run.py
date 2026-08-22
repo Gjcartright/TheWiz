@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
+import json
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    promote_staged_directory,
+    promote_staged_file,
+)
 from quant_platform.wizard_policy import load_wizard_discovery_policy
-
 
 ROOT = Path(__file__).resolve().parents[2]
 V2_RUN_SCHEMA_VERSION = "the_wizard_v2_run.v1"
@@ -253,7 +257,7 @@ def build_v2_preflight_run(
         seal = _build_seal(temporary, run_id=run_id)
         _atomic_json(seal, temporary / "seal.json")
         runs_dir.mkdir(parents=True, exist_ok=True)
-        temporary.replace(final)
+        promote_staged_directory(temporary, final)
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
@@ -506,7 +510,7 @@ def _snapshot_artifact(
             "blocker": blocker,
         }
     snapshot.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, snapshot)
+    atomic_copy_file(source, snapshot, immutable=True)
     frame = _read_csv(snapshot) if snapshot.suffix.lower() == ".csv" else pd.DataFrame()
     observed_ids = _column_values(frame, "candidate_set_id")
     observed_policies = _column_values(frame, "discovery_policy_hash")
@@ -801,21 +805,21 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, object], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_text(content: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(content, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _truthy(value: object) -> bool:

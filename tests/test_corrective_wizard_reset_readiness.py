@@ -98,7 +98,7 @@ def _prepare_root(tmp_path: Path) -> tuple[Path, Path]:
     root = tmp_path / "repo"
     active = root / "reports" / "active"
     active.mkdir(parents=True)
-    python = root / ".venv312" / "bin" / "python"
+    python = root / ".venv" / "bin" / "python3"
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
     runtime_temp = root / ".runtime_tmp"
@@ -369,7 +369,8 @@ def test_reset_readiness_requires_observation_manifest_and_execution_reset_roles
     assert result.summary["status"] == "PASS_RESET_AUTOMATION_READY"
     assert result.summary["scheduler_role_split_enforced"] is True
     assert result.summary["scheduler_execution_reset_binding_valid"] is True
-    checks = list(csv.DictReader(result.paths["checks"].open(encoding="utf-8")))
+    with result.paths["checks"].open(encoding="utf-8") as handle:
+        checks = list(csv.DictReader(handle))
     continuity = next(
         row for row in checks if row["check"] == "scheduler_capture_manifest_continuity"
     )
@@ -737,6 +738,7 @@ def test_reset_readiness_blocks_tampered_manifest_source_snapshot(tmp_path: Path
     )
     source_receipt = json.loads((root / manifest["source_receipt_path"]).read_text())
     snapshot = root / source_receipt["source_artifacts"][0]["snapshot_path"]
+    snapshot.chmod(0o600)
     snapshot.write_text("call_id\nchanged\n", encoding="utf-8")
 
     result = _run(root, plist_path)

@@ -11,6 +11,8 @@ from typing import Any
 
 import pandas as pd
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
 EXECUTION_SCHEMA_VERSION = "thewiz.live_canary_execution_receipt.v2"
 REVIEW_SCHEMA_VERSION = "thewiz.live_canary_post_canary_review.v1"
 OUTCOME_SCHEMA_VERSION = "thewiz.live_canary_outcome.v4"
@@ -507,7 +509,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _relative(path: Path | None, root: Path) -> str:

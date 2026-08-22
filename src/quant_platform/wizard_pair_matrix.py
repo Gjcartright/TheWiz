@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from collections import Counter
-from pathlib import Path
-from typing import Iterable
 import csv
 import json
 import re
+from collections import Counter
+from io import StringIO
+from pathlib import Path
+from typing import Iterable
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
 
 
 def _text(value: object) -> str:
@@ -224,17 +227,18 @@ def write_hourly_review_artifacts(
 
 def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     if not rows:
-        path.write_text("", encoding="utf-8")
+        atomic_write_text(path, "", encoding="utf-8")
         return
     fieldnames: list[str] = []
     for row in rows:
         for key in row:
             if key not in fieldnames:
                 fieldnames.append(key)
-    with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+    buffer = StringIO(newline="")
+    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+    atomic_write_text(path, buffer.getvalue(), encoding="utf-8")
 
 
 def load_matrix_rows(path: str | Path) -> list[dict[str, object]]:

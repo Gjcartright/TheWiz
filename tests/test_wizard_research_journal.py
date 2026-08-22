@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -10,8 +11,42 @@ from quant_platform.wizard_research_journal import (
     _build_detail_records,
     _build_strategy_mode_capture_queue,
     _build_two_hour_copula_report,
+    build_wizard_research_journal,
     refresh_wizard_pair_page_capture_from_matrices,
 )
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_terminal_ou_v6_rows_are_included_in_research_journal(tmp_path: Path):
+    reports = tmp_path / "reports"
+    active = reports / "active"
+    active.mkdir(parents=True)
+    shutil.copy2(
+        PROJECT_ROOT / "reports" / "wizard_research_journal_schema.csv",
+        reports / "wizard_research_journal_schema.csv",
+    )
+    pd.DataFrame(
+        [
+            {
+                "journal_layer": "ou_v6_terminal_evaluation",
+                "capture_id": "wizcall_test",
+                "pair": "APT-ATOM",
+                "timeframe": "1d",
+                "strategy_label": "OU (Spread)",
+                "capture_status": "failed",
+                "capture_blocker": "trend_selector_mismatch",
+            }
+        ]
+    ).to_csv(active / "wizard_ou_v6_terminal_journal_rows.csv", index=False)
+
+    result = build_wizard_research_journal(root=tmp_path)
+    journal = pd.read_csv(result.paths["wizard_research_journal"])
+
+    assert result.summary["ou_v6_terminal_rows"] == 1
+    assert journal["journal_layer"].eq("ou_v6_terminal_evaluation").sum() == 1
+    row = journal.loc[journal["journal_layer"].eq("ou_v6_terminal_evaluation")].iloc[0]
+    assert row["capture_blocker"] == "trend_selector_mismatch"
 
 
 def test_detail_records_preserve_top_metrics_separately_from_detail_metrics(tmp_path):

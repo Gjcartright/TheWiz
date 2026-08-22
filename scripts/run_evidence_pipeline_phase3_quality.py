@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data" / "processed" / "evidence_pipeline"
 REPORTS = ROOT / "reports" / "evidence_pipeline"
@@ -335,10 +334,11 @@ def metric_summary(
     losses = trade_s[trade_s < 0.0]
     loss_sum = abs(float(losses.sum()))
     profit_factor = float(wins.sum() / loss_sum) if loss_sum > 0 else (float("inf") if float(wins.sum()) > 0 else 0.0)
-    std = float(returns_s.std(ddof=0))
+    std = float(returns_s.std(ddof=1)) if len(returns_s) >= 2 else 0.0
     sharpe = float(math.sqrt(periods_per_year) * returns_s.mean() / std) if std > 0 else 0.0
-    peak = equity.cummax()
-    max_dd = float(((peak - equity) / peak.replace(0, np.nan)).fillna(0.0).max())
+    equity_with_initial = pd.concat([pd.Series([1.0], dtype="float64"), equity], ignore_index=True)
+    peak = equity_with_initial.cummax()
+    max_dd = float(((peak - equity_with_initial) / peak.replace(0, np.nan)).fillna(0.0).max())
     return {
         "trades": int(len(trade_s)),
         "profit_factor": profit_factor if math.isfinite(profit_factor) else 999.0,

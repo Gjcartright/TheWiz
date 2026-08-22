@@ -21,6 +21,7 @@ from quant_platform.orchestration.corrective_governance import (
 from quant_platform.orchestration.corrective_registered_rerun import (
     build_registered_rerun_gate,
 )
+from quant_platform.orchestration.corrective_runtime import atomic_write_text, promote_staged_file
 from quant_platform.orchestration.corrective_stage4_handoff_readiness import (
     build_corrective_stage4_handoff_readiness,
 )
@@ -164,7 +165,7 @@ def build_near_miss_queue(*, root: Path = ROOT, now: datetime | None = None) -> 
     path = active / "walkforward_near_miss_queue.csv"
     _atomic_csv(selected, path)
     markdown = active / "walkforward_near_miss_queue.md"
-    markdown.write_text(_near_miss_markdown(selected, acceptance, holdout), encoding="utf-8")
+    atomic_write_text(markdown, _near_miss_markdown(selected, acceptance, holdout), encoding="utf-8")
     batch_columns = [
         "semantic_hypothesis_id",
         "experiment_id",
@@ -327,7 +328,7 @@ def build_corrective_research_funnel(
     path = root / "reports" / "active" / "corrective_research_funnel.csv"
     _atomic_csv(frame, path)
     md = root / "reports" / "active" / "corrective_research_funnel.md"
-    md.write_text(_funnel_markdown(frame), encoding="utf-8")
+    atomic_write_text(md, _funnel_markdown(frame), encoding="utf-8")
     return {"path": path, "markdown": md, "frame": frame}
 
 
@@ -474,7 +475,7 @@ def issue_final_one_x_survivor_receipt(
         source = Path(registered_bridge["path"])
         temporary = path.with_suffix(path.suffix + ".tmp")
         temporary.write_bytes(source.read_bytes())
-        temporary.replace(path)
+        promote_staged_file(temporary, path)
         receipt = dict(registered_bridge["receipt"])
     return {"path": path, "receipt": receipt}
 
@@ -1001,14 +1002,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _truthy(value: Any) -> bool:

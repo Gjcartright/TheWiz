@@ -8,13 +8,29 @@ import fcntl
 import json
 import os
 import subprocess
-import tempfile
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_issuer,
+    read_authorized_credential,
+    reserved_external_effect_session,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
+    scheduler_python_path,
+    write_immutable_json,
+)
+from quant_platform.orchestration.corrective_scheduler_lock import (
+    publication_lease_for_path,
+)
+from quant_platform.orchestration.corrective_scheduler_supervisor import (
+    supervise_scheduler_run,
+)
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     validate_capture_manifest_source_receipt,
 )
@@ -118,7 +134,7 @@ def run_wizard_proof_launcher(
     execute: bool = True,
     force: bool = False,
     python: Path | None = None,
-    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    runner: Callable[..., subprocess.CompletedProcess[str]],
     unattended_preflight_builder: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
     """Skip heavy imports after a proven daily attempt; otherwise run the scheduler."""
@@ -229,7 +245,7 @@ def run_wizard_proof_launcher(
         except Exception as exc:  # noqa: BLE001 - launcher must fail closed
             unattended_preflight_status = "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
             unattended_preflight_blockers = [
-                f"unattended_preflight_failed:{type(exc).__name__}:{exc}"
+                f"unattended_preflight_failed:{safe_exception_code(exc)}"
             ]
         if unattended_preflight_status != "PASS_UNATTENDED_EXTERNAL_PREFLIGHT":
             should_run = False
@@ -240,7 +256,7 @@ def run_wizard_proof_launcher(
                 else "unattended_external_preflight_not_pass"
             )
     if should_run:
-        executable = python or root / ".venv312" / "bin" / "python"
+        executable = python or scheduler_python_path(root)
         if not executable.is_file():
             launcher_status = "BLOCKED_SCHEDULER_PYTHON_MISSING"
             blocker = f"scheduler_python_missing:{executable}"
@@ -2161,62 +2177,52 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    atomic_write_text(
+        path,
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        publication_scope="wizard_proof_launcher",
+    )
 
 
 def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> None:
-    encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_name = ""
     try:
-        with tempfile.NamedTemporaryFile(
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            temporary_name = handle.name
-            handle.write(encoded)
-            handle.flush()
-            os.fsync(handle.fileno())
-        try:
-            os.link(temporary_name, path)
-        except FileExistsError:
-            if path.read_bytes() != encoded:
-                raise ValueError(f"immutable launcher receipt collision: {path}")
-    finally:
-        if temporary_name:
-            Path(temporary_name).unlink(missing_ok=True)
+        write_immutable_json(
+            path,
+            payload,
+            publication_scope="wizard_proof_launcher",
+        )
+    except ValueError as exc:
+        if not str(exc).startswith("immutable artifact collision:"):
+            raise
+        raise ValueError(f"immutable launcher receipt collision: {path}") from exc
 
 
 def _publish_latest_launcher_status(payload: dict[str, Any], path: Path) -> bool:
     """Publish the newest operational heartbeat without letting dry runs replace it."""
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = path.with_suffix(path.suffix + ".lock")
-    with lock_path.open("a", encoding="utf-8") as lock:
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-        current = _read_json(path)
-        candidate_execute = payload.get("execute_requested") is True
-        current_execute = current.get("execute_requested") is True
-        if current_execute and not candidate_execute:
-            return False
-        if candidate_execute and not current_execute:
+    with publication_lease_for_path(path, scope="wizard_proof_launcher"):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lock_path = path.with_suffix(path.suffix + ".lock")
+        with lock_path.open("a", encoding="utf-8") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            current = _read_json(path)
+            candidate_execute = payload.get("execute_requested") is True
+            current_execute = current.get("execute_requested") is True
+            if current_execute and not candidate_execute:
+                return False
+            if candidate_execute and not current_execute:
+                _atomic_json(payload, path)
+                return True
+            candidate_completed_at = _launcher_completion_time(payload)
+            current_completed_at = _launcher_completion_time(current)
+            if (
+                candidate_completed_at is not None
+                and current_completed_at is not None
+                and candidate_completed_at < current_completed_at
+            ):
+                return False
             _atomic_json(payload, path)
             return True
-        candidate_completed_at = _launcher_completion_time(payload)
-        current_completed_at = _launcher_completion_time(current)
-        if (
-            candidate_completed_at is not None
-            and current_completed_at is not None
-            and candidate_completed_at < current_completed_at
-        ):
-            return False
-        _atomic_json(payload, path)
-        return True
 
 
 def _launcher_completion_time(payload: dict[str, Any]) -> datetime | None:
@@ -2344,26 +2350,138 @@ def _launcher_exit_code(result: dict[str, Any]) -> int:
     return 0
 
 
+def _launcher_supervisor_result(
+    *,
+    execute: bool,
+    force: bool,
+    unattended_preflight_builder: Callable[..., Any] | None,
+    runner: Callable[..., subprocess.CompletedProcess[str]],
+) -> dict[str, Any]:
+    launcher = run_wizard_proof_launcher(
+        execute=execute,
+        force=force,
+        runner=runner,
+        unattended_preflight_builder=unattended_preflight_builder,
+    )
+    exit_code = _launcher_exit_code(launcher)
+    blockers = [str(value) for value in launcher.get("blockers", []) if str(value)]
+    if exit_code and not blockers:
+        blockers = [
+            f"wizard_proof_launcher_status:{launcher.get('launcher_status', 'UNKNOWN')}"
+        ]
+    return {
+        "status": "PASS" if exit_code == 0 else "BLOCKED",
+        "blockers": blockers,
+        "launcher_result": launcher,
+        "external_calls": 0,
+        "external_credits_reserved": 0,
+        "external_credits_consumed": 0,
+        "external_credits_reconciled": 0,
+        "order_attempts": 0,
+        "order_submissions": 0,
+        "authority_advanced": False,
+        "promotion_authority": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+
+
+def _run_heavy_scheduler_in_process(
+    command: list[str],
+    **kwargs: Any,
+) -> subprocess.CompletedProcess[str]:
+    """Preserve supervisor authority across the heavy scheduler boundary."""
+
+    root = Path(kwargs.get("cwd", ROOT)).resolve()
+    expected_prefix = [str(scheduler_python_path(root)), "-m", HEAVY_MODULE]
+    flags = command[len(expected_prefix) :]
+    allowed_flags = {"--execute", "--force", "--internal-continuation-only"}
+    if command[: len(expected_prefix)] != expected_prefix:
+        raise ValueError("wizard_heavy_in_process_command_identity_mismatch")
+    if len(flags) != len(set(flags)) or any(flag not in allowed_flags for flag in flags):
+        raise ValueError("wizard_heavy_in_process_flags_invalid")
+    if current_external_effect_issuer() is None:
+        raise RuntimeError("wizard_heavy_in_process_effect_issuer_missing")
+    from quant_platform.orchestration.corrective_wizard_proof_scheduler import (
+        run_corrective_wizard_proof_cycle,
+    )
+
+    run_corrective_wizard_proof_cycle(
+        root=root,
+        execute="--execute" in flags,
+        force="--force" in flags,
+        internal_continuation_only="--internal-continuation-only" in flags,
+    )
+    return subprocess.CompletedProcess(command, 0)
+
+
+def _authorized_unattended_preflight(*, root: Path, now: datetime) -> Any:
+    """Authorize one free credit-status request before the paid lane opens."""
+
+    issuer = current_external_effect_issuer()
+    if issuer is None:
+        raise RuntimeError("wizard_preflight_effect_issuer_missing")
+    material = {
+        "run_id": issuer.run_id,
+        "intended_slot_id": issuer.intended_slot_id,
+        "purpose": "wizard_unattended_credit_preflight",
+        "max_total_requests": 1,
+        "max_total_credits": 0,
+    }
+    reservation_sha256 = sha256(
+        json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    with reserved_external_effect_session(
+        reservation_id=f"wizard-preflight:{issuer.run_id}",
+        reservation_sha256=reservation_sha256,
+        max_total_requests=1,
+        max_total_credits=0,
+    ):
+        api_key = read_authorized_credential("CRYPTO_WIZARDS_API_KEY")
+        from quant_platform.orchestration.corrective_wizard_unattended_preflight import (
+            build_wizard_unattended_external_preflight,
+        )
+
+        return build_wizard_unattended_external_preflight(
+            root=root,
+            now=now,
+            api_key=api_key,
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-    from quant_platform.orchestration.corrective_wizard_unattended_preflight import (
-        build_wizard_unattended_external_preflight,
-    )
-
-    result = run_wizard_proof_launcher(
-        execute=args.execute,
-        force=args.force,
-        unattended_preflight_builder=(
-            build_wizard_unattended_external_preflight if args.execute else None
+    supervised = supervise_scheduler_run(
+        root=ROOT,
+        contract_key="wizard_proof",
+        publication_scope="wizard_external_research",
+        callback=lambda: _launcher_supervisor_result(
+            execute=args.execute,
+            force=args.force,
+            runner=_run_heavy_scheduler_in_process,
+            unattended_preflight_builder=(
+                _authorized_unattended_preflight if args.execute else None
+            ),
         ),
+        require_launchd_provenance=True,
     )
-    print(json.dumps(result, indent=2))
-    exit_code = _launcher_exit_code(result)
-    if exit_code:
-        raise SystemExit(exit_code)
+    print(
+        json.dumps(
+            {
+                "summary": supervised.result_summary,
+                "terminal_receipt": supervised.terminal_receipt,
+                "terminal_paths": {
+                    key: str(value) for key, value in supervised.terminal_paths.items()
+                },
+            },
+            indent=2,
+        )
+    )
+    if supervised.exit_code:
+        raise SystemExit(supervised.exit_code)
 
 
 if __name__ == "__main__":

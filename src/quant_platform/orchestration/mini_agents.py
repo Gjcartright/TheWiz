@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -130,9 +134,9 @@ def build_mini_agent_orchestration(root: Path = ROOT) -> CommandResult:
     registry_path = output_dir / "mini_agent_registry.csv"
     queue_path = output_dir / "next_action_queue.csv"
     summary_path = output_dir / "mini_agent_orchestration.md"
-    registry.to_csv(registry_path, index=False)
-    queue.to_csv(queue_path, index=False)
-    summary_path.write_text(_summary_markdown(registry, queue), encoding="utf-8")
+    atomic_write_csv(registry, registry_path, index=False)
+    atomic_write_csv(queue, queue_path, index=False)
+    atomic_write_text(summary_path, _summary_markdown(registry, queue), encoding="utf-8")
     return CommandResult(
         paths={
             "mini_agent_registry": registry_path,

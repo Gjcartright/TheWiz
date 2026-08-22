@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import io
 import json
 import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
-from collections.abc import Callable
+import time
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager, nullcontext, redirect_stderr, redirect_stdout
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -17,7 +21,16 @@ from pathlib import Path
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, _write_csv, _write_json, _write_text
-from quant_platform.crypto_wizards_sweep import build_wizard_sweep_cells
+from quant_platform.crypto_wizards_sweep import (
+    WizardSweepResult,
+    build_wizard_sweep_cells,
+    run_authorized_wizard_discovery_sweep,
+)
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_issuer,
+    external_effect_provider_session,
+)
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
     MINIMUM_FREE_BYTES,
     STAGES,
@@ -30,6 +43,19 @@ from quant_platform.wizard_credit_ledger import (
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_daily_runner.v1"
 WIZARD_API_KEY_ENV = "CRYPTO_WIZARDS_API_KEY"
+SAFE_DAILY_ENVIRONMENT_KEYS = frozenset(
+    {
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "LOGNAME",
+        "PATH",
+        "SHELL",
+        "TMPDIR",
+        "TZ",
+        "USER",
+    }
+)
 SNAPSHOT_VALIDATED_STAGES = frozenset(
     {
         "wizard_refresh_accounting",
@@ -89,7 +115,10 @@ def run_current_wizard_hyperliquid_daily_pipeline(
     minimum_free_bytes: int = MINIMUM_FREE_BYTES,
     available_disk_bytes: int | None = None,
     command_runner: Callable[..., subprocess.CompletedProcess[str]] | None = None,
+    wizard_stage_runner: Callable[..., WizardSweepResult] | None = None,
     semantic_evidence_builder: Callable[..., dict[str, str]] | None = None,
+    stage_timeout_seconds: float | None = None,
+    run_deadline_monotonic: float | None = None,
 ) -> CommandResult:
     """Plan or execute the research cadence; never submit Testnet or live orders."""
 
@@ -105,8 +134,13 @@ def run_current_wizard_hyperliquid_daily_pipeline(
     run_dir = root / "reports" / "runs" / "current_wizard_hyperliquid_daily" / run_id
     active.mkdir(parents=True, exist_ok=True)
     run_dir.mkdir(parents=True, exist_ok=False)
-    runner = command_runner or subprocess.run
+    runner = command_runner
     child_env, wizard_credential = _secure_daily_child_environment(root)
+    wizard_credential_reader = _wizard_credential_reader(
+        root,
+        wizard_credential,
+    )
+    external_credits_reconciled = 0
     rows: list[dict[str, object]] = []
     halted = False
     for sequence, stage, cadence, _, _, _ in STAGES:
@@ -142,7 +176,8 @@ def run_current_wizard_hyperliquid_daily_pipeline(
             execute
             and stage == "wizard_exhaustive_discovery"
             and _same_day_completed_wizard_sweep_payload(root=root, as_of=as_of) is None
-            and wizard_credential["status"] != "PASS"
+            and wizard_credential["status"]
+            not in {"PASS", "PASS_UNVERIFIED_UNTIL_AUTHORIZED_READ"}
         ):
             timestamp = datetime.now(UTC).isoformat()
             started_at = timestamp
@@ -175,16 +210,80 @@ def run_current_wizard_hyperliquid_daily_pipeline(
                         stdout=json.dumps(reused, sort_keys=True),
                         stderr="",
                     )
-                else:
-                    execution_mode = "EXECUTED"
-                    result = runner(
-                        command,
-                        cwd=root,
-                        env=env,
-                        capture_output=True,
-                        text=True,
-                        check=False,
+                elif stage == "wizard_exhaustive_discovery":
+                    execution_mode = "EXECUTED_IN_PROCESS_AUTHORITY_BOUND"
+                    provider_context = (
+                        external_effect_provider_session("crypto_wizards")
+                        if current_external_effect_issuer("crypto_wizards")
+                        is not None
+                        or wizard_stage_runner is None
+                        else nullcontext()
                     )
+                    with provider_context:
+                        sweep = (
+                            wizard_stage_runner
+                            or run_authorized_wizard_discovery_sweep
+                        )(
+                            root=root,
+                            api_key=None,
+                            credential_reader=wizard_credential_reader,
+                            now=as_of,
+                        )
+                    if str(
+                        sweep.summary.get("credit_reconciliation_status", "")
+                    ) in {"PASS_RECONCILED", "REUSED_RECONCILIATION"}:
+                        external_credits_reconciled = int(
+                            sweep.summary.get("attempted_credits", 0) or 0
+                        )
+                    result = subprocess.CompletedProcess(
+                        command,
+                        0,
+                        stdout=json.dumps(
+                            {
+                                "summary": sweep.summary,
+                                "paths": {
+                                    key: str(value)
+                                    for key, value in sweep.paths.items()
+                                },
+                            },
+                            sort_keys=True,
+                        ),
+                        stderr="",
+                    )
+                else:
+                    timeout = _remaining_stage_timeout(
+                        command=command,
+                        stage_timeout_seconds=stage_timeout_seconds,
+                        run_deadline_monotonic=run_deadline_monotonic,
+                    )
+                    if runner is None:
+                        execution_mode = "EXECUTED_IN_PROCESS_AUTHORITY_BOUND"
+                        provider_context = (
+                            external_effect_provider_session(
+                                "hyperliquid_public"
+                            )
+                            if stage == "hyperliquid_market_inventory"
+                            else nullcontext()
+                        )
+                        with provider_context:
+                            result = _run_cli_stage_in_process(
+                                command,
+                                root=root,
+                                stage=stage,
+                                timeout=timeout,
+                            )
+                    else:
+                        execution_mode = "EXECUTED_INJECTED_RUNNER"
+                        runner_kwargs: dict[str, object] = {
+                            "cwd": root,
+                            "env": env,
+                            "capture_output": True,
+                            "text": True,
+                            "check": False,
+                        }
+                        if timeout is not None:
+                            runner_kwargs["timeout"] = timeout
+                        result = runner(command, **runner_kwargs)
                 return_code = int(result.returncode)
                 output = (result.stdout or "") + (result.stderr or "")
                 output_hash = sha256(output.encode("utf-8")).hexdigest()
@@ -259,6 +358,7 @@ def run_current_wizard_hyperliquid_daily_pipeline(
         run_status = "FAILED"
     else:
         run_status = "BLOCKED"
+    effect_accounting = _current_effect_accounting()
     summary = {
         "schema_version": SCHEMA_VERSION,
         "daily_run_id": run_id,
@@ -288,6 +388,14 @@ def run_current_wizard_hyperliquid_daily_pipeline(
         "wizard_api_credential_status": wizard_credential["status"],
         "wizard_api_credential_source": wizard_credential["source"],
         "wizard_api_credential_insecure_files": wizard_credential["insecure_files"],
+        "external_calls": effect_accounting["external_calls"],
+        "external_credits_reserved": effect_accounting[
+            "external_credits_reserved"
+        ],
+        "external_credits_consumed": effect_accounting[
+            "external_credits_consumed"
+        ],
+        "external_credits_reconciled": external_credits_reconciled,
         "testnet_execution_included": False,
         "order_submission_authority": False,
         "live_trading_authorized": False,
@@ -319,19 +427,153 @@ def run_current_wizard_hyperliquid_daily_pipeline(
     )
 
 
-def _secure_daily_child_environment(root: Path) -> tuple[dict[str, str], dict[str, object]]:
-    """Resolve the Wizard key for scheduled children without publishing its value."""
+def _run_cli_stage_in_process(
+    command: list[str],
+    *,
+    root: Path,
+    stage: str,
+    timeout: float | None,
+) -> subprocess.CompletedProcess[str]:
+    """Run one exact daily CLI stage without losing supervisor context."""
 
-    env = os.environ.copy()
+    expected, blocker = _stage_command(root, stage)
+    if blocker or command != expected:
+        raise RuntimeError("daily_in_process_command_identity_mismatch")
+    if (
+        len(command) < 4
+        or Path(command[0]).resolve() != Path(sys.executable).resolve()
+        or command[1:3] != ["-m", "quant_platform.cli"]
+    ):
+        raise RuntimeError("daily_in_process_command_prefix_invalid")
+
+    from quant_platform import cli
+
+    if root.resolve() != cli.ROOT.resolve():
+        raise RuntimeError("daily_in_process_cli_root_mismatch")
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+    previous_cwd = Path.cwd()
+    return_code = 0
+    try:
+        os.chdir(root)
+        with (
+            _in_process_stage_timeout(command, timeout),
+            redirect_stdout(stdout_buffer),
+            redirect_stderr(stderr_buffer),
+        ):
+            try:
+                cli.main(command[3:], load_environment=False)
+            except SystemExit as exc:
+                if exc.code in {None, 0}:
+                    return_code = 0
+                elif isinstance(exc.code, int):
+                    return_code = exc.code
+                else:
+                    return_code = 2
+                    print(str(exc.code), file=sys.stderr)
+    finally:
+        os.chdir(previous_cwd)
+    return subprocess.CompletedProcess(
+        command,
+        return_code,
+        stdout=stdout_buffer.getvalue(),
+        stderr=stderr_buffer.getvalue(),
+    )
+
+
+@contextmanager
+def _in_process_stage_timeout(
+    command: list[str],
+    timeout: float | None,
+) -> Iterator[None]:
+    if timeout is None:
+        yield
+        return
+    if timeout <= 0:
+        raise subprocess.TimeoutExpired(command, timeout)
+    if not hasattr(signal, "SIGALRM") or not hasattr(signal, "setitimer"):
+        raise RuntimeError("daily_in_process_timeout_unsupported")
+    prior_timer = signal.getitimer(signal.ITIMER_REAL)
+    if prior_timer != (0.0, 0.0):
+        raise RuntimeError("daily_in_process_timeout_already_active")
+    prior_handler = signal.getsignal(signal.SIGALRM)
+
+    def expire(_signum: int, _frame: object) -> None:
+        raise subprocess.TimeoutExpired(command, timeout)
+
+    signal.signal(signal.SIGALRM, expire)
+    signal.setitimer(signal.ITIMER_REAL, timeout)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, prior_handler)
+
+
+def _remaining_stage_timeout(
+    *,
+    command: list[str],
+    stage_timeout_seconds: float | None,
+    run_deadline_monotonic: float | None,
+) -> float | None:
+    limits = [
+        value
+        for value in (
+            stage_timeout_seconds,
+            None
+            if run_deadline_monotonic is None
+            else run_deadline_monotonic - time.monotonic(),
+        )
+        if value is not None
+    ]
+    if not limits:
+        return None
+    timeout = min(limits)
+    if timeout <= 0:
+        raise subprocess.TimeoutExpired(command, max(timeout, 0))
+    return timeout
+
+
+def _current_effect_accounting() -> dict[str, int]:
+    issuer = current_external_effect_issuer(
+        "crypto_wizards"
+    ) or current_external_effect_issuer("hyperliquid_public")
+    if issuer is None:
+        return {
+            "external_calls": 0,
+            "external_credits_reserved": 0,
+            "external_credits_consumed": 0,
+        }
+    accounting = issuer.authority.run_accounting(
+        run_id=issuer.run_id,
+        intended_slot_id=issuer.intended_slot_id,
+    )
+    return {
+        field: int(accounting.get(field, 0) or 0)
+        for field in (
+            "external_calls",
+            "external_credits_reserved",
+            "external_credits_consumed",
+        )
+    }
+
+
+def _secure_daily_child_environment(root: Path) -> tuple[dict[str, str], dict[str, object]]:
+    """Describe credential availability without reading or propagating secrets."""
+
+    env = {
+        key: os.environ[key]
+        for key in SAFE_DAILY_ENVIRONMENT_KEYS
+        if key in os.environ
+    }
     candidates = (root / ".env.local", root / ".env")
-    declaring = [path for path in candidates if _env_file_declares_key(path, WIZARD_API_KEY_ENV)]
+    existing = [path for path in candidates if path.exists()]
     insecure = [
         _relative(path, root)
-        for path in declaring
+        for path in existing
         if not _secret_file_is_owner_only(path)
     ]
     if insecure:
-        env.pop(WIZARD_API_KEY_ENV, None)
         return env, {
             "status": "BLOCKED",
             "source": "",
@@ -339,7 +581,7 @@ def _secure_daily_child_environment(root: Path) -> tuple[dict[str, str], dict[st
             "insecure_files": insecure,
         }
 
-    if env.get(WIZARD_API_KEY_ENV, "").strip():
+    if _environment_key_present(WIZARD_API_KEY_ENV):
         return env, {
             "status": "PASS",
             "source": "process_environment",
@@ -347,16 +589,13 @@ def _secure_daily_child_environment(root: Path) -> tuple[dict[str, str], dict[st
             "insecure_files": [],
         }
 
-    for path in declaring:
-        value = _env_file_value(path, WIZARD_API_KEY_ENV)
-        if value:
-            env[WIZARD_API_KEY_ENV] = value
-            return env, {
-                "status": "PASS",
-                "source": _relative(path, root),
-                "blocker": "",
-                "insecure_files": [],
-            }
+    if existing:
+        return env, {
+            "status": "PASS_UNVERIFIED_UNTIL_AUTHORIZED_READ",
+            "source": _relative(existing[0], root),
+            "blocker": "",
+            "insecure_files": [],
+        }
 
     return env, {
         "status": "MISSING",
@@ -366,6 +605,33 @@ def _secure_daily_child_environment(root: Path) -> tuple[dict[str, str], dict[st
     }
 
 
+def _environment_key_present(key: str) -> bool:
+    """Observe a key name without crossing the guarded credential-value boundary."""
+
+    return any(candidate == key for candidate in os.environ)
+
+
+def _wizard_credential_reader(
+    root: Path,
+    credential: dict[str, object],
+) -> Callable[[str], str | None]:
+    source = str(credential.get("source", ""))
+
+    def read(key: str) -> str | None:
+        if key != WIZARD_API_KEY_ENV:
+            return None
+        if source == "process_environment":
+            return os.getenv(key)
+        if not source:
+            return None
+        path = root / source
+        if not _secret_file_is_owner_only(path):
+            return None
+        return _env_file_value(path, key)
+
+    return read
+
+
 def _secret_file_is_owner_only(path: Path) -> bool:
     try:
         stat = path.stat()
@@ -373,10 +639,6 @@ def _secret_file_is_owner_only(path: Path) -> bool:
         return False
     owner_matches = not hasattr(os, "getuid") or stat.st_uid == os.getuid()
     return not path.is_symlink() and owner_matches and not bool(stat.st_mode & 0o077)
-
-
-def _env_file_declares_key(path: Path, key: str) -> bool:
-    return _env_file_value(path, key, preserve_empty=True) is not None
 
 
 def _env_file_value(path: Path, key: str, *, preserve_empty: bool = False) -> str | None:
@@ -587,6 +849,50 @@ def _build_wizard_stage_semantic_evidence(
                     f"wizard_raw_capture_invalid:{row.get('request_id', '')}:{type(exc).__name__}"
                 )
 
+    credit_usage_bindings: list[dict[str, str]] = []
+    credit_usage_root = (
+        root / "data" / "raw" / "crypto_wizards" / "credit_usage"
+    ).resolve()
+    for phase in ("before", "after"):
+        relative_path = str(
+            summary.get(f"credit_usage_{phase}_evidence_path", "")
+        )
+        expected_file_hash = str(
+            summary.get(f"credit_usage_{phase}_evidence_sha256", "")
+        )
+        evidence_path = _safe_artifact_path(root, relative_path)
+        try:
+            evidence_path.resolve().relative_to(credit_usage_root)
+            envelope = _read_json(evidence_path)
+            metadata = envelope.get("capture_metadata")
+            response = envelope.get("response")
+            if not isinstance(metadata, dict):
+                raise TypeError("credit usage capture metadata missing")
+            response_hash = sha256(
+                _canonical_json(response).encode("utf-8")
+            ).hexdigest()
+            file_hash = _file_sha256(evidence_path)
+            if (
+                metadata.get("sweep_id") != sweep_id
+                or metadata.get("capture_type") != "credit_usage"
+                or metadata.get("phase") != phase
+                or metadata.get("response_hash") != response_hash
+                or file_hash != expected_file_hash
+            ):
+                raise ValueError("credit usage evidence identity mismatch")
+            credit_usage_bindings.append(
+                {
+                    "phase": phase,
+                    "path": _relative(evidence_path, root),
+                    "file_sha256": file_hash,
+                    "response_hash": response_hash,
+                }
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            blockers.append(
+                f"wizard_credit_usage_evidence_invalid:{phase}:{type(exc).__name__}"
+            )
+
     credit = validate_wizard_credit_lane_evidence(
         root=root,
         lane=DISCOVERY_LANE,
@@ -630,6 +936,11 @@ def _build_wizard_stage_semantic_evidence(
         "raw_bindings": raw_bindings,
         "raw_response_set_sha256": sha256(
             _canonical_json(raw_bindings).encode("utf-8")
+        ).hexdigest(),
+        "credit_usage_snapshot_count": len(credit_usage_bindings),
+        "credit_usage_bindings": credit_usage_bindings,
+        "credit_usage_binding_set_sha256": sha256(
+            _canonical_json(credit_usage_bindings).encode("utf-8")
         ).hexdigest(),
         "manifest_snapshot_path": _relative(manifest_snapshot, root)
         if manifest_snapshot.is_file()
@@ -809,7 +1120,12 @@ def _build_artifact_stage_semantic_evidence(
         }
     elif stage == "hyperliquid_market_inventory":
         inventory_path = _safe_artifact_path(root, str(paths.get("inventory", "")))
+        evidence_path = _safe_artifact_path(
+            root,
+            str(paths.get("inventory_evidence", "")),
+        )
         inventory = _read_csv(inventory_path)
+        evidence = _read_json(evidence_path)
         validation_rows = len(inventory)
         if (
             inventory.empty
@@ -818,7 +1134,15 @@ def _build_artifact_stage_semantic_evidence(
             or int(summary.get("fetch_blocked_rows", 0) or 0) != 0
         ):
             blockers.append("hyperliquid_inventory_incomplete_or_blocked")
-        selected_paths = {"inventory": inventory_path}
+        if not _valid_hyperliquid_inventory_evidence(
+            root=root,
+            evidence=evidence,
+        ):
+            blockers.append("hyperliquid_inventory_evidence_invalid")
+        selected_paths = {
+            "inventory": inventory_path,
+            "inventory_evidence": evidence_path,
+        }
     elif stage == "monitor_dashboard":
         if int(summary.get("dashboard_files", 0) or 0) != len(paths):
             blockers.append("dashboard_file_count_mismatch")
@@ -853,6 +1177,100 @@ def _build_artifact_stage_semantic_evidence(
         validation_rows=validation_rows,
         blockers=blockers,
     )
+
+
+def _valid_hyperliquid_inventory_evidence(
+    *,
+    root: Path,
+    evidence: dict[str, object],
+) -> bool:
+    if (
+        evidence.get("schema_version")
+        != "thewiz.hyperliquid_public_inventory_evidence.v1"
+        or int(evidence.get("external_requests", 0) or 0) != 2
+        or int(evidence.get("external_credits", -1) or 0) != 0
+        or evidence.get("blockers") != []
+        or evidence.get("order_submission_included") is not False
+        or evidence.get("live_trading_authorized") is not False
+    ):
+        return False
+    reservation_path = _safe_artifact_path(
+        root,
+        str(evidence.get("reservation_path", "")),
+    )
+    try:
+        reservation_path.resolve().relative_to(
+            (root / "data" / "research" / "hyperliquid_public_ledger").resolve()
+        )
+    except (OSError, ValueError):
+        return False
+    if _file_sha256(reservation_path) != str(
+        evidence.get("reservation_sha256", "")
+    ):
+        return False
+    refresh_id = str(evidence.get("refresh_id", ""))
+    reservation = _read_json(reservation_path)
+    if (
+        not refresh_id
+        or reservation.get("schema_version")
+        != "thewiz.hyperliquid_public_reservation.v1"
+        or reservation.get("reservation_id") != refresh_id
+        or reservation.get("provider_id") != "hyperliquid_public"
+        or int(reservation.get("max_total_requests", 0) or 0) != 2
+        or int(reservation.get("max_total_credits", -1) or 0) != 0
+        or reservation.get("order_submission_included") is not False
+        or reservation.get("live_trading_authorized") is not False
+    ):
+        return False
+    bindings = evidence.get("response_bindings")
+    if not isinstance(bindings, list) or len(bindings) != 2:
+        return False
+    normalized: list[dict[str, str]] = []
+    request_types: set[str] = set()
+    raw_root = (
+        root / "data" / "raw" / "hyperliquid" / "testnet_market_inventory"
+    ).resolve()
+    for item in bindings:
+        if not isinstance(item, dict):
+            return False
+        request_type = str(item.get("request_type", ""))
+        response_path = _safe_artifact_path(root, str(item.get("path", "")))
+        try:
+            response_path.resolve().relative_to(raw_root)
+        except (OSError, ValueError):
+            return False
+        file_hash = _file_sha256(response_path)
+        if file_hash != str(item.get("sha256", "")):
+            return False
+        envelope = _read_json(response_path)
+        metadata = envelope.get("capture_metadata")
+        response = envelope.get("response")
+        if not isinstance(metadata, dict):
+            return False
+        response_hash = sha256(
+            _canonical_json(response).encode("utf-8")
+        ).hexdigest()
+        if (
+            metadata.get("schema_version")
+            != "thewiz.hyperliquid_public_response.v1"
+            or metadata.get("refresh_id") != refresh_id
+            or metadata.get("request_type") != request_type
+            or metadata.get("response_sha256") != response_hash
+            or not isinstance(envelope.get("request"), dict)
+            or envelope["request"].get("type") != request_type
+        ):
+            return False
+        request_types.add(request_type)
+        normalized.append(
+            {
+                "request_type": request_type,
+                "path": _relative(response_path, root),
+                "sha256": file_hash,
+            }
+        )
+    return request_types == {"meta", "allMids"} and sha256(
+        _canonical_json(normalized).encode("utf-8")
+    ).hexdigest() == str(evidence.get("response_binding_set_sha256", ""))
 
 
 def _parse_json_cli_output(
@@ -1175,14 +1593,14 @@ def _atomic_copy(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix(target.suffix + ".tmp")
     shutil.copyfile(source, temporary)
-    temporary.replace(target)
+    promote_staged_file(temporary, target)
 
 
 def _atomic_bytes(payload: bytes, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(payload)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:

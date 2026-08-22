@@ -1,50 +1,64 @@
+import json
+from datetime import UTC, datetime
+from hashlib import sha256
+from types import SimpleNamespace
+
 import pandas as pd
 import pytest
-from types import SimpleNamespace
+
 import quant_platform.dydx_sdk_order_adapter as dydx_adapter_module
 import quant_platform.execution as execution_module
-
 from quant_platform.dydx_sdk_order_adapter import DydxSdkOrderAdapter
 from quant_platform.execution import (
     DydxNetworkConfig,
+    DydxV4IndexerAdapter,
     ExecutionMode,
     FillReport,
     OrderIntent,
-    PaperVenueExecution,
     PaperDydxExecution,
+    PaperVenueExecution,
     SpreadOrderPlan,
-    append_paper_trading_record,
+    _split_pair,
     append_paper_outcome_record,
+    append_paper_trading_record,
+    block_paper_plan_for_execution_config,
     build_dydx_indexer_adapter,
     build_dydx_order_client_adapter,
-    build_venue_order_client_adapter,
-    build_market_neutral_spread_intents,
     build_execution_venue,
-    DydxV4IndexerAdapter,
-    block_paper_plan_for_execution_config,
-    dydx_readiness_report,
-    paper_trading_record,
+    build_market_neutral_spread_intents,
     build_research_gated_paper_plan,
-    submit_paper_plan,
-    validate_venue_order_client_adapter,
-    validate_dydx_order_client_adapter,
-    _split_pair,
-    refresh_dydx_execution_compatibility_table,
-    refresh_current_paper_watch_positions,
-    refresh_live_paper_trade_monitor,
-    refresh_paper_trade_decision_report,
-    refresh_non_eth_route_submit_queue,
-    refresh_injective_execution_compatibility_table,
+    build_venue_order_client_adapter,
+    dydx_readiness_report,
+    gmx_execution_compatibility_snapshot,
+    hyperliquid_execution_compatibility_snapshot,
     injective_execution_compatibility_snapshot,
+    paper_trading_record,
+    refresh_current_paper_watch_positions,
+    refresh_dydx_execution_compatibility_table,
+    refresh_gmx_execution_compatibility_table,
+    refresh_gmx_testnet_candidate_shortlist,
+    refresh_hyperliquid_execution_compatibility_table,
+    refresh_hyperliquid_testnet_candidate_shortlist,
+    refresh_hyperliquid_testnet_market_inventory,
+    refresh_injective_execution_compatibility_table,
     refresh_injective_mirror_candidate_queue,
     refresh_injective_spot_first_candidate_shortlist,
     refresh_injective_spot_supported_pair_universe,
-    refresh_gmx_execution_compatibility_table,
-    refresh_gmx_testnet_candidate_shortlist,
-    gmx_execution_compatibility_snapshot,
-    refresh_hyperliquid_execution_compatibility_table,
-    refresh_hyperliquid_testnet_candidate_shortlist,
-    hyperliquid_execution_compatibility_snapshot,
+    refresh_live_paper_trade_monitor,
+    refresh_non_eth_route_submit_queue,
+    refresh_paper_trade_decision_report,
+    submit_paper_plan,
+    validate_dydx_order_client_adapter,
+    validate_venue_order_client_adapter,
+)
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    ExternalEffectCallContract,
+    external_effect_issuer_session,
+)
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthority,
+    EffectAuthorityError,
 )
 
 
@@ -114,7 +128,14 @@ def test_hyperliquid_margin_tiers_retain_unresolved_referenced_table():
     assert tiers.loc[0, "blocker"] == "referenced_margin_table_missing_from_meta"
 
 
-def test_dydx_sdk_order_adapter_reduce_only_uses_close_position(monkeypatch):
+def test_dydx_sdk_order_adapter_reduce_only_requires_gate00g_before_close_position(monkeypatch, tmp_path):
+    active = tmp_path / "reports" / "active"
+    monkeypatch.setattr(dydx_adapter_module, "ROOT", tmp_path)
+    monkeypatch.setattr(
+        dydx_adapter_module,
+        "EXECUTION_ATTEMPT_LOG",
+        active / "dydx_execution_market_attempts.csv",
+    )
     adapter = DydxSdkOrderAdapter()
     called = {}
 
@@ -141,13 +162,24 @@ def test_dydx_sdk_order_adapter_reduce_only_uses_close_position(monkeypatch):
         private_key="secret",
     )
 
-    fill = adapter.place_order(OrderIntent(market="ETH-USD", side="SELL", size=0.003, reduce_only=True), config)
+    with pytest.raises(
+        execution_module.EffectAuthorityError,
+        match="gate00g_order_authority_missing",
+    ):
+        adapter.place_order(
+            OrderIntent(
+                market="ETH-USD",
+                side="SELL",
+                size=0.003,
+                limit_price=1.0,
+                reduce_only=True,
+            ),
+            config,
+        )
+    assert called == {}
 
-    assert called == {"market": "ETH-USD", "size": 0.003, "reduce_only": True}
-    assert fill.status == "confirmed_on_exchange"
 
-
-def test_dydx_sdk_order_adapter_market_orders_use_ioc(monkeypatch):
+def test_dydx_sdk_private_order_sink_requires_consumed_authorization(monkeypatch):
     adapter = DydxSdkOrderAdapter()
     captured = {}
 
@@ -192,9 +224,14 @@ def test_dydx_sdk_order_adapter_market_orders_use_ioc(monkeypatch):
     monkeypatch.setattr(dydx_adapter_module, "IndexerClient", FakeIndexerClient)
 
     config = DydxNetworkConfig.paper_testnet()
-    adapter._run(adapter._place_order(OrderIntent(market="STX-USD", side="SELL", size=1.0), config))
-
-    assert captured["order"]["execution"] == dydx_adapter_module.OrderExecution.IOC
+    with pytest.raises(TypeError, match="spec.*authorization"):
+        adapter._run(
+            adapter._place_order(
+                OrderIntent(market="STX-USD", side="SELL", size=1.0),
+                config,
+            )
+        )
+    assert captured == {}
 
 
 def test_dydx_sdk_order_adapter_non_reduce_attempts_configured_then_oegs_fallback():
@@ -1037,7 +1074,7 @@ def test_live_execution_is_not_enabled_from_factory():
         build_execution_venue(config)
 
 
-def test_paper_execution_blocks_submission_when_credentials_missing():
+def test_paper_execution_blocks_missing_client_without_inspecting_credentials():
     config = DydxNetworkConfig.paper_testnet()
     config = DydxNetworkConfig(
         mode=config.mode,
@@ -1051,8 +1088,8 @@ def test_paper_execution_blocks_submission_when_credentials_missing():
 
     fill = venue.place_order(OrderIntent(market="ETH-USD", side="BUY", size=1.0))
 
-    assert fill.order_id == "paper-missing-credentials"
-    assert fill.status == "paper_blocked_missing_credentials"
+    assert fill.order_id == "paper-missing-client"
+    assert fill.status == "paper_blocked_missing_client"
 
 
 def test_paper_execution_blocks_when_authenticated_client_missing():
@@ -1075,7 +1112,7 @@ def test_paper_execution_blocks_when_authenticated_client_missing():
     assert fill.status == "paper_blocked_missing_client"
 
 
-def test_paper_execution_uses_injected_dydx_client_when_ready():
+def test_paper_execution_denies_unfenced_injected_dydx_client():
     base = DydxNetworkConfig.paper_testnet()
     config = DydxNetworkConfig(
         mode=base.mode,
@@ -1092,11 +1129,11 @@ def test_paper_execution_uses_injected_dydx_client_when_ready():
 
     fill = venue.place_order(OrderIntent(market="ETH-USD", side="BUY", size=1.0))
 
-    assert fill.status == "paper_submitted"
-    assert len(client.orders) == 1
+    assert fill.status == "paper_blocked_gate00g_order_authority_required"
+    assert len(client.orders) == 0
 
 
-def test_build_dydx_order_client_adapter_loads_module_object(tmp_path, monkeypatch):
+def test_build_dydx_order_client_adapter_denies_unapproved_module_before_import(tmp_path, monkeypatch):
     adapter_module = tmp_path / "fake_order_adapter.py"
     adapter_module.write_text(
         """
@@ -1119,11 +1156,12 @@ class FakeOrderAdapter:
     )
     monkeypatch.syspath_prepend(str(tmp_path))
 
-    adapter = build_dydx_order_client_adapter("fake_order_adapter:FakeOrderAdapter")
-    fill = adapter.place_order(OrderIntent(market="ETH-USD", side="BUY", size=1.0), DydxNetworkConfig.paper_testnet())
-
-    assert fill.order_id == "loaded-adapter"
-    assert fill.status == "paper_submitted"
+    with pytest.raises(
+        execution_module.EffectAuthorityError,
+        match="gate00g_order_adapter_path_denied",
+    ):
+        build_dydx_order_client_adapter("fake_order_adapter:FakeOrderAdapter")
+    assert "fake_order_adapter" not in __import__("sys").modules
 
 
 def test_record_only_dydx_order_adapter_records_without_exchange_submission():
@@ -1197,14 +1235,14 @@ class BadOrderAdapter:
     report = validate_dydx_order_client_adapter("bad_order_adapter:BadOrderAdapter")
 
     assert report["configured"] is True
-    assert report["importable"] is True
-    assert report["has_place_order"] is True
+    assert report["importable"] is False
+    assert report["has_place_order"] is False
     assert report["signature_accepts_intent_config"] is False
     assert report["valid"] is False
-    assert report["error"] == "place_order must accept intent and config arguments"
+    assert report["error"] == "gate00g_order_adapter_path_denied"
 
 
-def test_load_venue_specific_order_client_respects_venue_adapter_env(tmp_path, monkeypatch):
+def test_venue_specific_order_client_denies_unapproved_env_adapter(tmp_path, monkeypatch):
     adapter_module = tmp_path / "venue_order_adapter.py"
     adapter_module.write_text(
         """
@@ -1229,22 +1267,23 @@ class VenueAdapter:
     monkeypatch.syspath_prepend(str(tmp_path))
     monkeypatch.setenv("HYPERLIQUID_PAPER_ORDER_ADAPTER", "venue_order_adapter:VenueAdapter")
 
-    adapter = build_venue_order_client_adapter("hyperliquid")
+    with pytest.raises(
+        execution_module.EffectAuthorityError,
+        match="gate00g_order_adapter_path_denied",
+    ):
+        build_venue_order_client_adapter("hyperliquid")
+    assert "venue_order_adapter" not in __import__("sys").modules
 
-    fill = adapter.place_order(OrderIntent(market="BTC-USD", side="BUY", size=0.25), None)
 
-    assert fill.order_id == "loaded-venue-adapter"
-    assert fill.status == "paper_submitted"
-
-
-def test_build_execution_venue_routes_generic_venue_through_paper_execution():
+def test_build_execution_venue_blocks_unfenced_generic_client():
     client = FakeVenueClient()
     venue = build_execution_venue("hyperliquid", config=DydxNetworkConfig.paper_testnet(), order_client=client)
 
     fill = venue.place_order(OrderIntent(market="BTC-USD", side="BUY", size=0.25))
 
     assert isinstance(venue, PaperVenueExecution)
-    assert fill.status == "paper_submitted"
+    assert fill.status == "paper_blocked_gate00g_order_authority_required"
+    assert client.orders == []
 
 
 def test_validate_venue_order_client_adapter_checks_venue_contract():
@@ -1262,6 +1301,7 @@ def test_paper_testnet_config_loads_credentials_from_env(monkeypatch):
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-1")
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
 
     config = DydxNetworkConfig.paper_testnet_from_env()
@@ -1291,6 +1331,7 @@ def test_paper_testnet_config_reports_blockers_when_not_ready(monkeypatch):
     monkeypatch.delenv("DYDX_TESTNET_WALLET_ADDRESS", raising=False)
     monkeypatch.delenv("DYDX_TESTNET_PRIVATE_KEY", raising=False)
     monkeypatch.delenv("DYDX_TESTNET_SUBMIT_ORDERS", raising=False)
+    monkeypatch.delenv("DYDX_TESTNET_ORDER_APPROVAL_ID", raising=False)
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: False)
 
     config = DydxNetworkConfig.paper_testnet_from_env()
@@ -1299,6 +1340,7 @@ def test_paper_testnet_config_reports_blockers_when_not_ready(monkeypatch):
         "submit_orders_false",
         "missing_wallet_address",
         "missing_private_key",
+        "missing_order_approval_id",
         "missing_dydx_v4_client",
     ]
 
@@ -1307,6 +1349,7 @@ def test_dydx_readiness_report_masks_secret_values(monkeypatch):
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-1")
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: False)
     monkeypatch.setattr("quant_platform.execution.dydx_indexer_adapter_available", lambda: False)
 
@@ -1325,6 +1368,7 @@ def test_dydx_readiness_requires_order_client_adapter(monkeypatch):
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-1")
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
 
     report = dydx_readiness_report()
@@ -1390,7 +1434,7 @@ def test_research_gated_paper_plan_submits_to_testnet_adapter_when_accepted():
     assert [fill.status for fill in fills] == ["paper_blocked_submit_orders_false"]
 
 
-def test_submit_paper_plan_uses_coordinated_pair_path_when_available():
+def test_submit_paper_plan_denies_unfenced_coordinated_pair_path():
     class PairVenue:
         pair_submission_capable = True
 
@@ -1435,12 +1479,15 @@ def test_submit_paper_plan_uses_coordinated_pair_path_when_available():
 
     fills = submit_paper_plan(plan, venue)
 
-    assert venue.calls == [plan.intents]
+    assert venue.calls == []
     assert len(fills) == 2
-    assert all(fill.status == "paper_submitted" for fill in fills)
+    assert all(
+        fill.status == "paper_blocked_gate00g_execution_venue_denied"
+        for fill in fills
+    )
 
 
-def test_submit_paper_plan_turns_pair_block_into_auditable_blocked_fills():
+def test_submit_paper_plan_turns_unfenced_pair_venue_into_auditable_blocked_fills():
     class BlockedPairVenue:
         pair_submission_capable = True
 
@@ -1467,12 +1514,15 @@ def test_submit_paper_plan_turns_pair_block_into_auditable_blocked_fills():
     record = paper_trading_record(plan, fills=fills)
 
     assert len(fills) == 2
-    assert all(fill.status.startswith("paper_blocked_pair_submission") for fill in fills)
+    assert all(
+        fill.status == "paper_blocked_gate00g_execution_venue_denied"
+        for fill in fills
+    )
     assert record.plan_status == "blocked"
-    assert "missing_explicit_hyperliquid_order_approval" in record.plan_reason
+    assert "gate00g_execution_venue_denied" in record.plan_reason
 
 
-def test_submit_paper_plan_keeps_sequential_path_for_non_pair_adapter():
+def test_submit_paper_plan_denies_unfenced_sequential_adapter():
     class SequentialClient:
         pair_submission_capable = False
 
@@ -1508,8 +1558,9 @@ def test_submit_paper_plan_keeps_sequential_path_for_non_pair_adapter():
 
     fills = submit_paper_plan(plan, venue)
 
-    assert client.calls == list(plan.intents)
-    assert len(fills) == 2
+    assert client.calls == []
+    assert len(fills) == 1
+    assert fills[0].status == "paper_blocked_gate00g_order_authority_required"
 
 
 def test_block_paper_plan_for_execution_config_preserves_intents_and_blocks_submission():
@@ -1863,3 +1914,118 @@ def test_refresh_live_paper_trade_monitor_builds_dashboard_first_watch_views(tmp
     assert row["current_zscore_roll"] == 2.1
     assert set(timeframe["timeframe"]) == {"Daily", "4 Hour"}
     assert "BNB-USD/ETC-USD" in markdown
+
+
+def test_hyperliquid_public_inventory_requires_authority_before_transport(
+    tmp_path,
+) -> None:
+    calls: list[dict[str, object]] = []
+
+    with pytest.raises(
+        EffectAuthorityError,
+        match="hyperliquid_public_effect_issuer_missing",
+    ):
+        refresh_hyperliquid_testnet_market_inventory(
+            root=tmp_path,
+            now=datetime(2026, 8, 22, 12, tzinfo=UTC),
+            post_json_fetcher=lambda payload, **_: calls.append(payload),
+        )
+
+    assert calls == []
+
+
+def test_hyperliquid_public_inventory_is_zero_credit_and_evidence_bound(
+    tmp_path,
+) -> None:
+    target = "https://api.hyperliquid-testnet.xyz/info"
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"hyperliquid-public-test-authority",
+        issuer_id="hyperliquid-public-test-supervisor",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    contracts = frozenset(
+        {
+            ExternalEffectCallContract(
+                operation="HYPERLIQUID_TESTNET_META",
+                method="POST",
+                target=target,
+                credit_units_per_request=0,
+            ),
+            ExternalEffectCallContract(
+                operation="HYPERLIQUID_TESTNET_ALL_MIDS",
+                method="POST",
+                target=target,
+                credit_units_per_request=0,
+            ),
+        }
+    )
+    calls: list[str] = []
+
+    def fetch(payload, **_):
+        request_type = payload["type"]
+        calls.append(request_type)
+        if request_type == "meta":
+            return {
+                "universe": [
+                    {
+                        "name": "BTC",
+                        "szDecimals": 5,
+                        "maxLeverage": 40,
+                        "marginTableId": 0,
+                        "isDelisted": False,
+                    }
+                ],
+                "marginTables": [],
+            }
+        return {"BTC": "60000"}
+
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id="hyperliquid-public-run",
+        intended_slot_id="hyperliquid-public-slot",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="hyperliquid_public",
+        account_scope_id="hyperliquid:testnet:public_research",
+        allowed_targets=frozenset({target}),
+        allowed_credential_keys=frozenset(),
+        max_total_requests=2,
+        max_total_credits=0,
+        allowed_call_contracts=contracts,
+    ):
+        frame = refresh_hyperliquid_testnet_market_inventory(
+            root=tmp_path,
+            now=datetime(2026, 8, 22, 12, tzinfo=UTC),
+            post_json_fetcher=fetch,
+        )
+
+    accounting = authority.run_accounting(
+        run_id="hyperliquid-public-run",
+        intended_slot_id="hyperliquid-public-slot",
+    )
+    manifest_path = (
+        tmp_path
+        / "reports"
+        / "active"
+        / "hyperliquid_testnet_market_inventory_evidence.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert calls == ["meta", "allMids"]
+    assert frame.loc[0, "asset"] == "BTC"
+    assert frame.loc[0, "mid_price"] == pytest.approx(60000.0)
+    assert accounting["external_calls"] == 2
+    assert accounting["external_credits_reserved"] == 0
+    assert accounting["external_credits_consumed"] == 0
+    assert accounting["accounting_complete"] is True
+    assert manifest["external_requests"] == 2
+    assert manifest["external_credits"] == 0
+    assert manifest["blockers"] == []
+    assert manifest["order_submission_included"] is False
+    assert manifest["live_trading_authorized"] is False
+    assert len(manifest["response_bindings"]) == 2
+    for binding in manifest["response_bindings"]:
+        path = tmp_path / binding["path"]
+        assert path.is_file()
+        assert sha256(path.read_bytes()).hexdigest() == binding["sha256"]

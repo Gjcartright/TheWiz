@@ -1,23 +1,46 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from enum import Enum
 import asyncio
 import importlib
 import importlib.util
 import inspect
 import json
-import os
-from pathlib import Path
 import math
+import os
 import ssl
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from hashlib import sha256
+from pathlib import Path
 from typing import Protocol
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
 import pandas as pd
+
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_issuer,
+    reserved_external_effect_session,
+)
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
+from quant_platform.orchestration.corrective_order_authority import (
+    BINANCE_SPOT_TESTNET_ADAPTER_ID,
+    BINANCE_USDM_TESTNET_ADAPTER_ID,
+    DYDX_TESTNET_ADAPTER_ID,
+    HYPERLIQUID_TESTNET_ADAPTER_ID,
+    CorrectiveOrderAuthority,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    write_immutable_bytes,
+)
+from quant_platform.orchestration.effect_authority import EffectAuthorityError
 
 
 class ExecutionMode(str, Enum):
@@ -36,6 +59,7 @@ class DydxNetworkConfig:
     submit_orders: bool = False
     wallet_address: str | None = None
     private_key: str | None = None
+    order_approval_id: str | None = None
 
     @classmethod
     def paper_testnet(cls) -> "DydxNetworkConfig":
@@ -58,6 +82,7 @@ class DydxNetworkConfig:
         rest_indexer_env: str = "DYDX_TESTNET_REST_INDEXER",
         websocket_indexer_env: str = "DYDX_TESTNET_WEBSOCKET_INDEXER",
         faucet_url_env: str = "DYDX_TESTNET_FAUCET_URL",
+        order_approval_env: str = "DYDX_TESTNET_ORDER_APPROVAL_ID",
     ) -> "DydxNetworkConfig":
         base = cls.paper_testnet()
         return cls(
@@ -69,6 +94,7 @@ class DydxNetworkConfig:
             submit_orders=os.getenv(submit_orders_env, "").lower() in {"1", "true", "yes"},
             wallet_address=os.getenv(wallet_address_env),
             private_key=os.getenv(private_key_env),
+            order_approval_id=os.getenv(order_approval_env),
         )
 
     def paper_trading_blockers(self) -> list[str]:
@@ -81,6 +107,8 @@ class DydxNetworkConfig:
             blockers.append("missing_wallet_address")
         if not self.private_key:
             blockers.append("missing_private_key")
+        if not str(self.order_approval_id or "").strip():
+            blockers.append("missing_order_approval_id")
         if not dydx_v4_client_installed():
             blockers.append("missing_dydx_v4_client")
         return blockers
@@ -179,6 +207,30 @@ _DEFAULT_VENUE_PAPER_ADAPTER_PATHS = {
     "binance_spot_testnet": "quant_platform.binance_testnet:BinanceSpotTestnetOrderAdapter",
     "binance_usdm_testnet": "quant_platform.binance_testnet:BinanceUsdmTestnetOrderAdapter",
 }
+_GATE00G_ADAPTER_ALLOWLIST = frozenset(
+    {
+        DYDX_TESTNET_ADAPTER_ID,
+        HYPERLIQUID_TESTNET_ADAPTER_ID,
+        BINANCE_SPOT_TESTNET_ADAPTER_ID,
+        BINANCE_USDM_TESTNET_ADAPTER_ID,
+    }
+)
+_RECORD_ONLY_ADAPTER_ALLOWLIST = frozenset(
+    {"quant_platform.dydx_record_only_adapter:RecordOnlyDydxOrderAdapter"}
+)
+
+
+def _gate00g_adapter_instance_allowed(adapter: object) -> bool:
+    adapter_path = f"{type(adapter).__module__}:{type(adapter).__name__}"
+    if adapter_path in _RECORD_ONLY_ADAPTER_ALLOWLIST:
+        return bool(
+            getattr(adapter, "record_only", False)
+            and not getattr(adapter, "exchange_submission_capable", True)
+        )
+    return bool(
+        adapter_path in _GATE00G_ADAPTER_ALLOWLIST
+        and getattr(adapter, "gate00g_order_authority_enforced", False)
+    )
 ROOT = Path(__file__).resolve().parents[2]
 DYDX_EXECUTION_COMPATIBILITY_TABLE = ROOT / "reports" / "active" / "dydx_execution_market_compatibility.csv"
 DYDX_EXECUTION_ATTEMPT_LOG = ROOT / "reports" / "active" / "dydx_execution_market_attempts.csv"
@@ -284,11 +336,24 @@ def dydx_indexer_adapter_available() -> bool:
         return False
 
 
-def build_dydx_order_client_adapter(adapter_path: str | None = None) -> DydxOrderClient | None:
-    return build_venue_order_client_adapter("dydx", adapter_path=adapter_path)
+def build_dydx_order_client_adapter(
+    adapter_path: str | None = None,
+    *,
+    order_authority: CorrectiveOrderAuthority | None = None,
+) -> DydxOrderClient | None:
+    return build_venue_order_client_adapter(
+        "dydx",
+        adapter_path=adapter_path,
+        order_authority=order_authority,
+    )
 
 
-def build_venue_order_client_adapter(venue: str, adapter_path: str | None = None) -> VenueOrderClient | None:
+def build_venue_order_client_adapter(
+    venue: str,
+    adapter_path: str | None = None,
+    *,
+    order_authority: CorrectiveOrderAuthority | None = None,
+) -> VenueOrderClient | None:
     venue = normalize_venue_name(venue)
     if adapter_path is None:
         if venue == "dydx":
@@ -307,13 +372,25 @@ def build_venue_order_client_adapter(venue: str, adapter_path: str | None = None
         adapter_path = os.getenv(env, "")
     if not adapter_path:
         return None
+    if adapter_path not in (
+        _GATE00G_ADAPTER_ALLOWLIST | _RECORD_ONLY_ADAPTER_ALLOWLIST
+    ):
+        raise EffectAuthorityError("gate00g_order_adapter_path_denied")
     module_name, object_name = _parse_adapter_path(adapter_path)
     module = importlib.import_module(module_name)
     adapter = getattr(module, object_name)
-    if inspect.isclass(adapter) or not hasattr(adapter, "place_order"):
+    if not inspect.isclass(adapter):
+        raise EffectAuthorityError("gate00g_order_adapter_class_required")
+    if f"{adapter.__module__}:{adapter.__name__}" != adapter_path:
+        raise EffectAuthorityError("gate00g_order_adapter_identity_mismatch")
+    if adapter_path in _RECORD_ONLY_ADAPTER_ALLOWLIST:
         adapter = adapter()
+    else:
+        adapter = adapter(order_authority=order_authority)
     if not hasattr(adapter, "place_order"):
         raise TypeError(f"dYdX order adapter {adapter_path} does not define place_order")
+    if not _gate00g_adapter_instance_allowed(adapter):
+        raise EffectAuthorityError("gate00g_order_adapter_unfenced")
     return adapter
 
 
@@ -382,6 +459,9 @@ def validate_venue_order_client_adapter(venue: str, adapter_path: str | None = N
 
 
 def _place_order_call(place_order, intent: OrderIntent, config: object | None = None):
+    adapter = getattr(place_order, "__self__", None)
+    if not _gate00g_adapter_instance_allowed(adapter):
+        raise EffectAuthorityError("gate00g_order_callable_denied")
     try:
         return place_order(intent, config)
     except TypeError:
@@ -524,7 +604,7 @@ def refresh_injective_execution_compatibility_table(root: Path = ROOT) -> pd.Dat
     ]
     if route_candidates.empty or "pair" not in route_candidates.columns:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
     mainnet_spot, mainnet_derivative, testnet_spot, testnet_derivative, fetch_blockers = _injective_market_indexes()
     checked_at = datetime.now(timezone.utc).isoformat()
@@ -588,7 +668,7 @@ def refresh_injective_execution_compatibility_table(root: Path = ROOT) -> pd.Dat
         ["mirrorable_for_paper", "pair"],
         ascending=[False, True],
     )
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -610,7 +690,7 @@ def refresh_injective_mirror_candidate_queue(root: Path = ROOT) -> pd.DataFrame:
     ]
     if route_candidates.empty or compatibility.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
     merged = route_candidates.merge(
         compatibility[["pair", "candidate_id", "injective_execution_mode", "mirrorable_for_paper", "mirror_blocker"]],
@@ -644,7 +724,7 @@ def refresh_injective_mirror_candidate_queue(root: Path = ROOT) -> pd.DataFrame:
         ["injective_mirrorable", "paper_priority", "pair"],
         ascending=[False, True, True],
     )
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -676,7 +756,7 @@ def refresh_injective_spot_supported_pair_universe(root: Path = ROOT) -> pd.Data
     ]
     if pair_universe.empty or "pair" not in pair_universe.columns:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     mainnet_spot, _mainnet_derivative, testnet_spot, _testnet_derivative, fetch_blockers = _injective_market_indexes()
@@ -729,7 +809,7 @@ def refresh_injective_spot_supported_pair_universe(root: Path = ROOT) -> pd.Data
         ["injective_supported_for_spot", "combined_score", "acceptance_score", "pair"],
         ascending=[False, False, False, True],
     )
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -756,7 +836,7 @@ def refresh_injective_spot_first_candidate_shortlist(root: Path = ROOT, max_pair
     ]
     if supported_universe.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     shortlist = supported_universe[
@@ -764,7 +844,7 @@ def refresh_injective_spot_first_candidate_shortlist(root: Path = ROOT, max_pair
     ].copy()
     if shortlist.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     bucket_rank = {"PROMOTE": 0, "WATCH": 1, "REJECT": 2}
@@ -802,7 +882,7 @@ def refresh_injective_spot_first_candidate_shortlist(root: Path = ROOT, max_pair
     )
     shortlist = shortlist.drop(columns=["_bucket_rank"], errors="ignore")
     frame = shortlist.reindex(columns=columns, fill_value="").copy()
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -1045,15 +1125,15 @@ def refresh_gmx_testnet_market_inventory(
     else:
         frame = frame.copy()
         frame["fetch_blocker"] = ""
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
 def _gmx_market_indexes(root: Path = ROOT) -> tuple[dict[str, list[str]], list[str]]:
     inventory = _read_csv_or_empty(root / "reports" / "active" / "gmx_testnet_market_inventory.csv")
-    if inventory.empty or "asset" not in inventory.columns:
-        inventory = refresh_gmx_testnet_market_inventory(root=root)
     blockers: list[str] = []
+    if inventory.empty or "asset" not in inventory.columns:
+        blockers.append("gmx_testnet_market_inventory_local_snapshot_missing")
     if not inventory.empty and "fetch_blocker" in inventory.columns:
         blockers = sorted(
             {
@@ -1128,7 +1208,7 @@ def refresh_gmx_execution_compatibility_table(root: Path = ROOT) -> pd.DataFrame
     ]
     if candidates.empty or "pair" not in candidates.columns:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     market_index, fetch_blockers = _gmx_market_indexes(root=root)
@@ -1175,7 +1255,7 @@ def refresh_gmx_execution_compatibility_table(root: Path = ROOT) -> pd.DataFrame
     frame = pd.DataFrame(rows, columns=columns)
     if not frame.empty:
         frame = frame.sort_values(["mirrorable_for_paper", "pair"], ascending=[False, True]).reset_index(drop=True)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -1204,7 +1284,7 @@ def refresh_gmx_testnet_candidate_shortlist(root: Path = ROOT, max_pairs: int = 
     ]
     if compatibility.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     supported = compatibility[
@@ -1212,7 +1292,7 @@ def refresh_gmx_testnet_candidate_shortlist(root: Path = ROOT, max_pairs: int = 
     ].copy()
     if supported.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     if not universe.empty and "pair" in universe.columns:
@@ -1264,7 +1344,7 @@ def refresh_gmx_testnet_candidate_shortlist(root: Path = ROOT, max_pairs: int = 
     )
     supported = supported.drop(columns=["_bucket_rank", "_gmx_pair_key"], errors="ignore")
     frame = supported.reindex(columns=columns, fill_value="")
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -1358,15 +1438,16 @@ def _hyperliquid_safe_float(value: object) -> float | None:
 def _hyperliquid_inventory_frame(
     *,
     info_url: str = HYPERLIQUID_TESTNET_INFO_URL,
+    post_json_fetcher: Callable[..., object] = _hyperliquid_post_json,
 ) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
     blockers: list[str] = []
     try:
-        meta = _hyperliquid_post_json({"type": "meta"}, info_url=info_url)
+        meta = post_json_fetcher({"type": "meta"}, info_url=info_url)
     except (OSError, URLError, TimeoutError, json.JSONDecodeError) as exc:
         meta = {}
         blockers.append(f"hyperliquid_meta_fetch_failed:{type(exc).__name__}")
     try:
-        mids = _hyperliquid_post_json({"type": "allMids"}, info_url=info_url)
+        mids = post_json_fetcher({"type": "allMids"}, info_url=info_url)
     except (OSError, URLError, TimeoutError, json.JSONDecodeError) as exc:
         mids = {}
         blockers.append(f"hyperliquid_all_mids_fetch_failed:{type(exc).__name__}")
@@ -1552,11 +1633,95 @@ def _hyperliquid_margin_tier_frame(
 def refresh_hyperliquid_testnet_market_inventory(
     root: Path = ROOT,
     info_url: str = HYPERLIQUID_TESTNET_INFO_URL,
+    *,
+    now: datetime | None = None,
+    post_json_fetcher: Callable[..., object] | None = None,
 ) -> pd.DataFrame:
+    issuer = current_external_effect_issuer()
+    if issuer is None or issuer.provider_id != "hyperliquid_public":
+        raise EffectAuthorityError("hyperliquid_public_effect_issuer_missing")
+    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    refresh_id = "hlinventory_" + sha256(
+        f"{observed.isoformat()}|{info_url}".encode()
+    ).hexdigest()[:20]
+    reservation_path = (
+        root
+        / "data"
+        / "research"
+        / "hyperliquid_public_ledger"
+        / observed.date().isoformat()
+        / f"{refresh_id}.json"
+    )
+    reservation = {
+        "schema_version": "thewiz.hyperliquid_public_reservation.v1",
+        "reservation_id": refresh_id,
+        "provider_id": "hyperliquid_public",
+        "account_scope_id": issuer.account_scope_id,
+        "target": info_url,
+        "max_total_requests": 2,
+        "max_total_credits": 0,
+        "created_at_utc": observed.isoformat(),
+        "order_submission_included": False,
+        "live_trading_authorized": False,
+    }
+    reservation_bytes = _canonical_execution_json(reservation)
+    write_immutable_bytes(reservation_path, reservation_bytes)
+    reservation_sha256 = sha256(reservation_bytes).hexdigest()
+    evidence_dir = (
+        root
+        / "data"
+        / "raw"
+        / "hyperliquid"
+        / "testnet_market_inventory"
+        / observed.date().isoformat()
+    )
+    response_paths = {
+        "meta": evidence_dir / f"{refresh_id}_meta.json",
+        "allMids": evidence_dir / f"{refresh_id}_all_mids.json",
+    }
+    raw_fetcher = post_json_fetcher or _hyperliquid_post_json
+
+    def governed_post_json(
+        payload: dict[str, object],
+        *,
+        info_url: str,
+    ) -> object:
+        request_type = str(payload.get("type", ""))
+        if request_type not in response_paths:
+            raise EffectAuthorityError("hyperliquid_public_request_type_denied")
+        return run_authorized_hyperliquid_info_call(
+            target=info_url,
+            payload=payload,
+            operation_prefix="HYPERLIQUID_TESTNET",
+            transport=lambda: raw_fetcher(payload, info_url=info_url),
+            result_recorder=lambda response: _write_hyperliquid_public_response(
+                response_paths[request_type],
+                refresh_id=refresh_id,
+                request_payload=payload,
+                captured_at=datetime.now(timezone.utc).isoformat(),
+                response=response,
+            ),
+        )
+
+    with reserved_external_effect_session(
+        reservation_id=refresh_id,
+        reservation_sha256=reservation_sha256,
+        max_total_requests=2,
+        max_total_credits=0,
+    ):
+        frame, margin_tiers, blockers = _hyperliquid_inventory_frame(
+            info_url=info_url,
+            post_json_fetcher=governed_post_json,
+        )
     output = root / "reports" / "active" / "hyperliquid_testnet_market_inventory.csv"
     margin_output = root / "reports" / "active" / "hyperliquid_testnet_margin_tiers.csv"
+    evidence_manifest = (
+        root
+        / "reports"
+        / "active"
+        / "hyperliquid_testnet_market_inventory_evidence.json"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
-    frame, margin_tiers, blockers = _hyperliquid_inventory_frame(info_url=info_url)
     if blockers and frame.empty:
         frame = pd.DataFrame(
             [
@@ -1585,16 +1750,82 @@ def refresh_hyperliquid_testnet_market_inventory(
     else:
         frame = frame.copy()
         frame["fetch_blocker"] = ""
-    frame.to_csv(output, index=False)
-    margin_tiers.to_csv(margin_output, index=False)
+    atomic_write_csv(frame, output, index=False)
+    atomic_write_csv(margin_tiers, margin_output, index=False)
+    bindings = [
+        {
+            "request_type": request_type,
+            "path": str(path.relative_to(root)),
+            "sha256": sha256(path.read_bytes()).hexdigest(),
+        }
+        for request_type, path in response_paths.items()
+        if path.is_file()
+    ]
+    manifest = {
+        "schema_version": "thewiz.hyperliquid_public_inventory_evidence.v1",
+        "refresh_id": refresh_id,
+        "created_at_utc": observed.isoformat(),
+        "reservation_path": str(reservation_path.relative_to(root)),
+        "reservation_sha256": reservation_sha256,
+        "response_bindings": bindings,
+        "response_binding_set_sha256": sha256(
+            _canonical_execution_json(bindings)
+        ).hexdigest(),
+        "external_requests": len(bindings),
+        "external_credits": 0,
+        "blockers": blockers,
+        "order_submission_included": False,
+        "live_trading_authorized": False,
+    }
+    atomic_write_text(
+        evidence_manifest,
+        json.dumps(manifest, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
     return frame
+
+
+def _write_hyperliquid_public_response(
+    path: Path,
+    *,
+    refresh_id: str,
+    request_payload: dict[str, object],
+    captured_at: str,
+    response: object,
+) -> str:
+    response_hash = sha256(_canonical_execution_json(response)).hexdigest()
+    envelope = {
+        "capture_metadata": {
+            "schema_version": "thewiz.hyperliquid_public_response.v1",
+            "refresh_id": refresh_id,
+            "request_type": request_payload.get("type", ""),
+            "captured_at_utc": captured_at,
+            "response_sha256": response_hash,
+        },
+        "request": request_payload,
+        "response": response,
+    }
+    encoded = json.dumps(envelope, indent=2, sort_keys=True).encode("utf-8")
+    write_immutable_bytes(path, encoded)
+    return sha256(encoded).hexdigest()
+
+
+def _canonical_execution_json(value: object) -> bytes:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 def _hyperliquid_market_indexes(root: Path = ROOT) -> tuple[dict[str, list[str]], list[str]]:
     inventory = _read_csv_or_empty(root / "reports" / "active" / "hyperliquid_testnet_market_inventory.csv")
-    if inventory.empty or "asset" not in inventory.columns:
-        inventory = refresh_hyperliquid_testnet_market_inventory(root=root)
     blockers: list[str] = []
+    if inventory.empty or "asset" not in inventory.columns:
+        blockers.append(
+            "hyperliquid_testnet_market_inventory_local_snapshot_missing"
+        )
     if not inventory.empty and "fetch_blocker" in inventory.columns:
         blockers = sorted(
             {
@@ -1655,7 +1886,10 @@ def hyperliquid_testnet_order_preflight_status() -> dict[str, object]:
     This lightweight status is safe to call from reports and shortlist refreshes.
     """
 
-    from quant_platform.hyperliquid_testnet import HyperliquidTestnetConfig, hyperliquid_sdk_installed
+    from quant_platform.hyperliquid_testnet import (
+        HyperliquidTestnetConfig,
+        hyperliquid_sdk_installed,
+    )
 
     config = HyperliquidTestnetConfig.paper_testnet_from_env()
     adapter_contract = validate_venue_order_client_adapter("hyperliquid")
@@ -1730,7 +1964,7 @@ def refresh_hyperliquid_execution_compatibility_table(root: Path = ROOT) -> pd.D
     ]
     if candidates.empty or "pair" not in candidates.columns:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     market_index, fetch_blockers = _hyperliquid_market_indexes(root=root)
@@ -1777,7 +2011,7 @@ def refresh_hyperliquid_execution_compatibility_table(root: Path = ROOT) -> pd.D
     frame = pd.DataFrame(rows, columns=columns)
     if not frame.empty:
         frame = frame.sort_values(["mirrorable_for_paper", "pair"], ascending=[False, True]).reset_index(drop=True)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -1812,7 +2046,7 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
     ]
     if compatibility.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     supported = compatibility[
@@ -1820,7 +2054,7 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
     ].copy()
     if supported.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
 
     if not universe.empty and "pair" in universe.columns:
@@ -1882,7 +2116,7 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
     )
     supported = supported.drop(columns=["_bucket_rank", "_hyperliquid_pair_key"], errors="ignore")
     frame = supported.reindex(columns=columns, fill_value="")
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     return frame
 
 
@@ -1969,7 +2203,7 @@ def refresh_dydx_execution_compatibility_table(root: Path = ROOT) -> pd.DataFram
     ]
     if attempts.empty:
         frame = pd.DataFrame(columns=columns)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         return frame
     attempts = attempts.copy()
     attempts["confirmed"] = attempts.get("confirmed", pd.Series(dtype=object)).astype(str).str.lower().isin({"true", "1", "yes"})
@@ -2000,7 +2234,7 @@ def refresh_dydx_execution_compatibility_table(root: Path = ROOT) -> pd.DataFram
         ["compatible_for_paper_submit", "market"],
         ascending=[False, True],
     )
-    compatibility.to_csv(output, index=False)
+    atomic_write_csv(compatibility, output, index=False)
     return compatibility
 
 
@@ -2147,7 +2381,7 @@ def refresh_non_eth_route_submit_queue(root: Path = ROOT, queue_path: Path | Non
     working["all_route_markets_confirmed"] = confirmed_flags
     working["current_submit_state"] = submit_states
     working["next_action"] = next_actions
-    working.to_csv(path, index=False)
+    atomic_write_csv(working, path, index=False)
     return working
 
 
@@ -2244,7 +2478,7 @@ def write_browser_account_state_override(
         "note": str(note),
         "confirmed_at_utc": datetime.now(timezone.utc).isoformat(),
     }
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return path
 
 
@@ -2368,6 +2602,8 @@ class PaperDydxExecution:
     and the official dYdX client wiring are explicitly configured.
     """
 
+    gate00g_order_authority_enforced = True
+
     def __init__(
         self,
         config: DydxNetworkConfig | None = None,
@@ -2403,17 +2639,6 @@ class PaperDydxExecution:
                 slippage_bps=0.0,
                 status="paper_blocked_submit_orders_false",
             )
-        if not self.config.wallet_address or not self.config.private_key:
-            return FillReport(
-                order_id="paper-missing-credentials",
-                market=intent.market,
-                side=intent.side,
-                size=intent.size,
-                avg_price=float(intent.limit_price or 0.0),
-                fee=0.0,
-                slippage_bps=0.0,
-                status="paper_blocked_missing_credentials",
-            )
         if self.client is None:
             return FillReport(
                 order_id="paper-missing-client",
@@ -2424,6 +2649,17 @@ class PaperDydxExecution:
                 fee=0.0,
                 slippage_bps=0.0,
                 status="paper_blocked_missing_client",
+            )
+        if not _gate00g_adapter_instance_allowed(self.client):
+            return FillReport(
+                order_id="paper-order-authority-required",
+                market=intent.market,
+                side=intent.side,
+                size=intent.size,
+                avg_price=float(intent.limit_price or 0.0),
+                fee=0.0,
+                slippage_bps=0.0,
+                status="paper_blocked_gate00g_order_authority_required",
             )
         if not intent.reduce_only:
             compatible, compatibility_reason = dydx_market_confirmed_for_paper_submit(intent.market)
@@ -2438,7 +2674,19 @@ class PaperDydxExecution:
                     slippage_bps=0.0,
                     status=f"paper_blocked_market_unconfirmed:{compatibility_reason}",
                 )
-        return self.client.place_order(intent, self.config)
+        try:
+            return self.client.place_order(intent, self.config)
+        except EffectAuthorityError as exc:
+            return FillReport(
+                order_id="paper-order-authority-denied",
+                market=intent.market,
+                side=intent.side,
+                size=intent.size,
+                avg_price=float(intent.limit_price or 0.0),
+                fee=0.0,
+                slippage_bps=0.0,
+                status=f"paper_blocked_{exc}",
+            )
 
     def positions(self) -> list[dict]:
         return []
@@ -2516,6 +2764,9 @@ class PaperVenueExecution:
             getattr(client, "pair_submission_capable", False)
             and callable(getattr(client, "submit_pair", None))
         )
+        self.gate00g_order_authority_enforced = (
+            _gate00g_adapter_instance_allowed(client)
+        )
 
     def market_data(self, market: str) -> dict:
         return {
@@ -2526,10 +2777,41 @@ class PaperVenueExecution:
         }
 
     def place_order(self, intent: OrderIntent) -> FillReport:
+        if not (
+            self.gate00g_order_authority_enforced
+            and _gate00g_adapter_instance_allowed(self.client)
+        ):
+            return FillReport(
+                order_id="paper-order-authority-required",
+                market=intent.market,
+                side=intent.side,
+                size=float(intent.size),
+                avg_price=float(intent.limit_price or 0.0),
+                fee=0.0,
+                slippage_bps=0.0,
+                status="paper_blocked_gate00g_order_authority_required",
+            )
         config = self.config or {"venue": self.venue, "mode": ExecutionMode.PAPER.value}
-        return _place_order_call(self.client.place_order, intent, config)
+        try:
+            return _place_order_call(self.client.place_order, intent, config)
+        except EffectAuthorityError as exc:
+            return FillReport(
+                order_id="paper-order-authority-denied",
+                market=intent.market,
+                side=intent.side,
+                size=float(intent.size),
+                avg_price=float(intent.limit_price or 0.0),
+                fee=0.0,
+                slippage_bps=0.0,
+                status=f"paper_blocked_{exc}",
+            )
 
     def submit_pair(self, intents: tuple[OrderIntent, ...]):
+        if not (
+            self.gate00g_order_authority_enforced
+            and _gate00g_adapter_instance_allowed(self.client)
+        ):
+            raise EffectAuthorityError("gate00g_order_authority_missing")
         submit_pair = getattr(self.client, "submit_pair", None)
         if not callable(submit_pair):
             raise NotImplementedError(f"{self.venue} adapter does not support coordinated pair submission")
@@ -2670,6 +2952,20 @@ def build_research_gated_paper_plan(
 def submit_paper_plan(plan: SpreadOrderPlan, venue: ExecutionVenue) -> list[FillReport]:
     if plan.status != "paper_ready":
         return []
+    if not _gate00g_execution_venue_allowed(venue):
+        return [
+            FillReport(
+                order_id="gate00g-venue-denied",
+                market=intent.market,
+                side=intent.side,
+                size=float(intent.size),
+                avg_price=float(intent.limit_price or 0.0),
+                fee=0.0,
+                slippage_bps=0.0,
+                status="paper_blocked_gate00g_execution_venue_denied",
+            )
+            for intent in plan.intents
+        ]
     pair_submit = getattr(venue, "submit_pair", None)
     if bool(getattr(venue, "pair_submission_capable", False)) and callable(pair_submit) and len(plan.intents) == 2:
         result = pair_submit(plan.intents)
@@ -2704,6 +3000,15 @@ def submit_paper_plan(plan: SpreadOrderPlan, venue: ExecutionVenue) -> list[Fill
         if not fill_report_confirmed(fill):
             break
     return fills
+
+
+def _gate00g_execution_venue_allowed(venue: ExecutionVenue) -> bool:
+    return type(venue) in {
+        DryRunDydxExecution,
+        PaperDydxExecution,
+        PaperVenueExecution,
+        UnsupportedVenueExecution,
+    }
 
 
 def _plan_status_from_fills(plan: SpreadOrderPlan, fills: list[FillReport] | None) -> tuple[str, str]:
@@ -2790,10 +3095,10 @@ def append_paper_trading_record(record: PaperTradingRecord, path: str | Path) ->
     row = pd.DataFrame([asdict(record)])
     existing = _read_csv(output)
     if existing.empty and not output.exists():
-        row.to_csv(output, index=False)
+        atomic_write_csv(row, output, index=False)
         return output
     combined = pd.concat([existing, row], ignore_index=True, sort=False).fillna("")
-    combined.to_csv(output, index=False)
+    atomic_write_csv(combined, output, index=False)
     return output
 
 
@@ -2959,7 +3264,7 @@ def refresh_current_paper_watch_positions(
     ]
     output.parent.mkdir(parents=True, exist_ok=True)
     if frame.empty:
-        pd.DataFrame(columns=columns).to_csv(output, index=False)
+        atomic_write_csv(pd.DataFrame(columns=columns), output, index=False)
         return output
     working = frame.copy()
     if "trade_id" not in working.columns:
@@ -2980,11 +3285,11 @@ def refresh_current_paper_watch_positions(
     latest = working.sort_values("timestamp_utc").groupby("trade_id", dropna=False, as_index=False).tail(1)
     latest = latest[latest["lifecycle_status"].astype(str).isin({"open", "monitoring", "unconfirmed", "partial"})].copy()
     if latest.empty:
-        pd.DataFrame(columns=columns).to_csv(output, index=False)
+        atomic_write_csv(pd.DataFrame(columns=columns), output, index=False)
         return output
     latest["last_event_timestamp_utc"] = latest.get("timestamp_utc", pd.Series(dtype=object)).astype(str)
     latest = latest.reindex(columns=columns, fill_value="")
-    latest.to_csv(output, index=False)
+    atomic_write_csv(latest, output, index=False)
     return output
 
 
@@ -3024,7 +3329,7 @@ def refresh_paper_trade_rulebook(output_path: str | Path | None = None) -> Path:
         f"Generated at: {datetime.now(timezone.utc).isoformat()}",
         "",
     ]
-    output.write_text("\n".join(lines), encoding="utf-8")
+    atomic_write_text(output, "\n".join(lines), encoding="utf-8")
     return output
 
 
@@ -3258,7 +3563,7 @@ def refresh_paper_trade_price_journal(root: Path = ROOT) -> Path:
             journal.at[idx, "exit_snapshot_json"] = json.dumps(exit_snapshot, sort_keys=True)
             changed = True
     if changed:
-        journal.to_csv(journal_path, index=False)
+        atomic_write_csv(journal, journal_path, index=False)
     return journal_path
 
 
@@ -3410,9 +3715,9 @@ def refresh_live_paper_trade_monitor(root: Path = ROOT) -> dict[str, Path]:
     ]
 
     if watch.empty:
-        pd.DataFrame(columns=summary_columns).to_csv(summary_path, index=False)
-        pd.DataFrame(columns=timeframe_columns).to_csv(timeframe_path, index=False)
-        md_path.write_text(_monitor_markdown(pd.DataFrame(columns=summary_columns), pd.DataFrame(columns=timeframe_columns)), encoding="utf-8")
+        atomic_write_csv(pd.DataFrame(columns=summary_columns), summary_path, index=False)
+        atomic_write_csv(pd.DataFrame(columns=timeframe_columns), timeframe_path, index=False)
+        atomic_write_text(md_path, _monitor_markdown(pd.DataFrame(columns=summary_columns), pd.DataFrame(columns=timeframe_columns)), encoding="utf-8")
         return {"summary": summary_path, "timeframe": timeframe_path, "markdown": md_path}
 
     detail = research.copy()
@@ -3620,9 +3925,9 @@ def refresh_live_paper_trade_monitor(root: Path = ROOT) -> dict[str, Path]:
             key=lambda col: col.map(_monitor_timeframe_sort_key) if col.name == "timeframe" else col,
             na_position="last",
         )
-    summary.to_csv(summary_path, index=False)
-    timeframe.to_csv(timeframe_path, index=False)
-    md_path.write_text(_monitor_markdown(summary, timeframe), encoding="utf-8")
+    atomic_write_csv(summary, summary_path, index=False)
+    atomic_write_csv(timeframe, timeframe_path, index=False)
+    atomic_write_text(md_path, _monitor_markdown(summary, timeframe), encoding="utf-8")
     return {"summary": summary_path, "timeframe": timeframe_path, "markdown": md_path}
 
 
@@ -3760,7 +4065,7 @@ def refresh_paper_trade_decision_report(root: Path = ROOT) -> pd.DataFrame:
 
     frame = pd.DataFrame(rows, columns=columns)
     if frame.empty:
-        frame.to_csv(root / "reports" / "active" / "paper_trade_decision_report.csv", index=False)
+        atomic_write_csv(frame, root / "reports" / "active" / "paper_trade_decision_report.csv", index=False)
         return frame
 
     priority_order = {"high": 0, "medium": 1, "low": 2}
@@ -3773,7 +4078,7 @@ def refresh_paper_trade_decision_report(root: Path = ROOT) -> pd.DataFrame:
     ).reset_index(drop=True)
     frame["decision_rank"] = frame.index + 1
     frame = frame.drop(columns=["_priority_sort", "_action_sort"])
-    frame.to_csv(root / "reports" / "active" / "paper_trade_decision_report.csv", index=False)
+    atomic_write_csv(frame, root / "reports" / "active" / "paper_trade_decision_report.csv", index=False)
     return frame
 
 

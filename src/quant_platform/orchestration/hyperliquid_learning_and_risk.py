@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 import fcntl
 import hmac
 import json
@@ -134,8 +138,7 @@ def materialize_council_learning_dataset(*, root: Path = ROOT) -> dict[str, obje
         _atomic_csv(mode_manifest, mode_manifest_path)
         readiness = write_student_training_readiness(root=root, dataset_path=dataset_path)
         summary_path.parent.mkdir(parents=True, exist_ok=True)
-        summary_path.write_text(
-            "\n".join(
+        atomic_write_text(summary_path, "\n".join(
                 [
                     "# Council Learning Dataset",
                     "",
@@ -153,9 +156,7 @@ def materialize_council_learning_dataset(*, root: Path = ROOT) -> dict[str, obje
                     f"Readiness: `{readiness['markdown']}`",
                     "",
                 ]
-            ),
-            encoding="utf-8",
-        )
+            ), encoding="utf-8")
         return {
             "status": "MATERIALIZED",
             "rows": len(dataset),
@@ -230,8 +231,7 @@ def materialize_council_learning_dataset(*, root: Path = ROOT) -> dict[str, obje
     _atomic_csv(dataset, dataset_path)
     readiness = write_student_training_readiness(root=root, dataset_path=dataset_path)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
-    summary_path.write_text(
-        "\n".join(
+    atomic_write_text(summary_path, "\n".join(
             [
                 "# Council Learning Dataset",
                 "",
@@ -244,9 +244,7 @@ def materialize_council_learning_dataset(*, root: Path = ROOT) -> dict[str, obje
                 f"Readiness: `{readiness['markdown']}`",
                 "",
             ]
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "status": "MATERIALIZED" if not dataset.empty else "BLOCKED",
         "rows": len(dataset),
@@ -349,9 +347,7 @@ def build_portfolio_critic(
     path = directory / "portfolio_critic.csv"
     markdown = directory / "portfolio_critic.md"
     _atomic_csv(frame, path)
-    markdown.write_text(
-        "# Portfolio Critic\n\n" + frame.to_markdown(index=False) + "\n", encoding="utf-8"
-    )
+    atomic_write_text(markdown, "# Portfolio Critic\n\n" + frame.to_markdown(index=False) + "\n", encoding="utf-8")
     return {"status": verdict.upper(), "critic": path, "summary": markdown, **row}
 
 
@@ -419,12 +415,9 @@ def build_testnet_lifecycle_gate(
     path = active / "hyperliquid_testnet_lifecycle_gate.csv"
     markdown = active / "hyperliquid_testnet_lifecycle_gate.md"
     _atomic_csv(frame, path)
-    markdown.write_text(
-        "# Hyperliquid Testnet Lifecycle Gate\n\nNo order is submitted by this check.\n\n"
+    atomic_write_text(markdown, "# Hyperliquid Testnet Lifecycle Gate\n\nNo order is submitted by this check.\n\n"
         + frame.to_markdown(index=False)
-        + "\n",
-        encoding="utf-8",
-    )
+        + "\n", encoding="utf-8")
     status = "PASS" if frame["status"].eq("PASS").all() else "BLOCKED"
     return {"status": status, "checks": len(frame), "gate": path, "summary": markdown}
 
@@ -502,7 +495,7 @@ def write_testnet_smoke_approval_template(
         }
         temporary = path.with_suffix(path.suffix + ".tmp")
         temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-        temporary.replace(path)
+        promote_staged_file(temporary, path)
         created = True
     else:
         payload = _read_json(path)
@@ -562,7 +555,7 @@ def write_testnet_smoke_approval_template(
                 temporary.write_text(
                     json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
                 )
-                temporary.replace(path)
+                promote_staged_file(temporary, path)
                 updated = True
     status = "TEMPLATE_CREATED" if created else "TEMPLATE_UPDATED" if updated else "EXISTS"
     return {"status": status, "approval": path, "approved": False}
@@ -1699,7 +1692,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, object], path: Path) -> None:
@@ -1708,7 +1701,7 @@ def _atomic_json(payload: dict[str, object], path: Path) -> None:
     temporary.write_text(
         json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _sha256_file(path: Path) -> str:

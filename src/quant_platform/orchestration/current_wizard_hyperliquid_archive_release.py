@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import shutil
 from datetime import datetime, timezone
@@ -159,8 +163,8 @@ def build_current_wizard_hyperliquid_archive_release_dry_run(
         projected_floor_met=projected_floor_met,
         global_blockers=global_blockers,
     )
-    plan.to_csv(paths["plan"], index=False)
-    validation.to_csv(paths["validation"], index=False)
+    atomic_write_csv(plan, paths["plan"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
     summary: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "release_id": release_id,
@@ -197,10 +201,8 @@ def build_current_wizard_hyperliquid_archive_release_dry_run(
         "live_trading_authorized": False,
         "artifacts": {name: str(path.relative_to(root)) for name, path in paths.items()},
     }
-    paths["manifest"].write_text(
-        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(paths["manifest"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

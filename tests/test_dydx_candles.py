@@ -1,14 +1,14 @@
 import json
 
 from quant_platform.dydx_candles import (
-    backfill_provisional_pair_history_features,
     archive_dydx_candles,
-    build_pair_history_from_windowed_candles,
+    backfill_provisional_pair_history_features,
     build_pair_history_from_candles,
-    merge_dydx_candle_windows,
+    build_pair_history_from_windowed_candles,
     dydx_two_leg_request_rows,
     import_dydx_candle_bundle,
     load_loose_candle_payload,
+    merge_dydx_candle_windows,
 )
 
 
@@ -44,7 +44,18 @@ def test_load_loose_candle_payload_accepts_pasted_response_fragment(tmp_path):
 def test_archive_dydx_candles_writes_ticker_resolution_file(tmp_path):
     source = tmp_path / "bnb.json"
     source.write_text(
-        json.dumps({"candles": [{"startedAt": "2026-06-18T00:00:00.000Z", "ticker": "BNB-USD", "resolution": "5MINS", "close": "600"}]}),
+        json.dumps(
+            {
+                "candles": [
+                    {
+                        "startedAt": "2026-06-18T00:00:00.000Z",
+                        "ticker": "BNB-USD",
+                        "resolution": "5MINS",
+                        "close": "600",
+                    }
+                ]
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -70,7 +81,9 @@ def test_build_pair_history_from_windowed_candles_merges_dedupes_and_sorts(tmp_p
                 }
                 for minute in minutes
             ]
-            (window_dir / f"{market}_5MINS_candles.json").write_text(json.dumps({"candles": candles}), encoding="utf-8")
+            (window_dir / f"{market}_5MINS_candles.json").write_text(
+                json.dumps({"candles": candles}), encoding="utf-8"
+            )
 
     paths = build_pair_history_from_windowed_candles(
         input_dir=source,
@@ -95,7 +108,7 @@ def test_build_pair_history_from_windowed_candles_merges_dedupes_and_sorts(tmp_p
         "2026-06-18T00:20:00.000Z",
     ]
     assert len(pair["history"]) == 5
-    assert pair["hedge_ratio_source"] == "derived_price_ols"
+    assert pair["hedge_ratio_source"] == "derived_log_y_on_log_x_ols"
 
 
 def test_merge_dydx_candle_windows_skips_empty_windows(tmp_path):
@@ -107,7 +120,10 @@ def test_merge_dydx_candle_windows_skips_empty_windows(tmp_path):
     good_window.mkdir()
     bad_window.mkdir()
 
-    for path in (good_window / "BTC-USD_5MINS_candles.json", good_window / "ETH-USD_5MINS_candles.json"):
+    for path in (
+        good_window / "BTC-USD_5MINS_candles.json",
+        good_window / "ETH-USD_5MINS_candles.json",
+    ):
         path.write_text(
             json.dumps(
                 {
@@ -124,8 +140,12 @@ def test_merge_dydx_candle_windows_skips_empty_windows(tmp_path):
             encoding="utf-8",
         )
 
-    bad_window.joinpath("BTC-USD_5MINS_candles.json").write_text('{"candles": []}', encoding="utf-8")
-    bad_window.joinpath("ETH-USD_5MINS_candles.json").write_text('{"candles": []}', encoding="utf-8")
+    bad_window.joinpath("BTC-USD_5MINS_candles.json").write_text(
+        '{"candles": []}', encoding="utf-8"
+    )
+    bad_window.joinpath("ETH-USD_5MINS_candles.json").write_text(
+        '{"candles": []}', encoding="utf-8"
+    )
 
     path = merge_dydx_candle_windows(
         input_dir=source,
@@ -140,7 +160,9 @@ def test_merge_dydx_candle_windows_skips_empty_windows(tmp_path):
 
 
 def test_dydx_two_leg_request_rows_builds_candle_funding_and_local_steps():
-    rows = dydx_two_leg_request_rows(asset_x="BNB-USD", asset_y="STX-USD", pair_id="1", hedge_ratio=1.36)
+    rows = dydx_two_leg_request_rows(
+        asset_x="BNB-USD", asset_y="STX-USD", pair_id="1", hedge_ratio=1.36
+    )
 
     assert [row["request_name"] for row in rows] == [
         "asset_x_candles_5mins",
@@ -166,7 +188,13 @@ def test_build_pair_history_from_5min_candles_namespaces_proxies_and_adds_math_v
         json.dumps(
             {
                 "candles": [
-                    {"startedAt": timestamp, "ticker": "BNB-USD", "resolution": "5MINS", "close": str(600 + idx), "usdVolume": "1000"}
+                    {
+                        "startedAt": timestamp,
+                        "ticker": "BNB-USD",
+                        "resolution": "5MINS",
+                        "close": str(600 + idx),
+                        "usdVolume": "1000",
+                    }
                     for idx, timestamp in enumerate(timestamps)
                 ]
             }
@@ -177,7 +205,13 @@ def test_build_pair_history_from_5min_candles_namespaces_proxies_and_adds_math_v
         json.dumps(
             {
                 "candles": [
-                    {"startedAt": timestamp, "ticker": "STX-USD", "resolution": "5MINS", "close": str(0.2 + idx * 0.001), "usdVolume": "100"}
+                    {
+                        "startedAt": timestamp,
+                        "ticker": "STX-USD",
+                        "resolution": "5MINS",
+                        "close": str(0.2 + idx * 0.001),
+                        "usdVolume": "100",
+                    }
                     for idx, timestamp in enumerate(timestamps)
                 ]
             }
@@ -215,12 +249,14 @@ def test_build_pair_history_from_5min_candles_namespaces_proxies_and_adds_math_v
     }.issubset(payload["history"][0])
     assert "ecm_strength" not in payload["history"][0]
     assert "conditional_probability_distortion" not in payload["history"][0]
-    assert payload["math_version"] == "math-v2"
+    assert payload["math_version"] == "math-v2.1-y-on-x"
     assert payload["math_v2_signal_use_status"].startswith("blocked")
     assert "funding_x_bps" not in payload["history"][0]
     assert "funding_y_bps" not in payload["history"][0]
     assert "Funding is not fabricated" in payload["source_note"]
-    assert payload["hedge_ratio_source"] == "operator"
+    assert payload["hedge_ratio_source"] == "operator_beta_y_on_x"
+    assert payload["hedge_ratio_orientation"] == "beta_y_on_x"
+    assert payload["spread_contract"] == "log_y_minus_beta_y_on_x_times_log_x"
     assert payload["beta_source"] == "derived_return_covariance"
     assert payload["ecm_derivation"]["native_crypto_wizards_ecm"] is False
 
@@ -229,13 +265,18 @@ def test_build_pair_history_can_derive_hedge_ratio_and_beta_from_candles(tmp_pat
     left = tmp_path / "left.json"
     right = tmp_path / "right.json"
     timestamps = [f"2026-06-18T00:{minute:02d}:00.000Z" for minute in range(0, 40, 5)]
-    right_prices = [100 + idx for idx, _ in enumerate(timestamps)]
-    left_prices = [10 + 2 * value for value in right_prices]
+    left_prices = [100 + idx for idx, _ in enumerate(timestamps)]
+    right_prices = [3.0 * value**2 for value in left_prices]
     left.write_text(
         json.dumps(
             {
                 "candles": [
-                    {"startedAt": timestamp, "ticker": "AAA-USD", "resolution": "5MINS", "close": str(price)}
+                    {
+                        "startedAt": timestamp,
+                        "ticker": "AAA-USD",
+                        "resolution": "5MINS",
+                        "close": str(price),
+                    }
                     for timestamp, price in zip(timestamps, left_prices)
                 ]
             }
@@ -246,7 +287,12 @@ def test_build_pair_history_can_derive_hedge_ratio_and_beta_from_candles(tmp_pat
         json.dumps(
             {
                 "candles": [
-                    {"startedAt": timestamp, "ticker": "BBB-USD", "resolution": "5MINS", "close": str(price)}
+                    {
+                        "startedAt": timestamp,
+                        "ticker": "BBB-USD",
+                        "resolution": "5MINS",
+                        "close": str(price),
+                    }
                     for timestamp, price in zip(timestamps, right_prices)
                 ]
             }
@@ -270,7 +316,8 @@ def test_build_pair_history_can_derive_hedge_ratio_and_beta_from_candles(tmp_pat
 
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert round(payload["hedge_ratio"], 6) == 2.0
-    assert payload["hedge_ratio_source"] == "derived_price_ols"
+    assert payload["hedge_ratio_source"] == "derived_log_y_on_log_x_ols"
+    assert payload["spread_point_in_time_status"] == "full_sample_hindsight_research_only"
     assert payload["beta_source"] == "derived_return_covariance"
     assert round(payload["history"][0]["hedge_ratio"], 6) == 2.0
 

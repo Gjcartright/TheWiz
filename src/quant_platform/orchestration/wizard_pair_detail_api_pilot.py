@@ -7,10 +7,10 @@ keeps all results discovery-only until dashboard and local parity are proven.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
+from collections.abc import Callable
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -20,9 +20,13 @@ import requests
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.api_extraction import CryptoWizardsExtractor
 from quant_platform.crypto_wizards_catalog import BASE_URL
-from quant_platform.crypto_wizards_history import fetch_credits_used
+from quant_platform.crypto_wizards_history import (
+    fetch_credits_used,
+    fetch_crypto_wizards_json,
+)
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
-
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "wizard_pair_detail_api_pilot.v2"
@@ -66,7 +70,7 @@ def run_wizard_pair_detail_api_pilot(
 ) -> CommandResult:
     """Plan or execute a credit-bounded API schema probe."""
 
-    as_of = _as_utc(now or datetime.now(timezone.utc))
+    as_of = _as_utc(now or datetime.now(UTC))
     active = root / "reports" / "active"
     queue_path = active / "exhaustive_wizard_api_refresh_pair_detail_queue.csv"
     accounting_path = active / "exhaustive_wizard_api_refresh_source_accounting.csv"
@@ -142,7 +146,7 @@ def run_wizard_pair_detail_api_pilot(
         requested_at = ""
         completed_at = ""
         if execute and not credit_blocker:
-            requested_at = datetime.now(timezone.utc).isoformat()
+            requested_at = datetime.now(UTC).isoformat()
             attempted_credits += credit_cost
             try:
                 payload = (endpoint_fetcher or _fetch_endpoint)(
@@ -170,10 +174,7 @@ def run_wizard_pair_detail_api_pilot(
                     "request": params,
                     "response": payload,
                 }
-                raw_path.write_text(
-                    json.dumps(envelope, indent=2, sort_keys=True),
-                    encoding="utf-8",
-                )
+                atomic_write_text(raw_path, json.dumps(envelope, indent=2, sort_keys=True), encoding="utf-8")
                 evidence_path = _relative(raw_path, root)
                 discovered = CryptoWizardsExtractor.discover_fields(payload)
                 observed_field_count = len(discovered)
@@ -193,19 +194,18 @@ def run_wizard_pair_detail_api_pilot(
                             "live_trading_authorized": False,
                         }
                     )
-                completed_at = datetime.now(timezone.utc).isoformat()
+                completed_at = datetime.now(UTC).isoformat()
                 completed_credits += credit_cost
                 status = "COMPLETED"
                 error = ""
             except (requests.RequestException, ValueError, TypeError, json.JSONDecodeError) as exc:
-                completed_at = datetime.now(timezone.utc).isoformat()
+                completed_at = datetime.now(UTC).isoformat()
                 status = "FAILED"
                 error = _safe_error(exc)
                 failure = _failure_payload(exc, api_key=api_key)
                 response_hash = sha256(_canonical_json(failure).encode()).hexdigest()
                 raw_path = raw_dir / f"{endpoint_name}.failure.json"
-                raw_path.write_text(
-                    json.dumps(
+                atomic_write_text(raw_path, json.dumps(
                         {
                             "capture_metadata": {
                                 "schema_version": SCHEMA_VERSION,
@@ -224,9 +224,7 @@ def run_wizard_pair_detail_api_pilot(
                         },
                         indent=2,
                         sort_keys=True,
-                    ),
-                    encoding="utf-8",
-                )
+                    ), encoding="utf-8")
                 evidence_path = _relative(raw_path, root)
         manifest_rows.append(
             {
@@ -368,9 +366,9 @@ def run_wizard_pair_detail_api_pilot(
             active_manifest_path=canonical_manifest_path,
             attempt_manifest=attempt_manifest,
         )
-    manifest.to_csv(paths["manifest_csv"], index=False)
-    fields.to_csv(paths["fields"], index=False)
-    coverage.to_csv(paths["coverage"], index=False)
+    atomic_write_csv(manifest, paths["manifest_csv"], index=False)
+    atomic_write_csv(fields, paths["fields"], index=False)
+    atomic_write_csv(coverage, paths["coverage"], index=False)
     summary: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "pilot_id": pilot_id,
@@ -414,8 +412,8 @@ def run_wizard_pair_detail_api_pilot(
         "daily_credit_limit": daily_credit_limit,
         "reserved_credits": reserved_credits,
         "pilot_complete": complete,
-        "observed_fields": int(len(fields)),
-        "coverage_checks": int(len(coverage)),
+        "observed_fields": len(fields),
+        "coverage_checks": len(coverage),
         "coverage_passes": int(coverage["status"].eq("FOUND").sum()),
         "ecm_fields_found": bool(
             coverage.loc[
@@ -437,8 +435,8 @@ def run_wizard_pair_detail_api_pilot(
         "raw_snapshot_directory": _relative(raw_dir, root),
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
-    paths["manifest_json"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(paths["manifest_json"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -542,14 +540,13 @@ def _fetch_endpoint(
     base_url: str,
     timeout: float,
 ) -> Any:
-    response = requests.get(
-        f"{base_url.rstrip('/')}{endpoint_path}",
+    return fetch_crypto_wizards_json(
+        method="GET",
+        url=f"{base_url.rstrip('/')}{endpoint_path}",
         params=params,
-        headers={"X-api-key": api_key or "", "Content-Type": "application/json"},
+        api_key=api_key,
         timeout=timeout,
     )
-    response.raise_for_status()
-    return response.json()
 
 
 def _failure_payload(exc: Exception, *, api_key: str | None) -> dict[str, object]:
@@ -566,9 +563,12 @@ def _failure_payload(exc: Exception, *, api_key: str | None) -> dict[str, object
                 _text(getattr(response, "text", ""))[:10_000],
                 api_key,
             )
+    safe_message = _safe_error(exc)
+    if _known_api_key_was_redacted(exc, api_key=api_key):
+        safe_message = f"{safe_message}:[REDACTED]"
     return {
         "exception_type": type(exc).__name__,
-        "message": _redact_text(_safe_error(exc), api_key),
+        "message": safe_message,
         "http_status": status_code,
         "content_type": content_type,
         "response_body": response_body,
@@ -662,7 +662,7 @@ def _append_attempt_history(
     ]
     if dedupe_columns:
         history = history.drop_duplicates(subset=dedupe_columns, keep="last")
-    history.to_csv(path, index=False)
+    atomic_write_csv(history, path, index=False)
 
 
 def _coverage_rows(
@@ -728,8 +728,11 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Authority: `{summary['authority']}`",
             f"- Endpoints complete: {summary['completed_endpoints']} / {summary['planned_endpoints']}",
             f"- Credits planned / observed: {summary['planned_credits']} / {summary['observed_credit_delta']}",
-            "- Current credits used / available after reserve: "
-            f"{summary['credits_used_after']} / {summary['credits_available_after_reserve']}",
+            (
+                "- Current credits used / available after reserve: "
+                f"{summary['credits_used_after']} / "
+                f"{summary['credits_available_after_reserve']}"
+            ),
             f"- Observed fields: {summary['observed_fields']}",
             f"- ECM fields found: `{str(summary['ecm_fields_found']).lower()}`",
             "- Dashboard pair detail complete: `false`",
@@ -766,18 +769,59 @@ def _read_json_required(path: Path) -> dict[str, Any]:
         raise FileNotFoundError(path)
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise ValueError(f"Required JSON object is invalid: {path}")
+        raise TypeError(f"Required JSON object is invalid: {path}")
     return payload
 
 
 def _safe_error(exc: Exception) -> str:
-    return str(exc).replace("\n", " ")[:500]
+    return safe_exception_code(exc)
 
 
 def _redact_text(value: str, api_key: str | None) -> str:
     if api_key:
         return value.replace(api_key, "[REDACTED]")
     return value
+
+
+def _known_api_key_was_redacted(exc: Exception, *, api_key: str | None) -> bool:
+    if not api_key:
+        return False
+    pending: list[object] = [exc]
+    seen: set[int] = set()
+    inspected = 0
+    while pending and inspected < 64:
+        value = pending.pop()
+        inspected += 1
+        if isinstance(value, str):
+            if api_key in value:
+                return True
+            continue
+        if isinstance(value, bytes):
+            if api_key.encode("utf-8") in value:
+                return True
+            continue
+        if isinstance(value, BaseException):
+            identity = id(value)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            pending.extend(value.args[:16])
+            continue
+        if isinstance(value, dict):
+            identity = id(value)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            for key, item in list(value.items())[:16]:
+                pending.extend((key, item))
+            continue
+        if isinstance(value, (list, tuple, set, frozenset)):
+            identity = id(value)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            pending.extend(list(value)[:16])
+    return False
 
 
 def _canonical_json(value: object) -> str:
@@ -799,5 +843,5 @@ def _relative(path: Path, root: Path) -> str:
 
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)

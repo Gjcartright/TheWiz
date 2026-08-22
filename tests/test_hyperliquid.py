@@ -5,13 +5,14 @@ import pandas as pd
 import pytest
 
 from quant_platform.hyperliquid import (
-    build_hyperliquid_lane_report,
+    build_hyperliquid_capacity_curve,
     build_hyperliquid_evidence_cadence,
+    build_hyperliquid_lane_report,
+    build_hyperliquid_pair_cost_model,
     build_hyperliquid_pair_history,
     build_hyperliquid_research_bundle,
-    build_hyperliquid_pair_cost_model,
-    normalize_hyperliquid_funding_history,
     normalize_hyperliquid_candles,
+    normalize_hyperliquid_funding_history,
     refresh_hyperliquid_execution_cost_snapshot,
     refresh_hyperliquid_funding_history,
     refresh_hyperliquid_market_context,
@@ -391,6 +392,68 @@ def test_hyperliquid_cost_snapshot_requires_repeated_depth_samples_before_slippa
     assert calibrated.loc[0, "slippage_samples_x"] == 12
     assert calibrated.loc[0, "slippage_samples_y"] == 12
     assert calibrated.loc[0, "estimated_pair_round_trip_cost_bps"] > 0
+
+
+def test_hyperliquid_capacity_curve_keeps_notional_and_funding_gates_separate(tmp_path):
+    active = tmp_path / "reports" / "active"
+    processed = tmp_path / "data" / "processed"
+    active.mkdir(parents=True)
+    processed.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "asset_x": "BTC",
+                "asset_y": "ETH",
+                "both_legs_testnet_perp": True,
+            }
+        ]
+    ).to_csv(active / "hyperliquid_execution_market_compatibility.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "asset_x": "BTC",
+                "asset_y": "ETH",
+                "funding_coverage_pct": 100.0,
+                "funding_ready": True,
+            }
+        ]
+    ).to_csv(active / "hyperliquid_funding_coverage.csv", index=False)
+    now = datetime(2026, 8, 5, 12, 30, tzinfo=timezone.utc)
+    rows = []
+    for asset in ("BTC", "ETH"):
+        for notional in (100.0, 1000.0):
+            for minute in (10, 20):
+                rows.append(
+                    {
+                        "pair": "BTC-USD-ETH-USD",
+                        "asset": asset,
+                        "notional_usd": notional,
+                        "source_timestamp": now.replace(minute=minute).isoformat(),
+                        "buy_complete": True,
+                        "sell_complete": True,
+                        "one_way_slippage_bps": 1.0 + notional / 1000.0,
+                    }
+                )
+    pd.DataFrame(rows).to_csv(
+        processed / "hyperliquid_l2_slippage_samples.csv", index=False
+    )
+
+    result = build_hyperliquid_capacity_curve(
+        root=tmp_path,
+        max_pairs=1,
+        notionals=(100.0, 500.0, 1000.0),
+        min_samples=2,
+        as_of=now,
+    )
+    curve = pd.read_csv(result.paths["hyperliquid_capacity_curve"])
+
+    assert set(curve["leg_notional_usd"]) == {100.0, 500.0, 1000.0}
+    assert curve.loc[curve["leg_notional_usd"].isin([100.0, 1000.0]), "depth_cost_ready"].all()
+    assert curve.loc[curve["leg_notional_usd"].eq(500.0), "funding_ready"].all()
+    assert not curve.loc[curve["leg_notional_usd"].eq(500.0), "depth_cost_ready"].any()
+    assert result.summary["acceptance_ready_rows"] == 2
 
 
 def test_hyperliquid_snapshot_model_includes_books_returned_after_request_start(tmp_path):

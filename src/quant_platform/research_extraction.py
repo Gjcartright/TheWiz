@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 from typing import Any
 
@@ -61,5 +63,5 @@ def normalize_extraction_rows(rows: list[dict[str, Any]]) -> pd.DataFrame:
 def write_extraction_frame(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     normalized = normalize_extraction_rows(frame.to_dict("records"))
-    normalized.to_csv(path, index=False)
+    atomic_write_csv(normalized, path, index=False)
     return path

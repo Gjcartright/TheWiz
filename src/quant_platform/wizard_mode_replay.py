@@ -15,18 +15,18 @@ from typing import Mapping
 import numpy as np
 import pandas as pd
 
-from quant_platform.statistics.math_v2 import rolling_gaussian_copula_conditionals
-
-
-CANONICAL_WIZARD_MODES = (
-    "Static (Spread)",
-    "Static (ZScoreR)",
-    "Dyn (Spread)",
-    "Dyn (ZScoreR)",
-    "OU (Spread)",
-    "OU (ZScoreR)",
-    "Copula",
+from quant_platform.economic_contract import (
+    CANONICAL_WIZARD_MODES,
+    action_for_threshold_operator,
+    normalize_copula_view,
+    normalize_exact_mode as normalize_contract_mode,
+    replay_label,
+    rolling_y_on_x_beta,
+    signal_for_action,
+    tail_actions,
+    y_on_x_log_spread,
 )
+from quant_platform.statistics.math_v2 import rolling_gaussian_copula_conditionals
 
 
 MODE_REQUIRED_SETTINGS: dict[str, tuple[str, ...]] = {
@@ -67,12 +67,6 @@ THRESHOLD_REQUIRED_SETTINGS = (
 SUPPORTED_DYNAMIC_METHODS = {
     "history_captured_hedge_ratio",
     "rolling_ols_log_prices",
-}
-
-POSITION_VALUES = {
-    # The shared two-leg backtester maps a negative signal to long X / short Y.
-    "long_x_short_y": -1.0,
-    "short_x_long_y": 1.0,
 }
 
 _OPERATOR_ALIASES = {
@@ -117,25 +111,10 @@ class WizardModeReplayResult:
 def normalize_exact_mode(value: object) -> str:
     """Return the canonical Wizard mode label or an empty string."""
 
-    normalized = "".join(character for character in str(value or "").lower() if character.isalnum())
-    aliases = {
-        "staticspread": "Static (Spread)",
-        "static": "Static (Spread)",
-        "staticzscorer": "Static (ZScoreR)",
-        "staticzscore": "Static (ZScoreR)",
-        "dynspread": "Dyn (Spread)",
-        "dynamicspread": "Dyn (Spread)",
-        "dynzscorer": "Dyn (ZScoreR)",
-        "dynzscore": "Dyn (ZScoreR)",
-        "dynamiczscorer": "Dyn (ZScoreR)",
-        "dynamiczscore": "Dyn (ZScoreR)",
-        "ouspread": "OU (Spread)",
-        "ou": "OU (Spread)",
-        "ouzscorer": "OU (ZScoreR)",
-        "ouzscore": "OU (ZScoreR)",
-        "copula": "Copula",
-    }
-    return aliases.get(normalized, "")
+    try:
+        return replay_label(normalize_contract_mode(str(value or "")))
+    except ValueError:
+        return ""
 
 
 def mode_requirements(exact_mode: object) -> tuple[str, ...]:
@@ -248,6 +227,35 @@ def _missing_setting_inputs(settings: Mapping[str, object], mode: str) -> tuple[
     for field in ("entry_long_position", "entry_short_position"):
         if field not in missing and _position(settings.get(field)) is None:
             missing.append(f"invalid_{field}")
+
+    if not any(field in missing for field in ("entry_long_position", "entry_short_position")):
+        try:
+            lower_action, upper_action = tail_actions(
+                mode,
+                copula_direction_view=str(settings.get("copula_direction_view", "u1_given_u2")),
+            )
+        except ValueError:
+            lower_action = upper_action = None
+        if mode == "Copula":
+            expected_entries = (
+                ("lower", lower_action, "entry_long_position"),
+                ("upper", upper_action, "entry_short_position"),
+            )
+        else:
+            expected_entries = []
+            for rule_name in ("entry_long", "entry_short"):
+                expected = action_for_threshold_operator(
+                    mode,
+                    settings.get(f"{rule_name}_operator"),
+                )
+                if expected is not None:
+                    tail_name, action = expected
+                    expected_entries.append(
+                        (tail_name, action, f"{rule_name}_position")
+                    )
+        for tail_name, action, position_field in expected_entries:
+            if action is not None and _position(settings.get(position_field)) != signal_for_action(action):
+                missing.append(f"{tail_name}_tail_position_contract_mismatch")
 
     if mode.startswith("Dyn"):
         method = _dynamic_method(settings.get("dynamic_hedge_ratio_method"))
@@ -366,11 +374,11 @@ def _metric_for_mode(
     residual = spread - mu
     if mode == "OU (Spread)":
         return (
-            residual / sigma,
-            "ou_sigma_scaled_spread",
+            residual,
+            "ou_centered_spread",
             (
-                "OU residual is centered by captured mu and scaled by captured sigma; it is not a re-fit full-sample OU process",
-                f"captured OU sigma={sigma:g} supplies the threshold unit",
+                "OU spread is centered by captured mu and remains in log-spread units; it is not a re-fit full-sample OU process",
+                f"captured OU sigma={sigma:g} scales entry thresholds in the same log-spread unit",
             ),
         )
     window = _positive_int(settings.get("zscore_window"))
@@ -390,7 +398,7 @@ def _static_spread(history: pd.DataFrame, settings: Mapping[str, object]) -> pd.
     hedge_ratio = _number(settings.get("hedge_ratio"))
     if hedge_ratio is None:
         raise ValueError("missing_static_hedge_ratio")
-    return np.log(prices["price_y"]) - hedge_ratio * np.log(prices["price_x"])
+    return y_on_x_log_spread(prices["price_x"], prices["price_y"], hedge_ratio)
 
 
 def _dynamic_spread(history: pd.DataFrame, settings: Mapping[str, object]) -> tuple[pd.Series, str]:
@@ -398,24 +406,22 @@ def _dynamic_spread(history: pd.DataFrame, settings: Mapping[str, object]) -> tu
     method = _dynamic_method(settings.get("dynamic_hedge_ratio_method"))
     window = _positive_int(settings.get("dynamic_hedge_ratio_window"))
     assert window is not None
-    log_x = np.log(prices["price_x"])
-    log_y = np.log(prices["price_y"])
     if method == "history_captured_hedge_ratio":
         column = _first_history_column(history, ("hedge_ratio", "dynamic_hedge_ratio", "beta"))
         if column is None:
             raise ValueError("missing_historical_dynamic_hedge_ratio")
         ratio = pd.to_numeric(history[column], errors="coerce")
         return (
-            log_x - ratio * log_y,
-            "uses the point-in-time hedge-ratio series captured in history",
+            y_on_x_log_spread(prices["price_x"], prices["price_y"], ratio),
+            "uses the point-in-time hedge-ratio series captured in history in y-on-x orientation",
         )
     if method == "rolling_ols_log_prices":
-        var_y = log_y.rolling(window, min_periods=window).var(ddof=0)
-        cov_yx = log_y.rolling(window, min_periods=window).cov(log_x, ddof=0)
-        ratio = cov_yx.div(var_y.where(var_y.abs() > 1e-12))
+        log_x = np.log(prices["price_x"])
+        log_y = np.log(prices["price_y"])
+        ratio = rolling_y_on_x_beta(log_x, log_y, window=window)
         return (
-            log_x - ratio * log_y,
-            f"uses a point-in-time rolling OLS log-price hedge ratio with captured window={window}",
+            y_on_x_log_spread(prices["price_x"], prices["price_y"], ratio),
+            f"uses a point-in-time rolling OLS log-price hedge ratio in y-on-x orientation with captured window={window}",
         )
     raise ValueError("unsupported_dynamic_hedge_ratio_method")
 
@@ -433,7 +439,7 @@ def _two_leg_prices(history: pd.DataFrame) -> pd.DataFrame:
 
 def _rolling_zscore(series: pd.Series, window: int) -> pd.Series:
     mean = series.rolling(window, min_periods=window).mean()
-    std = series.rolling(window, min_periods=window).std(ddof=0)
+    std = series.rolling(window, min_periods=window).std(ddof=1)
     return series.sub(mean).div(std.where(std.abs() > 1e-12))
 
 
@@ -626,7 +632,10 @@ def _operator(value: object) -> str | None:
 
 def _position(value: object) -> float | None:
     raw = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
-    return POSITION_VALUES.get(raw)
+    try:
+        return signal_for_action(raw)
+    except ValueError:
+        return None
 
 
 def _dynamic_method(value: object) -> str:
@@ -642,16 +651,10 @@ def _dynamic_method(value: object) -> str:
 
 
 def _copula_view(value: object) -> str | None:
-    raw = "".join(character for character in str(value or "").lower() if character.isalnum())
-    aliases = {
-        "u1givenu2": "u1_given_u2",
-        "xgiveny": "u1_given_u2",
-        "conditionalu1u2": "u1_given_u2",
-        "u2givenu1": "u2_given_u1",
-        "ygivenx": "u2_given_u1",
-        "conditionalu2u1": "u2_given_u1",
-    }
-    return aliases.get(raw)
+    try:
+        return normalize_copula_view(value)
+    except ValueError:
+        return None
 
 
 def _copula_column_aliases(view: str) -> tuple[str, ...]:

@@ -20,6 +20,12 @@ from quant_platform.crypto_wizards_history import (
     fetch_custom_series_copula,
 )
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    create_exclusive_bytes,
+    promote_staged_file,
+    write_immutable_bytes,
+)
 from quant_platform.wizard_credit_budget import (
     COPULA_BEHAVIORAL_REPEATS,
     COPULA_POST_CREDIT_COST,
@@ -336,7 +342,9 @@ def run_copula_behavioral_proofs(
         for _, proof in captured.iterrows()
     ]
     plans = _apply_source_orientation_contract(plans)
-    resolved_key = api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
+    resolved_key = api_key or (
+        os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip() if execute else ""
+    )
     calls_required = sum(
         COPULA_BEHAVIORAL_REPEATS
         for plan in plans
@@ -680,17 +688,10 @@ def _validate_v2_runtime_bindings(
 
 def _write_or_validate_immutable_csv(frame: pd.DataFrame, path: Path) -> None:
     content = frame.to_csv(index=False).encode("utf-8")
-    if path.is_file():
-        if path.read_bytes() != content:
-            raise ValueError(f"immutable CSV content mismatch: {path}")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with path.open("xb") as handle:
-            handle.write(content)
-    except FileExistsError:
-        if path.read_bytes() != content:
-            raise ValueError(f"immutable CSV content mismatch: {path}") from None
+        write_immutable_bytes(path, content)
+    except ValueError as exc:
+        raise ValueError(f"immutable CSV content mismatch: {path}") from exc
 
 
 def _apply_source_orientation_contract(
@@ -774,7 +775,7 @@ def _build_capture_plan(
             "base": base,
             "capture_state": "BLOCKED",
             "blocker": (
-                f"invalid_copula_endpoint_input:{type(exc).__name__}:{exc}"
+                f"invalid_copula_endpoint_input:{safe_exception_code(exc)}"
             ),
         }
     series_1_sha256 = _json_hash(
@@ -1330,7 +1331,7 @@ def _capture_identity(
                 **base,
                 "endpoint_responses_captured": len(responses),
                 "behavioral_status": "FAIL",
-                "blocker": f"copula_endpoint_request_failed:{type(exc).__name__}:{exc}",
+                "blocker": f"copula_endpoint_request_failed:{safe_exception_code(exc)}",
             }, calls, False, False
     receipt = _build_capture_receipt(
         root=root,
@@ -1505,7 +1506,7 @@ def _credit_preflight(
             credits_fetcher(api_key=api_key), configured_limit=daily_credit_limit
         )
     except Exception as exc:  # noqa: BLE001 - credit uncertainty blocks calls
-        return {"status": "BLOCKED", "blocker": f"credit_preflight_failed:{type(exc).__name__}:{exc}"}
+        return {"status": "BLOCKED", "blocker": f"credit_preflight_failed:{safe_exception_code(exc)}"}
     if not usage.known:
         return {"status": "BLOCKED", "blocker": "credit_usage_unknown"}
     required = calls_required * COPULA_POST_CREDIT_COST
@@ -1596,14 +1597,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(f"{path.suffix}.tmp")
     frame.to_csv(temp, index=False)
-    temp.replace(path)
+    promote_staged_file(temp, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(f"{path.suffix}.tmp")
     temp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temp.replace(path)
+    promote_staged_file(temp, path)
 
 
 def _canonical_json_bytes(payload: dict[str, Any]) -> bytes:
@@ -1626,21 +1627,14 @@ def _write_or_validate_immutable_json(
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(expected)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
     return expected_hash
 
 
 def _write_exclusive_json(payload: dict[str, Any], path: Path) -> str:
     expected = _canonical_json_bytes(payload)
     expected_hash = sha256(expected).hexdigest()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(expected)
-    except Exception:
-        path.unlink(missing_ok=True)
-        raise
+    create_exclusive_bytes(path, expected)
     return expected_hash
 
 

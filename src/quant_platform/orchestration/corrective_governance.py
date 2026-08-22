@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from collections.abc import Iterable
+from copy import deepcopy
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.evidence_integrity import sha256_file
-
 
 ROOT = Path(__file__).resolve().parents[3]
 ACCEPTANCE_SCHEMA = "thewiz.acceptance_policy.v1"
@@ -403,21 +404,21 @@ def _atomic_jsonl(records: list[dict[str, Any]], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text("".join(canonical_json(row) + "\n" for row in records), encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -484,10 +485,10 @@ def _json_scalar(value: Any) -> Any:
 
 
 def _as_utc(value: datetime | None) -> datetime:
-    value = value or datetime.now(timezone.utc)
+    value = value or datetime.now(UTC)
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 if __name__ == "__main__":

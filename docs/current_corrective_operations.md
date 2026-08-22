@@ -5,7 +5,7 @@
 Stage 3 requires a fresh immutable browser-auth readiness receipt whenever `config/wizard_browser_auth_contract.json` exists. Run the scanner and pair-detail browser helpers with explicit requested URLs, save both JSON artifacts under `data/raw/crypto_wizards/browser_auth/`, then build the receipt:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python scripts/build_wizard_browser_auth_readiness.py
+PYTHONPATH=src .venv/bin/python3 scripts/build_wizard_browser_auth_readiness.py
 ```
 
 The gate fails closed on public redirects, login or verification forms, missing account/member navigation, missing route controls, stale evidence, shared/tampered source files, or legacy self-asserted captures. Its immutable receipt publishes the earliest validity horizon across the two required routes. Reset readiness binds that receipt by ID, path, and SHA-256 and requires the horizon to cover the registered external-attempt timestamp; evidence that is fresh now but expires before the capture window is blocked before any vendor request. The gate grants research evidence only and cannot authorize promotion, Testnet orders, or live orders.
@@ -13,6 +13,145 @@ The gate fails closed on public redirects, login or verification forms, missing 
 ## Purpose
 
 This is the operator entrypoint for the active Crypto Wizards to Hyperliquid research program. The project remains research-only until each authority gate passes in order. No file's existence grants trading authority.
+
+## Phase 00 Run-Control Status
+
+As of 2026-08-22, the Phase 00 implementation has fail-closed controls for
+publication, external effects, provider credits, credentials, orders, scheduler
+provenance, terminal states, immutable identity, venue policy, typed lineage,
+and CCXT evidence. All 74 active artifact candidates are sealed by immutable,
+domain-validated, zero-authority envelopes. The current descendant control
+preserves raw evidence, supersedes obsolete math outputs, and explicitly
+invalidates stale fixture, strategy, dataset, model, and dashboard descendants,
+including MATH-023 and MATH-024, pending controlled rebuild.
+
+The canonical workspace and user LaunchAgent plist files remain unloaded. No
+external request, credential access, Wizard or Apify credit use, Testnet action,
+or order submission is part of Phase 00 verification. Runtime activation is a
+later, separately approved operation; a passing implementation closure never
+authorizes a reload, provider call, or order.
+
+Current authority is read from these fail-closed control surfaces:
+
+- `reports/active/phase00_control_checkpoint.json`
+- `reports/active/phase00_active_artifact_lineage.json`
+- `reports/active/phase00_descendant_control.json`
+- `reports/active/phase00_closure.json`
+- `reports/active/phase00_acceptance_matrix.csv`
+- `reports/active/phase00_fault_catalog.csv`
+
+The old 57-of-74 readiness report and its 17 blockers are historical diagnostic
+evidence, not current Phase 00 authority. Reload controls P00-SL-020 and
+P00-SL-021 remain deliberately blocked until separate operator approval and a
+controlled first-run protocol. Hardware reboot/unmount recovery and elapsed
+no-order soak tests also remain operational evidence gates rather than simulated
+implementation passes.
+
+Phase 00 maintenance and checkpoint commands are fail-closed and non-destructive:
+
+```bash
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+  phase00-maintenance-start --phase00-reason OPERATOR_REASON
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-lineage-seal
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+  phase00-descendant-invalidate
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-closure-verify
+
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+  phase00-maintenance-resume --phase00-maintenance-id MAINTENANCE_ID
+```
+
+Maintenance prevents governed producers from publishing, drains active leases
+within a bounded timeout, and requires two stable manifests before resume. It
+does not move or delete evidence. An expired or malformed maintenance marker
+continues to block until an explicit, matching resume succeeds.
+
+The repeated checkpoints are required dependency barriers, not redundant
+commands. The first checkpoint gives the lineage sealer a stable source root.
+Lineage publication changes a freshness-tracked pointer, so a new checkpoint is
+required before descendant invalidation. During that one checkpoint only, an
+otherwise fully valid zero-authority descendant control bound to the superseded
+immutable lineage is reported as `PASS_HISTORICAL_ONLY`; normal observation
+continues to block it. Descendant publication changes another
+freshness-tracked pointer; closure therefore requires two later checkpoint
+receipts with the same semantic freshness and the invalidated descendant status.
+Skipping either barrier fails closed with a stale-checkpoint or
+two-stable-checkpoints blocker.
+
+Each checkpoint retains its complete byte-level manifest. It also records a
+semantic freshness hash for safe comparison across controller processes. That
+projection excludes only changing authority-journal bytes, lock-file bytes, and
+raw process-probe return telemetry; it still binds source, tests, configuration,
+evidence, active pointers, publication surfaces, financial effects, blockers,
+producer presence, and launchd state. Two unchanged checkpoints must share that
+semantic hash, while each checkpoint's internal first and second full manifests
+must remain byte-identical.
+
+All Phase 00 control commands skip `.env.local`. Closure tests run under a
+sanitized environment with warnings promoted to errors, plugin autoload
+disabled, external-network-marked tests excluded, and no API, token, secret, or
+private-key environment variables. The immutable closure bundle contains exact
+source, runtime, test, Git, acceptance, and fault-catalog receipts. A dirty-tree
+receipt is hash-bound but is not reproducible from a clean Git clone; the receipt
+states that limitation directly.
+
+The first production closure attempt,
+`phase00closure_c28351a03d07f4bf4978c4c0`, remains immutable failed evidence.
+It correctly blocked on seven full-suite failures and an unavailable
+`python -m pip check`. The failures exposed stale provider tests that did not
+enter the required external-effect authority context and a full-suite CLI env
+load that could leak process state between tests. The permanent corrections are:
+
+- mocked provider calls must use the same authority and reservation sessions as
+  production code;
+- `NO_EXTERNAL_NO_ORDER` verification suppresses CLI env-file hydration for all
+  commands, not only Phase 00 commands;
+- the dependency integrity gate uses `uv pip check --python .venv/bin/python`
+  when `uv` is available and fails closed if neither supported checker works;
+- failed closure bundles have no implementation, runtime, model, or order
+  authority and are superseded only by a new exact-tree passing bundle.
+
+The later v2 closure attempt
+`phase00closure_134c1b03661e7051c74d1fc1` also remains immutable failed
+evidence. Its contained suite found two scheduler compatibility-lock failures
+that appeared only under the macOS deny-network sandbox. When the OS process
+start probe fell back to a monotonic token, re-probing the current PID produced
+a different token and could misclassify its live lock as a reused process. The
+lock validator now compares the current PID against the stable process and boot
+identity captured by the running module. Other inaccessible live owners remain
+unknown and non-evictable by age alone. The original two failures and an
+unstable-reprobe regression pass both directly and under the exact closure
+sandbox profile.
+
+Closure schema v1 bundles predate read-only hardening. The v2 observer accepts
+only an exact, hash-bound, path-bound, zero-authority v1 bundle as
+`PASS_HISTORICAL_ONLY`; it never treats that evidence as a current-tree pass.
+Unknown legacy schemas, path substitutions, hash mismatches, nonzero authority,
+or changed active acceptance/fault mirrors remain blocking. This bounded bridge
+exists only so a fresh v2 checkpoint and closure can supersede valid historical
+evidence without a schema-upgrade deadlock.
+
+Canonical runtime inspection commands are also research-only:
+
+```bash
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-canonical-runtime-contract
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-scheduler-runtime-readiness
+```
+
+Do not reload the three LaunchAgents until an operator separately approves a
+controlled first-run protocol. A plist existing on disk is not proof that it is
+loaded, healthy, current, or authorized.
 
 ## Authority Hierarchy
 
@@ -61,11 +200,11 @@ The governed operator is two-step and status-first. Neither command grants
 persistent authority:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli \
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
   hyperliquid-testnet-pair-execution-preflight \
   --testnet-pair-action entry --order-approval-id APPROVAL_ID
 
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli \
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
   run-hyperliquid-testnet-pair-execution \
   --testnet-pair-action entry \
   --testnet-pair-preflight-id PREFLIGHT_ID \
@@ -140,17 +279,17 @@ control plane never reads the keychain or contacts mainnet automatically.
 These commands inspect or rebuild research status. They do not submit orders:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli system-check
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-wizard-credit-budget
-PYTHONPATH=src .venv312/bin/python -m quant_platform.orchestration.corrective_wizard_surface_inventory
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-wizard-next-capture-manifest
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-scheduler-runtime-readiness
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-wizard-reset-readiness
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-stage4-handoff-readiness
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-corrective-agent-governance
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli complete-corrective-plan
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli build-artifact-index
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli current-state
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli system-check
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-credit-budget
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.orchestration.corrective_wizard_surface_inventory
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-next-capture-manifest
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-scheduler-runtime-readiness
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-reset-readiness
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-stage4-handoff-readiness
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-corrective-agent-governance
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli complete-corrective-plan
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-artifact-index
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli current-state
 ```
 
 The Wizard surface-inventory command validates, rather than regenerates, the
@@ -170,6 +309,17 @@ schema.
 - `com.thewiz.corrective-research-daily`: one bounded daily evidence cycle.
 - `com.thewiz.corrective-l2-cadence`: public read-only Hyperliquid depth and cost evidence.
 - `com.thewiz.corrective-wizard-proof`: credit-bounded Wizard proof capture after the registered UTC reset.
+
+Each L2 cadence run also refreshes the prospective evidence command center:
+
+```bash
+PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+  build-current-wizard-hyperliquid-evidence-command-center
+```
+
+Its pair and asset ledgers distinguish the immutable current cutoff from rolling
+evidence intended for the next Wizard snapshot. Prospective collection rows have
+no Stage 2, Testnet-order, promotion, or live-trading authority.
 
 Every scheduled L2 process now has two separate transactions. The first writes
 the immutable public-data capture receipt, an immutable cost-bundle pointer

@@ -1,0 +1,14 @@
+artifact_class,status,reason,required_action,authority_after_audit
+raw Crypto Wizards API/dashboard captures,RETAIN,vendor observations are not changed by local formula repair,"preserve hashes, timestamps, settings, and hindsight flags",discovery_and_parity_only
+raw Hyperliquid candles/funding/L2,RETAIN_WITH_QUALITY_CHECK,source observations are not changed by downstream formulas,"preserve hashes; recheck alignment, freshness, and completeness",eligible_input_only
+"research papers, YouTube, and Udemy source vaults",RETAIN_REFERENCE,reference evidence is not a calculated trading result,keep provenance; never use prose/transcripts as outcome labels,research_reference_only
+old math-v2 acceptance marker,SUPERSEDED,19/19 did not test orientation coefficients/residual identity/ECM signs,replace active marker with math-v2.1 output,no_current_authority
+pre-math-v2.1 canonical replay metrics,REEVALUATED_AND_SUPERSEDED,"frozen-input comparison confirmed 378 status changes, 473 metric changes, and 148 lost eligibility cells",use corrected receipt for failure attribution; rebuild all descendants,failure_attribution_only
+legacy normalized fixtures and dYdX-derived histories,SUPERSEDE_AND_REBUILD,"generic spread could use X-beta*Y, level units, or an implicit beta of 1.0",re-normalize from retained raw observations under the Y-on-X log contract and preserve fit-scope metadata,old_rows_failure_attribution_only
+strategy/regime/ablation/ranking reports,RERUN_REQUIRED,derived from stale replay metrics,rebuild only from math-v2.1 receipts,none_until_rerun
+teacher council and walk-forward rows,RERUN_REQUIRED,dependency orientation and ECM semantics changed,rematerialize all seven modes and critics,none_until_rerun
+trade training datasets,SUPERSEDE_AND_REBUILD,features and labels can inherit stale orientation and PnL,"new immutable dataset ID, leakage audit, math version, and source hashes",old_dataset_research_only
+"ML, RL, shadow, and student-teacher models",RETRAIN_REQUIRED,trained or evaluated on stale descendants,retrain after dataset rebuild; repeat purged OOS acceptance,research_only_blocked
+dashboard rankings and paper/live decision rows,RECOMPUTE_BEFORE_USE,displayed scores/actions may descend from stale artifacts,rebuild after all upstream gates; expose blockers,no_order_authority
+Wizard Static exact reconstruction captures,RETAIN_DIAGNOSTIC,formula reconstruction remains valid historical evidence,keep full-sample hindsight restriction,diagnostic_only
+Wizard Dynamic/OU/Copula negative or partial proofs,RETAIN_NEGATIVE_EVIDENCE,failed and unavailable proofs prevent repeated overclaims,do not relabel passing subsets as general parity,blocked_vendor_parity

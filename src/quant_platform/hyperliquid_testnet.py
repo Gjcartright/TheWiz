@@ -28,6 +28,34 @@ import requests
 from eth_account import Account
 
 from quant_platform.execution import ExecutionMode, FillReport, OrderIntent
+from quant_platform.orchestration.corrective_external_effects import (
+    read_authorized_keychain_credential,
+)
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    HYPERLIQUID_INFO_OPERATION_SUFFIXES,
+    run_authorized_hyperliquid_info_call,
+)
+from quant_platform.orchestration.corrective_order_authority import (
+    HYPERLIQUID_TESTNET_ADAPTER_ID,
+    ConsumedOrderAuthorization,
+    CorrectiveOrderAuthority,
+    OrderEffectSpec,
+    claim_effect_dispatch,
+    claim_effect_dispatch_all,
+    exact_notional,
+    require_consumed_authorization,
+    require_order_authority,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    promote_staged_file,
+)
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthorityError,
+    EffectKind,
+)
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 
 ROOT = Path(__file__).resolve().parents[2]
 HYPERLIQUID_TESTNET_URL = "https://api.hyperliquid-testnet.xyz"
@@ -41,6 +69,13 @@ HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON = (
 )
 ADDRESS_PATTERN = re.compile(r"^0x[a-fA-F0-9]{40}$")
 RAW_AGENT_KEY_ENV = "HYPERLIQUID_TESTNET_AGENT_PRIVATE_KEY"
+HYPERLIQUID_AGENT_KEYCHAIN_CREDENTIAL_ID = "HYPERLIQUID_TESTNET_AGENT_KEYCHAIN"
+HYPERLIQUID_PREFLIGHT_PROVIDER_ID = "hyperliquid_testnet_preflight"
+HYPERLIQUID_USER_ROLE_OPERATION = "HYPERLIQUID_TESTNET_USER_ROLE"
+HYPERLIQUID_INFO_OPERATIONS = {
+    request_type: f"HYPERLIQUID_TESTNET_{suffix}"
+    for request_type, suffix in HYPERLIQUID_INFO_OPERATION_SUFFIXES.items()
+}
 
 
 @dataclass(frozen=True)
@@ -142,8 +177,24 @@ def hyperliquid_sdk_installed() -> bool:
     return importlib.util.find_spec("hyperliquid") is not None
 
 
-def read_hyperliquid_agent_key_from_keychain(service: str, account: str) -> str:
-    """Read the dedicated Testnet agent key without logging or persisting it."""
+def read_hyperliquid_agent_key_from_keychain(
+    service: str,
+    account: str,
+    *,
+    reader: Callable[[str, str], str | None] | None = None,
+) -> str:
+    """Read the Testnet agent key only through external-effect authority."""
+
+    return read_authorized_keychain_credential(
+        HYPERLIQUID_AGENT_KEYCHAIN_CREDENTIAL_ID,
+        service=service,
+        account=account,
+        reader=reader or _read_hyperliquid_agent_key_from_keychain,
+    )
+
+
+def _read_hyperliquid_agent_key_from_keychain(service: str, account: str) -> str:
+    """Platform adapter called only inside an authorized Keychain window."""
 
     result = subprocess.run(
         ["security", "find-generic-password", "-w", "-s", service, "-a", account],
@@ -155,6 +206,39 @@ def read_hyperliquid_agent_key_from_keychain(service: str, account: str) -> str:
     if result.returncode != 0 or not secret:
         raise ValueError("hyperliquid_agent_keychain_entry_missing")
     return secret
+
+
+def _run_authorized_hyperliquid_info_call(
+    *,
+    session: requests.Session,
+    target: str,
+    payload: dict[str, object],
+) -> Any:
+    """Run one allowlisted public `/info` request under exact authority."""
+
+    return run_authorized_hyperliquid_info_call(
+        target=target,
+        payload=payload,
+        operation_prefix="HYPERLIQUID_TESTNET",
+        transport=lambda: _raw_hyperliquid_info_call(
+            session=session,
+            target=target,
+            payload=payload,
+        ),
+    )
+
+
+def _raw_hyperliquid_info_call(
+    *,
+    session: requests.Session,
+    target: str,
+    payload: dict[str, object],
+) -> Any:
+    """HTTP adapter reachable only from the authorized public-call window."""
+
+    response = session.post(target, json=payload, timeout=20)
+    response.raise_for_status()
+    return response.json()
 
 
 class HyperliquidTestnetOrderAdapter:
@@ -182,10 +266,17 @@ class HyperliquidTestnetPairAdapter:
     exchange_submission_capable = True
     pair_submission_capable = True
     record_only = False
+    gate00g_order_authority_enforced = True
 
-    def __init__(self, executor: HyperliquidTestnetPairExecutor | None = None) -> None:
+    def __init__(
+        self,
+        executor: HyperliquidTestnetPairExecutor | None = None,
+        *,
+        order_authority: CorrectiveOrderAuthority | None = None,
+    ) -> None:
         self.executor = executor or HyperliquidTestnetPairExecutor(
-            state_path=HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON
+            state_path=HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON,
+            order_authority=order_authority,
         )
 
     def place_order(self, intent: OrderIntent, config: object | None = None) -> FillReport:
@@ -196,12 +287,40 @@ class HyperliquidTestnetPairAdapter:
         intents: Sequence[OrderIntent],
         config: object | None = None,
     ) -> HyperliquidPairExecutionResult:
+        executor = _require_hyperliquid_pair_executor(self.executor)
         resolved = config if isinstance(config, HyperliquidTestnetConfig) else None
-        return self.executor.submit_pair(intents, resolved)
+        return executor.submit_pair(intents, resolved)
+
+
+def _require_hyperliquid_pair_executor(
+    executor: object,
+) -> HyperliquidTestnetPairExecutor:
+    if type(executor) is not HyperliquidTestnetPairExecutor:
+        raise EffectAuthorityError("gate00g_hyperliquid_pair_executor_denied")
+    return executor
+
+
+def _claim_all_pair_order_authorizations(
+    *,
+    executor: HyperliquidTestnetPairExecutor,
+    authorizations: Sequence[tuple[OrderEffectSpec, ConsumedOrderAuthorization]],
+    intents: Sequence[OrderIntent],
+) -> None:
+    if not intents:
+        raise EffectAuthorityError("gate00g_pair_order_authorizations_empty")
+    for intent in intents:
+        executor._claim_pair_authorization(
+            authorizations,
+            effect_kind=EffectKind.ORDER_SUBMISSION,
+            operation="bulk_orders",
+            instrument_id=_normalize_perp_coin(intent.market),
+        )
 
 
 class HyperliquidTestnetPairExecutor:
     """Testnet-only two-leg executor using Hyperliquid's official SDK bulk action."""
+
+    gate00g_order_authority_enforced = True
 
     def __init__(
         self,
@@ -213,16 +332,24 @@ class HyperliquidTestnetPairExecutor:
             Callable[[str, HyperliquidTestnetConfig], Sequence[str]] | None
         ) = None,
         state_path: Path | None = None,
+        order_authority: CorrectiveOrderAuthority | None = None,
     ) -> None:
         self._session = session or requests.Session()
-        self._keychain_reader = keychain_reader or read_hyperliquid_agent_key_from_keychain
+        self._keychain_reader = (
+            keychain_reader or _read_hyperliquid_agent_key_from_keychain
+        )
         self._exchange_factory = exchange_factory
         self._approval_validator = approval_validator or _signed_approval_blockers
         self._uses_default_approval_validator = approval_validator is None
         self._state_path = state_path
+        self._order_authority = order_authority
+        self._validated_wallet: Any | None = None
+        self._validated_wallet_binding: tuple[str, str] | None = None
 
     def no_order_preflight(self, config: HyperliquidTestnetConfig | None = None) -> dict[str, object]:
         resolved = config or HyperliquidTestnetConfig.paper_testnet_from_env()
+        self._validated_wallet = None
+        self._validated_wallet_binding = None
         blockers = list(resolved.configuration_blockers())
         result: dict[str, object] = {
             "checked_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -246,22 +373,36 @@ class HyperliquidTestnetPairExecutor:
             blockers.append("missing_hyperliquid_python_sdk")
 
         wallet = None
+        external_authority_ready = True
         if not blockers and resolved.keychain_service and resolved.agent_address:
             try:
-                secret = self._keychain_reader(resolved.keychain_service, resolved.agent_address)
+                secret = read_authorized_keychain_credential(
+                    HYPERLIQUID_AGENT_KEYCHAIN_CREDENTIAL_ID,
+                    service=resolved.keychain_service,
+                    account=resolved.agent_address,
+                    reader=self._keychain_reader,
+                )
                 result["agent_key_present"] = bool(secret)
                 wallet = Account.from_key(secret)
                 result["agent_key_matches_address"] = wallet.address.lower() == resolved.agent_address.lower()
                 if not bool(result["agent_key_matches_address"]):
                     blockers.append("hyperliquid_agent_key_address_mismatch")
+            except EffectAuthorityError as exc:
+                external_authority_ready = False
+                blockers.append(str(exc))
             except Exception:
                 blockers.append("hyperliquid_agent_keychain_entry_missing")
 
-        if resolved.agent_address and resolved.master_address and not any(
-            blocker.startswith("missing_or_invalid") for blocker in blockers
+        if (
+            external_authority_ready
+            and wallet is not None
+            and resolved.agent_address
+            and resolved.master_address
+            and not blockers
         ):
             try:
-                role_payload = self._info({"type": "userRole", "user": resolved.agent_address}, resolved)
+                payload = {"type": "userRole", "user": resolved.agent_address}
+                role_payload = self._info(payload, resolved)
                 role = str(role_payload.get("role") or "")
                 linked_master = str((role_payload.get("data") or {}).get("user") or "")
                 result["agent_role"] = role
@@ -270,6 +411,8 @@ class HyperliquidTestnetPairExecutor:
                 )
                 if not bool(result["agent_authorized_for_master"]):
                     blockers.append("hyperliquid_agent_authorization_unverified")
+            except EffectAuthorityError as exc:
+                blockers.append(str(exc))
             except Exception:
                 blockers.append("hyperliquid_agent_role_check_failed")
 
@@ -281,6 +424,17 @@ class HyperliquidTestnetPairExecutor:
                 blockers.append("hyperliquid_local_signature_check_failed")
 
         blockers = _unique(blockers)
+        if (
+            not blockers
+            and wallet is not None
+            and resolved.keychain_service
+            and resolved.agent_address
+        ):
+            self._validated_wallet = wallet
+            self._validated_wallet_binding = (
+                resolved.keychain_service,
+                resolved.agent_address.lower(),
+            )
         result["blockers"] = ";".join(blockers)
         result["ready_for_no_order_preflight"] = not blockers
         result["ready_for_testnet_submit"] = False
@@ -292,7 +446,13 @@ class HyperliquidTestnetPairExecutor:
         intents: Sequence[OrderIntent],
         config: HyperliquidTestnetConfig | None = None,
     ) -> HyperliquidPairExecutionResult:
-        resolved = config or HyperliquidTestnetConfig.paper_testnet_from_env()
+        if config is None:
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason="gate00g_hyperliquid_explicit_config_required",
+                state_path=self._state_path_text(),
+            )
+        resolved = config
         constructor_blockers: list[str] = []
         if self._exchange_factory is None and self._state_path is None:
             constructor_blockers.append(
@@ -345,6 +505,15 @@ class HyperliquidTestnetPairExecutor:
                 reason=";".join(blockers),
             )
 
+        try:
+            authority = require_order_authority(self._order_authority)
+        except EffectAuthorityError as exc:
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=str(exc),
+                state_path=self._state_path_text(),
+            )
+
         preflight = self.no_order_preflight(resolved)
         if not bool(preflight.get("ready_for_no_order_preflight")):
             return HyperliquidPairExecutionResult(
@@ -352,25 +521,32 @@ class HyperliquidTestnetPairExecutor:
                 reason=str(preflight.get("blockers") or "hyperliquid_no_order_preflight_failed"),
             )
 
-        account_blockers = self._pair_account_blockers(intents, resolved)
-        if account_blockers:
+        pre_submission_blockers = self._pair_account_blockers(intents, resolved)
+        pre_submission_blockers.extend(
+            self._pair_market_rule_blockers(intents, resolved)
+        )
+        pre_submission_blockers.extend(
+            self._pair_exit_price_blockers(intents, resolved)
+        )
+        pre_submission_blockers = _unique(pre_submission_blockers)
+        if pre_submission_blockers:
             return HyperliquidPairExecutionResult(
                 status="pair_blocked",
-                reason=";".join(account_blockers),
+                reason=";".join(pre_submission_blockers),
             )
 
-        market_rule_blockers = self._pair_market_rule_blockers(intents, resolved)
-        if market_rule_blockers:
-            return HyperliquidPairExecutionResult(
-                status="pair_blocked",
-                reason=";".join(market_rule_blockers),
+        try:
+            authorizations = self._consume_pair_authority(
+                authority,
+                intents,
+                resolved,
             )
-
-        exit_price_blockers = self._pair_exit_price_blockers(intents, resolved)
-        if exit_price_blockers:
+            self._validate_pair_authorizations(authorizations)
+        except (EffectAuthorityError, ValueError) as exc:
             return HyperliquidPairExecutionResult(
                 status="pair_blocked",
-                reason=";".join(exit_price_blockers),
+                reason=str(exc),
+                state_path=self._state_path_text(),
             )
 
         final_blockers = self._approval_blockers(intents, resolved)
@@ -408,8 +584,23 @@ class HyperliquidTestnetPairExecutor:
             )
         self._persist_execution_state(state)
         try:
-            wallet = self._load_wallet(resolved)
-            exchange = self._build_exchange(wallet, resolved)
+            setup_spec, setup_authorization = self._pair_authorization(
+                authorizations,
+                effect_kind=EffectKind.ORDER_SUBMISSION,
+                operation="bulk_orders",
+                instrument_id=_normalize_perp_coin(intents[0].market),
+            )
+            wallet = self._load_wallet(
+                resolved,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
+            exchange = self._build_exchange(
+                wallet,
+                resolved,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
         except Exception as exc:
             state["phase"] = "PRE_SUBMISSION_FAILED"
             state["blocker"] = f"hyperliquid_pair_setup_error:{type(exc).__name__}"
@@ -419,9 +610,43 @@ class HyperliquidTestnetPairExecutor:
                 reason=str(state["blocker"]),
                 state_path=self._state_path_text(),
             )
+        leverage_blockers: list[str] = []
+        if not all(intent.reduce_only for intent in intents):
+            leverage_blockers.extend(self._approval_blockers(intents, resolved))
+            latest_state = self._read_execution_state()
+            leverage_blockers.extend(
+                self._submission_state_blockers(latest_state, intents, resolved)
+            )
+            leverage_blockers = _unique(leverage_blockers)
+        if leverage_blockers:
+            state["phase"] = "PRE_SUBMISSION_FAILED"
+            state["blocker"] = ";".join(leverage_blockers)
+            self._persist_execution_state(state)
+            return HyperliquidPairExecutionResult(
+                status="pair_blocked",
+                reason=str(state["blocker"]),
+                state_path=self._state_path_text(),
+            )
         try:
             if not all(intent.reduce_only for intent in intents):
                 for intent in intents:
+                    mutation_blockers = self._approval_blockers(intents, resolved)
+                    mutation_blockers.extend(
+                        self._submission_state_blockers(
+                            self._read_execution_state(),
+                            intents,
+                            resolved,
+                        )
+                    )
+                    mutation_blockers = _unique(mutation_blockers)
+                    if mutation_blockers:
+                        raise EffectAuthorityError(";".join(mutation_blockers))
+                    self._claim_pair_authorization(
+                        authorizations,
+                        effect_kind=EffectKind.ACCOUNT_MUTATION,
+                        operation="update_leverage",
+                        instrument_id=_normalize_perp_coin(intent.market),
+                    )
                     exchange.update_leverage(
                         resolved.requested_leverage,
                         _normalize_perp_coin(intent.market),
@@ -477,6 +702,11 @@ class HyperliquidTestnetPairExecutor:
         state["submit_attempted_at_utc"] = datetime.now(timezone.utc).isoformat()
         self._persist_execution_state(state)
         try:
+            _claim_all_pair_order_authorizations(
+                executor=self,
+                authorizations=authorizations,
+                intents=intents,
+            )
             response = exchange.bulk_orders(requests)
         except Exception as exc:
             state["phase"] = "RECONCILE_REQUIRED"
@@ -554,12 +784,170 @@ class HyperliquidTestnetPairExecutor:
             state_path=self._state_path_text(),
         )
 
+    def _consume_pair_authority(
+        self,
+        authority: CorrectiveOrderAuthority,
+        intents: Sequence[OrderIntent],
+        config: HyperliquidTestnetConfig,
+    ) -> tuple[tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...]:
+        specs: list[OrderEffectSpec] = []
+        if not all(intent.reduce_only for intent in intents):
+            specs.extend(
+                self._account_mutation_spec(
+                    authority,
+                    intent,
+                    config,
+                    operation="update_leverage",
+                )
+                for intent in intents
+            )
+        specs.extend(
+            self._order_effect_spec(
+                authority,
+                intent,
+                config,
+                operation="bulk_orders",
+            )
+            for intent in intents
+        )
+        tokens = authority.consume_all(tuple(specs))
+        return tuple(zip(specs, tokens, strict=True))
+
+    def _validate_pair_authorizations(
+        self,
+        authorizations: tuple[
+            tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+        ],
+    ) -> None:
+        authority = require_order_authority(self._order_authority)
+        if not authorizations:
+            raise EffectAuthorityError("gate00g_pair_authorizations_missing")
+        for spec, authorization in authorizations:
+            require_consumed_authorization(
+                authorization,
+                owner=authority,
+                spec=spec,
+            )
+
+    def _claim_pair_authorization(
+        self,
+        authorizations: tuple[
+            tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+        ],
+        *,
+        effect_kind: EffectKind,
+        operation: str,
+        instrument_id: str,
+    ) -> None:
+        spec, authorization = self._pair_authorization(
+            authorizations,
+            effect_kind=effect_kind,
+            operation=operation,
+            instrument_id=instrument_id,
+        )
+        authority = require_order_authority(self._order_authority)
+        claim_effect_dispatch(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
+
+    def _pair_authorization(
+        self,
+        authorizations: tuple[
+            tuple[OrderEffectSpec, ConsumedOrderAuthorization], ...
+        ],
+        *,
+        effect_kind: EffectKind,
+        operation: str,
+        instrument_id: str,
+    ) -> tuple[OrderEffectSpec, ConsumedOrderAuthorization]:
+        authority = require_order_authority(self._order_authority)
+        for spec, authorization in authorizations:
+            if (
+                spec.effect_kind == effect_kind
+                and spec.operation == operation
+                and spec.instrument_id == instrument_id
+            ):
+                require_consumed_authorization(
+                    authorization,
+                    owner=authority,
+                    spec=spec,
+                )
+                return spec, authorization
+        raise EffectAuthorityError("gate00g_exact_effect_authorization_missing")
+
+    @staticmethod
+    def _order_effect_spec(
+        authority: CorrectiveOrderAuthority,
+        intent: OrderIntent,
+        config: HyperliquidTestnetConfig,
+        *,
+        operation: str,
+        size: object | None = None,
+        side: str | None = None,
+        reference_price: object | None = None,
+        client_reference: str = "",
+    ) -> OrderEffectSpec:
+        quantity = intent.size if size is None else size
+        price = intent.limit_price if reference_price is None else reference_price
+        return authority.spec(
+            effect_kind=EffectKind.ORDER_SUBMISSION,
+            environment="testnet",
+            adapter_id=HYPERLIQUID_TESTNET_ADAPTER_ID,
+            target=f"{config.base_url.rstrip('/')}/exchange",
+            operation=operation,
+            venue_id="hyperliquid",
+            product_lane_id=VenueLane.HYPERLIQUID_PERP.value,
+            account_scope_id=str(config.master_address or ""),
+            instrument_id=_normalize_perp_coin(intent.market),
+            side=str(side or intent.side).lower(),
+            size=quantity,
+            notional=(
+                exact_notional(quantity, price)
+                if operation in {"bulk_orders", "market_close"}
+                else 0
+            ),
+            leverage=config.requested_leverage,
+            reduce_only=bool(intent.reduce_only or operation == "market_close"),
+            proposal_id=str(config.order_approval_id or ""),
+            client_reference=client_reference,
+        )
+
+    @staticmethod
+    def _account_mutation_spec(
+        authority: CorrectiveOrderAuthority,
+        intent: OrderIntent,
+        config: HyperliquidTestnetConfig,
+        *,
+        operation: str,
+    ) -> OrderEffectSpec:
+        return authority.spec(
+            effect_kind=EffectKind.ACCOUNT_MUTATION,
+            environment="testnet",
+            adapter_id=HYPERLIQUID_TESTNET_ADAPTER_ID,
+            target=f"{config.base_url.rstrip('/')}/exchange",
+            operation=operation,
+            venue_id="hyperliquid",
+            product_lane_id=VenueLane.HYPERLIQUID_PERP.value,
+            account_scope_id=str(config.master_address or ""),
+            instrument_id=_normalize_perp_coin(intent.market),
+            leverage=config.requested_leverage,
+            proposal_id=str(config.order_approval_id or ""),
+        )
+
     def recover_incomplete_pair(
         self,
         config: HyperliquidTestnetConfig | None = None,
     ) -> HyperliquidPairExecutionResult:
         """Recover a journaled uncertain pair without ever retrying its entry."""
 
+        if config is None:
+            return HyperliquidPairExecutionResult(
+                status="pair_recovery_blocked",
+                reason="gate00g_hyperliquid_explicit_config_required",
+                state_path=self._state_path_text(),
+            )
         with self._exclusive_submission_lock() as lock_acquired:
             if not lock_acquired:
                 return HyperliquidPairExecutionResult(
@@ -592,7 +980,13 @@ class HyperliquidTestnetPairExecutor:
                 reconciled=bool(state.get("reconciled", False)),
                 state_path=self._state_path_text(),
             )
-        resolved = config or HyperliquidTestnetConfig.paper_testnet_from_env()
+        if config is None:
+            return HyperliquidPairExecutionResult(
+                status="pair_recovery_blocked",
+                reason="gate00g_hyperliquid_explicit_config_required",
+                state_path=self._state_path_text(),
+            )
+        resolved = config
         blockers = resolved.configuration_blockers()
         if not resolved.submit_orders:
             blockers.append("hyperliquid_testnet_submit_orders_false")
@@ -620,6 +1014,24 @@ class HyperliquidTestnetPairExecutor:
                 reason=";".join(blockers),
                 state_path=self._state_path_text(),
             )
+        try:
+            authority = require_order_authority(self._order_authority)
+            preparation_specs = tuple(
+                self._order_effect_spec(
+                    authority,
+                    intent,
+                    resolved,
+                    operation="recovery_prepare",
+                )
+                for intent in intents
+            )
+            preparation_tokens = authority.consume_all(preparation_specs)
+        except (EffectAuthorityError, ValueError) as exc:
+            return HyperliquidPairExecutionResult(
+                status="pair_recovery_blocked",
+                reason=str(exc),
+                state_path=self._state_path_text(),
+            )
         preflight = self.no_order_preflight(resolved)
         if not bool(preflight.get("ready_for_no_order_preflight")):
             return HyperliquidPairExecutionResult(
@@ -631,8 +1043,19 @@ class HyperliquidTestnetPairExecutor:
                 state_path=self._state_path_text(),
             )
         try:
-            wallet = self._load_wallet(resolved)
-            exchange = self._build_exchange(wallet, resolved)
+            setup_spec = preparation_specs[0]
+            setup_authorization = preparation_tokens[0]
+            wallet = self._load_wallet(
+                resolved,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
+            exchange = self._build_exchange(
+                wallet,
+                resolved,
+                spec=setup_spec,
+                authorization=setup_authorization,
+            )
         except Exception as exc:
             return HyperliquidPairExecutionResult(
                 status="pair_recovery_failed",
@@ -842,7 +1265,7 @@ class HyperliquidTestnetPairExecutor:
         temporary.write_text(
             json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
         )
-        temporary.replace(self._state_path)
+        promote_staged_file(temporary, self._state_path)
 
     @contextmanager
     def _exclusive_submission_lock(self):
@@ -1002,8 +1425,12 @@ class HyperliquidTestnetPairExecutor:
         config: HyperliquidTestnetConfig,
     ) -> dict[str, object]:
         coins = {_normalize_perp_coin(intent.market) for intent in intents}
+        intents_by_coin = {
+            _normalize_perp_coin(intent.market): intent for intent in intents
+        }
         actions: list[str] = ["block_duplicate_entry_retry"]
         try:
+            authority = require_order_authority(self._order_authority)
             open_orders = self._info_value(
                 {"type": "openOrders", "user": config.master_address},
                 config,
@@ -1012,6 +1439,28 @@ class HyperliquidTestnetPairExecutor:
                 raise ValueError("hyperliquid_pair_open_orders_missing")
             cancel_requests = _recovery_cancel_requests(fills, open_orders, coins)
             if cancel_requests:
+                cancel_specs = tuple(
+                    self._order_effect_spec(
+                        authority,
+                        intents_by_coin[str(request.get("coin", ""))],
+                        config,
+                        operation="bulk_cancel",
+                        size=0,
+                        client_reference=str(request.get("oid", "")),
+                    )
+                    for request in cancel_requests
+                    if str(request.get("coin", "")) in intents_by_coin
+                )
+                if len(cancel_specs) != len(cancel_requests):
+                    raise EffectAuthorityError(
+                        "gate00g_recovery_cancel_instrument_mismatch"
+                    )
+                cancel_tokens = authority.consume_all(cancel_specs)
+                claim_effect_dispatch_all(
+                    cancel_tokens,
+                    owner=authority,
+                    specs=cancel_specs,
+                )
                 exchange.bulk_cancel(cancel_requests)
                 actions.append("cancel_pair_open_orders")
             state = self._info(
@@ -1022,6 +1471,27 @@ class HyperliquidTestnetPairExecutor:
             for coin, size in positions.items():
                 if abs(size) <= 0.0:
                     continue
+                intent = intents_by_coin.get(coin)
+                if intent is None:
+                    raise EffectAuthorityError(
+                        "gate00g_recovery_position_instrument_mismatch"
+                    )
+                close_side = "sell" if size > 0 else "buy"
+                close_spec = self._order_effect_spec(
+                    authority,
+                    intent,
+                    config,
+                    operation="market_close",
+                    size=abs(size),
+                    side=close_side,
+                    reference_price=intent.limit_price,
+                )
+                close_authorization = authority.consume(close_spec)
+                claim_effect_dispatch(
+                    close_authorization,
+                    owner=authority,
+                    spec=close_spec,
+                )
                 exchange.market_close(coin, sz=abs(size))
                 actions.append(f"reduce_only_flatten:{coin}")
             final_state = self._info(
@@ -1068,10 +1538,11 @@ class HyperliquidTestnetPairExecutor:
         payload: dict[str, object],
         config: HyperliquidTestnetConfig,
     ) -> Any:
-        response = self._session.post(f"{config.base_url.rstrip('/')}/info", json=payload, timeout=20)
-        response.raise_for_status()
-        parsed = response.json()
-        return parsed
+        return _run_authorized_hyperliquid_info_call(
+            session=self._session,
+            target=f"{config.base_url.rstrip('/')}/info",
+            payload=payload,
+        )
 
     @staticmethod
     def _create_local_noop_signature(wallet: Any) -> None:
@@ -1081,12 +1552,45 @@ class HyperliquidTestnetPairExecutor:
         if not isinstance(signature, dict) or not signature:
             raise ValueError("invalid_hyperliquid_local_signature")
 
-    def _load_wallet(self, config: HyperliquidTestnetConfig) -> Any:
+    def _load_wallet(
+        self,
+        config: HyperliquidTestnetConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> Any:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         if not config.keychain_service or not config.agent_address:
             raise ValueError("hyperliquid_agent_configuration_missing")
-        return Account.from_key(self._keychain_reader(config.keychain_service, config.agent_address))
+        binding = (config.keychain_service, config.agent_address.lower())
+        if (
+            self._validated_wallet is None
+            or self._validated_wallet_binding != binding
+        ):
+            raise EffectAuthorityError(
+                "hyperliquid_validated_preflight_wallet_missing"
+            )
+        return self._validated_wallet
 
-    def _build_exchange(self, wallet: Any, config: HyperliquidTestnetConfig) -> Any:
+    def _build_exchange(
+        self,
+        wallet: Any,
+        config: HyperliquidTestnetConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> Any:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         if self._exchange_factory is not None:
             return self._exchange_factory(wallet, config)
         from hyperliquid.exchange import Exchange
@@ -1128,7 +1632,7 @@ def write_hyperliquid_testnet_preflight_report(
     active.mkdir(parents=True, exist_ok=True)
     csv_path = active / HYPERLIQUID_TESTNET_PRECHECK_CSV.name
     md_path = active / HYPERLIQUID_TESTNET_PRECHECK_MD.name
-    frame.to_csv(csv_path, index=False)
+    atomic_write_csv(frame, csv_path, index=False)
     lines = [
         "# Hyperliquid Testnet Preflight",
         "",
@@ -1139,7 +1643,7 @@ def write_hyperliquid_testnet_preflight_report(
         "The agent private key is never written to this report.",
         "",
     ]
-    md_path.write_text("\n".join(lines), encoding="utf-8")
+    atomic_write_text(md_path, "\n".join(lines), encoding="utf-8")
     return frame
 
 
@@ -1165,26 +1669,28 @@ def hyperliquid_testnet_margin_snapshot(
     if not blockers:
         client = session or requests.Session()
         try:
-            response = client.post(
-                f"{resolved.base_url.rstrip('/')}/info",
-                json={"type": "clearinghouseState", "user": resolved.master_address},
-                timeout=20,
+            parsed = _run_authorized_hyperliquid_info_call(
+                session=client,
+                target=f"{resolved.base_url.rstrip('/')}/info",
+                payload={
+                    "type": "clearinghouseState",
+                    "user": resolved.master_address,
+                },
             )
-            response.raise_for_status()
-            parsed = response.json()
             if not isinstance(parsed, dict):
                 raise ValueError("unexpected_hyperliquid_clearinghouse_response")
             payload = parsed
         except Exception:
             blockers.append("hyperliquid_testnet_margin_query_failed")
         try:
-            response = client.post(
-                f"{resolved.base_url.rstrip('/')}/info",
-                json={"type": "spotClearinghouseState", "user": resolved.master_address},
-                timeout=20,
+            parsed = _run_authorized_hyperliquid_info_call(
+                session=client,
+                target=f"{resolved.base_url.rstrip('/')}/info",
+                payload={
+                    "type": "spotClearinghouseState",
+                    "user": resolved.master_address,
+                },
             )
-            response.raise_for_status()
-            parsed = response.json()
             if not isinstance(parsed, dict):
                 raise ValueError("unexpected_hyperliquid_spot_clearinghouse_response")
             spot_payload = parsed
@@ -1249,9 +1755,8 @@ def write_hyperliquid_testnet_margin_snapshot(
     md_path = active / HYPERLIQUID_TESTNET_MARGIN_MD.name
     temporary = csv_path.with_suffix(csv_path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(csv_path)
-    md_path.write_text(
-        "\n".join(
+    promote_staged_file(temporary, csv_path)
+    atomic_write_text(md_path, "\n".join(
             [
                 "# Hyperliquid Testnet Margin Snapshot",
                 "",
@@ -1260,9 +1765,7 @@ def write_hyperliquid_testnet_margin_snapshot(
                 frame.to_markdown(index=False),
                 "",
             ]
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return frame
 
 

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 import json
-import os
 import math
+import os
 from pathlib import Path
 from statistics import mean, pstdev
 from typing import Any
@@ -11,6 +13,7 @@ from urllib.parse import urlencode
 import numpy as np
 import pandas as pd
 
+from quant_platform.economic_contract import y_on_x_beta, y_on_x_log_spread
 from quant_platform.funding import normalize_funding_rows
 from quant_platform.performance_math import MATH_VERSION
 from quant_platform.statistics.math_v2 import attach_math_v2_statistics
@@ -48,7 +51,7 @@ def dydx_two_leg_request_rows(
     from_iso: str | None = None,
     indexer_base: str = DYDX_INDEXER_BASE,
     output_dir: str | Path = "data/raw/dydx_manual",
-        zscore_window: int = ZSCORE_WINDOW,
+    zscore_window: int = ZSCORE_WINDOW,
 ) -> list[dict[str, str]]:
     left = _dydx_market(asset_x)
     right = _dydx_market(asset_y)
@@ -102,7 +105,10 @@ def dydx_two_leg_request_rows(
             "method": "LOCAL",
             "url": "",
             "curl": "",
-            "save_as": str(Path("data/raw/pair_details") / f"pair_{pair_id}_{resolution.lower()}_dydx_candles_derived_history.json"),
+            "save_as": str(
+                Path("data/raw/pair_details")
+                / f"pair_{pair_id}_{resolution.lower()}_dydx_candles_derived_history.json"
+            ),
             "import_command": (
                 "PYTHONPATH=src python3 -m quant_platform.cli build-dydx-pair-history "
                 f"--left-candles data/raw/dydx_candles/{left}_{resolution}_candles.json "
@@ -150,7 +156,7 @@ def archive_dydx_candles(input_path: str | Path, output_dir: str | Path) -> Path
     resolution = str(candles[0].get("resolution") or "UNKNOWN")
     output = Path(output_dir) / f"{ticker}_{resolution}_candles.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({"candles": candles}, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps({"candles": candles}, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -164,7 +170,9 @@ def merge_dydx_candle_windows(
     market_name = _dydx_market(market)
     candidates = sorted(Path(input_dir).glob(f"**/{market_name}_{resolution}_candles.json"))
     if not candidates:
-        raise ValueError(f"no windowed dYdX candle files found for {market_name} {resolution} in {input_dir}")
+        raise ValueError(
+            f"no windowed dYdX candle files found for {market_name} {resolution} in {input_dir}"
+        )
 
     by_timestamp: dict[str, dict[str, Any]] = {}
     for candidate in candidates:
@@ -182,12 +190,14 @@ def merge_dydx_candle_windows(
             by_timestamp[timestamp] = candle
 
     if not by_timestamp:
-        raise ValueError(f"no timestamped candles found for {market_name} {resolution} in {input_dir}")
+        raise ValueError(
+            f"no timestamped candles found for {market_name} {resolution} in {input_dir}"
+        )
 
     candles = [by_timestamp[timestamp] for timestamp in sorted(by_timestamp)]
     output = Path(output_dir) / f"{market_name}_{resolution}_candles.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({"candles": candles}, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps({"candles": candles}, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -252,8 +262,8 @@ def build_pair_history_from_candles(
     hedge_ratio: float | None,
     beta: float | None = None,
     interval: str | None = None,
-        zscore_window: int = ZSCORE_WINDOW,
-        min_zscore_window: int = ZSCORE_MIN_WINDOW,
+    zscore_window: int = ZSCORE_WINDOW,
+    min_zscore_window: int = ZSCORE_MIN_WINDOW,
     derive_ecm: bool = True,
     funding_path: str | Path | None = None,
     funding_rows: pd.DataFrame | None = None,
@@ -266,8 +276,13 @@ def build_pair_history_from_candles(
     if not timestamps:
         raise ValueError("no overlapping candle timestamps")
 
-    price_pairs = [(_candle_price(left_by_time[timestamp]), _candle_price(right_by_time[timestamp])) for timestamp in timestamps]
-    final_hedge_ratio = hedge_ratio if hedge_ratio is not None else _estimate_price_hedge_ratio(price_pairs)
+    price_pairs = [
+        (_candle_price(left_by_time[timestamp]), _candle_price(right_by_time[timestamp]))
+        for timestamp in timestamps
+    ]
+    final_hedge_ratio = (
+        hedge_ratio if hedge_ratio is not None else _estimate_price_hedge_ratio(price_pairs)
+    )
     final_beta = beta if beta is not None else _estimate_return_beta(price_pairs)
 
     rows: list[dict[str, Any]] = []
@@ -276,7 +291,15 @@ def build_pair_history_from_candles(
         y = right_by_time[timestamp]
         price_x = _candle_price(x)
         price_y = _candle_price(y)
-        spread = price_x - final_hedge_ratio * price_y
+        if price_x <= 0.0 or price_y <= 0.0:
+            raise ValueError("pair history requires finite positive two-leg prices")
+        spread = float(
+            y_on_x_log_spread(
+                pd.Series([price_x]),
+                pd.Series([price_y]),
+                final_hedge_ratio,
+            ).iloc[0]
+        )
         rows.append(
             {
                 "timestamp": timestamp,
@@ -311,7 +334,10 @@ def build_pair_history_from_candles(
             asset_y=asset_y,
         )
 
-    resolution = interval or str(left[0].get("resolution") or right[0].get("resolution") or "unknown").lower()
+    resolution = (
+        interval
+        or str(left[0].get("resolution") or right[0].get("resolution") or "unknown").lower()
+    )
     payload: dict[str, Any] = {
         "pair_id": pair_id,
         "pair": f"{asset_x}-{asset_y}",
@@ -324,15 +350,25 @@ def build_pair_history_from_candles(
         "math_version": MATH_VERSION,
         "math_v2_signal_use_status": "blocked_until_walk_forward_and_wizard_mode_parity",
         "hedge_ratio": final_hedge_ratio,
-        "hedge_ratio_source": "operator" if hedge_ratio is not None else "derived_price_ols",
+        "hedge_ratio_source": (
+            "operator_beta_y_on_x" if hedge_ratio is not None else "derived_log_y_on_log_x_ols"
+        ),
+        "hedge_ratio_orientation": "beta_y_on_x",
+        "spread_contract": "log_y_minus_beta_y_on_x_times_log_x",
+        "spread_point_in_time_status": (
+            "operator_fit_scope_unknown"
+            if hedge_ratio is not None
+            else "full_sample_hindsight_research_only"
+        ),
         "beta": final_beta,
         "beta_source": "operator" if beta is not None else "derived_return_covariance",
+        "beta_orientation": "return_x_on_return_y_diagnostic_only",
         "ecm_x_available": bool(derive_ecm),
         "ecm_y_available": bool(derive_ecm),
         "ecm_strength_available": bool(derive_ecm),
         "source_note": (
             "Derived from manually copied dYdX candle responses observed on Crypto Wizards pair page. "
-            "Spread and zscore are reconstructed locally. Funding is not fabricated; merge real dYdX funding "
+            "Spread and zscore use the local Y-on-X log contract. Funding is not fabricated; merge real dYdX funding "
             "with --funding-path before production acceptance."
         ),
         "history": rows,
@@ -351,7 +387,7 @@ def build_pair_history_from_candles(
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -377,13 +413,16 @@ def backfill_provisional_pair_history_features(
         payload["history"] = rows
         if "source_note" in payload:
             source_note = str(payload.get("source_note") or "")
-            if "provisional derived features used to exercise the strategy research harness" not in source_note:
+            if (
+                "provisional derived features used to exercise the strategy research harness"
+                not in source_note
+            ):
                 payload["source_note"] = source_note + (
                     " Additional research columns such as conditional_probability_distortion, half_life, hurst,"
                     " tail_dependence, and model confidence inputs are provisional derived features used to exercise"
                     " the strategy research harness."
                 )
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         written.append(path)
     return written
 
@@ -428,14 +467,12 @@ def _attach_leg_funding_to_rows(
         return
 
     frame = pd.DataFrame(rows).reset_index().rename(columns={"index": "_row_index"})
-    frame["_timestamp"] = (
-        pd.to_datetime(frame["timestamp"], errors="coerce", utc=True)
-        .astype("datetime64[ns, UTC]")
+    frame["_timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce", utc=True).astype(
+        "datetime64[ns, UTC]"
     )
     right = market_funding.dropna(subset=["timestamp"]).copy()
     right["_timestamp"] = (
-        pd.to_datetime(right["timestamp"], errors="coerce", utc=True)
-        .astype("datetime64[ns, UTC]")
+        pd.to_datetime(right["timestamp"], errors="coerce", utc=True).astype("datetime64[ns, UTC]")
     ).sort_values()
     if right.empty:
         latest = market_funding["funding_bps"].dropna()
@@ -444,13 +481,11 @@ def _attach_leg_funding_to_rows(
                 row[output_column] = float(latest.iloc[-1])
         return
 
-    frame["_timestamp"] = (
-        pd.to_datetime(frame["_timestamp"], utc=True, errors="coerce")
-        .astype("datetime64[ns, UTC]")
+    frame["_timestamp"] = pd.to_datetime(frame["_timestamp"], utc=True, errors="coerce").astype(
+        "datetime64[ns, UTC]"
     )
-    right["_timestamp"] = (
-        pd.to_datetime(right["_timestamp"], utc=True, errors="coerce")
-        .astype("datetime64[ns, UTC]")
+    right["_timestamp"] = pd.to_datetime(right["_timestamp"], utc=True, errors="coerce").astype(
+        "datetime64[ns, UTC]"
     )
 
     merged = pd.merge_asof(
@@ -504,11 +539,14 @@ def import_dydx_candle_bundle(
 
         left_path = candle_dir / f"{asset_x}_5MINS_candles.json"
         right_path = candle_dir / f"{asset_y}_5MINS_candles.json"
-        left_path.write_text(json.dumps({"candles": left_candles}, indent=2, sort_keys=True), encoding="utf-8")
-        right_path.write_text(json.dumps({"candles": right_candles}, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(left_path, json.dumps({"candles": left_candles}, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(right_path, json.dumps({"candles": right_candles}, indent=2, sort_keys=True), encoding="utf-8")
 
         hedge_ratio = (hedge_ratio_by_pair or {}).get(pair_name, default_hedge_ratio)
-        output = pair_dir / f"pair_{_safe_filename(pair_id)}_5mins_{_safe_filename(asset_x)}_{_safe_filename(asset_y)}_dydx_candles_derived_history.json"
+        output = (
+            pair_dir
+            / f"pair_{_safe_filename(pair_id)}_5mins_{_safe_filename(asset_x)}_{_safe_filename(asset_y)}_dydx_candles_derived_history.json"
+        )
         written.append(
             build_pair_history_from_candles(
                 left_path=left_path,
@@ -528,7 +566,7 @@ def import_dydx_candle_bundle(
 
 def _parse_loose_candle_text(text: str) -> Any:
     stripped = text.strip()
-    if stripped.endswith("] }") or stripped.endswith("]\n}") or stripped.endswith("]\r\n}"):
+    if stripped.endswith(("] }", "]\n}", "]\r\n}")):
         return json.loads('{"candles": [' + stripped.rsplit("]", 1)[0].rstrip().rstrip(",") + "]}")
     return json.loads("[" + stripped.rstrip().rstrip(",") + "]")
 
@@ -588,26 +626,27 @@ def _estimate_price_hedge_ratio(price_pairs: list[tuple[float, float]]) -> float
     x_values = [x for x, y in price_pairs if x > 0 and y > 0]
     y_values = [y for x, y in price_pairs if x > 0 and y > 0]
     if len(x_values) < 2 or len(y_values) < 2:
-        return 1.0
-    x_mean = mean(x_values)
-    y_mean = mean(y_values)
-    variance_y = sum((value - y_mean) ** 2 for value in y_values)
-    if variance_y <= 0:
-        ratios = [x / y for x, y in zip(x_values, y_values) if y > 0]
-        return mean(ratios) if ratios else 1.0
-    covariance_xy = sum((x - x_mean) * (y - y_mean) for x, y in zip(x_values, y_values))
-    hedge_ratio = covariance_xy / variance_y
-    if not math.isfinite(hedge_ratio) or hedge_ratio == 0:
-        ratios = [x / y for x, y in zip(x_values, y_values) if y > 0]
-        return mean(ratios) if ratios else 1.0
+        raise ValueError("hedge-ratio fit requires at least two positive aligned prices")
+    hedge_ratio = y_on_x_beta(
+        pd.Series(np.log(x_values), dtype="float64"),
+        pd.Series(np.log(y_values), dtype="float64"),
+    )
+    if not math.isfinite(hedge_ratio) or hedge_ratio <= 0.0:
+        raise ValueError("derived beta_y_on_x must be finite and positive")
     return hedge_ratio
 
 
 def _estimate_return_beta(price_pairs: list[tuple[float, float]]) -> float:
     if len(price_pairs) < 3:
         return 1.0
-    returns_x = [_log_return(price_pairs[idx][0], price_pairs[idx - 1][0]) for idx in range(1, len(price_pairs))]
-    returns_y = [_log_return(price_pairs[idx][1], price_pairs[idx - 1][1]) for idx in range(1, len(price_pairs))]
+    returns_x = [
+        _log_return(price_pairs[idx][0], price_pairs[idx - 1][0])
+        for idx in range(1, len(price_pairs))
+    ]
+    returns_y = [
+        _log_return(price_pairs[idx][1], price_pairs[idx - 1][1])
+        for idx in range(1, len(price_pairs))
+    ]
     x_mean = mean(returns_x)
     y_mean = mean(returns_y)
     variance_y = sum((value - y_mean) ** 2 for value in returns_y)
@@ -648,7 +687,9 @@ def _attach_zscores(rows: list[dict[str, Any]], *, zscore_window: int, min_windo
         return
     if not all("spread" in row for row in rows):
         return
-    attach_row_level_zscores(rows, spread_key="spread", zscore_key="zscore", window=zscore_window, min_periods=min_window)
+    attach_row_level_zscores(
+        rows, spread_key="spread", zscore_key="zscore", window=zscore_window, min_periods=min_window
+    )
 
 
 def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -656,8 +697,12 @@ def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
     spread_mean = mean(spreads)
     spread_std = pstdev(spreads) or 1.0
     lagged_spread_z = [0.0] + [(spread - spread_mean) / spread_std for spread in spreads[:-1]]
-    returns_x = [0.0] + [_log_return(rows[i]["price_x"], rows[i - 1]["price_x"]) for i in range(1, len(rows))]
-    returns_y = [0.0] + [_log_return(rows[i]["price_y"], rows[i - 1]["price_y"]) for i in range(1, len(rows))]
+    returns_x = [0.0] + [
+        _log_return(rows[i]["price_x"], rows[i - 1]["price_x"]) for i in range(1, len(rows))
+    ]
+    returns_y = [0.0] + [
+        _log_return(rows[i]["price_y"], rows[i - 1]["price_y"]) for i in range(1, len(rows))
+    ]
     gamma_x = _slope(lagged_spread_z[1:], returns_x[1:])
     gamma_y = _slope(lagged_spread_z[1:], returns_y[1:])
     strength = min(1.0, abs(gamma_x - gamma_y) * 100.0)
@@ -691,7 +736,6 @@ def _attach_provisional_research_features(
     zscore = pd.to_numeric(frame["zscore"], errors="coerce").fillna(0.0)
     spread_delta = spread.diff().fillna(0.0)
     lagged_spread = spread.shift(1).fillna(spread.iloc[0])
-    lagged_zscore = zscore.shift(1).fillna(zscore.iloc[0])
     window = min(max(len(frame) // 4, 12), 48)
     min_periods = min(8, window)
 
@@ -712,43 +756,103 @@ def _attach_provisional_research_features(
     u2_given_u1 = np.clip(0.5 - cpd / 2.0, 0.0, 1.0)
 
     downside = spread_delta.where(spread_delta < 0.0, 0.0)
-    downside_std = float(downside.std(ddof=0)) if float(downside.std(ddof=0) or 0.0) > 0 else float(spread_delta.std(ddof=0) or 1.0)
+    downside_std = (
+        float(downside.std(ddof=0))
+        if float(downside.std(ddof=0) or 0.0) > 0
+        else float(spread_delta.std(ddof=0) or 1.0)
+    )
     mean_delta = float(spread_delta.mean())
     total_std = float(spread_delta.std(ddof=0) or 1.0)
     sharpe = float((mean_delta / total_std) * math.sqrt(max(len(spread_delta), 1)))
-    sortino = float((mean_delta / downside_std) * math.sqrt(max(len(spread_delta), 1))) if downside_std else sharpe
+    sortino = (
+        float((mean_delta / downside_std) * math.sqrt(max(len(spread_delta), 1)))
+        if downside_std
+        else sharpe
+    )
     var = float(abs(spread_delta.quantile(0.05)))
-    cvar = float(abs(spread_delta[spread_delta <= spread_delta.quantile(0.05)].mean()) if not spread_delta.empty else 0.0)
+    cvar = float(
+        abs(spread_delta[spread_delta <= spread_delta.quantile(0.05)].mean())
+        if not spread_delta.empty
+        else 0.0
+    )
     cumulative = spread_delta.cumsum()
     rolling_max = cumulative.cummax()
     drawdown = float((rolling_max - cumulative).max()) if not cumulative.empty else 0.0
     win_rate = float((spread_delta > 0.0).mean()) if not spread_delta.empty else 0.5
-    tail_dependence = float(np.clip(abs(cpd).mean() + abs(spread_z).rolling(20, min_periods=1).mean().iloc[-1] / 10.0, 0.0, 1.0))
-    corr = pd.Series(spread).corr(pd.Series(frame["price_x"]), method="pearson")
-    corr = 0.0 if pd.isna(corr) else float(corr)
+    tail_dependence = float(
+        np.clip(
+            abs(cpd).mean() + abs(spread_z).rolling(20, min_periods=1).mean().iloc[-1] / 10.0,
+            0.0,
+            1.0,
+        )
+    )
+    price_x = pd.to_numeric(frame["price_x"], errors="coerce")
+    correlation_frame = pd.DataFrame({"spread": spread, "price_x": price_x}).dropna()
+    if (
+        len(correlation_frame) < 2
+        or correlation_frame["spread"].nunique() < 2
+        or correlation_frame["price_x"].nunique() < 2
+    ):
+        corr = 0.0
+    else:
+        observed_corr = correlation_frame["spread"].corr(
+            correlation_frame["price_x"],
+            method="pearson",
+        )
+        corr = 0.0 if pd.isna(observed_corr) else float(observed_corr)
     cointegration_pvalue = float(np.clip(1.0 - abs(corr), 0.0, 1.0))
     stability_series = spread.pct_change().abs().rolling(20, min_periods=1).mean()
-    stability_value = float(stability_series.iloc[-1]) if not stability_series.empty and not pd.isna(stability_series.iloc[-1]) else 0.0
+    stability_value = (
+        float(stability_series.iloc[-1])
+        if not stability_series.empty and not pd.isna(stability_series.iloc[-1])
+        else 0.0
+    )
     hedge_ratio_stability = float(np.clip(1.0 - stability_value, 0.0, 1.0))
-    realized_volatility_percentile = float(np.clip((spread_delta.abs().rank(pct=True).iloc[-1] if len(spread_delta) else 0.5), 0.0, 1.0))
+    realized_volatility_percentile = float(
+        np.clip(
+            (spread_delta.abs().rank(pct=True).iloc[-1] if len(spread_delta) else 0.5), 0.0, 1.0
+        )
+    )
     crisis_probability = float(np.clip(realized_volatility_percentile * 0.8, 0.0, 1.0))
-    volume_x = pd.to_numeric(frame["volume_x_usd"], errors="coerce").fillna(0.0) if "volume_x_usd" in frame.columns else pd.Series(0.0, index=frame.index)
-    liquidity_source = volume_x.rolling(20, min_periods=1).mean().iloc[-1] if not volume_x.empty else 0.0
+    volume_x = (
+        pd.to_numeric(frame["volume_x_usd"], errors="coerce").fillna(0.0)
+        if "volume_x_usd" in frame.columns
+        else pd.Series(0.0, index=frame.index)
+    )
+    liquidity_source = (
+        volume_x.rolling(20, min_periods=1).mean().iloc[-1] if not volume_x.empty else 0.0
+    )
     liquidity_score = float(np.clip(liquidity_source / 10_000.0, 0.0, 1.0))
     bid_ask_spread_bps = float(np.clip(20.0 - liquidity_score * 15.0, 1.0, 30.0))
     slippage_bps = float(np.clip(15.0 - liquidity_score * 10.0, 1.0, 25.0))
-    funding_x = pd.to_numeric(frame["funding_x_bps"], errors="coerce").fillna(0.0) if "funding_x_bps" in frame.columns else pd.Series(0.0, index=frame.index)
-    funding_y = pd.to_numeric(frame["funding_y_bps"], errors="coerce").fillna(0.0) if "funding_y_bps" in frame.columns else pd.Series(0.0, index=frame.index)
+    funding_x = (
+        pd.to_numeric(frame["funding_x_bps"], errors="coerce").fillna(0.0)
+        if "funding_x_bps" in frame.columns
+        else pd.Series(0.0, index=frame.index)
+    )
+    funding_y = (
+        pd.to_numeric(frame["funding_y_bps"], errors="coerce").fillna(0.0)
+        if "funding_y_bps" in frame.columns
+        else pd.Series(0.0, index=frame.index)
+    )
     funding_bps_per_day = float((funding_x.abs() + funding_y.abs()).mean())
 
     local_corr = lagged_spread.rolling(window, min_periods=min_periods).corr(spread)
-    local_std_spread = spread.rolling(window, min_periods=min_periods).std(ddof=0).replace(0.0, np.nan)
-    local_std_lagged = lagged_spread.rolling(window, min_periods=min_periods).std(ddof=0).replace(0.0, np.nan)
-    phi_series = (local_corr * (local_std_spread / local_std_lagged)).replace([np.inf, -np.inf], np.nan)
+    local_std_spread = (
+        spread.rolling(window, min_periods=min_periods).std(ddof=0).replace(0.0, np.nan)
+    )
+    local_std_lagged = (
+        lagged_spread.rolling(window, min_periods=min_periods).std(ddof=0).replace(0.0, np.nan)
+    )
+    phi_series = (local_corr * (local_std_spread / local_std_lagged)).replace(
+        [np.inf, -np.inf], np.nan
+    )
     phi_series = phi_series.clip(-0.99, 0.99).fillna(phi)
     abs_phi = phi_series.abs().clip(lower=1.0e-6)
     half_life_series = abs(np.log(2.0) / np.log(abs_phi))
-    half_life_series = half_life_series.replace([np.inf, -np.inf], np.nan).fillna(half_life).clip(2.0, 240.0)
+    half_life_series = (
+        half_life_series.replace([np.inf, -np.inf], np.nan).fillna(half_life).clip(2.0, 240.0)
+    )
     hurst_series = (0.5 - 0.25 * (1.0 - phi_series)).clip(0.05, 0.95)
 
     local_abs_cpd = abs(cpd).rolling(window, min_periods=1).mean().clip(0.0, 1.0)
@@ -765,11 +869,15 @@ def _attach_provisional_research_features(
     local_return = spread_delta.rolling(window, min_periods=2).sum().fillna(0.0)
     local_vol = spread_delta.rolling(window, min_periods=2).std(ddof=0).fillna(0.0)
     return_scale = spread_delta.abs().rolling(window, min_periods=2).mean().replace(0.0, np.nan)
-    trend_pressure = (local_return / return_scale).replace([np.inf, -np.inf], np.nan).fillna(0.0).clip(-2.0, 2.0)
+    trend_pressure = (
+        (local_return / return_scale).replace([np.inf, -np.inf], np.nan).fillna(0.0).clip(-2.0, 2.0)
+    )
     bullish_trend = trend_pressure.clip(lower=0.0) / 2.0
     local_vol_percentile = local_vol.rank(pct=True).clip(0.0, 1.0)
     crisis_like = (0.6 * local_vol_percentile + 0.4 * normalized_drawdown).clip(0.0, 1.0)
-    bull_like = (bullish_trend * (1.0 - normalized_drawdown) * (1.0 - local_vol_percentile)).clip(0.0, 1.0)
+    bull_like = (bullish_trend * (1.0 - normalized_drawdown) * (1.0 - local_vol_percentile)).clip(
+        0.0, 1.0
+    )
     hurst_ml_term = (1.0 - abs(hurst_series - 0.35) / 0.35).clip(0.0, 1.0)
     hurst_ou_term = (1.0 - abs(hurst_series - 0.30) / 0.30).clip(0.0, 1.0)
     half_life_term = (1.0 - half_life_series / 240.0).clip(0.0, 1.0)
@@ -803,15 +911,21 @@ def _attach_provisional_research_features(
         + 0.08 * crisis_like * zscore_extension
         - 0.12 * bull_like * bullish_trend
     ).clip(0.0, 1.0)
-    ml_confidence = float(ml_confidence_series.iloc[-1])
-    profile_match = float(profile_match_series.iloc[-1])
-    ou_optimal = float(ou_optimal_series.iloc[-1])
-    composite_score = float(np.clip(100.0 * np.nanmean([
-        np.clip(1.0 - cointegration_pvalue, 0.0, 1.0),
-        np.clip(1.0 - abs(hurst - 0.35) / 0.35, 0.0, 1.0),
-        np.clip(1.0 - abs(cpd).mean(), 0.0, 1.0),
-        np.clip(1.0 - drawdown, 0.0, 1.0),
-    ]), 0.0, 100.0))
+    composite_score = float(
+        np.clip(
+            100.0
+            * np.nanmean(
+                [
+                    np.clip(1.0 - cointegration_pvalue, 0.0, 1.0),
+                    np.clip(1.0 - abs(hurst - 0.35) / 0.35, 0.0, 1.0),
+                    np.clip(1.0 - abs(cpd).mean(), 0.0, 1.0),
+                    np.clip(1.0 - drawdown, 0.0, 1.0),
+                ]
+            ),
+            0.0,
+            100.0,
+        )
+    )
 
     for idx, row in enumerate(rows):
         updates = {
@@ -866,7 +980,11 @@ def _safe_series_slope(xs: list[float], ys: list[float]) -> float:
 def _log_return(current: Any, previous: Any) -> float:
     current_float = _safe_float(current)
     previous_float = _safe_float(previous)
-    return math.log(current_float / previous_float) if current_float > 0 and previous_float > 0 else 0.0
+    return (
+        math.log(current_float / previous_float)
+        if current_float > 0 and previous_float > 0
+        else 0.0
+    )
 
 
 def _slope(xs: list[float], ys: list[float]) -> float:

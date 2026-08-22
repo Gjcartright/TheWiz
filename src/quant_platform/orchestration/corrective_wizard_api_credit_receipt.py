@@ -15,7 +15,9 @@ from quant_platform.active_pipeline import CommandResult
 from quant_platform.api_extraction import CryptoWizardsFetchError
 from quant_platform.crypto_wizards_history import fetch_credits_used
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
-from quant_platform.env import load_env_file
+from quant_platform.env import load_selected_env_keys
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.wizard_api_credit_receipt.v1"
@@ -37,7 +39,10 @@ def capture_wizard_api_credit_receipt(
     key = (api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "")).strip()
     key_source = "argument" if api_key else "environment"
     if not key:
-        load_env_file(root / ".env.local")
+        load_selected_env_keys(
+            root / ".env.local",
+            allowed_keys={"CRYPTO_WIZARDS_API_KEY"},
+        )
         key = os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
         key_source = ".env.local" if key else "missing"
     response: Any = None
@@ -46,7 +51,7 @@ def capture_wizard_api_credit_receipt(
         try:
             response = fetcher(api_key=key)
         except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-            error = f"credit_endpoint_failed:{type(exc).__name__}:{exc}"
+            error = f"credit_endpoint_failed:{safe_exception_code(exc)}"
     else:
         error = "crypto_wizards_api_key_missing"
     return publish_wizard_api_credit_receipt(
@@ -184,7 +189,7 @@ def _atomic_text(path: Path, value: str) -> None:
             handle.write(value)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        promote_staged_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

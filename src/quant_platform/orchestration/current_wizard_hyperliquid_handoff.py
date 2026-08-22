@@ -7,32 +7,36 @@ and all exact-mode/orientation experiment rows without discovery filtering.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.economic_contract import (
+    CANONICAL_WIZARD_MODES,
+    ECONOMIC_CONTRACT_VERSION,
+    SCANNER_OVERLAYS,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_replay import (
     HISTORY_DAYS,
     MINIMUM_HISTORY_ROWS,
     TIMEFRAME_INTERVALS,
 )
-from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
-    EXACT_MODES,
-    ORIENTATIONS,
-)
-
+from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import ORIENTATIONS
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "current_wizard_hyperliquid_handoff.v1"
-PAIR_PAGE_IMPLEMENTED_MODES = tuple(
-    mode for mode in EXACT_MODES if mode != "OU (Optimal)"
-)
+SCHEMA_VERSION = "current_wizard_hyperliquid_handoff.v2"
+EXACT_MODES = CANONICAL_WIZARD_MODES
+PAIR_PAGE_IMPLEMENTED_MODES = EXACT_MODES
 
 
 def build_current_wizard_hyperliquid_handoff(
@@ -82,9 +86,10 @@ def build_current_wizard_hyperliquid_handoff(
         "refresh_id": refresh_id,
         "input_hashes": input_hashes,
         "exact_modes": EXACT_MODES,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "orientations": ORIENTATIONS,
         "pair_page_implemented_modes": PAIR_PAGE_IMPLEMENTED_MODES,
-        "scanner_boolean_overlays": ("ou_optimal",),
+        "scanner_boolean_overlays": SCANNER_OVERLAYS,
         "canonical_leverage": 1.0,
     }
     handoff_id = "cwhandoff_" + sha256(
@@ -103,8 +108,11 @@ def build_current_wizard_hyperliquid_handoff(
     input_snapshot_dir.mkdir(parents=True, exist_ok=True)
     input_snapshots: dict[str, Path] = {}
     for name, source in inputs.items():
-        destination = input_snapshot_dir / source.name
-        shutil.copy2(source, destination)
+        destination = immutable_snapshot_copy(
+            source,
+            input_snapshot_dir,
+            artifact_name=name,
+        )
         input_snapshots[name] = destination
 
     pair_status = _build_pair_status(
@@ -173,8 +181,8 @@ def build_current_wizard_hyperliquid_handoff(
         (asset_fetch_queue, "asset_fetch_queue", "snapshot_asset_fetch_queue"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     vendor_counts = pair_status["vendor_pair_detail_status"].value_counts().to_dict()
     experiment_counts = experiments["experiment_status"].value_counts().to_dict()
@@ -183,6 +191,9 @@ def build_current_wizard_hyperliquid_handoff(
         "handoff_id": handoff_id,
         "refresh_id": refresh_id,
         "created_at": as_of.isoformat(),
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
+        "exact_modes": list(EXACT_MODES),
+        "scanner_boolean_overlays": list(SCANNER_OVERLAYS),
         "pair_groups": int(len(pair_status)),
         "pair_groups_accounted": int(pair_status["pair_group_key"].nunique()),
         "api_schema_pilot_pairs": int(pair_status["api_schema_pilot_pair"].sum()),
@@ -231,10 +242,10 @@ def build_current_wizard_hyperliquid_handoff(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -722,6 +733,8 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Current complete vendor pair details: {summary['current_vendor_pair_detail_complete']}",
             f"- Historical UI evidence pairs: {summary['historical_ui_pair_groups']}",
             f"- Hyperliquid-ready / blocked pairs: {summary['hyperliquid_ready_pair_groups']} / {summary['hyperliquid_blocked_pair_groups']}",
+            f"- Economic contract: `{summary['economic_contract_version']}`",
+            f"- Exact strategies: {len(summary['exact_modes'])}",
             f"- Exact-mode/orientation experiments: {summary['planned_experiments']}",
             f"- Ready for point-in-time history: {summary['ready_for_point_in_time_history_experiments']}",
             f"- Pair histories ready to fetch: {summary['pair_history_ready_to_fetch']}",

@@ -21,13 +21,32 @@ from quant_platform.hyperliquid_testnet import (
     hyperliquid_testnet_margin_snapshot,
     read_hyperliquid_agent_key_from_keychain,
 )
+from quant_platform.orchestration.corrective_order_authority import (
+    HYPERLIQUID_TESTNET_COLLATERAL_TRANSFER_ADAPTER_ID,
+    CorrectiveOrderAuthority,
+    OrderEffectSpec,
+    claim_effect_dispatch,
+    require_consumed_authorization,
+    require_order_authority,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_release_gates import (
     _validated_testnet_candidate_receipt,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    create_exclusive_text,
+    promote_staged_file,
+    write_immutable_bytes,
+)
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthorityError,
+    EffectKind,
 )
 from quant_platform.orchestration.hyperliquid_learning_and_risk import (
     TESTNET_APPROVAL_VERSION,
     validate_testnet_smoke_approval,
 )
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 
 ROOT = Path(__file__).resolve().parents[3]
 PREFLIGHT_SCHEMA = "thewiz.hyperliquid_testnet_collateral_transfer_preflight.v1"
@@ -213,6 +232,7 @@ def run_testnet_collateral_transfer(
     exchange_factory: ExchangeFactory | None = None,
     margin_reader: MarginReader | None = None,
     sleeper: Callable[[float], None] = time.sleep,
+    order_authority: CorrectiveOrderAuthority | None = None,
 ) -> CommandResult:
     """Execute at most one explicitly approved Testnet collateral transfer."""
 
@@ -289,6 +309,31 @@ def run_testnet_collateral_transfer(
             blockers=blockers,
         )
 
+    try:
+        authority = require_order_authority(order_authority)
+        transfer_spec = _collateral_transfer_effect_spec(
+            authority=authority,
+            config=resolved,
+            preflight_id=preflight_id,
+            approval_id=approval_id,
+            amount_usd=amount,
+        )
+        transfer_authorization = authority.consume(transfer_spec)
+        require_consumed_authorization(
+            transfer_authorization,
+            owner=authority,
+            spec=transfer_spec,
+        )
+    except (EffectAuthorityError, ValueError) as exc:
+        return _blocked_execution_result(
+            root=root,
+            started_at=started_at,
+            preflight_id=preflight_id,
+            approval_id=approval_id,
+            amount_usd=amount,
+            blockers=[safe_exception_code(exc)],
+        )
+
     reservation = {
         "schema_version": RESERVATION_SCHEMA,
         "reserved_at_utc": started_at.isoformat(),
@@ -326,17 +371,37 @@ def run_testnet_collateral_transfer(
     after: dict[str, object] = {}
     reconciled = False
     try:
-        reader = keychain_reader or read_hyperliquid_agent_key_from_keychain
-        secret = reader(
+        require_consumed_authorization(
+            transfer_authorization,
+            owner=authority,
+            spec=transfer_spec,
+        )
+        secret = read_hyperliquid_agent_key_from_keychain(
             str(resolved.keychain_service or ""),
             str(resolved.agent_address or ""),
+            reader=keychain_reader,
         )
         agent_key_accessed = True
+        require_consumed_authorization(
+            transfer_authorization,
+            owner=authority,
+            spec=transfer_spec,
+        )
         wallet = Account.from_key(secret)
         if wallet.address.lower() != str(resolved.agent_address or "").lower():
             raise ValueError("hyperliquid_agent_key_address_mismatch")
         factory = exchange_factory or _default_exchange_factory
+        require_consumed_authorization(
+            transfer_authorization,
+            owner=authority,
+            spec=transfer_spec,
+        )
         exchange = factory(wallet, resolved)
+        claim_effect_dispatch(
+            transfer_authorization,
+            owner=authority,
+            spec=transfer_spec,
+        )
         transfer_attempted = True
         response = exchange.usd_class_transfer(amount, True)
     except Exception as exc:  # noqa: BLE001 - receipt must survive SDK uncertainty.
@@ -429,6 +494,32 @@ def run_testnet_collateral_transfer(
             "reservation": reservation_path,
         },
         summary=active_execution,
+    )
+
+
+def _collateral_transfer_effect_spec(
+    *,
+    authority: CorrectiveOrderAuthority,
+    config: HyperliquidTestnetConfig,
+    preflight_id: str,
+    approval_id: str,
+    amount_usd: float,
+) -> OrderEffectSpec:
+    return authority.spec(
+        effect_kind=EffectKind.ACCOUNT_MUTATION,
+        environment="testnet",
+        adapter_id=HYPERLIQUID_TESTNET_COLLATERAL_TRANSFER_ADAPTER_ID,
+        target=f"{config.base_url.rstrip('/')}/exchange",
+        operation="usd_class_transfer",
+        venue_id="hyperliquid",
+        product_lane_id=VenueLane.HYPERLIQUID_PERP.value,
+        account_scope_id=str(config.master_address or ""),
+        instrument_id="USDC",
+        size=amount_usd,
+        notional=amount_usd,
+        leverage=0,
+        proposal_id=approval_id,
+        client_reference=f"{preflight_id}:spot_to_perp",
     )
 
 
@@ -654,22 +745,19 @@ def _write_json_atomic(payload: dict[str, Any], path: Path) -> None:
         json.dumps(payload, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json_exclusive(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
+    create_exclusive_text(path, json.dumps(payload, indent=2, sort_keys=True))
 
 
 def _write_immutable_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        if _read_json(path) != payload:
-            raise ValueError("immutable_testnet_collateral_artifact_collision")
-        return
-    _write_json_exclusive(payload, path)
+    encoded = json.dumps(payload, indent=2, sort_keys=True).encode()
+    try:
+        write_immutable_bytes(path, encoded)
+    except ValueError as exc:
+        raise ValueError("immutable_testnet_collateral_artifact_collision") from exc
 
 
 def _path_sha256(path: Path) -> str:

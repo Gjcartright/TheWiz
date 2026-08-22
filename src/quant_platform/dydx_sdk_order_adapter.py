@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import asyncio
-from dataclasses import dataclass, replace
-from decimal import Decimal
-from datetime import datetime, timezone
-from pathlib import Path
 import time
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
+from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -26,7 +28,18 @@ from quant_platform.execution import (
     OrderIntent,
     refresh_dydx_execution_compatibility_table,
 )
-
+from quant_platform.orchestration.corrective_order_authority import (
+    DYDX_TESTNET_ADAPTER_ID,
+    ConsumedOrderAuthorization,
+    CorrectiveOrderAuthority,
+    OrderEffectSpec,
+    claim_effect_dispatch,
+    exact_notional,
+    require_consumed_authorization,
+    require_order_authority,
+)
+from quant_platform.orchestration.effect_authority import EffectKind
+from quant_platform.orchestration.venue_policy_registry import VenueLane
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_ATTEMPT_LOG = ROOT / "reports" / "active" / "dydx_execution_market_attempts.csv"
@@ -50,24 +63,63 @@ class DydxSdkOrderAdapter:
 
     exchange_submission_capable = True
     record_only = False
+    gate00g_order_authority_enforced = True
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        order_authority: CorrectiveOrderAuthority | None = None,
+    ) -> None:
         self._client_id_seed = int(time.time() * 1000) % self._MAX_CLIENT_ID
+        self._order_authority = order_authority
 
     def place_order(self, intent: OrderIntent, config: DydxNetworkConfig) -> FillReport:
+        authority = require_order_authority(self._order_authority)
+        attempts = self._attempt_specs(intent, config)
+        if not attempts:
+            raise ValueError("gate00g_dydx_order_route_missing")
+        first_spec = self._order_effect_spec(authority, intent, attempts[0])
+        first_authorization = authority.consume(first_spec)
         if not config.wallet_address:
             raise ValueError("DYDX_TESTNET_WALLET_ADDRESS is required for authenticated order submission")
         if not config.private_key:
             raise ValueError("DYDX_TESTNET_PRIVATE_KEY is required for authenticated order submission")
         if not config.rest_indexer:
             raise ValueError("DYDX_TESTNET_REST_INDEXER is required for authenticated order submission")
-        before_state = self._run(self._capture_market_state(intent.market, config))
-        attempts = self._attempt_specs(intent, config)
+        before_state = self._run(
+            self._capture_market_state(
+                intent.market,
+                config,
+                spec=first_spec,
+                authorization=first_authorization,
+            )
+        )
         last_fill: FillReport | None = None
-        for attempt in attempts:
-            response = self._run(self._submit_order(intent, attempt))
+        for index, attempt in enumerate(attempts):
+            if index == 0:
+                spec = first_spec
+                authorization = first_authorization
+            else:
+                spec = self._order_effect_spec(authority, intent, attempt)
+                authorization = authority.consume(spec)
+            response = self._run(
+                self._submit_order(
+                    intent,
+                    attempt,
+                    spec=spec,
+                    authorization=authorization,
+                )
+            )
             order_id = self._response_txhash(response) or f"dydx-sdk-{self._client_id_seed}"
-            confirmation = self._run(self._confirm_market_state(intent, attempt.config, before_state))
+            confirmation = self._run(
+                self._confirm_market_state(
+                    intent,
+                    attempt.config,
+                    before_state,
+                    spec=spec,
+                    authorization=authorization,
+                )
+            )
             avg_price = confirmation.get("avg_price")
             if avg_price is None:
                 avg_price = float(intent.limit_price or 0.0)
@@ -85,6 +137,8 @@ class DydxSdkOrderAdapter:
             self._record_attempt(intent, attempt, last_fill)
             if confirmation.get("confirmed"):
                 return last_fill
+            if not intent.reduce_only:
+                return last_fill
         return last_fill or FillReport(
             order_id="dydx-sdk-no-attempt",
             market=intent.market,
@@ -96,12 +150,40 @@ class DydxSdkOrderAdapter:
             status="broadcast_accepted_unconfirmed",
         )
 
-    async def _submit_order(self, intent: OrderIntent, attempt: _AttemptSpec):
+    async def _submit_order(
+        self,
+        intent: OrderIntent,
+        attempt: _AttemptSpec,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ):
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         if attempt.submit_mode == "reduce_only_market":
-            return await self._place_order(intent, attempt.config)
+            return await self._place_order(
+                intent,
+                attempt.config,
+                spec=spec,
+                authorization=authorization,
+            )
         if intent.reduce_only:
-            return await self._close_position(intent, attempt.config)
-        return await self._place_order(intent, attempt.config)
+            return await self._close_position(
+                intent,
+                attempt.config,
+                spec=spec,
+                authorization=authorization,
+            )
+        return await self._place_order(
+            intent,
+            attempt.config,
+            spec=spec,
+            authorization=authorization,
+        )
 
     def _attempt_specs(self, intent: OrderIntent, config: DydxNetworkConfig) -> list[_AttemptSpec]:
         attempts = [
@@ -146,6 +228,39 @@ class DydxSdkOrderAdapter:
                 )
             )
         return attempts
+
+    @staticmethod
+    def _order_effect_spec(
+        authority: CorrectiveOrderAuthority,
+        intent: OrderIntent,
+        attempt: _AttemptSpec,
+    ) -> OrderEffectSpec:
+        operation = (
+            "close_position"
+            if attempt.submit_mode == "close_position"
+            else "place_order"
+        )
+        config = attempt.config
+        node_target = str(config.node_url or "sdk_builtin_testnet_node").strip()
+        indexer_target = str(config.rest_indexer or "missing_indexer").strip()
+        return authority.spec(
+            effect_kind=EffectKind.ORDER_SUBMISSION,
+            environment="testnet",
+            adapter_id=DYDX_TESTNET_ADAPTER_ID,
+            target=f"dydx-testnet:{node_target}|{indexer_target}",
+            operation=operation,
+            venue_id="dydx",
+            product_lane_id=VenueLane.DYDX_PERP.value,
+            account_scope_id=str(config.wallet_address or ""),
+            instrument_id=str(intent.market).upper(),
+            side=str(intent.side).lower(),
+            size=intent.size,
+            notional=exact_notional(intent.size, intent.limit_price),
+            leverage=1,
+            reduce_only=bool(intent.reduce_only),
+            proposal_id=str(config.order_approval_id or ""),
+            client_reference=attempt.route_label,
+        )
 
     @staticmethod
     def _default_route_config(config: DydxNetworkConfig) -> DydxNetworkConfig:
@@ -196,15 +311,37 @@ class DydxSdkOrderAdapter:
             ]
         )
         EXECUTION_ATTEMPT_LOG.parent.mkdir(parents=True, exist_ok=True)
-        row.to_csv(EXECUTION_ATTEMPT_LOG, mode="a", header=not EXECUTION_ATTEMPT_LOG.exists(), index=False)
+        atomic_write_csv(row, EXECUTION_ATTEMPT_LOG, mode="a", header=not EXECUTION_ATTEMPT_LOG.exists(), index=False)
         self._refresh_execution_compatibility_table()
 
     def _refresh_execution_compatibility_table(self) -> None:
         refresh_dydx_execution_compatibility_table(ROOT)
 
-    async def _place_order(self, intent: OrderIntent, config: DydxNetworkConfig):
-        node = await self._connect_node(config)
-        wallet = await self._build_wallet(node, config)
+    async def _place_order(
+        self,
+        intent: OrderIntent,
+        config: DydxNetworkConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ):
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
+        node = await self._connect_node(
+            config,
+            spec=spec,
+            authorization=authorization,
+        )
+        wallet = await self._build_wallet(
+            node,
+            config,
+            spec=spec,
+            authorization=authorization,
+        )
         indexer = IndexerClient(config.rest_indexer)
         payload = await indexer.markets.get_perpetual_markets(intent.market)
         market_payload = payload.get("markets", {}).get(intent.market)
@@ -237,11 +374,38 @@ class DydxSdkOrderAdapter:
             good_til_block=current_height + 20,
             execution=order_execution,
         )
+        claim_effect_dispatch(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         return await node.place_order(wallet, order)
 
-    async def _close_position(self, intent: OrderIntent, config: DydxNetworkConfig):
-        node = await self._connect_node(config)
-        wallet = await self._build_wallet(node, config)
+    async def _close_position(
+        self,
+        intent: OrderIntent,
+        config: DydxNetworkConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ):
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
+        node = await self._connect_node(
+            config,
+            spec=spec,
+            authorization=authorization,
+        )
+        wallet = await self._build_wallet(
+            node,
+            config,
+            spec=spec,
+            authorization=authorization,
+        )
         indexer = IndexerClient(config.rest_indexer)
         payload = await indexer.markets.get_perpetual_markets(intent.market)
         market_payload = payload.get("markets", {}).get(intent.market)
@@ -249,6 +413,11 @@ class DydxSdkOrderAdapter:
             raise ValueError(f"missing dYdX market metadata for {intent.market}")
         market = Market(market_payload)
         client_id = self._next_client_id()
+        claim_effect_dispatch(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         return await node.close_position(
             wallet,
             str(config.wallet_address),
@@ -259,7 +428,20 @@ class DydxSdkOrderAdapter:
             slippage_pct=self._DEFAULT_MARKET_SLIPPAGE_PCT,
         )
 
-    async def _capture_market_state(self, market: str, config: DydxNetworkConfig) -> dict[str, Any]:
+    async def _capture_market_state(
+        self,
+        market: str,
+        config: DydxNetworkConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> dict[str, Any]:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         indexer = IndexerClient(str(config.rest_indexer))
         address = str(config.wallet_address)
         fills_payload = await self._safe_indexer_call(
@@ -306,10 +488,24 @@ class DydxSdkOrderAdapter:
         intent: OrderIntent,
         config: DydxNetworkConfig,
         before_state: dict[str, Any],
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
     ) -> dict[str, Any]:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         deadline = time.time() + self._DEFAULT_CONFIRM_TIMEOUT_SECS
         while time.time() < deadline:
-            current_state = await self._capture_market_state(intent.market, config)
+            current_state = await self._capture_market_state(
+                intent.market,
+                config,
+                spec=spec,
+                authorization=authorization,
+            )
             if self._market_state_confirms(intent, before_state, current_state):
                 return {"confirmed": True, "avg_price": current_state.get("avg_price")}
             await asyncio.sleep(self._DEFAULT_CONFIRM_POLL_SECS)
@@ -333,7 +529,20 @@ class DydxSdkOrderAdapter:
         expected_direction = 1.0 if str(intent.side).upper() == "BUY" else -1.0
         return (current_size - before_size) * expected_direction > epsilon
 
-    async def _build_wallet(self, node: NodeClient, config: DydxNetworkConfig) -> Wallet:
+    async def _build_wallet(
+        self,
+        node: NodeClient,
+        config: DydxNetworkConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> Wallet:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         secret = str(config.private_key or "").strip()
         if " " in secret:
             return await Wallet.from_mnemonic(node, secret, str(config.wallet_address))
@@ -415,7 +624,19 @@ class DydxSdkOrderAdapter:
         txhash = getattr(tx_response, "txhash", "") if tx_response is not None else ""
         return str(txhash or "").strip()
 
-    async def _connect_node(self, config: DydxNetworkConfig) -> NodeClient:
+    async def _connect_node(
+        self,
+        config: DydxNetworkConfig,
+        *,
+        spec: OrderEffectSpec,
+        authorization: ConsumedOrderAuthorization | None,
+    ) -> NodeClient:
+        authority = require_order_authority(self._order_authority)
+        require_consumed_authorization(
+            authorization,
+            owner=authority,
+            spec=spec,
+        )
         node_url = str(config.node_url or "").strip()
         if node_url:
             network = make_testnet(

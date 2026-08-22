@@ -2,13 +2,13 @@ from __future__ import annotations
 
 FORMULAS: dict[str, dict[str, str]] = {
     "cointegration": {
-        "formula": "Engle-Granger/Johansen stationarity test on residual spread: y_t - beta*x_t.",
+        "formula": "Local Math V2 Engle-Granger: log(y_t)=alpha+beta*log(x_t)+epsilon_t, followed by a stationarity test on epsilon_t; Johansen is not yet a local acceptance estimator.",
         "interpretation": "Tests whether a pair has a persistent equilibrium relation.",
         "use_case": "Filter/rank pairs before mean-reversion strategies.",
         "failure_mode": "Breaks during regime shifts, structural changes, or multiple-testing overfit.",
     },
     "hedge_ratio": {
-        "formula": "OLS/TLS/Kalman beta in y_t = alpha + beta*x_t + epsilon_t.",
+        "formula": "Local static beta is OLS in log(y_t)=alpha+beta_y_on_x*log(x_t)+epsilon_t; the canonical opposite-leg execution contract requires finite beta_y_on_x>0. Dynamic and vendor alternatives require their own method_id.",
         "interpretation": "Defines spread neutrality and leg sizing.",
         "use_case": "Position construction and spread measurement.",
         "failure_mode": "Unstable beta creates hidden directional exposure.",
@@ -20,19 +20,19 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Nonlinear exposure is missed by linear beta.",
     },
     "ecm_x": {
-        "formula": "Delta x_t = alpha_x * error_{t-1} + lagged deltas + noise.",
+        "formula": "Delta x_t = gamma_x*error_{t-1}+lagged deltas+noise, where error=log(y)-alpha-beta_y_on_x*log(x); expected correction sign is gamma_x>0.",
         "interpretation": "Adjustment speed of X toward equilibrium.",
         "use_case": "Leader/follower and directional leg prediction.",
         "failure_mode": "Spurious adjustment under unstable cointegration.",
     },
     "ecm_y": {
-        "formula": "Delta y_t = alpha_y * error_{t-1} + lagged deltas + noise.",
+        "formula": "Delta y_t = gamma_y*error_{t-1}+lagged deltas+noise, where error=log(y)-alpha-beta_y_on_x*log(x); expected correction sign is gamma_y<0.",
         "interpretation": "Adjustment speed of Y toward equilibrium.",
         "use_case": "Leader/follower and directional leg prediction.",
         "failure_mode": "Coefficient sign flips across regimes.",
     },
     "ecm_strength": {
-        "formula": "Function of adjustment coefficient magnitude, t-statistics, and residual correction reliability.",
+        "formula": "Local Math V2: share of the two HC1 ECM adjustment coefficients that are significant at 5% and have the expected residual-correction sign.",
         "interpretation": "How forcefully the pair corrects deviations.",
         "use_case": "Rank mean-reversion candidates and holding period confidence.",
         "failure_mode": "High in-sample strength can be overfit or stale.",
@@ -44,25 +44,25 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Invalid when spread is not stationary or phi is unstable.",
     },
     "hurst": {
-        "formula": "Scaling relation E[range/std] ~ n^H.",
+        "formula": "Local Math V2: first-order detrended fluctuation analysis; log fluctuation is regressed on log window scale and the slope is H.",
         "interpretation": "H < 0.5 suggests anti-persistence; H > 0.5 suggests trend persistence.",
         "use_case": "Filter mean-reversion vs trend regimes.",
         "failure_mode": "Sensitive to sample length, microstructure noise, and jumps.",
     },
     "zscore": {
-        "formula": "(spread_t - rolling_mean) / rolling_std with z-score window and min_periods set in config.",
+        "formula": "Active ZScoreR: (spread_t - rolling_mean) / rolling_sample_std with ddof=1; window and min_periods are explicit configuration.",
         "interpretation": "Distance from estimated equilibrium.",
         "use_case": "Classic entry/exit trigger.",
         "failure_mode": "Large z-score may indicate structural break rather than opportunity.",
     },
     "rolling_zscore": {
-        "formula": "(spread_t - rolling_mean) / rolling_std.",
+        "formula": "(spread_t - rolling_mean) / rolling_sample_std with ddof=1 for active signals; ddof=0 exists only as a separately named parity diagnostic.",
         "interpretation": "Adaptive deviation measure.",
         "use_case": "Threshold model with recent volatility adaptation.",
         "failure_mode": "Window choice can chase noise or lag breaks.",
     },
     "spread": {
-        "formula": "y_t - beta*x_t - alpha.",
+        "formula": "Y-on-X fitted residual is log(y_t)-alpha-beta_y_on_x*log(x_t). The replay execution spread is the separately named uncentered log(y_t)-beta_y_on_x*log(x_t); translation-invariant z-scores remove alpha, while raw OU levels require explicit centering.",
         "interpretation": "Tradable disequilibrium between hedged legs.",
         "use_case": "Base series for stationarity, z-score, OU, and ECM.",
         "failure_mode": "Bad hedge ratio converts spread into directional bet.",
@@ -92,13 +92,13 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Wrong family or poor calibration creates false dislocation signals.",
     },
     "conditional_probabilities": {
-        "formula": "P(U <= u | V = v) or tail-conditional variants from fitted copula.",
+        "formula": "Gaussian local h-function: Phi((Phi^-1(u)-rho*Phi^-1(v))/sqrt(1-rho^2)); the reverse view swaps u and v.",
         "interpretation": "Observed pair state vs expected conditional state.",
         "use_case": "Pure copula and dual conditional copula entries.",
         "failure_mode": "Probability distortions can persist instead of reverting.",
     },
     "sharpe": {
-        "formula": "annualized mean(return) / std(return).",
+        "formula": "Local active metric: sqrt(periods_per_year)*mean(net simple return)/sample_std(net simple return, ddof=1), with zero risk-free rate and interval-aware 365-day crypto annualization. Zero variance and declared-interval/timestamp mismatch fail closed.",
         "interpretation": "Risk-adjusted return quality.",
         "use_case": "Strategy ranking and acceptance tests.",
         "failure_mode": "Inflated by non-normal tails, serial correlation, and selection bias.",
@@ -122,7 +122,7 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Requires enough tail observations or robust stress modeling.",
     },
     "drawdown": {
-        "formula": "(equity_peak - equity_t) / equity_peak.",
+        "formula": "max((running_peak-equity_t)/running_peak), with initial equity 1.0 prepended before the first return.",
         "interpretation": "Capital impairment from peak.",
         "use_case": "Risk limits, strategy rejection, and kill switches.",
         "failure_mode": "Backtest drawdown underestimates unseen structural breaks.",
@@ -146,9 +146,9 @@ FORMULAS: dict[str, dict[str, str]] = {
         "failure_mode": "Historical clusters may not survive new regimes.",
     },
     "ou_optimal": {
-        "formula": "OU process dX_t = theta(mu-X_t)dt + sigma dW_t with optimal stopping thresholds.",
-        "interpretation": "Model-based mean-reversion entry/exit attractiveness.",
-        "use_case": "Threshold optimization and expected holding period.",
-        "failure_mode": "OU assumptions fail under jumps, trends, or changing volatility.",
+        "formula": "Vendor formula not exposed; observed only as a scanner boolean annotation.",
+        "interpretation": "A Crypto Wizards screening hint, not a published OU threshold formula.",
+        "use_case": "Stratify research within the row's captured exact mode; never infer entries or exits.",
+        "failure_mode": "Inventing stopping thresholds from this boolean creates unsupported vendor semantics.",
     },
 }

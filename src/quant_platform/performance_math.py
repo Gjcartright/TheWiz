@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 
-
-MATH_VERSION = "math-v2"
+MATH_VERSION = "math-v2.1-y-on-x"
 SECONDS_PER_YEAR = 365.0 * 24.0 * 60.0 * 60.0
 
 PERIODS_PER_YEAR: dict[str, int] = {
@@ -87,7 +86,29 @@ def resolve_annualization(
 
     normalized = normalize_interval(interval)
     if normalized is not None:
-        return Annualization(normalized, float(PERIODS_PER_YEAR[normalized]), "valid", "declared_interval")
+        inferred_seconds = _median_interval_seconds(timestamps)
+        if inferred_seconds is not None:
+            inferred = _canonical_interval_for_seconds(inferred_seconds)
+            if inferred is None:
+                return Annualization(
+                    normalized,
+                    None,
+                    "blocked",
+                    "declared_interval_timestamp_grid_unsupported",
+                )
+            if inferred != normalized:
+                return Annualization(
+                    normalized,
+                    None,
+                    "blocked",
+                    f"declared_interval_timestamp_mismatch:{normalized}!={inferred}",
+                )
+        return Annualization(
+            normalized,
+            float(PERIODS_PER_YEAR[normalized]),
+            "valid",
+            "declared_interval_verified" if inferred_seconds is not None else "declared_interval",
+        )
 
     inferred_seconds = _median_interval_seconds(timestamps)
     if inferred_seconds is None:
@@ -96,7 +117,9 @@ def resolve_annualization(
     inferred = _canonical_interval_for_seconds(inferred_seconds)
     if inferred is None:
         return Annualization(None, None, "blocked", "unsupported_or_irregular_interval")
-    return Annualization(inferred, float(PERIODS_PER_YEAR[inferred]), "valid", "inferred_from_timestamps")
+    return Annualization(
+        inferred, float(PERIODS_PER_YEAR[inferred]), "valid", "inferred_from_timestamps"
+    )
 
 
 def calculate_annualized_sharpe(
@@ -110,9 +133,18 @@ def calculate_annualized_sharpe(
 
     values = pd.to_numeric(pd.Series(returns), errors="coerce").dropna()
     if periods_per_year is not None:
+        explicit_periods = float(periods_per_year)
+        if not np.isfinite(explicit_periods) or explicit_periods <= 0.0:
+            return SharpeCalculation(
+                float("nan"),
+                normalize_interval(interval),
+                None,
+                "blocked",
+                "invalid_explicit_periods_per_year",
+            )
         annualization = Annualization(
             normalize_interval(interval),
-            float(periods_per_year),
+            explicit_periods,
             "valid",
             "explicit_periods_per_year",
         )
@@ -135,14 +167,24 @@ def calculate_annualized_sharpe(
             "blocked",
             "no_finite_returns",
         )
-    standard_deviation = float(values.std(ddof=0))
-    if standard_deviation == 0.0:
+    if len(values) < 2:
         return SharpeCalculation(
-            0.0,
+            float("nan"),
             annualization.interval,
             annualization.periods_per_year,
-            "valid",
-            "zero_volatility",
+            "blocked",
+            "insufficient_return_observations",
+        )
+    # Historical returns are a sample used to estimate future volatility. Keep
+    # this convention aligned with the PSR/DSR inference path.
+    standard_deviation = float(values.std(ddof=1))
+    if not np.isfinite(standard_deviation) or standard_deviation <= 0.0:
+        return SharpeCalculation(
+            float("nan"),
+            annualization.interval,
+            annualization.periods_per_year,
+            "blocked",
+            "zero_or_nonfinite_return_variance",
         )
     value = float(np.sqrt(annualization.periods_per_year) * values.mean() / standard_deviation)
     return SharpeCalculation(
@@ -159,7 +201,12 @@ def _median_interval_seconds(
 ) -> float | None:
     if timestamps is None:
         return None
-    parsed = pd.Series(pd.to_datetime(list(timestamps), utc=True, errors="coerce")).dropna().drop_duplicates().sort_values()
+    parsed = (
+        pd.Series(pd.to_datetime(list(timestamps), utc=True, errors="coerce"))
+        .dropna()
+        .drop_duplicates()
+        .sort_values()
+    )
     if len(parsed) < 3:
         return None
     deltas = parsed.diff().dropna().dt.total_seconds()

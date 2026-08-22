@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import plistlib
 import subprocess
 import sys
+from contextvars import copy_context
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -13,8 +15,12 @@ import pandas as pd
 import pytest
 
 from quant_platform.active_pipeline import CommandResult
-from quant_platform.crypto_wizards_sweep import run_wizard_discovery_sweep
+from quant_platform.crypto_wizards_catalog import BASE_URL
+from quant_platform.crypto_wizards_sweep import (
+    run_authorized_wizard_discovery_sweep,
+)
 from quant_platform.orchestration import corrective_daily_scheduler as daily_scheduler
+from quant_platform.orchestration import effect_authority
 from quant_platform.orchestration.corrective_daily_scheduler import (
     SCHEMA_VERSION,
     _acquire_lock,
@@ -24,21 +30,92 @@ from quant_platform.orchestration.corrective_daily_scheduler import (
     _publish_daily_receipt,
     _scheduled_research_exit_code,
     build_daily_cadence_acceptance,
+    finalize_scheduled_research_checkpoint,
     refresh_corrective_checkpoint_after_scheduled_run,
     run_daily_cadence_fault_tests,
     run_scheduled_research,
 )
+from quant_platform.orchestration.corrective_external_effect_policy import (
+    EXTERNAL_EFFECT_POLICY_PATH,
+)
+from quant_platform.orchestration.corrective_external_effects import (
+    external_effect_issuer_session,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    launch_agent_runtime_environment,
+    scheduler_contract,
+    scheduler_run_identity,
+)
+from quant_platform.orchestration.corrective_scheduler_supervisor import (
+    intended_scheduler_slot,
+    supervise_scheduler_run,
+)
+from quant_platform.orchestration.corrective_scheduler_terminal import (
+    build_scheduler_terminal_receipt,
+    claim_scheduler_slot,
+    new_scheduler_run_id,
+    publish_scheduler_terminal_receipt,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_cadence import STAGES
 from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
     _build_stage_semantic_evidence,
+)
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
 )
 
 NOW = datetime(2026, 8, 9, 23, 0, tzinfo=UTC)
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _credit_usage_fetcher(*used_values: int):
+    readings = iter(used_values)
+
+    def fetcher(**_):
+        return {"credits_used": next(readings), "credit_limit": 1000}
+
+    return fetcher
+
+
+def _run_authorized_sweep(root: Path, *, now: datetime):
+    run_key = now.strftime("%Y%m%dT%H%M%SZ")
+    authority = EffectAuthority(
+        root=root,
+        secret=b"daily-semantic-test-authority-secret",
+        issuer_id="daily-semantic-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id=f"daily-semantic-{run_key}",
+        intended_slot_id=f"daily-semantic-slot-{run_key}",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="crypto_wizards",
+        account_scope_id="crypto_wizards:research:test",
+        allowed_targets=frozenset(
+            {
+                f"{BASE_URL}/v1beta/credits-used",
+                f"{BASE_URL}/v1beta/prescanned",
+            }
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=100,
+        max_total_credits=1000,
+    ):
+        return run_authorized_wizard_discovery_sweep(
+            root=root,
+            api_key="test-key",
+            now=now,
+            credits_fetcher=_credit_usage_fetcher(0, 300),
+            prescanned_fetcher=lambda **_: {"pairs": []},
+        )
+
+
 def test_daily_launch_agent_uses_workspace_runtime_temp(tmp_path: Path) -> None:
-    python = tmp_path / ".venv312" / "bin" / "python"
+    python = tmp_path / ".venv" / "bin" / "python3"
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
     logs = tmp_path / "reports" / "active" / "schedule_logs"
@@ -52,9 +129,12 @@ def test_daily_launch_agent_uses_workspace_runtime_temp(tmp_path: Path) -> None:
         logs=logs,
     )
 
-    assert f"<key>TMPDIR</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TEMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
+    payload = plistlib.loads(plist.encode("utf-8"))
+    environment = payload["EnvironmentVariables"]
+    assert environment["TMPDIR"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TEMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TZ"] == "America/New_York"
 
 
 def _valid_daily_receipt(tmp_path, *, day: int, run_status: str = "PASS"):
@@ -128,20 +208,14 @@ def _valid_semantic_daily_receipt(
     external_execution_included: bool = False,
     include_isolation_manifest: bool = True,
     resolved_command: str = "python -m quant_platform.cli system-check",
+    scheduler_provenance: bool = True,
 ):
     run_date = f"2026-08-{day:02d}"
     now = datetime(2026, 8, day, 6, 15, tzinfo=UTC)
     run_id = f"cwdaily_semantic_{day:02d}"
     run_dir = tmp_path / "reports" / "runs" / "current_wizard_hyperliquid_daily" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    sweep = run_wizard_discovery_sweep(
-        root=tmp_path,
-        execute=True,
-        api_key="test-key",
-        now=now,
-        credits_fetcher=lambda **_: {"credits_used": 0, "credit_limit": 1000},
-        prescanned_fetcher=lambda **_: {"pairs": []},
-    )
+    sweep = _run_authorized_sweep(tmp_path, now=now)
     output_sha256 = "d" * 64
     semantic = _build_stage_semantic_evidence(
         root=tmp_path,
@@ -275,42 +349,150 @@ def _valid_semantic_daily_receipt(
         "daily_run_status_sha256": _file_sha256(status_path),
         "source_evidence_immutable": True,
     }
+    if scheduler_provenance:
+        _attach_scheduler_lineage(tmp_path, receipt=receipt, now=now)
     return _publish_daily_receipt(receipt, root=tmp_path)
+
+
+def _attach_scheduler_lineage(tmp_path: Path, *, receipt: dict, now: datetime) -> None:
+    contract = scheduler_contract("daily_research")
+    environment = launch_agent_runtime_environment(tmp_path, contract=contract)
+    identity = scheduler_run_identity(
+        tmp_path,
+        contract=contract,
+        environment=environment,
+        require_launchd=True,
+    )
+    run_id = new_scheduler_run_id(scheduler_key=contract.key, now=now)
+    intended_slot = intended_scheduler_slot(contract, now=now)
+    claim_scheduler_slot(
+        tmp_path,
+        run_id=run_id,
+        intended_slot=intended_slot,
+        runtime_identity=identity,
+        claimed_at=now,
+    )
+    terminal = build_scheduler_terminal_receipt(
+        run_id=run_id,
+        intended_slot=intended_slot,
+        runtime_identity=identity,
+        started_at=now,
+        completed_at=now + pd.Timedelta(minutes=20),
+        terminal_status="PASS",
+        process_health="HEALTHY",
+        business_state="PASS",
+        retryable=False,
+        intended_slot_credit=True,
+        result_summary={"status": "PASS"},
+    )
+    terminal_path = publish_scheduler_terminal_receipt(tmp_path, terminal)["terminal_receipt"]
+    receipt.update(identity)
+    receipt.update(
+        {
+            "cadence_scheduler_key": contract.key,
+            "cadence_scheduler_run_id": run_id,
+            "cadence_intended_slot": intended_slot,
+            "cadence_terminal_receipt_path": str(terminal_path.relative_to(tmp_path)),
+            "cadence_lineage_bound": True,
+        }
+    )
 
 
 def test_overlap_lock_fails_closed_and_stale_lock_recovers(tmp_path):
     lock = tmp_path / "lock"
     _acquire_lock(lock, now=NOW, timeout_seconds=60)
+    with pytest.raises(FileExistsError, match="active_scheduler_lock_present"):
+        _acquire_lock(lock, now=NOW, timeout_seconds=60)
 
-
-def test_stale_timestamp_cannot_evict_a_live_lock_owner(tmp_path):
-    lock = tmp_path / "live-owner.lock"
     lock.write_text(
         json.dumps(
             {
-                "pid": os.getpid(),
+                "pid": 999_999_999,
                 "started_at_utc": "2020-01-01T00:00:00+00:00",
             }
         ),
         encoding="utf-8",
     )
+    _acquire_lock(lock, now=NOW, timeout_seconds=60)
 
-    try:
+    quarantine = tmp_path / ".scheduler_lock_quarantine"
+    assert len(list(quarantine.glob("lock.*.quarantined"))) == 1
+
+
+def test_stale_timestamp_cannot_evict_a_live_lock_owner(tmp_path):
+    lock = tmp_path / "live-owner.lock"
+    _acquire_lock(lock, now=NOW, timeout_seconds=60)
+    state = json.loads(lock.read_text(encoding="utf-8"))
+    state["started_at_utc"] = "2020-01-01T00:00:00+00:00"
+    lock.write_text(json.dumps(state), encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="active_scheduler_lock_present"):
         _acquire_lock(lock, now=NOW, timeout_seconds=60)
-    except FileExistsError as exc:
-        assert str(exc) == "active_scheduler_lock_present"
-    else:
-        raise AssertionError("a live lock owner must never be evicted by age alone")
+    assert json.loads(lock.read_text(encoding="utf-8"))["pid"] == os.getpid()
+
+
+def test_invalid_timestamp_cannot_evict_a_proven_live_lock_owner(tmp_path):
+    lock = tmp_path / "live-owner-invalid-time.lock"
+    _acquire_lock(lock, now=NOW, timeout_seconds=60)
+    state = json.loads(lock.read_text(encoding="utf-8"))
+    state["started_at_utc"] = "not-a-timestamp"
+    lock.write_text(json.dumps(state), encoding="utf-8")
+    old = datetime(2020, 1, 1, tzinfo=UTC).timestamp()
+    os.utime(lock, (old, old))
+
+    with pytest.raises(FileExistsError, match="active_scheduler_lock_present"):
+        _acquire_lock(lock, now=NOW, timeout_seconds=60)
 
     assert json.loads(lock.read_text(encoding="utf-8"))["pid"] == os.getpid()
-    try:
-        _acquire_lock(lock, now=NOW, timeout_seconds=60)
-    except FileExistsError:
-        pass
-    else:
-        raise AssertionError("overlapping run must be blocked")
-    lock.write_text(json.dumps({"started_at_utc": "2020-01-01T00:00:00+00:00"}))
+    assert not (tmp_path / ".scheduler_lock_quarantine").exists()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    ["", "{", '{"started_at_utc":"invalid"}', '{"pid":1}'],
+)
+def test_old_malformed_scheduler_lock_is_quarantined(tmp_path, payload):
+    lock = tmp_path / "malformed.lock"
+    lock.write_text(payload, encoding="utf-8")
+    old = datetime(2020, 1, 1, tzinfo=UTC).timestamp()
+    os.utime(lock, (old, old))
+
     _acquire_lock(lock, now=NOW, timeout_seconds=60)
+
+    state = json.loads(lock.read_text(encoding="utf-8"))
+    assert state["pid"] == os.getpid()
+    assert state["process_start_id"]
+    assert state["boot_id"]
+    quarantine = tmp_path / ".scheduler_lock_quarantine"
+    assert len(list(quarantine.glob("malformed.lock.*.quarantined"))) == 1
+
+
+def test_recent_malformed_scheduler_lock_fails_safely(tmp_path):
+    lock = tmp_path / "recent-malformed.lock"
+    lock.write_text("{", encoding="utf-8")
+    current = NOW.timestamp()
+    os.utime(lock, (current, current))
+
+    with pytest.raises(FileExistsError, match="active_scheduler_lock_present"):
+        _acquire_lock(lock, now=NOW, timeout_seconds=60)
+
+    assert lock.read_text(encoding="utf-8") == "{"
+
+
+def test_reused_pid_cannot_preserve_scheduler_lock_ownership(tmp_path):
+    lock = tmp_path / "reused-pid.lock"
+    _acquire_lock(lock, now=NOW, timeout_seconds=60)
+    stale = json.loads(lock.read_text(encoding="utf-8"))
+    stale["started_at_utc"] = "2020-01-01T00:00:00+00:00"
+    stale["process_start_id"] = "reused-process-identity"
+    lock.write_text(json.dumps(stale), encoding="utf-8")
+
+    _acquire_lock(lock, now=NOW, timeout_seconds=60)
+
+    current = json.loads(lock.read_text(encoding="utf-8"))
+    assert current["process_start_id"] != "reused-process-identity"
+    quarantine = tmp_path / ".scheduler_lock_quarantine"
+    assert len(list(quarantine.glob("reused-pid.lock.*.quarantined"))) == 1
 
 
 def test_daily_scheduler_module_cli_starts_cleanly():
@@ -522,6 +704,7 @@ def test_seven_distinct_consecutive_receipts_are_required(tmp_path):
     assert frame.iloc[-1]["cadence_acceptance_status"] == "PASS"
     assert frame["receipt_valid"].all()
     assert frame["semantic_contract_status"].eq("PASS").all()
+    assert frame["scheduler_provenance_status"].eq("PASS").all()
 
 
 def test_legacy_receipt_remains_valid_but_cannot_qualify_without_semantics(tmp_path):
@@ -533,6 +716,31 @@ def test_legacy_receipt_remains_valid_but_cannot_qualify_without_semantics(tmp_p
     assert frame.iloc[0]["semantic_contract_status"] == "BLOCKED"
     assert not bool(frame.iloc[0]["qualifying_cycle"])
     assert "daily_receipt_semantic_columns_missing" in frame.iloc[0]["semantic_contract_blocker"]
+
+
+def test_manual_semantic_receipt_is_research_valid_but_gets_zero_cadence_credit(
+    tmp_path,
+):
+    _valid_semantic_daily_receipt(
+        tmp_path,
+        day=11,
+        scheduler_provenance=False,
+    )
+
+    frame = pd.read_csv(
+        build_daily_cadence_acceptance(
+            root=tmp_path,
+            now=datetime(2026, 8, 11, 23, 0, tzinfo=UTC),
+        )
+    )
+
+    assert bool(frame.iloc[0]["receipt_valid"])
+    assert frame.iloc[0]["semantic_contract_status"] == "PASS"
+    assert frame.iloc[0]["scheduler_provenance_status"] == "BLOCKED"
+    assert (
+        "daily_receipt_scheduler_lineage_missing" in frame.iloc[0]["scheduler_provenance_blocker"]
+    )
+    assert not bool(frame.iloc[0]["qualifying_cycle"])
 
 
 def test_semantic_legacy_manifest_uses_hash_bound_command_isolation_audit(tmp_path):
@@ -585,8 +793,7 @@ def test_semantic_legacy_command_audit_rejects_direct_stage3_module(tmp_path):
         day=10,
         include_isolation_manifest=False,
         resolved_command=(
-            "python -m "
-            "quant_platform.orchestration.corrective_wizard_proof_scheduler --execute"
+            "python -m quant_platform.orchestration.corrective_wizard_proof_scheduler --execute"
         ),
     )
 
@@ -598,9 +805,10 @@ def test_semantic_legacy_command_audit_rejects_direct_stage3_module(tmp_path):
     )
 
     assert frame.iloc[0]["semantic_contract_status"] == "BLOCKED"
-    assert "daily_receipt_stage3_forbidden_commands_present" in frame.iloc[0][
-        "semantic_contract_blocker"
-    ]
+    assert (
+        "daily_receipt_stage3_forbidden_commands_present"
+        in frame.iloc[0]["semantic_contract_blocker"]
+    )
     assert not bool(frame.iloc[0]["qualifying_cycle"])
 
 
@@ -681,6 +889,7 @@ def test_new_daily_receipt_requires_clean_stage3_command_isolation(tmp_path):
 def test_mutated_wizard_raw_capture_revokes_new_daily_receipt(tmp_path):
     _valid_semantic_daily_receipt(tmp_path)
     raw_path = next((tmp_path / "data" / "raw" / "crypto_wizards" / "prescanned").glob("**/*.json"))
+    raw_path.chmod(0o600)
     raw_path.write_text(raw_path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     frame = pd.read_csv(
         build_daily_cadence_acceptance(
@@ -764,6 +973,77 @@ def test_successful_scheduled_run_refreshes_non_order_checkpoint(tmp_path):
     assert handoff["live_trading_authorized"] is False
 
 
+def test_checkpoint_failure_publishes_bound_blocked_handoff_and_no_slot_credit(
+    tmp_path,
+    monkeypatch,
+):
+    (tmp_path / "src" / "quant_platform").mkdir(parents=True)
+    (tmp_path / "src" / "quant_platform" / "fixture.py").write_text(
+        "VALUE = 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname='fixture'\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "uv.lock").write_text("version = 1\n", encoding="utf-8")
+    policy_path = tmp_path / EXTERNAL_EFFECT_POLICY_PATH
+    policy_path.parent.mkdir(parents=True, exist_ok=True)
+    policy_path.write_bytes((ROOT / EXTERNAL_EFFECT_POLICY_PATH).read_bytes())
+    contract = scheduler_contract("daily_research")
+    for name, value in launch_agent_runtime_environment(
+        tmp_path,
+        contract=contract,
+    ).items():
+        monkeypatch.setenv(name, value)
+
+    def callback():
+        daily_receipt = _valid_daily_receipt(tmp_path, day=9)
+        scheduled = CommandResult(
+            paths={"daily_receipt": daily_receipt},
+            summary={
+                "status": "PASS",
+                "research_board_current": True,
+                "blockers": [],
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            },
+        )
+
+        def fail_checkpoint(**_):
+            raise OSError("private-path-and-token-must-not-leak")
+
+        return finalize_scheduled_research_checkpoint(
+            result=scheduled,
+            root=tmp_path,
+            now=NOW,
+            refresher=fail_checkpoint,
+        )
+
+    test_authority = effect_authority._CURRENT_PUBLICATION_AUTHORITY.set(None)
+    try:
+        supervised = supervise_scheduler_run(
+            root=tmp_path,
+            contract_key="daily_research",
+            publication_scope="daily_research",
+            callback=callback,
+            now=datetime(2026, 8, 22, 23, 0, tzinfo=UTC),
+        )
+    finally:
+        effect_authority._CURRENT_PUBLICATION_AUTHORITY.reset(test_authority)
+
+    assert supervised.exit_code == 2
+    assert supervised.terminal_receipt["terminal_status"] == "BLOCKED"
+    assert supervised.terminal_receipt["intended_slot_credit"] is False
+    handoff_path = Path(supervised.result_paths["post_run_handoff"])
+    handoff = json.loads(handoff_path.read_text(encoding="utf-8"))
+    assert handoff["handoff_status"] == "BLOCKED_CHECKPOINT_REFRESH_FAILED"
+    assert handoff["scheduler_run_id"] == supervised.run_id
+    assert handoff["scheduler_intended_slot"] == supervised.intended_slot
+    assert handoff["blockers"] == ["post_run_checkpoint_refresh_failed:OSError"]
+    assert "private-path-and-token" not in handoff_path.read_text(encoding="utf-8")
+
+
 def test_mutated_receipt_or_dated_source_cannot_qualify(tmp_path):
     receipt_path = _valid_daily_receipt(tmp_path, day=9)
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
@@ -840,9 +1120,7 @@ def test_self_consistent_pass_receipt_with_substituted_stage_cannot_qualify(tmp_
     semantic["stage"] = "substituted_research_stage"
     semantic.pop("semantic_receipt_sha256")
     semantic["semantic_receipt_sha256"] = sha256(
-        json.dumps(
-            semantic, sort_keys=True, separators=(",", ":"), allow_nan=False
-        ).encode()
+        json.dumps(semantic, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     ).hexdigest()
     semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
     status.loc[target, "stage"] = "substituted_research_stage"
@@ -984,7 +1262,10 @@ def test_concurrent_daily_publishers_freeze_exactly_one_first_valid_pass(tmp_pat
         except Exception as exc:  # noqa: BLE001 - surfaced through the parent thread
             errors.append(exc)
 
-    threads = [Thread(target=publish, args=(marker,)) for marker in ("first", "second")]
+    threads = [
+        Thread(target=copy_context().run, args=(publish, marker))
+        for marker in ("first", "second")
+    ]
     for thread in threads:
         thread.start()
     barrier.wait()

@@ -1,16 +1,68 @@
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
 
 import pandas as pd
 
 from quant_platform.api_extraction import CryptoWizardsFetchError
+from quant_platform.crypto_wizards_catalog import BASE_URL
 from quant_platform.crypto_wizards_sweep import (
     build_wizard_sweep_cells,
     parse_wizard_credit_usage,
     restore_complete_wizard_sweep_from_raw,
+    run_authorized_wizard_discovery_sweep,
     run_wizard_discovery_sweep,
 )
+from quant_platform.orchestration.corrective_external_effects import (
+    external_effect_issuer_session,
+)
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
+)
 from quant_platform.wizard_run_config import WizardRunConfiguration
+
+TEST_RUN_ID = "wizard-sweep-authority-test"
+TEST_SLOT_ID = "wizard-sweep-authority-slot"
+TEST_HASH = "a" * 64
+
+
+def _run_authorized_sweep(root, **kwargs):
+    authority = EffectAuthority(
+        root=root,
+        secret=b"wizard-sweep-test-authority-secret",
+        issuer_id="wizard-sweep-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id=TEST_RUN_ID,
+        intended_slot_id=TEST_SLOT_ID,
+        source_fingerprint_sha256=TEST_HASH,
+        runtime_fingerprint_sha256=TEST_HASH,
+        configuration_fingerprint_sha256=TEST_HASH,
+        provider_id="crypto_wizards",
+        account_scope_id="crypto_wizards:research:test",
+        allowed_targets=frozenset(
+            {
+                f"{BASE_URL}/v1beta/credits-used",
+                f"{BASE_URL}/v1beta/prescanned",
+            }
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=100,
+        max_total_credits=1000,
+    ):
+        result = run_authorized_wizard_discovery_sweep(root=root, **kwargs)
+    return result, authority
+
+
+def _credit_usage_fetcher(*used_values: int):
+    readings = iter(used_values)
+
+    def fetcher(**_):
+        return {"credits_used": next(readings), "credit_limit": 1000}
+
+    return fetcher
 
 
 def test_wizard_configuration_hash_is_stable_and_cost_sensitive():
@@ -106,7 +158,7 @@ def test_sweep_is_dry_by_default_and_cannot_claim_complete_discovery(tmp_path):
         exchanges=("Dydx",),
         intervals=("Daily",),
         strategies=("Spread",),
-        now=datetime(2026, 8, 7, tzinfo=timezone.utc),
+        now=datetime(2026, 8, 7, tzinfo=UTC),
     )
 
     manifest = pd.read_csv(result.paths["manifest"])
@@ -130,9 +182,8 @@ def test_credit_preflight_blocks_entire_sweep_before_any_paid_call(tmp_path):
         calls.append(kwargs)
         return []
 
-    result = run_wizard_discovery_sweep(
+    result, _authority = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="secret",
         exchanges=("Dydx",),
         intervals=("Daily", "Hourly"),
@@ -151,6 +202,27 @@ def test_credit_preflight_blocks_entire_sweep_before_any_paid_call(tmp_path):
     assert manifest["status"].eq("blocked_insufficient_credits_for_complete_sweep").all()
 
 
+def test_direct_paid_sweep_without_issuer_cannot_reach_provider(tmp_path):
+    calls = []
+
+    result = run_wizard_discovery_sweep(
+        root=tmp_path,
+        execute=True,
+        api_key="secret",
+        exchanges=("Dydx",),
+        intervals=("Daily",),
+        strategies=("Spread",),
+        credits_fetcher=lambda **kwargs: calls.append(kwargs),
+        prescanned_fetcher=lambda **kwargs: calls.append(kwargs),
+    )
+
+    assert calls == []
+    assert result.summary["attempted_credits"] == 0
+    assert result.summary["blocker"] == (
+        "reused_credit_reservation_does_not_authorize_external_replay"
+    )
+
+
 def test_blocked_sweep_preserves_prior_complete_active_snapshot(tmp_path):
     active = tmp_path / "reports" / "active"
     active.mkdir(parents=True)
@@ -159,9 +231,8 @@ def test_blocked_sweep_preserves_prior_complete_active_snapshot(tmp_path):
     prior_candidates.to_csv(active / "wizard_sweep_candidates.csv", index=False)
     prior_manifest.to_csv(active / "wizard_sweep_manifest.csv", index=False)
 
-    result = run_wizard_discovery_sweep(
+    result, _authority = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="secret",
         exchanges=("Dydx",),
         intervals=("Daily",),
@@ -235,16 +306,15 @@ def test_successful_sweep_writes_raw_evidence_candidates_and_complete_authority(
             }
         ]
 
-    result = run_wizard_discovery_sweep(
+    result, authority = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="secret",
         exchanges=("Dydx", "Coinbase"),
         intervals=("Daily",),
         strategies=("Spread", "Copula"),
-        credits_fetcher=lambda **kwargs: {"data": {"credits_used": 100, "daily_limit": 1000}},
+        credits_fetcher=_credit_usage_fetcher(100, 140),
         prescanned_fetcher=fake_prescanned,
-        now=datetime(2026, 8, 7, 12, 30, tzinfo=timezone.utc),
+        now=datetime(2026, 8, 7, 12, 30, tzinfo=UTC),
     )
 
     manifest = pd.read_csv(result.paths["manifest"])
@@ -254,6 +324,10 @@ def test_successful_sweep_writes_raw_evidence_candidates_and_complete_authority(
     assert result.summary["planned_cells"] == 4
     assert result.summary["planned_credits"] == 40
     assert result.summary["attempted_credits"] == 40
+    assert result.summary["credits_used_before"] == 100
+    assert result.summary["credits_used_after"] == 140
+    assert result.summary["observed_credit_delta"] == 40
+    assert result.summary["credit_reconciliation_status"] == "PASS_RECONCILED"
     assert result.summary["sweep_complete"] is True
     assert result.summary["discovery_authority"] == "complete_discovery"
     assert manifest["status"].eq("completed").all()
@@ -266,6 +340,28 @@ def test_successful_sweep_writes_raw_evidence_candidates_and_complete_authority(
         .all()
     )
     assert len(raw_paths) == 4
+    for key in (
+        "credit_usage_before_evidence",
+        "credit_usage_after_evidence",
+    ):
+        evidence_path = result.paths[key]
+        assert evidence_path.is_file()
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        assert evidence["capture_metadata"]["capture_type"] == "credit_usage"
+        assert "api_key" not in json.dumps(evidence).lower()
+    assert len(result.summary["credit_usage_before_evidence_sha256"]) == 64
+    assert len(result.summary["credit_usage_after_evidence_sha256"]) == 64
+    accounting = authority.run_accounting(
+        run_id=TEST_RUN_ID,
+        intended_slot_id=TEST_SLOT_ID,
+    )
+    assert accounting["external_calls"] == 6
+    assert accounting["external_credits_consumed"] == 40
+    assert (
+        accounting["matching_permits"]
+        - accounting["consumed_provider_effect_permits"]
+        == 1
+    )
     envelope = json.loads(raw_paths[0].read_text(encoding="utf-8"))
     assert envelope["capture_metadata"]["response_hash"]
     assert envelope["request"]["interval"] == "Daily"
@@ -282,14 +378,13 @@ def test_successful_attempt_only_sweep_does_not_replace_active_snapshot(tmp_path
         active / "wizard_sweep_manifest.csv", index=False
     )
 
-    result = run_wizard_discovery_sweep(
+    result, _authority = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="secret",
         exchanges=("Dydx",),
         intervals=("Daily",),
         strategies=("Spread",),
-        credits_fetcher=lambda **kwargs: {"credits_used": 0, "credit_limit": 1000},
+        credits_fetcher=_credit_usage_fetcher(0, 10),
         prescanned_fetcher=lambda **kwargs: [
             {"pair_id": 8, "symbol_1": "NEW", "symbol_2": "PAIR"}
         ],
@@ -299,6 +394,8 @@ def test_successful_attempt_only_sweep_does_not_replace_active_snapshot(tmp_path
     active_candidates = pd.read_csv(active / "wizard_sweep_candidates.csv")
     attempt_candidates = pd.read_csv(result.paths["candidates"])
     assert result.summary["sweep_complete"] is True
+    assert result.summary["observed_credit_delta"] == 10
+    assert result.summary["credit_reconciliation_status"] == "PASS_RECONCILED"
     assert result.summary["published_active_snapshot"] is False
     assert result.summary["active_snapshot_preserved"] is True
     assert active_candidates["pair_id"].tolist() == [7]
@@ -311,14 +408,13 @@ def test_one_failed_cell_blocks_complete_discovery_but_preserves_other_evidence(
             raise CryptoWizardsFetchError("copula temporarily unavailable")
         return [{"symbol_1": "BTC-USD", "symbol_2": "ETH-USD"}]
 
-    result = run_wizard_discovery_sweep(
+    result, _authority = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="secret",
         exchanges=("Dydx",),
         intervals=("Daily",),
         strategies=("Spread", "Copula"),
-        credits_fetcher=lambda **kwargs: {"credits_used": 0, "credit_limit": 1000},
+        credits_fetcher=_credit_usage_fetcher(0, 20),
         prescanned_fetcher=fake_prescanned,
     )
 
@@ -326,6 +422,8 @@ def test_one_failed_cell_blocks_complete_discovery_but_preserves_other_evidence(
     assert result.summary["completed_cells"] == 1
     assert result.summary["failed_cells"] == 1
     assert result.summary["attempted_credits"] == 20
+    assert result.summary["observed_credit_delta"] == 20
+    assert result.summary["credit_reconciliation_status"] == "PASS_RECONCILED"
     assert result.summary["sweep_complete"] is False
     assert result.summary["discovery_authority"] == "blocked_partial_discovery"
     assert result.summary["blocker"] == "failed_requests:1"

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
+from urllib.parse import urlsplit
 
 BASE_URL = "https://api.cryptowizards.net"
+ENDPOINT_CREDIT_CONTRACT_VERSION = "thewiz.crypto_wizards_endpoint_credits.v1"
 
 
 @dataclass(frozen=True)
@@ -152,3 +153,28 @@ def endpoint_rows() -> list[dict[str, object]]:
         }
         for endpoint in ENDPOINTS
     ]
+
+
+def endpoint_contract(method: str, url: str) -> CryptoWizardsEndpoint:
+    """Return the one reviewed credit contract for an official API request."""
+
+    normalized_method = method.strip().upper()
+    parsed = urlsplit(url)
+    official = urlsplit(BASE_URL)
+    if (
+        parsed.scheme != official.scheme
+        or parsed.hostname != official.hostname
+        or parsed.port != official.port
+        or parsed.username
+        or parsed.password
+        or parsed.fragment
+    ):
+        raise ValueError("crypto_wizards_endpoint_not_official")
+    matches = [
+        endpoint
+        for endpoint in ENDPOINTS
+        if endpoint.method == normalized_method and endpoint.path == parsed.path
+    ]
+    if len(matches) != 1:
+        raise ValueError("crypto_wizards_endpoint_credit_contract_unknown")
+    return matches[0]

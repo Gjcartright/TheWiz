@@ -25,8 +25,16 @@ from quant_platform.hyperliquid_testnet import (
     _price_precision_valid,
     _size_precision_valid,
 )
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
 from quant_platform.orchestration.corrective_release_gates import (
     _validated_testnet_candidate_receipt,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    create_exclusive_json,
+    promote_staged_file,
+    write_immutable_json,
 )
 from quant_platform.orchestration.hyperliquid_learning_and_risk import (
     TESTNET_CANDIDATE_BINDING_FIELDS,
@@ -111,7 +119,13 @@ def build_testnet_pair_execution_preflight(
     intents: list[dict[str, object]] = []
     account_snapshot: dict[str, object] = {}
     if not blockers:
-        fetch = info_client or _default_info_client(resolved.base_url)
+        raw_fetch = info_client or _raw_hyperliquid_testnet_info_client(
+            resolved.base_url
+        )
+        fetch = _authorized_hyperliquid_testnet_info_client(
+            base_url=resolved.base_url,
+            raw_fetch=raw_fetch,
+        )
         try:
             meta = fetch({"type": "meta"})
             account = fetch({"type": "clearinghouseState", "user": resolved.master_address})
@@ -232,6 +246,12 @@ def run_testnet_pair_execution(
         blockers.append("testnet_pair_preflight_stale_or_future")
     blockers.extend(_source_binding_blockers(root, immutable))
     blockers.extend(resolved.configuration_blockers())
+    if (
+        execute
+        and pair_executor is not None
+        and type(pair_executor) is not HyperliquidTestnetPairExecutor
+    ):
+        blockers.append("gate00g_testnet_pair_executor_type_invalid")
     if not execute:
         blockers.append("testnet_pair_execute_flag_not_set")
     if os.getenv(ENABLE_ENV, "").strip().lower() != "true":
@@ -292,8 +312,14 @@ def run_testnet_pair_execution(
             blockers=["testnet_pair_preflight_intents_invalid"],
         )
     execution_config = replace(resolved, order_approval_id=approval_id)
-    executor = pair_executor or HyperliquidTestnetPairExecutor(
-        state_path=root / "reports" / "active" / HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON.name
+    executor = _require_gate00g_testnet_pair_executor(
+        pair_executor
+        or HyperliquidTestnetPairExecutor(
+            state_path=root
+            / "reports"
+            / "active"
+            / HYPERLIQUID_TESTNET_EXECUTION_STATE_JSON.name
+        )
     )
     try:
         result = executor.submit_pair(intents, execution_config)
@@ -577,7 +603,25 @@ def _default_candidate_validator(root: Path, candidate: dict[str, Any]) -> tuple
     return _validated_testnet_candidate_receipt(root=root, candidate=candidate)
 
 
-def _default_info_client(base_url: str) -> InfoClient:
+def _authorized_hyperliquid_testnet_info_client(
+    *,
+    base_url: str,
+    raw_fetch: InfoClient,
+) -> InfoClient:
+    target = f"{base_url.rstrip('/')}/info"
+
+    def fetch(payload: dict[str, Any]) -> Any:
+        return run_authorized_hyperliquid_info_call(
+            target=target,
+            payload=payload,
+            operation_prefix="HYPERLIQUID_TESTNET",
+            transport=lambda: raw_fetch(payload),
+        )
+
+    return fetch
+
+
+def _raw_hyperliquid_testnet_info_client(base_url: str) -> InfoClient:
     session = requests.Session()
 
     def fetch(payload: dict[str, Any]) -> Any:
@@ -678,27 +722,30 @@ def _read_json(path: Path | None) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _require_gate00g_testnet_pair_executor(
+    executor: HyperliquidTestnetPairExecutor,
+) -> HyperliquidTestnetPairExecutor:
+    if type(executor) is not HyperliquidTestnetPairExecutor:
+        raise ValueError("gate00g_testnet_pair_executor_type_invalid")
+    return executor
+
+
 def _write_json_atomic(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json_exclusive(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+    create_exclusive_json(path, payload)
 
 
 def _write_immutable_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        if _read_json(path) != payload:
-            raise ValueError("testnet_pair_immutable_artifact_conflict")
-        return
-    _write_json_exclusive(payload, path)
+    try:
+        write_immutable_json(path, payload)
+    except ValueError as exc:
+        raise ValueError("testnet_pair_immutable_artifact_conflict") from exc
 
 
 def _safe_root_path(root: Path, relative: str) -> Path | None:

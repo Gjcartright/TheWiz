@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -173,9 +175,9 @@ def run_exhaustive_wizard_hyperliquid_validation(
     manifest = json.dumps(summary, indent=2, sort_keys=True)
     markdown = _summary_markdown(summary)
     for path in (paths["manifest"], paths["snapshot_manifest"]):
-        path.write_text(manifest, encoding="utf-8")
+        atomic_write_text(path, manifest, encoding="utf-8")
     for path in (paths["summary_md"], paths["snapshot_summary_md"]):
-        path.write_text(markdown, encoding="utf-8")
+        atomic_write_text(path, markdown, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

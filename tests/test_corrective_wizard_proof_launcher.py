@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import json
 import subprocess
 from datetime import UTC, datetime, timedelta
@@ -8,6 +9,10 @@ from hashlib import sha256
 import pytest
 
 import quant_platform.orchestration.corrective_wizard_proof_launcher as launcher
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_issuer,
+    external_effect_issuer_session,
+)
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     _load_or_create_source_receipt,
 )
@@ -18,12 +23,17 @@ from quant_platform.orchestration.corrective_wizard_proof_launcher import (
     _ou_v4_scheduler_evidence_complete,
     _ou_v5_scheduler_evidence_complete,
     _ou_v6_scheduler_evidence_complete,
+    _run_heavy_scheduler_in_process,
     _stage3_evidence_complete,
     _stage3_local_evidence_fingerprint,
     _stage4_active_execution_continuation_complete,
     _terminal_learning_status_valid,
     latest_verified_immutable_scheduler_execution,
     run_wizard_proof_launcher,
+)
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
 )
 from tests.capture_reconciliation_support import (
     write_valid_capture_reconciliation_evidence,
@@ -117,10 +127,81 @@ def _capture_reconciliation_complete_fields(root=None):
 
 
 def _python(root):
-    path = root / ".venv312" / "bin" / "python"
+    path = root / ".venv" / "bin" / "python3"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("", encoding="utf-8")
     return path
+
+
+def test_production_heavy_runner_requires_supervisor_effect_issuer(tmp_path):
+    python = _python(tmp_path)
+    command = [str(python), "-m", HEAVY_MODULE, "--execute"]
+
+    with pytest.raises(RuntimeError, match="effect_issuer_missing"):
+        _run_heavy_scheduler_in_process(command, cwd=tmp_path)
+
+
+def test_production_heavy_runner_preserves_supervisor_effect_issuer(
+    tmp_path,
+    monkeypatch,
+):
+    python = _python(tmp_path)
+    observed = {}
+
+    def fake_cycle(**kwargs):
+        observed["issuer"] = current_external_effect_issuer()
+        observed["kwargs"] = kwargs
+
+    monkeypatch.setattr(
+        "quant_platform.orchestration.corrective_wizard_proof_scheduler."
+        "run_corrective_wizard_proof_cycle",
+        fake_cycle,
+    )
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"wizard-launcher-test-authority-32b",
+        issuer_id="wizard-launcher-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id="wizard-launcher-test-run",
+        intended_slot_id="wizard-launcher-test-slot",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="crypto_wizards",
+        account_scope_id="wizard-research-test-account",
+        allowed_targets=frozenset(
+            {"https://api.cryptowizards.net/v1beta/backtest"}
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=10,
+        max_total_credits=20,
+    ) as issuer:
+        command = [
+            str(python),
+            "-m",
+            HEAVY_MODULE,
+            "--execute",
+            "--force",
+            "--internal-continuation-only",
+        ]
+        completed = _run_heavy_scheduler_in_process(command, cwd=tmp_path)
+
+    assert completed.returncode == 0
+    assert completed.args == command
+    assert observed["issuer"] is issuer
+    assert observed["issuer"].provider_id == "crypto_wizards"
+    assert observed["issuer"].authority.profile.name == (
+        "PHASE00_WIZARD_RESEARCH_NO_ORDER"
+    )
+    assert observed["kwargs"] == {
+        "root": tmp_path.resolve(),
+        "execute": True,
+        "force": True,
+        "internal_continuation_only": True,
+    }
 
 
 def test_stage3_completion_requires_exact_immutable_manifest_binding():
@@ -239,6 +320,7 @@ def test_stage3_completion_reverifies_immutable_source_snapshots(tmp_path):
         (tmp_path / receipt["capture_manifest_source_receipt_path"]).read_text()
     )
     snapshot = tmp_path / source_receipt["source_artifacts"][0]["snapshot_path"]
+    snapshot.chmod(0o600)
     snapshot.write_text("tampered\n", encoding="utf-8")
 
     assert not _capture_manifest_binding_complete(receipt, root=tmp_path)
@@ -932,6 +1014,15 @@ def test_same_day_attempt_skips_heavy_scheduler_and_preserves_zero_authority(tmp
     assert (tmp_path / binding["receipt_path"]).is_file()
 
 
+def test_launcher_has_no_child_process_default_and_main_binds_in_process() -> None:
+    runner = inspect.signature(run_wizard_proof_launcher).parameters["runner"]
+
+    assert runner.default is inspect.Signature.empty
+    main_source = inspect.getsource(launcher.main)
+    assert "runner=_run_heavy_scheduler_in_process" in main_source
+    assert "subprocess.run" not in main_source
+
+
 def test_launcher_receipt_tampering_invalidates_active_binding(tmp_path):
     _status(tmp_path, attempted=True)
     result = run_wizard_proof_launcher(
@@ -941,6 +1032,7 @@ def test_launcher_receipt_tampering_invalidates_active_binding(tmp_path):
         runner=lambda *_, **__: (_ for _ in ()).throw(AssertionError("not called")),
     )
     receipt_path = tmp_path / result["immutable_launcher_receipt_path"]
+    receipt_path.chmod(0o600)
     receipt_path.write_text("{}\n", encoding="utf-8")
 
     binding = launcher.validate_launcher_receipt_binding(
@@ -958,6 +1050,7 @@ def test_launcher_immutable_receipt_rejects_collision(tmp_path):
     payload = {"launcher_receipt_id": "wizardlauncher_test", "status": "PASS"}
     launcher._write_or_validate_immutable_json(payload, path)
     launcher._write_or_validate_immutable_json(payload, path)
+    path.chmod(0o600)
     path.write_text("{}\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="immutable launcher receipt collision"):

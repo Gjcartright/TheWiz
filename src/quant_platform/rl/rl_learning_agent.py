@@ -9,7 +9,12 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import ROOT, CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    atomic_write_csv,
+    atomic_write_text,
+)
 from quant_platform.rl.features import attach_copula_dashboard_features
 from quant_platform.rl.rl_acceptance import (
     MAXIMUM_CONCENTRATION,
@@ -55,7 +60,7 @@ def run_rl_learning_cycle(
     path_log = root / "data" / "agent_memory" / "rl_learning_agent.jsonl"
     path_copula_audit = reports / "rl_learning_copula_dashboard_join_audit.csv"
     path_split_audit = reports / "rl_learning_split_audit.csv"
-    copula_join_audit.to_csv(path_copula_audit, index=False)
+    atomic_write_csv(copula_join_audit, path_copula_audit, index=False)
 
     if dataset.empty:
         summary = pd.DataFrame(
@@ -76,12 +81,12 @@ def run_rl_learning_cycle(
                 }
             ]
         )
-        summary.to_csv(path_summary, index=False)
-        pd.DataFrame(columns=_learning_backtest_columns()).to_csv(path_backtest, index=False)
-        pd.DataFrame(columns=_learning_idea_columns()).to_csv(path_learning_ideas, index=False)
-        pd.DataFrame(columns=_learning_agent_columns()).to_csv(path_agent, index=False)
-        pd.DataFrame(columns=_split_audit_columns()).to_csv(path_split_audit, index=False)
-        path_best.write_text("{}", encoding="utf-8")
+        atomic_write_csv(summary, path_summary, index=False)
+        atomic_write_csv(pd.DataFrame(columns=_learning_backtest_columns()), path_backtest, index=False)
+        atomic_write_csv(pd.DataFrame(columns=_learning_idea_columns()), path_learning_ideas, index=False)
+        atomic_write_csv(pd.DataFrame(columns=_learning_agent_columns()), path_agent, index=False)
+        atomic_write_csv(pd.DataFrame(columns=_split_audit_columns()), path_split_audit, index=False)
+        atomic_write_text(path_best, "{}", encoding="utf-8")
         _append_cycle_memory(path_log, cycle_id, "blocked", "missing_trade_dataset", pair_id)
         return CommandResult(
             paths={
@@ -97,7 +102,7 @@ def run_rl_learning_cycle(
         )
 
     ordered_dataset, partitions, split_audit = _chronological_rl_partitions(dataset)
-    split_audit.to_csv(path_split_audit, index=False)
+    atomic_write_csv(split_audit, path_split_audit, index=False)
     split_ready = bool(not split_audit.empty and split_audit["status"].eq("ready").all())
     split_blocker = "" if split_ready else _first_nonempty(split_audit.get("blocker", pd.Series(dtype=str)))
     validation = partitions.get("validation", pd.DataFrame()) if split_ready else ordered_dataset
@@ -225,9 +230,9 @@ def run_rl_learning_cycle(
     _write_json(path_best, best_payload)
 
     ideas = _build_learning_ideas(backtest_log, best_payload)
-    backtest_log.to_csv(path_backtest, index=False)
-    backtests.to_csv(path_summary, index=False)
-    ideas.to_csv(path_learning_ideas, index=False)
+    atomic_write_csv(backtest_log, path_backtest, index=False)
+    atomic_write_csv(backtests, path_summary, index=False)
+    atomic_write_csv(ideas, path_learning_ideas, index=False)
     # keep an agent-facing artifact for queue tracing
     agent_frame = pd.DataFrame(
         [
@@ -249,7 +254,7 @@ def run_rl_learning_cycle(
             }
         ]
     )
-    agent_frame.to_csv(path_agent, index=False)
+    atomic_write_csv(agent_frame, path_agent, index=False)
     _append_cycle_memory(
         path_log,
         cycle_id,
@@ -753,12 +758,11 @@ def _append_cycle_memory(
     }
     if extra:
         event.update(extra)
-    with memory_path.open("a", encoding="utf-8") as handle:
-        handle.write(_json_dumps(event) + "\n")
+    atomic_append_text(memory_path, _json_dumps(event) + "\n", encoding="utf-8")
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
-    path.write_text(_json_dumps(payload), encoding="utf-8")
+    atomic_write_text(path, _json_dumps(payload), encoding="utf-8")
 
 
 def _json_dumps(payload: Any) -> str:
@@ -820,8 +824,8 @@ def run_sequential_thinking_magicka(
                 }
             ]
         )
-        summary.to_csv(memory_path, index=False)
-        pd.DataFrame(columns=_seq_recommendation_columns()).to_csv(recommendations_path, index=False)
+        atomic_write_csv(summary, memory_path, index=False)
+        atomic_write_csv(pd.DataFrame(columns=_seq_recommendation_columns()), recommendations_path, index=False)
         _append_cycle_memory(
             memory_events_path,
             cycle_id,
@@ -851,7 +855,7 @@ def run_sequential_thinking_magicka(
     recommendations_df = pd.DataFrame(recommendations, columns=_seq_recommendation_columns())
     recommendations_df["cycle_id"] = cycle_id
     recommendations_df["created_at"] = _now()
-    recommendations_df.to_csv(recommendations_path, index=False)
+    atomic_write_csv(recommendations_df, recommendations_path, index=False)
 
     best_policy = str(learning_summary.iloc[0].get("winner_policy", "")) if not learning_summary.empty else ""
     summary = pd.DataFrame(
@@ -867,7 +871,7 @@ def run_sequential_thinking_magicka(
             }
         ]
     )
-    summary.to_csv(memory_path, index=False)
+    atomic_write_csv(summary, memory_path, index=False)
 
     _append_cycle_memory(
         memory_events_path,

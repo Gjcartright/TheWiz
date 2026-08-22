@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import re
 from collections.abc import Iterable
@@ -470,20 +474,16 @@ def write_pair_detail_reports(input_dir: str | Path, output_dir: str | Path) -> 
     quality_path = output / "pair_detail_quality_report.csv"
     audit_path = output / "pair_detail_capture_audit.csv"
     checklist_path = output / "pair_detail_capture_checklist.csv"
-    pd.DataFrame([snapshot.to_row() for snapshot in snapshots]).to_csv(snapshot_path, index=False)
-    pd.DataFrame(pair_detail_field_rows(snapshots)).to_csv(fields_path, index=False)
+    atomic_write_csv(pd.DataFrame([snapshot.to_row() for snapshot in snapshots]), snapshot_path, index=False)
+    atomic_write_csv(pd.DataFrame(pair_detail_field_rows(snapshots)), fields_path, index=False)
     evidence_cache = load_or_refresh_pair_detail_evidence_cache(
         input_dir,
         output,
     )
     history_path = Path(evidence_cache["history_path"])
     quality_path = Path(evidence_cache["quality_path"])
-    pd.DataFrame(pair_detail_capture_audit(input_dir), columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS).to_csv(
-        audit_path, index=False
-    )
-    pd.DataFrame(pair_detail_capture_checklist(input_dir), columns=PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS).to_csv(
-        checklist_path, index=False
-    )
+    atomic_write_csv(pd.DataFrame(pair_detail_capture_audit(input_dir), columns=PAIR_DETAIL_CAPTURE_AUDIT_COLUMNS), audit_path, index=False)
+    atomic_write_csv(pd.DataFrame(pair_detail_capture_checklist(input_dir), columns=PAIR_DETAIL_CAPTURE_CHECKLIST_COLUMNS), checklist_path, index=False)
     return {
         "snapshots": snapshot_path,
         "fields": fields_path,
@@ -950,7 +950,7 @@ def _path_sha256(path: Path) -> str:
 def _write_frame_atomic(frame: pd.DataFrame, path: Path) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json_atomic(payload: dict[str, object], path: Path) -> None:
@@ -959,7 +959,7 @@ def _write_json_atomic(payload: dict[str, object], path: Path) -> None:
         json.dumps(payload, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _pair_detail_quality_blockers(

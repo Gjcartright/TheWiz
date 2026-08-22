@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import math
 from datetime import datetime, timezone
@@ -191,8 +197,8 @@ def build_current_wizard_hyperliquid_failure_attribution(
         (blocker_summary, "blocker_summary", "snapshot_blocker_summary"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     status_counts = attribution["consolidated_status"].value_counts().to_dict()
     stage_counts = attribution["first_blocking_stage"].value_counts().to_dict()
@@ -251,9 +257,9 @@ def build_current_wizard_hyperliquid_failure_attribution(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary, attribution)
     for path in (paths["manifest"], paths["snapshot_manifest"]):
-        path.write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(path, manifest_text, encoding="utf-8")
     for path in (paths["summary_md"], paths["snapshot_summary_md"]):
-        path.write_text(summary_text, encoding="utf-8")
+        atomic_write_text(path, summary_text, encoding="utf-8")
     routing = build_current_wizard_hyperliquid_failure_routing_index(
         root=root,
         routes=attribution.loc[:, list(L2_ROUTING_COLUMNS)].copy(),
@@ -399,19 +405,19 @@ def _attribution_row(
     observed_complete = observed_status == "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE"
     walkforward_pass = walkforward_status == "PASS_RESEARCH_WALK_FORWARD"
     regime_pass = (
-        _text(regime["regime_stability_status"])
+        _text(regime.get("regime_stability_status"))
         == "PASS_RESEARCH_REGIME_STABILITY"
     )
     robustness_pass = (
-        _text(robustness["research_robustness_status"])
+        _text(robustness.get("research_robustness_status"))
         == "PASS_RESEARCH_ROBUSTNESS"
     )
     statistical_pass = (
-        _text(robustness["statistical_selection_status"]) == "PASS"
-        and _text(robustness["promotion_readiness"])
+        _text(robustness.get("statistical_selection_status")) == "PASS"
+        and _text(robustness.get("promotion_readiness"))
         == "READY_FOR_NEXT_RESEARCH_GATE"
     )
-    concentration_pass = _truthy(concentration["ready_for_leverage_gate"])
+    concentration_pass = _truthy(concentration.get("ready_for_leverage_gate"))
     one_x_survivor = bool(
         canonical_complete
         and observed_complete
@@ -421,7 +427,7 @@ def _attribution_row(
         and statistical_pass
         and concentration_pass
     )
-    strict_cost_ready = _truthy(observed["strict_cost_calibration_ready"])
+    strict_cost_ready = _truthy(observed.get("strict_cost_calibration_ready"))
     vendor_parity = _truthy(matrix_row.vendor_parity_claimed)
     execution_ready = bool(one_x_survivor and strict_cost_ready and vendor_parity)
 
@@ -492,18 +498,18 @@ def _attribution_row(
         "observed_cost_replay_status": observed_status,
         "walkforward_status": walkforward_status,
         "regime_status": regime_status,
-        "regime_stability_status": _text(regime["regime_stability_status"]),
+        "regime_stability_status": _text(regime.get("regime_stability_status")),
         "robustness_status": robustness_status,
         "research_robustness_status": _text(
-            robustness["research_robustness_status"]
+            robustness.get("research_robustness_status")
         ),
         "statistical_selection_status": _text(
-            robustness["statistical_selection_status"]
+            robustness.get("statistical_selection_status")
         ),
         "concentration_status": concentration_status,
         "concentration_gate_pass": concentration_pass,
         "strict_cost_calibration_ready": strict_cost_ready,
-        "mode_fidelity_status": _text(observed["mode_fidelity_status"]),
+        "mode_fidelity_status": _text(observed.get("mode_fidelity_status")),
         "vendor_exact_mode_parity_proven": vendor_parity,
         "one_x_research_survivor": one_x_survivor,
         "leverage_research_eligible": one_x_survivor,
@@ -515,33 +521,33 @@ def _attribution_row(
         "all_independent_blockers": ";".join(all_blockers),
         "next_action": next_action,
         "research_progress_rank": progress_rank,
-        "observed_trades": _number(observed["trades"]),
-        "observed_profit_factor": _number(observed["profit_factor"]),
-        "observed_sharpe": _number(observed["sharpe"]),
-        "observed_max_drawdown": _number(observed["max_drawdown"]),
-        "observed_total_return": _number(observed["total_return"]),
-        "walkforward_trades": _number(walkforward["aggregate_trades"]),
+        "observed_trades": _number(observed.get("trades")),
+        "observed_profit_factor": _number(observed.get("profit_factor")),
+        "observed_sharpe": _number(observed.get("sharpe")),
+        "observed_max_drawdown": _number(observed.get("max_drawdown")),
+        "observed_total_return": _number(observed.get("total_return")),
+        "walkforward_trades": _number(walkforward.get("aggregate_trades")),
         "walkforward_profit_factor": _number(
-            walkforward["aggregate_profit_factor"]
+            walkforward.get("aggregate_profit_factor")
         ),
-        "walkforward_sharpe": _number(walkforward["aggregate_sharpe"]),
+        "walkforward_sharpe": _number(walkforward.get("aggregate_sharpe")),
         "walkforward_max_drawdown": _number(
-            walkforward["aggregate_max_drawdown"]
+            walkforward.get("aggregate_max_drawdown")
         ),
         "walkforward_total_return": _number(
-            walkforward["aggregate_total_return"]
+            walkforward.get("aggregate_total_return")
         ),
-        "walkforward_bh_qvalue": _number(walkforward["bh_qvalue"]),
-        "hedge_ratio_cv": _number(walkforward["hedge_ratio_cv"]),
+        "walkforward_bh_qvalue": _number(walkforward.get("bh_qvalue")),
+        "hedge_ratio_cv": _number(walkforward.get("hedge_ratio_cv")),
         "regime_profit_concentration": _number(
-            regime["regime_profit_concentration"]
+            regime.get("regime_profit_concentration")
         ),
-        "worst_regime_expectancy": _number(regime["worst_regime_expectancy"]),
+        "worst_regime_expectancy": _number(regime.get("worst_regime_expectancy")),
         "robustness_parameter_pass_ratio": _number(
-            robustness["parameter_pass_ratio"]
+            robustness.get("parameter_pass_ratio")
         ),
         "worst_robustness_drawdown": _number(
-            robustness["worst_parameter_drawdown"]
+            robustness.get("worst_parameter_drawdown")
         ),
         "leverage_research_only": True,
         "acceptance_status": "BLOCKED",
@@ -629,7 +635,7 @@ def _first_blocker(
     if not flags["regime_pass"]:
         return (
             "regime_stability",
-            _text(regime["regime_stability_blocker"])
+            _text(regime.get("regime_stability_blocker"))
             or _text(regime["regime_status"]),
             "investigate_regime_instability",
             6,
@@ -637,7 +643,7 @@ def _first_blocker(
     if not flags["robustness_pass"]:
         return (
             "robustness",
-            _text(robustness["research_robustness_blocker"])
+            _text(robustness.get("research_robustness_blocker"))
             or _text(robustness["robustness_status"]),
             "investigate_parameter_and_cost_fragility",
             7,
@@ -645,15 +651,15 @@ def _first_blocker(
     if not flags["statistical_pass"]:
         return (
             "statistical_selection",
-            _text(robustness["promotion_blocker"])
-            or _text(robustness["statistical_selection_status"]),
+            _text(robustness.get("promotion_blocker"))
+            or _text(robustness.get("statistical_selection_status")),
             "retain_on_watchlist_or_collect_more_out_of_sample_history",
             8,
         )
     if not flags["concentration_pass"]:
         return (
             "cross_cell_concentration",
-            _text(concentration["concentration_blocker"])
+            _text(concentration.get("concentration_blocker"))
             or _text(concentration["concentration_status"]),
             "collect_a_broader_statistically_selected_cohort",
             9,
@@ -668,7 +674,7 @@ def _first_blocker(
     if not flags["vendor_parity"]:
         return (
             "vendor_exact_mode_parity",
-            _text(observed["mode_fidelity_reason"])
+            _text(observed.get("mode_fidelity_reason"))
             or "vendor_custom_series_parity_not_proven",
             "capture_vendor_custom_series_and_prove_mode_parity",
             11,
@@ -731,14 +737,14 @@ def _all_independent_blockers(
     if flags["walkforward_pass"] and not flags["regime_pass"]:
         blockers.append(
             "regime:" + (
-                _text(regime["regime_stability_blocker"])
+                _text(regime.get("regime_stability_blocker"))
                 or _text(regime["regime_status"])
             )
         )
     if flags["walkforward_pass"] and not flags["robustness_pass"]:
         blockers.append(
             "robustness:" + (
-                _text(robustness["research_robustness_blocker"])
+                _text(robustness.get("research_robustness_blocker"))
                 or _text(robustness["robustness_status"])
             )
         )
@@ -750,15 +756,15 @@ def _all_independent_blockers(
     ):
         blockers.append(
             "statistical:" + (
-                _text(robustness["promotion_blocker"])
-                or _text(robustness["statistical_selection_status"])
+                _text(robustness.get("promotion_blocker"))
+                or _text(robustness.get("statistical_selection_status"))
             )
         )
     if flags["statistical_pass"] and not flags["concentration_pass"]:
         blockers.append(
             "concentration:"
             + (
-                _text(concentration["concentration_blocker"])
+                _text(concentration.get("concentration_blocker"))
                 or _text(concentration["concentration_status"])
             )
         )
@@ -1073,14 +1079,14 @@ def _write_or_validate_immutable_bytes(payload: bytes, path: Path) -> None:
         return
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(payload)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_write_bytes(payload: bytes, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(payload)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _canonical_json(value: object) -> str:

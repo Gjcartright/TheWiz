@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from quant_platform.orchestration.contracts import AgentCapability, CandidateIdentity, TaskCard
+from quant_platform.orchestration.corrective_runtime import atomic_append_text
 from quant_platform.orchestration.dynamic_ledger import DynamicAgentLedger
-
 
 COPULA_FRESHNESS_SECONDS = 2 * 60 * 60 + 30 * 60
 DATA_HEALTH_TASK_SECONDS = 15 * 60
@@ -168,5 +168,7 @@ def _create_task(
 
 def _write_route_plan(directory: Path, plan: RoutePlan) -> None:
     path = directory / "route_plans.jsonl"
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(plan.model_dump(mode="json"), sort_keys=True) + "\n")
+    atomic_append_text(
+        path,
+        json.dumps(plan.model_dump(mode="json"), sort_keys=True) + "\n",
+    )

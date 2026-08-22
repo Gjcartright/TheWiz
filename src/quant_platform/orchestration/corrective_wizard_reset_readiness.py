@@ -19,6 +19,8 @@ from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration.corrective_runtime import (
     RUNTIME_TEMP_DIRNAME,
     RUNTIME_TEMP_ENV_NAMES,
+    promote_staged_file,
+    scheduler_python_path,
     workspace_launch_agent_path,
 )
 from quant_platform.orchestration.corrective_wizard_browser_auth import (
@@ -125,7 +127,7 @@ def build_corrective_wizard_reset_readiness(
         blocker=plist_blocker or "wizard_proof_launch_agent_invalid",
     )
 
-    expected_python = root / ".venv312" / "bin" / "python"
+    expected_python = scheduler_python_path(root)
     expected_arguments = [
         str(expected_python),
         "-m",
@@ -1124,7 +1126,7 @@ def _write_csv(rows: list[dict[str, str]], path: Path) -> None:
         )
         writer.writeheader()
         writer.writerows(rows)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json(payload: dict[str, Any], path: Path) -> None:
@@ -1144,7 +1146,7 @@ def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(text, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _markdown(payload: dict[str, Any], checks: list[dict[str, str]]) -> str:

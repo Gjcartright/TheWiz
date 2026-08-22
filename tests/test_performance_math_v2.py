@@ -3,9 +3,19 @@ from __future__ import annotations
 import math
 
 import pandas as pd
+import pytest
 
-from quant_platform.backtest import CostModel, FundingPolicy, backtest_two_leg_spread
-from quant_platform.performance_math import calculate_annualized_sharpe, resolve_annualization
+from quant_platform.backtest import (
+    CostModel,
+    FundingPolicy,
+    backtest_two_leg_spread,
+    max_drawdown,
+)
+from quant_platform.performance_math import (
+    MATH_VERSION,
+    calculate_annualized_sharpe,
+    resolve_annualization,
+)
 from quant_platform.trade_ledger import build_trade_ledger
 
 
@@ -25,6 +35,36 @@ def test_annualization_infers_regular_five_minute_timestamps():
     result = resolve_annualization(timestamps=timestamps)
     assert result.interval == "5m"
     assert result.periods_per_year == 105120
+
+
+def test_sharpe_uses_sample_standard_deviation_and_blocks_one_observation():
+    values = pd.Series([0.01, -0.005, 0.007, 0.002])
+    result = calculate_annualized_sharpe(values, interval="1d")
+    singleton = calculate_annualized_sharpe(pd.Series([0.01]), interval="1d")
+
+    expected = math.sqrt(365.0) * values.mean() / values.std(ddof=1)
+    assert result.value == pytest.approx(expected)
+    assert singleton.status == "blocked"
+    assert singleton.reason == "insufficient_return_observations"
+
+
+def test_sharpe_blocks_zero_variance_and_declared_timestamp_mismatch():
+    constant = calculate_annualized_sharpe(pd.Series([0.01, 0.01, 0.01]), interval="1d")
+    timestamps = pd.date_range("2026-01-01", periods=4, freq="1h", tz="UTC")
+    mismatch = calculate_annualized_sharpe(
+        pd.Series([0.01, -0.01, 0.02, -0.01]),
+        interval="1d",
+        timestamps=timestamps,
+    )
+
+    assert constant.status == "blocked"
+    assert math.isnan(constant.value)
+    assert mismatch.status == "blocked"
+    assert mismatch.reason == "declared_interval_timestamp_mismatch:1d!=1h"
+
+
+def test_max_drawdown_includes_initial_capital_before_first_return():
+    assert max_drawdown(pd.Series([0.90, 0.80])) == pytest.approx(0.20)
 
 
 def test_trade_ledger_counts_closed_trades_and_reconciles_reversal():
@@ -85,5 +125,5 @@ def test_two_leg_backtest_ignores_beta_and_declares_funding_policy():
 
     assert low.total_return == high.total_return
     assert low.funding_policy == "signed_realized"
-    assert low.math_version == "math-v2"
+    assert low.math_version == MATH_VERSION
     assert low.sharpe_status == "valid"

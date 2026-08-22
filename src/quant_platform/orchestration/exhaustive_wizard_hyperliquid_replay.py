@@ -6,11 +6,11 @@ deduplicates network requests, never pair groups, modes, or orientations.
 
 from __future__ import annotations
 
+import json
+import time
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import time
 from typing import Callable
 
 import pandas as pd
@@ -20,14 +20,29 @@ from quant_platform.hyperliquid import (
     build_hyperliquid_pair_history,
     fetch_hyperliquid_candles,
 )
-
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_bytes,
+    atomic_write_csv,
+    atomic_write_text,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_replay_preflight.v1"
+SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_replay_preflight.v2"
 HISTORY_SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_history.v1"
 TIMEFRAME_INTERVALS = {"daily": "1d", "hourly": "1h"}
 HISTORY_DAYS = {"1d": 1_500, "1h": 210}
 MINIMUM_HISTORY_ROWS = {"1d": 750, "1h": 1_000}
+RESEARCH_MINIMUM_HISTORY_ROWS = {"1d": 500, "1h": 500}
+CURRENT_CYCLE_ACCEPTANCE_MODES = {
+    "Static (Spread)",
+    "Static (ZScoreR)",
+    "Dyn (Spread)",
+    "Dyn (ZScoreR)",
+    "Copula",
+}
+CURRENT_CYCLE_POLICY = "static_dynamic_copula_only_ou_family_diagnostic"
+OU_FAMILY_ACCEPTANCE_BLOCKER = "ou_family_terminal_research_only"
 ASSET_HISTORY_RESULT_COLUMNS = [
     "schema_version",
     "exhaustive_run_id",
@@ -39,6 +54,7 @@ ASSET_HISTORY_RESULT_COLUMNS = [
     "fetch_end_at",
     "history_days_requested",
     "minimum_history_rows",
+    "research_minimum_history_rows",
     "attempts",
     "history_rows",
     "earliest_candle_at",
@@ -48,6 +64,10 @@ ASSET_HISTORY_RESULT_COLUMNS = [
     "timestamp_bound_valid",
     "history_status",
     "history_blocker",
+    "history_lane",
+    "acceptance_history_ready",
+    "research_history_ready",
+    "acceptance_history_blocker",
     "history_path",
     "history_sha256",
     "queue_evidence_path",
@@ -68,6 +88,7 @@ PAIR_HISTORY_RESULT_COLUMNS = [
     "asset_y",
     "scanner_cutoff_at",
     "minimum_history_rows",
+    "research_minimum_history_rows",
     "history_rows",
     "earliest_candle_at",
     "latest_candle_at",
@@ -77,6 +98,10 @@ PAIR_HISTORY_RESULT_COLUMNS = [
     "ready_mode_orientation_cells",
     "history_status",
     "history_blocker",
+    "history_lane",
+    "acceptance_history_ready",
+    "research_history_ready",
+    "acceptance_history_blocker",
     "history_path",
     "history_sha256",
     "evidence_path",
@@ -145,6 +170,13 @@ def materialize_exhaustive_wizard_hyperliquid_history(
         cutoff = _parse_timestamp(request.fetch_end_at)
         days = int(request.history_days_requested)
         minimum_rows = int(request.minimum_history_rows)
+        research_minimum_rows = int(
+            getattr(
+                request,
+                "research_minimum_history_rows",
+                RESEARCH_MINIMUM_HISTORY_ROWS.get(interval, minimum_rows),
+            )
+        )
         output_path: Path | None = None
         blocker = ""
         attempts = 0
@@ -164,19 +196,32 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                     )
                     break
                 except Exception as exc:  # Preserve every remaining request.
-                    last_error = f"{type(exc).__name__}:{exc}"
+                    last_error = f"{safe_exception_code(exc)}"
                     if attempt < max_attempts:
                         sleep(float(2 ** (attempt - 1)))
             if output_path is None:
                 blocker = f"hyperliquid_candle_fetch_failed:{last_error}"
         metadata = _candle_file_metadata(output_path, cutoff=cutoff)
-        if not blocker and metadata["rows"] < minimum_rows:
+        if not blocker and metadata["rows"] < research_minimum_rows:
             blocker = "insufficient_point_in_time_history"
         if not blocker and not metadata["timestamp_parse_valid"]:
             blocker = "history_timestamp_missing_or_invalid"
         if not blocker and metadata["post_snapshot_rows"] > 0:
             blocker = "history_contains_post_snapshot_candles"
-        status = "COMPLETE" if not blocker else "BLOCKED"
+        research_ready = not blocker
+        acceptance_ready = research_ready and metadata["rows"] >= minimum_rows
+        if blocker:
+            status = "BLOCKED"
+            history_lane = "BLOCKED"
+            acceptance_blocker = blocker
+        elif acceptance_ready:
+            status = "COMPLETE"
+            history_lane = "ACCEPTANCE_HISTORY"
+            acceptance_blocker = ""
+        else:
+            status = "COMPLETE_RESEARCH_ONLY"
+            history_lane = "SHORT_HISTORY_RESEARCH_ONLY"
+            acceptance_blocker = "below_acceptance_history_floor"
         asset_rows.append(
             {
                 "schema_version": HISTORY_SCHEMA_VERSION,
@@ -189,6 +234,7 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                 "fetch_end_at": cutoff.isoformat() if cutoff else "",
                 "history_days_requested": days,
                 "minimum_history_rows": minimum_rows,
+                "research_minimum_history_rows": research_minimum_rows,
                 "attempts": attempts,
                 "history_rows": metadata["rows"],
                 "earliest_candle_at": metadata["earliest"],
@@ -198,6 +244,10 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                 "timestamp_bound_valid": metadata["timestamp_bound_valid"],
                 "history_status": status,
                 "history_blocker": blocker,
+                "history_lane": history_lane,
+                "acceptance_history_ready": acceptance_ready,
+                "research_history_ready": research_ready,
+                "acceptance_history_blocker": acceptance_blocker,
                 "history_path": _relative(output_path, root) if output_path else "",
                 "history_sha256": _file_hash(output_path) if output_path else "",
                 "queue_evidence_path": _relative(asset_queue_path, root),
@@ -215,9 +265,18 @@ def materialize_exhaustive_wizard_hyperliquid_history(
         asset_x = _text(request.asset_x)
         asset_y = _text(request.asset_y)
         interval = _text(request.hyperliquid_interval)
+        minimum_rows = int(request.minimum_history_rows)
+        research_minimum_rows = int(
+            getattr(
+                request,
+                "research_minimum_history_rows",
+                RESEARCH_MINIMUM_HISTORY_ROWS.get(interval, minimum_rows),
+            )
+        )
         x_result = asset_lookup.get((asset_x, interval))
         y_result = asset_lookup.get((asset_y, interval))
         blockers = _split_blockers(getattr(request, "history_request_blocker", ""))
+        asset_acceptance_ready = True
         pair_path: Path | None = None
         rows = 0
         earliest = ""
@@ -230,10 +289,14 @@ def materialize_exhaustive_wizard_hyperliquid_history(
         for asset, result in ((asset_x, x_result), (asset_y, y_result)):
             if result is None:
                 blockers.append(f"asset_history_result_missing:{asset}")
-            elif _text(result.history_status) != "COMPLETE":
+                asset_acceptance_ready = False
+            elif not _truthy(getattr(result, "research_history_ready", False)):
                 blockers.extend(
                     _split_blockers(result.history_blocker) or [f"asset_history_blocked:{asset}"]
                 )
+                asset_acceptance_ready = False
+            elif not _truthy(getattr(result, "acceptance_history_ready", False)):
+                asset_acceptance_ready = False
         if not blockers:
             try:
                 pair_path = build_hyperliquid_pair_history(
@@ -254,16 +317,31 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                 timestamp_parse_valid = pair_metadata["timestamp_parse_valid"]
                 post_snapshot_rows = pair_metadata["post_snapshot_rows"]
                 timestamp_bound_valid = pair_metadata["timestamp_bound_valid"]
-                if rows < int(request.minimum_history_rows):
+                if rows < research_minimum_rows:
                     blockers.append("insufficient_aligned_pair_history")
                 if not timestamp_parse_valid:
                     blockers.append("pair_history_timestamp_missing_or_invalid")
                 if post_snapshot_rows > 0:
                     blockers.append("pair_history_contains_post_snapshot_candles")
             except Exception as exc:
-                blockers.append(f"hyperliquid_pair_history_build_failed:{type(exc).__name__}:{exc}")
+                blockers.append(f"hyperliquid_pair_history_build_failed:{safe_exception_code(exc)}")
         blockers = list(dict.fromkeys(blockers))
-        status = "READY_FOR_CANONICAL_REPLAY" if not blockers else "BLOCKED"
+        research_ready = not blockers and pair_path is not None
+        acceptance_ready = (
+            research_ready and asset_acceptance_ready and rows >= minimum_rows
+        )
+        if not research_ready:
+            status = "BLOCKED"
+            history_lane = "BLOCKED"
+            acceptance_blocker = ";".join(blockers)
+        elif acceptance_ready:
+            status = "READY_FOR_CANONICAL_REPLAY"
+            history_lane = "ACCEPTANCE_HISTORY"
+            acceptance_blocker = ""
+        else:
+            status = "READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY"
+            history_lane = "SHORT_HISTORY_RESEARCH_ONLY"
+            acceptance_blocker = "below_acceptance_history_floor"
         evidence = [
             _relative(pair_queue_path, root),
             _text(getattr(x_result, "history_path", "")) if x_result else "",
@@ -285,7 +363,8 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                 "asset_x": asset_x,
                 "asset_y": asset_y,
                 "scanner_cutoff_at": _text(request.scanner_cutoff_at),
-                "minimum_history_rows": int(request.minimum_history_rows),
+                "minimum_history_rows": minimum_rows,
+                "research_minimum_history_rows": research_minimum_rows,
                 "history_rows": rows,
                 "earliest_candle_at": earliest,
                 "latest_candle_at": latest,
@@ -295,6 +374,10 @@ def materialize_exhaustive_wizard_hyperliquid_history(
                 "ready_mode_orientation_cells": int(request.ready_mode_orientation_cells),
                 "history_status": status,
                 "history_blocker": ";".join(blockers),
+                "history_lane": history_lane,
+                "acceptance_history_ready": acceptance_ready,
+                "research_history_ready": research_ready,
+                "acceptance_history_blocker": acceptance_blocker,
                 "history_path": _relative(pair_path, root) if pair_path else "",
                 "history_sha256": _file_hash(pair_path) if pair_path else "",
                 "evidence_path": ";".join(value for value in evidence if value),
@@ -307,8 +390,8 @@ def materialize_exhaustive_wizard_hyperliquid_history(
         (asset_results, paths["asset_results"], paths["snapshot_asset_results"]),
         (pair_results, paths["pair_results"], paths["snapshot_pair_results"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     summary: dict[str, object] = {
         "schema_version": HISTORY_SCHEMA_VERSION,
@@ -318,10 +401,18 @@ def materialize_exhaustive_wizard_hyperliquid_history(
         "created_at": as_of.isoformat(),
         "asset_requests": int(len(asset_results)),
         "asset_histories_complete": int(asset_results["history_status"].eq("COMPLETE").sum()),
+        "asset_histories_research_only": int(
+            asset_results["history_status"].eq("COMPLETE_RESEARCH_ONLY").sum()
+        ),
         "asset_histories_blocked": int(asset_results["history_status"].eq("BLOCKED").sum()),
         "pair_work_items": int(len(pair_results)),
         "pair_histories_ready": int(
             pair_results["history_status"].eq("READY_FOR_CANONICAL_REPLAY").sum()
+        ),
+        "pair_histories_short_research_ready": int(
+            pair_results["history_status"]
+            .eq("READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY")
+            .sum()
         ),
         "pair_histories_blocked": int(pair_results["history_status"].eq("BLOCKED").sum()),
         "post_snapshot_asset_violations": int(
@@ -337,10 +428,10 @@ def materialize_exhaustive_wizard_hyperliquid_history(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _history_summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -395,6 +486,9 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
         "timeframe_intervals": TIMEFRAME_INTERVALS,
         "history_days": HISTORY_DAYS,
         "minimum_history_rows": MINIMUM_HISTORY_ROWS,
+        "research_minimum_history_rows": RESEARCH_MINIMUM_HISTORY_ROWS,
+        "current_cycle_policy": CURRENT_CYCLE_POLICY,
+        "current_cycle_acceptance_modes": sorted(CURRENT_CYCLE_ACCEPTANCE_MODES),
     }
     preflight_hash = sha256(_canonical_json(material).encode("utf-8")).hexdigest()
     preflight_id = f"hlreplay_{preflight_hash[:20]}"
@@ -404,11 +498,17 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
     active.mkdir(parents=True, exist_ok=True)
     paths = {
         "experiment_preflight": active / "exhaustive_wizard_hyperliquid_replay_preflight.csv",
+        "current_cycle_validation_queue": (
+            active / "exhaustive_wizard_hyperliquid_current_cycle_validation_queue.csv"
+        ),
         "pair_history_queue": active / "exhaustive_wizard_hyperliquid_pair_history_queue.csv",
         "asset_fetch_queue": active / "exhaustive_wizard_hyperliquid_asset_fetch_queue.csv",
         "manifest": active / "exhaustive_wizard_hyperliquid_replay_preflight_manifest.json",
         "summary_md": active / "exhaustive_wizard_hyperliquid_replay_preflight_summary.md",
         "snapshot_experiment_preflight": snapshot_dir / "experiment_preflight.csv",
+        "snapshot_current_cycle_validation_queue": (
+            snapshot_dir / "current_cycle_validation_queue.csv"
+        ),
         "snapshot_pair_history_queue": snapshot_dir / "pair_history_queue.csv",
         "snapshot_asset_fetch_queue": snapshot_dir / "asset_fetch_queue.csv",
         "snapshot_manifest": snapshot_dir / "manifest.json",
@@ -420,7 +520,7 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
     for key, source in input_paths.items():
         destination = input_snapshot_paths[key]
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(source.read_bytes())
+        atomic_write_bytes(destination, source.read_bytes())
 
     experiment_preflight = _build_experiment_preflight(
         experiments,
@@ -449,17 +549,28 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
         preflight_id=preflight_id,
         evidence_path=_relative(paths["snapshot_pair_history_queue"], root),
     )
+    current_cycle_validation_queue = experiment_preflight.loc[
+        experiment_preflight["acceptance_policy_status"].eq(
+            "ELIGIBLE_FOR_DOWNSTREAM_EVIDENCE_GATES"
+        )
+        & experiment_preflight["mapping_ready"].astype(bool)
+    ].copy()
     for frame, active_path, snapshot_path in (
         (
             experiment_preflight,
             paths["experiment_preflight"],
             paths["snapshot_experiment_preflight"],
         ),
+        (
+            current_cycle_validation_queue,
+            paths["current_cycle_validation_queue"],
+            paths["snapshot_current_cycle_validation_queue"],
+        ),
         (pair_history_queue, paths["pair_history_queue"], paths["snapshot_pair_history_queue"]),
         (asset_fetch_queue, paths["asset_fetch_queue"], paths["snapshot_asset_fetch_queue"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = experiment_preflight["preflight_status"].value_counts().to_dict()
     summary: dict[str, object] = {
@@ -481,6 +592,25 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
             pair_history_queue["history_request_status"].eq("READY_TO_FETCH").sum()
         ),
         "asset_interval_fetch_requests": int(len(asset_fetch_queue)),
+        "current_cycle_policy": CURRENT_CYCLE_POLICY,
+        "current_cycle_acceptance_modes": sorted(CURRENT_CYCLE_ACCEPTANCE_MODES),
+        "current_cycle_validation_experiments": int(
+            experiment_preflight["acceptance_policy_status"]
+            .eq("ELIGIBLE_FOR_DOWNSTREAM_EVIDENCE_GATES")
+            .sum()
+        ),
+        "current_cycle_hyperliquid_mapped_validation_experiments": int(
+            len(current_cycle_validation_queue)
+        ),
+        "current_cycle_ready_for_history_experiments": int(
+            current_cycle_validation_queue["preflight_status"].eq("READY_FOR_HISTORY").sum()
+        ),
+        "current_cycle_pending_pair_detail_experiments": int(
+            current_cycle_validation_queue["preflight_status"].eq("PENDING_PAIR_DETAIL").sum()
+        ),
+        "ou_diagnostic_only_experiments": int(
+            experiment_preflight["acceptance_policy_status"].eq("BLOCKED").sum()
+        ),
         "history_cutoff_policy": "earliest_scanner_capture_timestamp_per_pair_group",
         "network_request_deduplication_only": True,
         "discovery_prefilter_applied": False,
@@ -494,10 +624,10 @@ def build_exhaustive_wizard_hyperliquid_replay_preflight(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -526,11 +656,11 @@ def _build_experiment_preflight(
     rows: list[dict[str, object]] = []
     for experiment in experiments.itertuples():
         pair_group_id = _text(experiment.pair_group_id)
+        exact_mode = _text(experiment.exact_mode)
+        acceptance_policy_eligible = exact_mode in CURRENT_CYCLE_ACCEPTANCE_MODES
         mapping_row = mapping_rows.get(pair_group_id)
         progress_row = progress_rows.get(pair_group_id)
-        mode_row = mode_rows.get(
-            (pair_group_id, _text(experiment.exact_mode), _text(experiment.orientation))
-        )
+        mode_row = mode_rows.get((pair_group_id, exact_mode, _text(experiment.orientation)))
         asset_x = _text(experiment.asset_x).upper()
         asset_y = _text(experiment.asset_y).upper()
         mapping_ready = bool(
@@ -611,7 +741,7 @@ def _build_experiment_preflight(
                 "wizard_exchange": _text(experiment.wizard_exchange),
                 "wizard_timeframe": _text(experiment.timeframe),
                 "hyperliquid_interval": interval,
-                "exact_mode": _text(experiment.exact_mode),
+                "exact_mode": exact_mode,
                 "orientation": _text(experiment.orientation),
                 "asset_x": asset_x,
                 "asset_y": asset_y,
@@ -623,6 +753,19 @@ def _build_experiment_preflight(
                 "history_request_id": history_request_id,
                 "preflight_status": status,
                 "preflight_blocker": ";".join(dict.fromkeys(blockers)),
+                "validation_lane": (
+                    "CURRENT_CYCLE_LOCAL_VALIDATION"
+                    if acceptance_policy_eligible
+                    else "DIAGNOSTIC_ONLY"
+                ),
+                "acceptance_policy_status": (
+                    "ELIGIBLE_FOR_DOWNSTREAM_EVIDENCE_GATES"
+                    if acceptance_policy_eligible
+                    else "BLOCKED"
+                ),
+                "acceptance_policy_blocker": (
+                    "" if acceptance_policy_eligible else OU_FAMILY_ACCEPTANCE_BLOCKER
+                ),
                 "mode_evidence_path": mode_evidence,
                 "evidence_path": ";".join(dict.fromkeys(evidence)),
                 "discovery_prefilter_applied": False,
@@ -654,7 +797,10 @@ def _build_pair_history_queue(
         mapping_row = mapping_rows.get(pair_group_id)
         progress_row = progress_rows.get(pair_group_id)
         cells = experiment_preflight.loc[experiment_preflight["pair_group_id"].eq(pair_group_id)]
-        ready_cells = int(cells["preflight_status"].eq("READY_FOR_HISTORY").sum())
+        current_cycle_cells = cells.loc[
+            cells["acceptance_policy_status"].eq("ELIGIBLE_FOR_DOWNSTREAM_EVIDENCE_GATES")
+        ]
+        ready_cells = int(current_cycle_cells["preflight_status"].eq("READY_FOR_HISTORY").sum())
         interval = TIMEFRAME_INTERVALS.get(_text(pair.timeframe).lower(), "")
         cutoff_at = _earliest_timestamp(
             getattr(progress_row, "scanner_capture_timestamps", "") if progress_row else ""
@@ -686,8 +832,15 @@ def _build_pair_history_queue(
                 "scanner_cutoff_at": cutoff_at,
                 "history_days_requested": HISTORY_DAYS.get(interval, 0),
                 "minimum_history_rows": MINIMUM_HISTORY_ROWS.get(interval, 0),
+                "research_minimum_history_rows": RESEARCH_MINIMUM_HISTORY_ROWS.get(
+                    interval, 0
+                ),
                 "ready_mode_orientation_cells": ready_cells,
                 "planned_mode_orientation_cells": int(len(cells)),
+                "current_cycle_planned_mode_orientation_cells": int(len(current_cycle_cells)),
+                "diagnostic_only_mode_orientation_cells": int(
+                    len(cells) - len(current_cycle_cells)
+                ),
                 "pair_detail_capture_status": _text(
                     getattr(progress_row, "capture_status", "MISSING")
                     if progress_row
@@ -741,6 +894,7 @@ def _build_asset_fetch_queue(
                 "fetch_start_at",
                 "history_days_requested",
                 "minimum_history_rows",
+                "research_minimum_history_rows",
                 "pair_group_count",
                 "pair_group_ids",
                 "history_request_ids",
@@ -775,6 +929,9 @@ def _build_asset_fetch_queue(
                 else "",
                 "history_days_requested": days,
                 "minimum_history_rows": MINIMUM_HISTORY_ROWS.get(interval, 0),
+                "research_minimum_history_rows": RESEARCH_MINIMUM_HISTORY_ROWS.get(
+                    interval, 0
+                ),
                 "pair_group_count": int(group["pair_group_id"].nunique()),
                 "pair_group_ids": ";".join(sorted(set(group["pair_group_id"]))),
                 "history_request_ids": ";".join(sorted(set(group["history_request_id"]))),
@@ -829,6 +986,11 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Mainnet history market blocked: {summary['mainnet_history_blocked_experiments']}",
             f"- Pair-history requests ready: {summary['pair_history_ready_to_fetch']} / {summary['pair_history_work_items']}",
             f"- Deduplicated asset/interval fetches: {summary['asset_interval_fetch_requests']}",
+            f"- Current-cycle policy: `{summary['current_cycle_policy']}`",
+            f"- Current-cycle experiments: {summary['current_cycle_validation_experiments']}",
+            f"- Current-cycle Hyperliquid-mapped queue: {summary['current_cycle_hyperliquid_mapped_validation_experiments']}",
+            f"- Current-cycle pending pair detail: {summary['current_cycle_pending_pair_detail_experiments']}",
+            f"- OU diagnostic-only experiments: {summary['ou_diagnostic_only_experiments']}",
             f"- Canonical replay leverage: {summary['canonical_replay_leverage']}x",
             f"- Live trading authorized: `{str(summary['live_trading_authorized']).lower()}`",
             "",
@@ -903,15 +1065,17 @@ def _history_summary_markdown(summary: dict[str, object]) -> str:
             f"- Replay preflight: `{summary['replay_preflight_id']}`",
             f"- History run: `{summary['history_run_id']}`",
             f"- Asset histories complete: {summary['asset_histories_complete']} / {summary['asset_requests']}",
+            f"- Asset histories short-research only: {summary['asset_histories_research_only']}",
             f"- Asset histories blocked: {summary['asset_histories_blocked']}",
             f"- Pair histories ready for canonical replay: {summary['pair_histories_ready']} / {summary['pair_work_items']}",
+            f"- Pair histories ready for short-history research: {summary['pair_histories_short_research_ready']}",
             f"- Pair histories blocked: {summary['pair_histories_blocked']}",
             f"- Asset histories with post-snapshot rows: {summary['post_snapshot_asset_violations']}",
             f"- Pair histories with post-snapshot rows: {summary['post_snapshot_pair_violations']}",
             f"- Canonical replay leverage: {summary['canonical_replay_leverage']}x",
             f"- Live trading authorized: `{str(summary['live_trading_authorized']).lower()}`",
             "",
-            "Every history is bounded by the frozen scanner timestamp. Failed, short, malformed, and mapping-blocked work remains visible with an explicit blocker; no research identity is silently dropped.",
+            "Every history is bounded by the frozen scanner timestamp. The short-history lane may produce research-only replays, but it cannot satisfy the full-history acceptance gate. Failed, malformed, and mapping-blocked work remains visible with an explicit blocker; no research identity is silently dropped.",
             "",
         ]
     )

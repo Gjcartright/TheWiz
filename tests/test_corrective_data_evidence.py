@@ -307,6 +307,53 @@ def test_registered_hypotheses_are_normalized_for_public_l2_collection(tmp_path)
     assert bool(frame.loc[0, "testnet_order_authority"]) is False
 
 
+def test_current_wizard_selected_pairs_expand_collection_not_stage_two(tmp_path):
+    active = tmp_path / "reports" / "active"
+    processed = tmp_path / "data" / "processed"
+    snapshot = tmp_path / "reports" / "snapshots" / "current" / "pair_costs.csv"
+    active.mkdir(parents=True)
+    processed.mkdir(parents=True)
+    snapshot.parent.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "cost_evidence_id": "cwcost-test",
+                "pair_group_key": "coinbase|daily|ETH|WIF",
+                "pair": "ETH-USD-WIF-USD",
+                "asset_x": "ETH",
+                "asset_y": "WIF",
+                "selected_for_cost_evidence": True,
+            }
+        ]
+    ).to_csv(snapshot, index=False)
+    (active / "current_wizard_hyperliquid_cost_manifest.json").write_text(
+        json.dumps(
+            {
+                "cost_evidence_id": "cwcost-test",
+                "selected_pair_group_keys": ["coinbase|daily|ETH|WIF"],
+                "artifacts": {
+                    "snapshot_pairs": str(snapshot.relative_to(tmp_path)),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    pd.DataFrame(
+        [{"asset": "ETH", "tradable": True}, {"asset": "WIF", "tradable": True}]
+    ).to_csv(processed / "hyperliquid_market_context.csv", index=False)
+
+    result = build_l2_capture_candidate_set(root=tmp_path)
+    frame = pd.read_csv(result["path"])
+
+    assert result["current_board_collection_pairs"] == 1
+    assert result["eligible_pairs"] == 1
+    assert result["stage_two_candidate_pairs"] == 0
+    assert frame.loc[0, "source_family"] == "current_wizard_cost_selected_collection"
+    assert bool(frame.loc[0, "collection_eligible"]) is True
+    assert bool(frame.loc[0, "stage_two_candidate"]) is False
+    assert bool(frame.loc[0, "testnet_order_authority"]) is False
+
+
 def test_l2_candidate_builder_uses_hash_bound_failure_route_index(
     tmp_path, monkeypatch
 ):

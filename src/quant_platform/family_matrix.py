@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from itertools import combinations
 from math import isfinite
@@ -60,7 +64,7 @@ def run_family_matrix(
 
     registry = strategy_family_registry(strategy_list)
     registry_path = output / "family_registry.csv"
-    registry.to_csv(registry_path, index=False)
+    atomic_write_csv(registry, registry_path, index=False)
 
     by_family: dict[str, list[StrategySpec]] = {}
     for strategy in strategy_list:
@@ -83,7 +87,7 @@ def run_family_matrix(
         harness.write_reports(results, family_output)
         acceptance = strategy_acceptance_report(results, gate)
         acceptance_path = family_output / "family_acceptance_report.csv"
-        acceptance.to_csv(acceptance_path, index=False)
+        atomic_write_csv(acceptance, acceptance_path, index=False)
         best_row = _best_acceptance_row(acceptance)
         artifact = FamilyRunArtifact(
             family=family,
@@ -127,7 +131,7 @@ def run_family_matrix(
         ascending=[False, False, False, False, False, False, True],
     )
     separate_summary_path = output / "family_separate_summary.csv"
-    separate_summary.to_csv(separate_summary_path, index=False)
+    atomic_write_csv(separate_summary, separate_summary_path, index=False)
 
     best_frame = separate_summary[
         [
@@ -146,7 +150,7 @@ def run_family_matrix(
         ]
     ].copy()
     best_frame_path = output / "family_best_strategies.csv"
-    best_frame.to_csv(best_frame_path, index=False)
+    atomic_write_csv(best_frame, best_frame_path, index=False)
 
     combo_summary, combo_pair_summary, combo_detail = _build_combo_reports(
         family_artifacts,
@@ -156,15 +160,12 @@ def run_family_matrix(
     combo_summary_path = output / "family_combo_summary.csv"
     combo_pair_summary_path = output / "family_combo_pair_summary.csv"
     combo_detail_path = output / "family_combo_detail.csv"
-    combo_summary.to_csv(combo_summary_path, index=False)
-    combo_pair_summary.to_csv(combo_pair_summary_path, index=False)
-    combo_detail.to_csv(combo_detail_path, index=False)
+    atomic_write_csv(combo_summary, combo_summary_path, index=False)
+    atomic_write_csv(combo_pair_summary, combo_pair_summary_path, index=False)
+    atomic_write_csv(combo_detail, combo_detail_path, index=False)
 
     runbook_path = output / "family_matrix_runbook.md"
-    runbook_path.write_text(
-        _family_matrix_runbook(separate_summary, combo_summary, max_combo_size=max_combo_size),
-        encoding="utf-8",
-    )
+    atomic_write_text(runbook_path, _family_matrix_runbook(separate_summary, combo_summary, max_combo_size=max_combo_size), encoding="utf-8")
 
     return {
         "registry": registry_path,

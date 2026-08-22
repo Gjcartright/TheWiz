@@ -37,6 +37,11 @@ SCRIPT_KEYWORDS = (
     "funding",
     "corrective",
     "recovery",
+    "udemy",
+    "transcript",
+    "evidence",
+    "statistical",
+    "canonical",
 )
 EXCLUDE_PREFIXES = (
     ".venv312/",
@@ -163,6 +168,8 @@ def main() -> int:
         "sha256",
     ]
     _write_csv(manifest_path, rows, manifest_fields)
+    release_index_path = ACTIVE / "quant_release_index.csv"
+    _write_csv(release_index_path, rows, manifest_fields)
 
     include_rows = [row for row in rows if row["disposition"] == "commit" and row["exists"]]
     files_path = ACTIVE / "corrective_baseline_files.csv"
@@ -208,6 +215,23 @@ def main() -> int:
         counts[disposition] = counts.get(disposition, 0) + 1
 
     created_at = datetime.now(timezone.utc)
+    lock_path = ROOT / "uv.lock"
+    lock_tracked = bool(str(_git("ls-files", "--", "uv.lock")).strip())
+    lock_check = subprocess.run(
+        ["uv", "lock", "--check"],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    clean_checkout_reproducible = bool(
+        lock_path.is_file()
+        and lock_tracked
+        and lock_check.returncode == 0
+        and not include_rows
+        and not any(row["disposition"] == "review" for row in rows)
+    )
     manifest = {
         "run_id": f"corrective_baseline_{created_at.strftime('%Y%m%dT%H%M%SZ')}",
         "created_at_utc": created_at.isoformat(),
@@ -221,6 +245,34 @@ def main() -> int:
         "commit_candidate_bytes": sum(int(row["size_bytes"]) for row in include_rows),
         "secret_findings_total": len(findings),
         "secret_blockers": sum(1 for finding in findings if finding["severity"] == "block"),
+        "uv_lock_exists": lock_path.is_file(),
+        "uv_lock_tracked": lock_tracked,
+        "uv_lock_check_passed": lock_check.returncode == 0,
+        "uv_lock_check_output": lock_check.stdout.strip(),
+        "clean_checkout_reproducible": clean_checkout_reproducible,
+        "release_status": (
+            "READY_CLEAN_CHECKOUT"
+            if clean_checkout_reproducible
+            else "BLOCKED_UNCOMMITTED_OR_UNREVIEWED_CANDIDATE"
+        ),
+        "release_blockers": [
+            blocker
+            for blocker, blocked in (
+                ("uv_lock_missing", not lock_path.is_file()),
+                ("uv_lock_untracked", not lock_tracked),
+                ("uv_lock_inconsistent", lock_check.returncode != 0),
+                ("quant_source_changes_uncommitted", bool(include_rows)),
+                (
+                    "unclassified_release_paths_require_review",
+                    any(row["disposition"] == "review" for row in rows),
+                ),
+                (
+                    "secret_scan_blocker",
+                    any(finding["severity"] == "block" for finding in findings),
+                ),
+            )
+            if blocked
+        ],
         "latest_completion_audit": str(
             ACTIVE / "current_wizard_hyperliquid_completion_audit_summary.md"
         ),
@@ -235,6 +287,30 @@ def main() -> int:
     }
     output = ACTIVE / "corrective_baseline_manifest.json"
     output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    release_md = ACTIVE / "quant_release_index.md"
+    release_md.write_text(
+        "\n".join(
+            [
+                "# Quant Release Index",
+                "",
+                "The existing repo is left intact. This index is the reviewed active release boundary.",
+                "Generated evidence and `apps/the-ave` remain outside the quant release.",
+                "",
+                f"- Status: `{manifest['release_status']}`",
+                f"- Commit candidates: `{len(include_rows)}`",
+                f"- Review paths: `{counts.get('review', 0)}`",
+                f"- Excluded paths: `{counts.get('exclude', 0)}`",
+                f"- `uv.lock` exists / tracked / consistent: `{lock_path.is_file()}` / `{lock_tracked}` / `{lock_check.returncode == 0}`",
+                f"- Secret blockers: `{manifest['secret_blockers']}`",
+                f"- Clean-checkout reproducible: `{clean_checkout_reproducible}`",
+                f"- Blockers: `{' ; '.join(manifest['release_blockers']) or 'none'}`",
+                "",
+                "A local passing environment is not clean-checkout proof. The release stays blocked until the reviewed source set and lockfile are committed and CI passes from that commit.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     print(json.dumps(manifest, indent=2))
     return 0
 

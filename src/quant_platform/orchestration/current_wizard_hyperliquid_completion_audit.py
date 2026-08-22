@@ -17,20 +17,12 @@ from quant_platform.active_pipeline import (
     _write_json,
     _write_text,
 )
+from quant_platform.economic_contract import CANONICAL_WIZARD_MODES
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "current_wizard_hyperliquid_completion_audit.v1"
-EXACT_MODES = (
-    "Static (Spread)",
-    "Static (ZScoreR)",
-    "Dyn (Spread)",
-    "Dyn (ZScoreR)",
-    "OU (Spread)",
-    "OU (ZScoreR)",
-    "OU (Optimal)",
-    "Copula",
-)
+SCHEMA_VERSION = "current_wizard_hyperliquid_completion_audit.v2"
+EXACT_MODES = CANONICAL_WIZARD_MODES
 ORIENTATIONS = ("original", "reverse")
 SATISFIED_STATUSES = {"PROVEN", "CONDITIONALLY_PROVEN"}
 

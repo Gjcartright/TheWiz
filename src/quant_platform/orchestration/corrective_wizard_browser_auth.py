@@ -15,6 +15,7 @@ from uuid import uuid4
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 ROOT = Path(__file__).resolve().parents[3]
 OBSERVATION_SCHEMA_VERSION = "wizard_browser_auth_observation.v1"
@@ -542,7 +543,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
     frame.to_csv(temporary, index=False)
-    os.replace(temporary, path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
@@ -553,7 +554,7 @@ def _atomic_text(value: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
     temporary.write_text(value, encoding="utf-8")
-    os.replace(temporary, path)
+    promote_staged_file(temporary, path)
 
 
 def _markdown(summary: dict[str, Any]) -> str:

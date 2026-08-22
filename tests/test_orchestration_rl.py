@@ -30,8 +30,13 @@ from quant_platform.rl.rl_learning_agent import (
 from quant_platform.rl.train_ppo import train_ppo_research_policy
 
 
-def test_orchestrator_dry_run_records_stage_contracts():
-    result = run_orchestrator(stage="discovery", dry_run=True, pair_id="BNB-USD-STX-USD")
+def test_orchestrator_dry_run_records_stage_contracts(tmp_path):
+    result = run_orchestrator(
+        stage="discovery",
+        dry_run=True,
+        pair_id="BNB-USD-STX-USD",
+        root=tmp_path,
+    )
 
     frame = pd.read_csv(result.paths["orchestrator_status"])
 
@@ -62,8 +67,8 @@ def test_langgraph_agent_workflow_dry_run_writes_graph_manifests(tmp_path):
     assert result.summary["graph"] == "langgraph_agent_workflow"
 
 
-def test_orchestrator_report_only_writes_spine_audit():
-    result = run_orchestrator(stage="verification", report_only=True)
+def test_orchestrator_report_only_writes_spine_audit(tmp_path):
+    result = run_orchestrator(stage="verification", report_only=True, root=tmp_path)
 
     frame = pd.read_csv(result.paths["orchestrator_status"])
 
@@ -366,8 +371,8 @@ def test_specialist_scoreboard_covers_exact_mode_families_without_promotion(tmp_
     assert result.paths["specialist_strategy_scoreboard_md"].exists()
 
 
-def test_orchestrator_agents_stage_runs_mini_agent_reports():
-    result = run_orchestrator(stage="agents", report_only=True)
+def test_orchestrator_agents_stage_runs_local_reports_without_external_refresh(tmp_path):
+    result = run_orchestrator(stage="agents", report_only=True, root=tmp_path)
     frame = pd.read_csv(result.paths["orchestrator_status"])
 
     assert "mini_agents" in set(frame["stage"])
@@ -375,7 +380,25 @@ def test_orchestrator_agents_stage_runs_mini_agent_reports():
     assert "orchestrator_assistant" in set(frame["stage"])
     assert "specialist_scoreboard" in set(frame["stage"])
     assert frame.loc[frame["stage"] == "mini_agents", "status"].iloc[0] == "passed"
-    assert frame.loc[frame["stage"] == "youtube_research_brain", "status"].iloc[0] == "passed"
+    assert frame.loc[frame["stage"] == "youtube_research_brain", "status"].iloc[0] == "skipped"
+    assert frame.loc[frame["stage"] == "youtube_research_brain", "reason"].iloc[0] == "report_only_mode"
+
+
+def test_report_only_agents_never_invoke_live_youtube_refresh(tmp_path, monkeypatch):
+    def forbidden_refresh(*args, **kwargs):
+        raise AssertionError("report-only orchestration must not refresh external sources")
+
+    monkeypatch.setattr(
+        "quant_platform.orchestration.nodes.run_youtube_brain_cycle",
+        forbidden_refresh,
+    )
+
+    result = run_orchestrator(stage="agents", report_only=True, root=tmp_path)
+    frame = pd.read_csv(result.paths["orchestrator_status"])
+
+    youtube = frame.loc[frame["stage"] == "youtube_research_brain"].iloc[0]
+    assert youtube["status"] == "skipped"
+    assert youtube["reason"] == "report_only_mode"
 
 
 def test_orchestrator_supreme_team_stage_runs_and_records_checkpoint(tmp_path):

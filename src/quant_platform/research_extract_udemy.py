@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -10,6 +14,7 @@ from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.research_extraction import EXTRACTION_COLUMNS, normalize_extraction_rows
 from quant_platform.research_ingestion import ingest_research_source, mark_research_sources_processed
 from quant_platform.research_knowledge_store import build_research_knowledge_store
+from quant_platform.udemy_transcript_vault import build_udemy_transcript_vault_inventory
 
 
 UDEMY_SOURCE_ID = "udemy_shaun_mcdonogh_review"
@@ -162,25 +167,36 @@ def extract_udemy_research(
 
     for path in paths.values():
         path.parent.mkdir(parents=True, exist_ok=True)
-    lecture_index.to_csv(paths["lecture_index"], index=False)
-    research_rows.to_csv(paths["udemy_research_rows"], index=False)
-    research_rows[research_rows["row_type"] == "feature_idea"].to_csv(paths["udemy_research_features"], index=False)
-    research_rows[research_rows["row_type"].isin(["risk_prior", "regime_condition", "anti_pattern", "execution_warning"])].to_csv(paths["udemy_research_rules"], index=False)
-    research_rows[research_rows["row_type"].isin(["strategy_hint", "mode_preference"])].to_csv(paths["udemy_strategy_hints"], index=False)
-    course_coverage.to_csv(paths["course_coverage"], index=False)
-    audit.to_csv(paths["ingestion_audit"], index=False)
-    paths["ingestion_audit_md"].write_text(_audit_markdown(audit, course_coverage), encoding="utf-8")
-    hypotheses.to_csv(paths["hypotheses"], index=False)
-    context.to_csv(paths["agent_context"], index=False)
+    atomic_write_csv(lecture_index, paths["lecture_index"], index=False)
+    vault = build_udemy_transcript_vault_inventory(
+        root=root, lecture_index_path=paths["lecture_index"]
+    )
+    atomic_write_csv(research_rows, paths["udemy_research_rows"], index=False)
+    atomic_write_csv(research_rows[research_rows["row_type"] == "feature_idea"], paths["udemy_research_features"], index=False)
+    atomic_write_csv(research_rows[research_rows["row_type"].isin(["risk_prior", "regime_condition", "anti_pattern", "execution_warning"])], paths["udemy_research_rules"], index=False)
+    atomic_write_csv(research_rows[research_rows["row_type"].isin(["strategy_hint", "mode_preference"])], paths["udemy_strategy_hints"], index=False)
+    atomic_write_csv(course_coverage, paths["course_coverage"], index=False)
+    atomic_write_csv(audit, paths["ingestion_audit"], index=False)
+    atomic_write_text(paths["ingestion_audit_md"], _audit_markdown(audit, course_coverage), encoding="utf-8")
+    atomic_write_csv(hypotheses, paths["hypotheses"], index=False)
+    atomic_write_csv(context, paths["agent_context"], index=False)
     mark_research_sources_processed("udemy", root=root)
     return CommandResult(
-        paths={key: value for key, value in paths.items() if key not in {"coverage_source", "review_source"}},
+        paths={
+            **{key: value for key, value in paths.items() if key not in {"coverage_source", "review_source"}},
+            **{f"transcript_vault_{key}": value for key, value in vault.paths.items()},
+        },
         summary={
             "lectures": int(len(lecture_index)),
             "direct_transcript_reviews": int(lecture_index["evidence_source"].eq("udemy_transcript").sum()),
             "assistant_fallback_reviews": int(lecture_index["evidence_source"].eq("udemy_ai_assistant").sum()),
             "knowledge_rows": int(len(research_rows)),
             "hypotheses": int(len(hypotheses)),
+            "transcripts_captured": int(vault.summary["transcripts_captured"]),
+            "transcript_captures_pending": int(vault.summary["captures_pending"]),
+            "independent_transcript_rereview_ready": bool(
+                vault.summary["independent_rereview_ready"]
+            ),
             "trade_authorized": False,
         },
     )
@@ -331,7 +347,7 @@ def _audit(frame: pd.DataFrame, *, coverage: Path, review: Path) -> pd.DataFrame
             {"metric": "lectures_reviewed", "value": int(reviewed.sum()), "detail": ""},
             {"metric": "direct_transcript_reviews", "value": int(frame["evidence_source"].eq("udemy_transcript").sum()), "detail": "coverage metadata only"},
             {"metric": "assistant_fallback_reviews", "value": int(frame["evidence_source"].eq("udemy_ai_assistant").sum()), "detail": "preserved as lower-quality provenance"},
-            {"metric": "transcript_text_rows_stored", "value": int(frame["transcript_text_stored"].map(bool).sum()), "detail": "must remain zero"},
+            {"metric": "transcript_text_rows_stored", "value": int(frame["transcript_text_stored"].map(bool).sum()), "detail": "must remain zero in derived knowledge ledger; restricted local vault is separate"},
             {"metric": "live_signal_eligible_rows", "value": int(frame["live_signal_eligible"].map(bool).sum()), "detail": "must remain zero"},
             {"metric": "coverage_sha256", "value": _hash_file(coverage), "detail": str(coverage)},
             {"metric": "review_sha256", "value": _hash_file(review), "detail": str(review)},

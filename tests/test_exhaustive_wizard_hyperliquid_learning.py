@@ -89,7 +89,7 @@ def _write_inputs(root, *, omit_leverage_experiment=False):
                 "replay_blocker": "",
                 "mode_fidelity_status": "local_formula_approximation",
                 "mode_fidelity_reason": "research_only",
-                "math_version": "math-v2",
+                "math_version": "math-v2.1-y-on-x",
                 "trades": 20,
                 "profit_factor": 1.2,
                 "expectancy": 0.01,

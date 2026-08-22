@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import math
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
 import statsmodels.api as sm
+from scipy.stats import norm
 from statsmodels.tsa.stattools import adfuller, coint
 
 from quant_platform.performance_math import MATH_VERSION
@@ -56,24 +56,32 @@ def fit_engle_granger(
     *,
     min_rows: int = 60,
 ) -> EstimatorResult:
-    """Estimate log-price Engle-Granger cointegration with a real p-value."""
+    """Fit the canonical log(Y)-on-log(X) Engle-Granger relation."""
 
     data = _positive_log_prices(price_x, price_y)
     if len(data) < min_rows:
         return _invalid("engle_granger_log_ols", "insufficient_rows", len(data))
     try:
-        design = sm.add_constant(data["log_y"], has_constant="add")
-        regression = sm.OLS(data["log_x"], design).fit(cov_type="HC1")
+        design = sm.add_constant(data["log_x"], has_constant="add")
+        regression = sm.OLS(data["log_y"], design).fit(cov_type="HC1")
         alpha = float(regression.params["const"])
-        hedge_ratio = float(regression.params["log_y"])
-        residual = data["log_x"] - alpha - hedge_ratio * data["log_y"]
-        test_statistic, pvalue, critical_values = coint(data["log_x"], data["log_y"], trend="c", autolag="aic")
+        hedge_ratio = float(regression.params["log_x"])
+        residual = data["log_y"] - alpha - hedge_ratio * data["log_x"]
+        test_statistic, pvalue, critical_values = coint(
+            data["log_y"], data["log_x"], trend="c", autolag="aic"
+        )
         adf_statistic, adf_pvalue, used_lag, *_ = adfuller(residual, regression="c", autolag="AIC")
     except (ValueError, np.linalg.LinAlgError) as exc:
-        return _invalid("engle_granger_log_ols", f"estimation_error:{type(exc).__name__}", len(data))
+        return _invalid(
+            "engle_granger_log_ols", f"estimation_error:{type(exc).__name__}", len(data)
+        )
     values = {
         "alpha": alpha,
         "hedge_ratio": hedge_ratio,
+        "asset_order": "x_then_y",
+        "hedge_ratio_orientation": "beta_y_on_x",
+        "regression_formula": "log_y=alpha+beta_y_on_x*log_x+residual",
+        "residual_formula": "log_y-alpha-beta_y_on_x*log_x",
         "residual": residual.reindex(price_x.index),
         "cointegration_test_statistic": float(test_statistic),
         "cointegration_pvalue": float(pvalue),
@@ -89,7 +97,7 @@ def fit_engle_granger(
         "engle_granger_log_ols",
         MATH_VERSION,
         "valid",
-        "estimated_with_intercept_and_aic_lag_selection",
+        "estimated_y_on_x_with_intercept_and_aic_lag_selection",
         values,
         len(data),
     )
@@ -99,6 +107,8 @@ def fit_ou(spread: pd.Series, *, min_rows: int = 60, delta_t: float = 1.0) -> Es
     """Fit an AR(1) representation of OU and reject non-mean-reverting phi."""
 
     numeric = pd.to_numeric(spread, errors="coerce").dropna()
+    if not math.isfinite(delta_t) or delta_t <= 0.0:
+        return _invalid("ou_ar1_with_intercept", "invalid_delta_t", len(numeric))
     if len(numeric) < min_rows:
         return _invalid("ou_ar1_with_intercept", "insufficient_rows", len(numeric))
     lagged = numeric.shift(1).dropna()
@@ -108,7 +118,9 @@ def fit_ou(spread: pd.Series, *, min_rows: int = 60, delta_t: float = 1.0) -> Es
         intercept = float(model.params.iloc[0])
         phi = float(model.params.iloc[1])
     except (ValueError, np.linalg.LinAlgError, IndexError) as exc:
-        return _invalid("ou_ar1_with_intercept", f"estimation_error:{type(exc).__name__}", len(numeric))
+        return _invalid(
+            "ou_ar1_with_intercept", f"estimation_error:{type(exc).__name__}", len(numeric)
+        )
     if not 0.0 < phi < 1.0:
         return EstimatorResult(
             "ou_ar1_with_intercept",
@@ -122,7 +134,9 @@ def fit_ou(spread: pd.Series, *, min_rows: int = 60, delta_t: float = 1.0) -> Es
     half_life = math.log(2.0) / theta
     mu = intercept / (1.0 - phi)
     innovation_sigma = float(np.std(model.resid, ddof=1))
-    continuous_sigma = innovation_sigma * math.sqrt((2.0 * theta) / max(1.0 - phi**2, np.finfo(float).eps))
+    continuous_sigma = innovation_sigma * math.sqrt(
+        (2.0 * theta) / max(1.0 - phi**2, np.finfo(float).eps)
+    )
     confidence = model.conf_int(alpha=0.05)
     return EstimatorResult(
         "ou_ar1_with_intercept",
@@ -152,7 +166,9 @@ def estimate_hurst_dfa(series: pd.Series, *, min_rows: int = 128) -> EstimatorRe
         return _invalid("hurst_dfa_linear", "insufficient_rows", len(values))
     profile = np.cumsum(values - values.mean())
     maximum_scale = len(values) // 4
-    scales = np.unique(np.floor(np.logspace(np.log10(4), np.log10(maximum_scale), num=12)).astype(int))
+    scales = np.unique(
+        np.floor(np.logspace(np.log10(4), np.log10(maximum_scale), num=12)).astype(int)
+    )
     fluctuations: list[float] = []
     valid_scales: list[int] = []
     for scale in scales:
@@ -188,11 +204,15 @@ def estimate_hurst_dfa(series: pd.Series, *, min_rows: int = 128) -> EstimatorRe
     )
 
 
-def fit_ecm(price_x: pd.Series, price_y: pd.Series, engle_granger: EstimatorResult) -> EstimatorResult:
+def fit_ecm(
+    price_x: pd.Series, price_y: pd.Series, engle_granger: EstimatorResult
+) -> EstimatorResult:
     """Estimate two robust single-lag error-correction equations."""
 
     if engle_granger.validity_status != "valid":
-        return _invalid("ecm_two_equation_hc1", "cointegration_estimate_invalid", engle_granger.lookback_rows)
+        return _invalid(
+            "ecm_two_equation_hc1", "cointegration_estimate_invalid", engle_granger.lookback_rows
+        )
     data = _positive_log_prices(price_x, price_y)
     residual = engle_granger.values["residual"].reindex(data.index)
     design = pd.DataFrame(
@@ -211,13 +231,17 @@ def fit_ecm(price_x: pd.Series, price_y: pd.Series, engle_granger: EstimatorResu
         model_x = sm.OLS(design["dx"], regressors).fit(cov_type="HC1")
         model_y = sm.OLS(design["dy"], regressors).fit(cov_type="HC1")
     except (ValueError, np.linalg.LinAlgError) as exc:
-        return _invalid("ecm_two_equation_hc1", f"estimation_error:{type(exc).__name__}", len(design))
+        return _invalid(
+            "ecm_two_equation_hc1", f"estimation_error:{type(exc).__name__}", len(design)
+        )
     gamma_x = float(model_x.params["ec_term"])
     gamma_y = float(model_y.params["ec_term"])
     pvalue_x = float(model_x.pvalues["ec_term"])
     pvalue_y = float(model_y.pvalues["ec_term"])
-    supported_x = pvalue_x < 0.05 and gamma_x < 0.0
-    supported_y = pvalue_y < 0.05 and gamma_y > 0.0
+    # e_t = log(Y_t) - alpha - beta*log(X_t). If e_t is positive, Y is
+    # rich relative to X, so correction implies X rises and/or Y falls.
+    supported_x = pvalue_x < 0.05 and gamma_x > 0.0
+    supported_y = pvalue_y < 0.05 and gamma_y < 0.0
     strength = (float(supported_x) + float(supported_y)) / 2.0
     return EstimatorResult(
         "ecm_two_equation_hc1",
@@ -231,6 +255,9 @@ def fit_ecm(price_x: pd.Series, price_y: pd.Series, engle_granger: EstimatorResu
             "gamma_y_standard_error": float(model_y.bse["ec_term"]),
             "gamma_x_pvalue": pvalue_x,
             "gamma_y_pvalue": pvalue_y,
+            "error_term_formula": "log_y-alpha-beta_y_on_x*log_x",
+            "expected_gamma_x_sign": "positive",
+            "expected_gamma_y_sign": "negative",
             "ecm_strength": strength,
             "ecm_strength_method": "share_of_significant_expected_sign_adjustment_coefficients",
         },
@@ -238,7 +265,9 @@ def fit_ecm(price_x: pd.Series, price_y: pd.Series, engle_granger: EstimatorResu
     )
 
 
-def fit_gaussian_copula(return_x: pd.Series, return_y: pd.Series, *, min_rows: int = 60) -> EstimatorResult:
+def fit_gaussian_copula(
+    return_x: pd.Series, return_y: pd.Series, *, min_rows: int = 60
+) -> EstimatorResult:
     """Fit a Gaussian copula and calculate actual conditional CDF values."""
 
     data = pd.concat(
@@ -268,7 +297,9 @@ def fit_gaussian_copula(return_x: pd.Series, return_y: pd.Series, *, min_rows: i
             "rho": rho,
             "u1_given_u2": conditional_x.reindex(return_x.index),
             "u2_given_u1": conditional_y.reindex(return_x.index),
-            "conditional_probability_distortion": (conditional_x - conditional_y).reindex(return_x.index),
+            "conditional_probability_distortion": (conditional_x - conditional_y).reindex(
+                return_x.index
+            ),
             "lower_tail_dependence": 0.0,
             "upper_tail_dependence": 0.0,
         },
@@ -311,8 +342,12 @@ def rolling_gaussian_copula_conditionals(
         if row_index not in normal_x.index:
             continue
         denominator = math.sqrt(1.0 - rho**2)
-        conditional_x = float(norm.cdf((normal_x.loc[row_index] - rho * normal_y.loc[row_index]) / denominator))
-        conditional_y = float(norm.cdf((normal_y.loc[row_index] - rho * normal_x.loc[row_index]) / denominator))
+        conditional_x = float(
+            norm.cdf((normal_x.loc[row_index] - rho * normal_y.loc[row_index]) / denominator)
+        )
+        conditional_y = float(
+            norm.cdf((normal_y.loc[row_index] - rho * normal_x.loc[row_index]) / denominator)
+        )
         output.loc[row_index] = [rho, conditional_x, conditional_y, conditional_x - conditional_y]
     return output
 
@@ -326,14 +361,21 @@ def attach_math_v2_statistics(
     """Attach namespaced Math V2 fields without promoting legacy proxies."""
 
     if not rows:
-        return {"math_version": MATH_VERSION, "status": "invalid", "reason": "empty_history", "audit": []}
+        return {
+            "math_version": MATH_VERSION,
+            "status": "invalid",
+            "reason": "empty_history",
+            "audit": [],
+        }
     frame = pd.DataFrame(rows)
     price_x = pd.to_numeric(frame.get("price_x"), errors="coerce")
     price_y = pd.to_numeric(frame.get("price_y"), errors="coerce")
     engle_granger = fit_engle_granger(price_x, price_y)
     legacy_spread = pd.to_numeric(frame.get("spread"), errors="coerce")
     residual = engle_granger.values.get("residual")
-    analysis_spread = residual.reindex(frame.index) if isinstance(residual, pd.Series) else legacy_spread
+    analysis_spread = (
+        residual.reindex(frame.index) if isinstance(residual, pd.Series) else legacy_spread
+    )
     frame["math_v2_log_spread"] = analysis_spread
     zscores = rolling_zscore_variants(
         analysis_spread,
@@ -370,12 +412,15 @@ def attach_math_v2_statistics(
     results = [engle_granger, ou, hurst, ecm, copula]
     return {
         "math_version": MATH_VERSION,
-        "status": "valid" if all(result.validity_status == "valid" for result in results) else "partial",
+        "status": "valid"
+        if all(result.validity_status == "valid" for result in results)
+        else "partial",
         "reason": ";".join(
             f"{result.method_id}:{result.validity_reason}"
             for result in results
             if result.validity_status != "valid"
-        ) or "all_estimators_valid",
+        )
+        or "all_estimators_valid",
         "audit": [_audit_row(result, frame) for result in results],
         "zscore_convention_status": "pending_wizard_parity",
     }
@@ -416,10 +461,11 @@ def _audit_row(result: EstimatorResult, frame: pd.DataFrame) -> dict[str, Any]:
         "input_start": str(timestamps.iloc[0]) if not timestamps.empty else "",
         "input_end": str(timestamps.iloc[-1]) if not timestamps.empty else "",
         "lookback_rows": result.lookback_rows,
-        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "computed_at": datetime.now(UTC).isoformat(),
         "point_in_time": False,
         "validity_status": result.validity_status,
-        "validity_reason": result.validity_reason + ";batch_fit_requires_walk_forward_for_signal_use",
+        "validity_reason": result.validity_reason
+        + ";batch_fit_requires_walk_forward_for_signal_use",
     }
 
 

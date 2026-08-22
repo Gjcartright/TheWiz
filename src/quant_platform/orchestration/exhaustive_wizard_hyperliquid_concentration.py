@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_concentration.v1"
@@ -194,8 +197,11 @@ def build_exhaustive_wizard_hyperliquid_concentration(
     snapshot_inputs_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = snapshot_inputs_dir / f"{name}{source.suffix or '.dat'}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(
+            source,
+            snapshot_inputs_dir,
+            artifact_name=name,
+        )
         snapshot_inputs[name] = target
 
     dimension_rows: list[dict[str, object]] = []
@@ -311,8 +317,8 @@ def build_exhaustive_wizard_hyperliquid_concentration(
         (dimension_frame, paths["dimensions"], paths["snapshot_dimensions"]),
         (contributor_frame, paths["contributors"], paths["snapshot_contributors"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = _status_counts(status_frame, "concentration_status")
     summary: dict[str, object] = {
@@ -352,10 +358,10 @@ def build_exhaustive_wizard_hyperliquid_concentration(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary, cohort_frame, dimension_frame)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

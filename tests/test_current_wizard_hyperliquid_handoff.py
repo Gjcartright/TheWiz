@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_session,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
     build_current_wizard_hyperliquid_operating_cadence,
 )
@@ -47,10 +50,14 @@ from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
     build_current_wizard_hyperliquid_storage_reclamation_plan,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_validation import (
+    _frozen_refresh_stage_paths,
     validate_current_wizard_hyperliquid_chain,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_walkforward import (
     run_current_wizard_hyperliquid_walkforward,
+)
+from quant_platform.orchestration.effect_authority import (
+    current_publication_authority,
 )
 from quant_platform.orchestration.snapshot_lineage import (
     verified_snapshot_reference,
@@ -74,9 +81,9 @@ def _write_inputs(root: Path) -> None:
         ),
         encoding="utf-8",
     )
-    pd.DataFrame(
-        [{"check": "fixture_refresh_complete", "status": "PASS"}]
-    ).to_csv(active / "exhaustive_wizard_api_refresh_validation.csv", index=False)
+    pd.DataFrame([{"check": "fixture_refresh_complete", "status": "PASS"}]).to_csv(
+        active / "exhaustive_wizard_api_refresh_validation.csv", index=False
+    )
     pd.DataFrame(
         [
             {
@@ -114,18 +121,14 @@ def _write_inputs(root: Path) -> None:
                 "api_returns_total_max": -0.2,
             },
         ]
-    ).to_csv(
-        active / "exhaustive_wizard_api_refresh_pair_detail_queue.csv", index=False
-    )
+    ).to_csv(active / "exhaustive_wizard_api_refresh_pair_detail_queue.csv", index=False)
     pd.DataFrame(
         [
             {"pair_group_key": READY_PAIR, "api_exact_mode": "Copula"},
             {"pair_group_key": READY_PAIR, "api_exact_mode": "Dyn (ZScoreR)"},
             {"pair_group_key": BLOCKED_PAIR, "api_exact_mode": "Static (Spread)"},
         ]
-    ).to_csv(
-        active / "exhaustive_wizard_api_refresh_source_accounting.csv", index=False
-    )
+    ).to_csv(active / "exhaustive_wizard_api_refresh_source_accounting.csv", index=False)
     pd.DataFrame(
         [
             {
@@ -147,8 +150,7 @@ def _write_inputs(root: Path) -> None:
                 "hyperliquid_only_isolated": False,
                 "hyperliquid_inventory_checked_at": "2026-08-08T10:11:20Z",
                 "hyperliquid_mapping_blocker": (
-                    "missing_hyperliquid_testnet_perp:AAA;"
-                    "missing_hyperliquid_testnet_perp:BBB"
+                    "missing_hyperliquid_testnet_perp:AAA;missing_hyperliquid_testnet_perp:BBB"
                 ),
             },
         ]
@@ -172,9 +174,9 @@ def _write_inputs(root: Path) -> None:
         ),
         encoding="utf-8",
     )
-    pd.DataFrame(
-        [{"endpoint": name, "status": "COMPLETED"} for name in range(6)]
-    ).to_csv(active / "wizard_pair_detail_api_pilot_manifest.csv", index=False)
+    pd.DataFrame([{"endpoint": name, "status": "COMPLETED"} for name in range(6)]).to_csv(
+        active / "wizard_pair_detail_api_pilot_manifest.csv", index=False
+    )
     pd.DataFrame(
         [
             {"field_group": "backtest_return", "status": "FOUND"},
@@ -196,9 +198,7 @@ def _write_inputs(root: Path) -> None:
                 "pair_detail_evidence_paths": "historical.json",
             }
         ]
-    ).to_csv(
-        active / "exhaustive_wizard_pair_detail_capture_progress.csv", index=False
-    )
+    ).to_csv(active / "exhaustive_wizard_pair_detail_capture_progress.csv", index=False)
 
 
 def test_current_handoff_accounts_all_pairs_modes_orientations_and_blockers(
@@ -222,26 +222,26 @@ def test_current_handoff_accounts_all_pairs_modes_orientations_and_blockers(
     ready = pairs[pairs["pair_group_key"].eq(READY_PAIR)].iloc[0]
     blocked = pairs[pairs["pair_group_key"].eq(BLOCKED_PAIR)].iloc[0]
     assert ready["api_schema_pilot_pair"]
-    assert ready["vendor_pair_detail_status"] == (
-        "API_ANALYTICS_COMPLETE_DASHBOARD_FIELDS_MISSING"
-    )
+    assert ready["vendor_pair_detail_status"] == ("API_ANALYTICS_COMPLETE_DASHBOARD_FIELDS_MISSING")
     assert "missing_ecm_x" in ready["vendor_pair_detail_blocker"]
     assert ready["local_research_status"] == "READY_FOR_POINT_IN_TIME_HISTORY"
     assert blocked["local_research_status"] == "BLOCKED_HYPERLIQUID_MAPPING"
     assert blocked["local_research_blocker"]
 
-    assert len(experiments) == 32
-    assert experiments["experiment_id"].nunique() == 32
+    assert len(experiments) == 28
+    assert experiments["experiment_id"].nunique() == 28
     counts = experiments["experiment_status"].value_counts().to_dict()
     assert counts["READY_FOR_POINT_IN_TIME_HISTORY"] == 14
-    assert counts["NOT_APPLICABLE_VENDOR_MODE"] == 2
-    assert counts["BLOCKED_HYPERLIQUID_MAPPING"] == 16
+    assert counts.get("NOT_APPLICABLE_VENDOR_MODE", 0) == 0
+    assert counts["BLOCKED_HYPERLIQUID_MAPPING"] == 14
     assert len(history) == 2
     assert history["history_request_status"].eq("READY_TO_FETCH").sum() == 1
     assert len(assets) == 2
     assert validation["status"].eq("PASS").all()
     assert result.summary["pair_groups_accounted"] == 2
-    assert result.summary["planned_experiments"] == 32
+    assert result.summary["planned_experiments"] == 28
+    assert result.summary["economic_contract_version"] == ("wizard-seven-mode-economic-contract.v2")
+    assert len(result.summary["exact_modes"]) == 7
     assert result.summary["promotion_authority"] is False
     assert result.summary["live_trading_authorized"] is False
     assert Path(result.paths["snapshot_manifest"]).exists()
@@ -349,19 +349,17 @@ def test_bounded_current_history_and_replay_account_for_every_cell(tmp_path: Pat
     results = pd.read_csv(replay.paths["results"], keep_default_na=False)
     validation = pd.read_csv(replay.paths["validation"], keep_default_na=False)
     ready_results = results.loc[results["pair_group_key"].eq(READY_PAIR)]
-    completed = ready_results.loc[
-        ready_results["replay_status"].eq("RESEARCH_REPLAY_COMPLETE")
-    ]
+    completed = ready_results.loc[ready_results["replay_status"].eq("RESEARCH_REPLAY_COMPLETE")]
 
-    assert len(results) == 32
-    assert results["experiment_id"].nunique() == 32
+    assert len(results) == 28
+    assert results["experiment_id"].nunique() == 28
     assert len(completed) == 14
-    assert ready_results["replay_status"].eq(
-        "NOT_APPLICABLE_VENDOR_MODE"
-    ).sum() == 2
-    assert results.loc[results["pair_group_key"].eq(BLOCKED_PAIR), "replay_status"].eq(
-        "BLOCKED_HYPERLIQUID_MAPPING"
-    ).all()
+    assert ready_results["replay_status"].eq("NOT_APPLICABLE_VENDOR_MODE").sum() == 0
+    assert (
+        results.loc[results["pair_group_key"].eq(BLOCKED_PAIR), "replay_status"]
+        .eq("BLOCKED_HYPERLIQUID_MAPPING")
+        .all()
+    )
     assert completed["train_rows"].eq(630).all()
     assert completed["test_rows"].eq(270).all()
     assert completed["canonical_replay_leverage"].eq(1.0).all()
@@ -369,27 +367,28 @@ def test_bounded_current_history_and_replay_account_for_every_cell(tmp_path: Pat
     assert not results["live_trading_authorized"].astype(bool).any()
     assert validation["status"].eq("PASS").all()
     assert replay.summary["acceptance_eligible_replays"] == 0
-    assert replay.summary["replay_status_count_total"] == 32
-    assert sum(replay.summary["replay_status_counts"].values()) == 32
+    assert replay.summary["replay_status_count_total"] == 28
+    assert sum(replay.summary["replay_status_counts"].values()) == 28
+    assert replay.summary["settings_version"] == ("current_local_standardized_math_v2.v4_y_on_x")
+    assert replay.summary["economic_contract_version"] == ("wizard-seven-mode-economic-contract.v2")
+    assert len(replay.summary["math_implementation_hashes"]) == 7
+    assert all(len(value) == 64 for value in replay.summary["math_implementation_hashes"].values())
 
     static = completed.loc[
-        completed["exact_mode"].eq("Static (ZScoreR)")
-        & completed["orientation"].eq("original")
+        completed["exact_mode"].eq("Static (ZScoreR)") & completed["orientation"].eq("original")
     ].iloc[0]
     dynamic = completed.loc[
-        completed["exact_mode"].eq("Dyn (ZScoreR)")
-        & completed["orientation"].eq("original")
+        completed["exact_mode"].eq("Dyn (ZScoreR)") & completed["orientation"].eq("original")
     ].iloc[0]
     reverse_static = completed.loc[
-        completed["exact_mode"].eq("Static (ZScoreR)")
-        & completed["orientation"].eq("reverse")
+        completed["exact_mode"].eq("Static (ZScoreR)") & completed["orientation"].eq("reverse")
     ].iloc[0]
     static_settings = json.loads(static["settings_json"])
     dynamic_settings = json.loads(dynamic["settings_json"])
     assert static_settings["entry_long_position"] == "short_x_long_y"
     assert static_settings["entry_short_position"] == "long_x_short_y"
-    assert dynamic_settings["entry_long_position"] == "long_x_short_y"
-    assert dynamic_settings["entry_short_position"] == "short_x_long_y"
+    assert dynamic_settings["entry_long_position"] == "short_x_long_y"
+    assert dynamic_settings["entry_short_position"] == "long_x_short_y"
     assert not np.isclose(float(static["hedge_ratio"]), float(reverse_static["hedge_ratio"]))
 
 
@@ -478,9 +477,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
                         "blocker": "",
                     }
                 )
-    pd.DataFrame(l2_rows).to_csv(
-        processed / "hyperliquid_l2_slippage_samples.csv", index=False
-    )
+    pd.DataFrame(l2_rows).to_csv(processed / "hyperliquid_l2_slippage_samples.csv", index=False)
 
     cached_dir = tmp_path / "reports" / "snapshots" / "funding_cache"
     cached_dir.mkdir(parents=True)
@@ -494,9 +491,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         for timestamp in pd.date_range(end=cutoff, periods=900, freq="1D", tz="UTC")
     ]
     cached_eth.write_text(
-        json.dumps(
-            {"coin": "ETH", "funding": cached_records, "fetch_complete": True}
-        ),
+        json.dumps({"coin": "ETH", "funding": cached_records, "fetch_complete": True}),
         encoding="utf-8",
     )
     pd.DataFrame(
@@ -509,16 +504,15 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
             }
         ]
     ).to_csv(
-        tmp_path
-        / "reports"
-        / "active"
-        / "exhaustive_wizard_hyperliquid_funding_asset_results.csv",
+        tmp_path / "reports" / "active" / "exhaustive_wizard_hyperliquid_funding_asset_results.csv",
         index=False,
     )
     network_calls: list[str] = []
 
     def funding_fetcher(*, coin, days, output_dir, end_time):
         del days
+        assert current_external_effect_session() is not None
+        assert current_publication_authority() is not None
         network_calls.append(coin)
         timestamps = pd.date_range(end=end_time, periods=900, freq="1D", tz="UTC")
         records = [
@@ -550,15 +544,11 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     blocked = pairs.loc[pairs["pair_group_key"].eq(BLOCKED_PAIR)].iloc[0]
 
     assert len(pairs) == 2
-    assert len(experiments) == 32
+    assert len(experiments) == 28
     assert len(assets) == 2
     assert network_calls == ["WIF"]
-    assert assets.set_index("asset").loc["ETH", "funding_source"] == (
-        "reused_point_in_time_cache"
-    )
-    assert assets.set_index("asset").loc["WIF", "funding_source"] == (
-        "hyperliquid_public_api"
-    )
+    assert assets.set_index("asset").loc["ETH", "funding_source"] == ("reused_point_in_time_cache")
+    assert assets.set_index("asset").loc["WIF", "funding_source"] == ("hyperliquid_public_api")
     assert assets["post_cutoff_rows"].eq(0).all()
     assert ready["strict_l2_samples_x"] == 12
     assert ready["strict_l2_samples_y"] == 12
@@ -567,12 +557,10 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     assert ready["cost_evidence_status"] == "STRICT_COST_EVIDENCE_READY"
     assert ready["cost_acceptance_ready"]
     assert blocked["cost_evidence_status"] == "DEFERRED_NOT_SELECTED"
-    assert experiments["cost_replay_status"].eq(
-        "READY_FOR_OBSERVED_COST_RESEARCH"
-    ).sum() == 14
+    assert experiments["cost_replay_status"].eq("READY_FOR_OBSERVED_COST_RESEARCH").sum() == 14
     assert validation["status"].eq("PASS").all()
     assert result.summary["pair_groups_accounted"] == 2
-    assert result.summary["experiments_accounted"] == 32
+    assert result.summary["experiments_accounted"] == 28
     assert result.summary["funding_assets_reused_from_cache"] == 1
     assert result.summary["funding_assets_fetched_from_network"] == 1
     assert result.summary["live_trading_authorized"] is False
@@ -586,7 +574,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     complete = replay_rows.loc[
         replay_rows["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE")
     ]
-    assert len(replay_rows) == 32
+    assert len(replay_rows) == 28
     assert len(complete) == 14
     assert complete["funding_evidence_attached"].all()
     assert complete["slippage_evidence_attached"].all()
@@ -601,14 +589,10 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         now=datetime(2026, 8, 8, 15, 0, tzinfo=timezone.utc),
     )
     walk_status = pd.read_csv(walkforward.paths["status"], keep_default_na=False)
-    walk_candidates = pd.read_csv(
-        walkforward.paths["candidates"], keep_default_na=False
-    )
+    walk_candidates = pd.read_csv(walkforward.paths["candidates"], keep_default_na=False)
     walk_folds = pd.read_csv(walkforward.paths["folds"], keep_default_na=False)
-    walk_validation = pd.read_csv(
-        walkforward.paths["validation"], keep_default_na=False
-    )
-    assert len(walk_status) == 32
+    walk_validation = pd.read_csv(walkforward.paths["validation"], keep_default_na=False)
+    assert len(walk_status) == 28
     assert len(walk_candidates) == 14
     assert len(walk_folds) == 70
     assert walk_folds.groupby("experiment_id").size().eq(5).all()
@@ -618,7 +602,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     assert walk_status["acceptance_status"].eq("BLOCKED").all()
     assert not walk_status["live_trading_authorized"].astype(bool).any()
     assert walk_validation["status"].eq("PASS").all()
-    assert walkforward.summary["experiments_accounted"] == 32
+    assert walkforward.summary["experiments_accounted"] == 28
     assert walkforward.summary["folds_complete"] == 70
     assert walkforward.summary["selection_hindsight_used_for_fold_execution"] is False
 
@@ -629,10 +613,8 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     regime_status = pd.read_csv(regimes.paths["status"], keep_default_na=False)
     regime_bars = pd.read_csv(regimes.paths["bars"], keep_default_na=False)
     regime_trades = pd.read_csv(regimes.paths["trades"], keep_default_na=False)
-    regime_validation = pd.read_csv(
-        regimes.paths["validation"], keep_default_na=False
-    )
-    assert len(regime_status) == 32
+    regime_validation = pd.read_csv(regimes.paths["validation"], keep_default_na=False)
+    assert len(regime_status) == 28
     assert regime_status["acceptance_status"].eq("BLOCKED").all()
     assert not regime_status["live_trading_authorized"].astype(bool).any()
     if not regime_bars.empty:
@@ -640,7 +622,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     if not regime_trades.empty:
         assert not regime_trades["regime_uses_future_data"].astype(bool).any()
     assert regime_validation["status"].eq("PASS").all()
-    assert regimes.summary["experiments_accounted"] == 32
+    assert regimes.summary["experiments_accounted"] == 28
     assert regimes.summary["point_in_time_regime_thresholds"] is True
 
     robustness = run_current_wizard_hyperliquid_robustness(
@@ -648,57 +630,40 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         now=datetime(2026, 8, 8, 16, 0, tzinfo=timezone.utc),
     )
     robust_status = pd.read_csv(robustness.paths["status"], keep_default_na=False)
-    robust_candidates = pd.read_csv(
-        robustness.paths["candidates"], keep_default_na=False
-    )
-    robust_scenarios = pd.read_csv(
-        robustness.paths["scenarios"], keep_default_na=False
-    )
+    robust_candidates = pd.read_csv(robustness.paths["candidates"], keep_default_na=False)
+    robust_scenarios = pd.read_csv(robustness.paths["scenarios"], keep_default_na=False)
     robust_folds = pd.read_csv(robustness.paths["folds"], keep_default_na=False)
-    robust_validation = pd.read_csv(
-        robustness.paths["validation"], keep_default_na=False
-    )
-    assert len(robust_status) == 32
+    robust_validation = pd.read_csv(robustness.paths["validation"], keep_default_na=False)
+    assert len(robust_status) == 28
     assert len(robust_scenarios) == len(robust_candidates) * 11
     assert len(robust_folds) == len(robust_scenarios) * 5
     if not robust_candidates.empty:
         assert robust_candidates["baseline_reconciliation_error"].le(1e-10).all()
-    assert not robust_folds.get(
-        "fit_uses_test_data", pd.Series(dtype=bool)
-    ).astype(bool).any()
+    assert not robust_folds.get("fit_uses_test_data", pd.Series(dtype=bool)).astype(bool).any()
     assert robust_status["acceptance_status"].eq("BLOCKED").all()
     assert not robust_status["live_trading_authorized"].astype(bool).any()
     assert robust_validation["status"].eq("PASS").all()
-    assert robustness.summary["experiments_accounted"] == 32
+    assert robustness.summary["experiments_accounted"] == 28
 
     concentration = build_current_wizard_hyperliquid_concentration(
         root=tmp_path,
         now=datetime(2026, 8, 8, 16, 15, tzinfo=timezone.utc),
     )
-    concentration_status = pd.read_csv(
-        concentration.paths["status"], keep_default_na=False
-    )
-    concentration_cohorts = pd.read_csv(
-        concentration.paths["cohorts"], keep_default_na=False
-    )
-    concentration_validation = pd.read_csv(
-        concentration.paths["validation"], keep_default_na=False
-    )
-    assert len(concentration_status) == 32
-    assert concentration_status["experiment_id"].nunique() == 32
+    concentration_status = pd.read_csv(concentration.paths["status"], keep_default_na=False)
+    concentration_cohorts = pd.read_csv(concentration.paths["cohorts"], keep_default_na=False)
+    concentration_validation = pd.read_csv(concentration.paths["validation"], keep_default_na=False)
+    assert len(concentration_status) == 28
+    assert concentration_status["experiment_id"].nunique() == 28
     assert len(concentration_cohorts) == 3
     assert concentration_status["acceptance_status"].eq("BLOCKED").all()
     assert not concentration_status["live_trading_authorized"].astype(bool).any()
     assert concentration_validation["status"].eq("PASS").all()
-    assert concentration.summary["experiments_accounted"] == 32
+    assert concentration.summary["experiments_accounted"] == 28
     assert concentration.summary["live_trading_authorized"] is False
     assert set(concentration.summary["input_snapshot_modes"].values()) == {
         "verified_upstream_reference"
     }
-    assert all(
-        "/inputs/" not in path
-        for path in concentration.summary["input_snapshots"].values()
-    )
+    assert all("/inputs/" not in path for path in concentration.summary["input_snapshots"].values())
     assert concentration.summary["referenced_upstream_bytes"] > 0
     assert concentration.summary["locally_copied_input_bytes"] == 0
 
@@ -706,17 +671,11 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         root=tmp_path,
         now=datetime(2026, 8, 8, 16, 30, tzinfo=timezone.utc),
     )
-    attribution_rows = pd.read_csv(
-        attribution.paths["attribution"], keep_default_na=False
-    )
-    attribution_routes = pd.read_csv(
-        attribution.paths["route_index"], keep_default_na=False
-    )
-    attribution_validation = pd.read_csv(
-        attribution.paths["validation"], keep_default_na=False
-    )
-    assert len(attribution_rows) == 32
-    assert len(attribution_routes) == 32
+    attribution_rows = pd.read_csv(attribution.paths["attribution"], keep_default_na=False)
+    attribution_routes = pd.read_csv(attribution.paths["route_index"], keep_default_na=False)
+    attribution_validation = pd.read_csv(attribution.paths["validation"], keep_default_na=False)
+    assert len(attribution_rows) == 28
+    assert len(attribution_routes) == 28
     assert attribution_routes["experiment_id"].is_unique
     assert set(attribution_routes.columns) == {
         "experiment_id",
@@ -726,19 +685,18 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         "asset_y",
         "overall_research_rank",
     }
-    assert attribution_rows["experiment_id"].nunique() == 32
+    assert attribution_rows["experiment_id"].nunique() == 28
     assert attribution_rows["first_blocker"].astype(str).ne("").all()
     assert attribution_rows["next_action"].astype(str).ne("").all()
     survivors = attribution_rows["one_x_research_survivor"].astype(bool)
     assert (
-        ~survivors
-        | attribution_rows["walkforward_status"].eq("PASS_RESEARCH_WALK_FORWARD")
+        ~survivors | attribution_rows["walkforward_status"].eq("PASS_RESEARCH_WALK_FORWARD")
     ).all()
     assert not attribution_rows["testnet_order_authority"].astype(bool).any()
     assert attribution_rows["acceptance_status"].eq("BLOCKED").all()
     assert not attribution_rows["live_trading_authorized"].astype(bool).any()
     assert attribution_validation["status"].eq("PASS").all()
-    assert attribution.summary["experiments_accounted"] == 32
+    assert attribution.summary["experiments_accounted"] == 28
     assert set(attribution.summary["input_snapshot_modes"].values()) == {
         "verified_upstream_reference"
     }
@@ -750,20 +708,20 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     assert attribution.summary["locally_copied_input_bytes"] == 0
     assert attribution.summary["schema_version"].endswith(".v1")
     assert "route_index" not in attribution.summary["artifacts"]
-    assert json.loads(
-        attribution.paths["manifest"].read_text(encoding="utf-8")
-    ) == attribution.summary
-    route_manifest = json.loads(
-        attribution.paths["route_manifest"].read_text(encoding="utf-8")
+    assert (
+        json.loads(attribution.paths["manifest"].read_text(encoding="utf-8")) == attribution.summary
     )
-    assert route_manifest["route_index_rows"] == 32
-    assert route_manifest["route_index_unique_experiment_ids"] == 32
-    assert route_manifest["source_failure_attribution_id"] == attribution.summary[
-        "failure_attribution_id"
-    ]
-    assert route_manifest["route_index_sha256"] == sha256(
-        attribution.paths["route_index"].read_bytes()
-    ).hexdigest()
+    route_manifest = json.loads(attribution.paths["route_manifest"].read_text(encoding="utf-8"))
+    assert route_manifest["route_index_rows"] == 28
+    assert route_manifest["route_index_unique_experiment_ids"] == 28
+    assert (
+        route_manifest["source_failure_attribution_id"]
+        == attribution.summary["failure_attribution_id"]
+    )
+    assert (
+        route_manifest["route_index_sha256"]
+        == sha256(attribution.paths["route_index"].read_bytes()).hexdigest()
+    )
     assert route_manifest["testnet_order_authority"] is False
     assert route_manifest["live_trading_authorized"] is False
 
@@ -772,23 +730,17 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         now=datetime(2026, 8, 8, 17, 0, tzinfo=timezone.utc),
     )
     leverage_status = pd.read_csv(leverage.paths["status"], keep_default_na=False)
-    leverage_candidates = pd.read_csv(
-        leverage.paths["candidates"], keep_default_na=False
-    )
-    leverage_scenarios = pd.read_csv(
-        leverage.paths["scenarios"], keep_default_na=False
-    )
-    leverage_validation = pd.read_csv(
-        leverage.paths["validation"], keep_default_na=False
-    )
-    assert len(leverage_status) == 32
-    assert leverage_status["experiment_id"].nunique() == 32
+    leverage_candidates = pd.read_csv(leverage.paths["candidates"], keep_default_na=False)
+    leverage_scenarios = pd.read_csv(leverage.paths["scenarios"], keep_default_na=False)
+    leverage_validation = pd.read_csv(leverage.paths["validation"], keep_default_na=False)
+    assert len(leverage_status) == 28
+    assert leverage_status["experiment_id"].nunique() == 28
     assert len(leverage_scenarios) == len(leverage_candidates) * 240
     assert leverage_status["acceptance_status"].eq("BLOCKED").all()
     assert not leverage_status["testnet_order_authority"].astype(bool).any()
     assert not leverage_status["live_trading_authorized"].astype(bool).any()
     assert leverage_validation["status"].eq("PASS").all()
-    assert leverage.summary["experiments_accounted"] == 32
+    assert leverage.summary["experiments_accounted"] == 28
     assert set(leverage.summary["input_snapshot_modes"].values()) == {
         "verified_upstream_reference",
         "local_external_evidence_copy",
@@ -810,12 +762,10 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         now=datetime(2026, 8, 8, 17, 15, tzinfo=timezone.utc),
     )
     learning_rows = pd.read_csv(learning.paths["ledger"], keep_default_na=False)
-    learning_validation = pd.read_csv(
-        learning.paths["validation"], keep_default_na=False
-    )
-    assert len(learning_rows) == 32
-    assert learning_rows["experiment_id"].nunique() == 32
-    assert learning_rows["learning_record_id"].nunique() == 32
+    learning_validation = pd.read_csv(learning.paths["validation"], keep_default_na=False)
+    assert len(learning_rows) == 28
+    assert learning_rows["experiment_id"].nunique() == 28
+    assert learning_rows["learning_record_id"].nunique() == 28
     assert learning_rows["backtest_label"].astype(str).ne("").all()
     assert learning_rows["paper_label"].astype(str).eq("").all()
     assert learning_rows["live_label"].astype(str).eq("").all()
@@ -823,15 +773,10 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     assert not learning_rows["order_submission_performed"].astype(bool).any()
     assert not learning_rows["live_trading_authorized"].astype(bool).any()
     assert learning_validation["status"].eq("PASS").all()
-    assert learning.summary["records"] == 32
+    assert learning.summary["records"] == 28
     assert learning.summary["training_eligible_records"] == 0
-    assert set(learning.summary["input_snapshot_modes"].values()) == {
-        "verified_upstream_reference"
-    }
-    assert all(
-        "/learning/" not in path
-        for path in learning.summary["input_snapshots"].values()
-    )
+    assert set(learning.summary["input_snapshot_modes"].values()) == {"verified_upstream_reference"}
+    assert all("/learning/" not in path for path in learning.summary["input_snapshots"].values())
     assert learning.summary["referenced_upstream_bytes"] > 0
     assert learning.summary["locally_copied_input_bytes"] == 0
 
@@ -853,14 +798,12 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
             }
         ]
     ).to_csv(active / "hyperliquid_testnet_margin_snapshot.csv", index=False)
-    pd.DataFrame(
-        [{"status": "BLOCKED", "execution_allowed": False}]
-    ).to_csv(active / "hyperliquid_testnet_lifecycle_gate.csv", index=False)
+    pd.DataFrame([{"status": "BLOCKED", "execution_allowed": False}]).to_csv(
+        active / "hyperliquid_testnet_lifecycle_gate.csv", index=False
+    )
 
     handoff_manifest = json.loads(
-        (active / "current_wizard_hyperliquid_handoff_manifest.json").read_text(
-            encoding="utf-8"
-        )
+        (active / "current_wizard_hyperliquid_handoff_manifest.json").read_text(encoding="utf-8")
     )
     (active / "current_wizard_ou_optimal_overlay_manifest.json").write_text(
         json.dumps(
@@ -890,24 +833,20 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         ),
         encoding="utf-8",
     )
-    pd.DataFrame(
-        [{"check": "fixture_overlay_complete", "status": "PASS"}]
-    ).to_csv(active / "current_wizard_ou_optimal_overlay_validation.csv", index=False)
+    pd.DataFrame([{"check": "fixture_overlay_complete", "status": "PASS"}]).to_csv(
+        active / "current_wizard_ou_optimal_overlay_validation.csv", index=False
+    )
 
     chain = validate_current_wizard_hyperliquid_chain(
         root=tmp_path,
         now=datetime(2026, 8, 8, 17, 30, tzinfo=timezone.utc),
     )
-    chain_validation = pd.read_csv(
-        chain.paths["validation"], keep_default_na=False
-    )
+    chain_validation = pd.read_csv(chain.paths["validation"], keep_default_na=False)
     assert chain_validation["status"].eq("PASS").all()
     assert chain.summary["chain_status"] == "PASS"
     assert chain.summary["stages_complete"] == 14
-    assert chain.summary["experiment_authority_count"] == 32
-    assert chain.summary["trade_eligibility_status"] == (
-        "BLOCKED_NO_ONE_X_RESEARCH_SURVIVOR"
-    )
+    assert chain.summary["experiment_authority_count"] == 28
+    assert chain.summary["trade_eligibility_status"] == ("BLOCKED_NO_ONE_X_RESEARCH_SURVIVOR")
     assert chain.summary["testnet_no_order_preflight_ready"] is True
     assert chain.summary["testnet_submit_orders_enabled"] is False
     assert chain.summary["order_submission_performed"] is False
@@ -921,12 +860,8 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     )
     cadence_rows = pd.read_csv(cadence.paths["cadence"], keep_default_na=False)
     live_lock = pd.read_csv(cadence.paths["live_lock"], keep_default_na=False)
-    storage_efficiency = pd.read_csv(
-        cadence.paths["storage_efficiency"], keep_default_na=False
-    )
-    cadence_validation = pd.read_csv(
-        cadence.paths["validation"], keep_default_na=False
-    )
+    storage_efficiency = pd.read_csv(cadence.paths["storage_efficiency"], keep_default_na=False)
+    cadence_validation = pd.read_csv(cadence.paths["validation"], keep_default_na=False)
     assert len(cadence_rows) == 19
     assert cadence_rows["sequence"].tolist() == list(range(1, 20))
     assert not cadence_rows["scheduled_order_submission"].astype(bool).any()
@@ -954,10 +889,7 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
     assert cadence.summary["live_trading_authorized"] is False
 
     leverage_status.iloc[:-1].to_csv(
-        tmp_path
-        / "reports"
-        / "active"
-        / "current_wizard_hyperliquid_leverage_status.csv",
+        tmp_path / "reports" / "active" / "current_wizard_hyperliquid_leverage_status.csv",
         index=False,
     )
     with pytest.raises(ValueError, match="accounting mismatch"):
@@ -967,6 +899,136 @@ def test_current_cost_evidence_is_exact_pair_bounded_and_fully_accounted(
         match="leverage_status_active_snapshot_parity",
     ):
         validate_current_wizard_hyperliquid_chain(root=tmp_path)
+
+
+def test_all_blocked_walkforward_writes_parseable_empty_schemas(
+    tmp_path: Path,
+) -> None:
+    active = tmp_path / "reports" / "active"
+    snapshot = tmp_path / "reports" / "snapshots" / "blocked"
+    active.mkdir(parents=True)
+    snapshot.mkdir(parents=True)
+    observed_path = snapshot / "observed.csv"
+    pair_costs_path = snapshot / "pair_costs.csv"
+    observed_manifest_snapshot = snapshot / "observed_manifest.json"
+    cost_manifest_snapshot = snapshot / "cost_manifest.json"
+    pd.DataFrame(
+        [
+            {
+                "experiment_id": "blocked-1",
+                "pair_group_key": READY_PAIR,
+                "pair": "ETH-USD-WIF-USD",
+                "wizard_exchange": "binance",
+                "timeframe": "daily",
+                "exact_mode": "Dyn (ZScoreR)",
+                "orientation": "original",
+                "observed_cost_replay_id": "observed-blocked",
+                "replay_status": "BLOCKED_COST_EVIDENCE",
+                "replay_blocker": "strict_l2_calibration_incomplete",
+                "research_rank_eligible": False,
+            }
+        ]
+    ).to_csv(observed_path, index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair_group_key": READY_PAIR,
+                "hyperliquid_interval": "1d",
+                "asset_x": "ETH",
+                "asset_y": "WIF",
+                "provisional_cost_research_ready": False,
+            }
+        ]
+    ).to_csv(pair_costs_path, index=False)
+    observed_manifest_snapshot.write_text("{}", encoding="utf-8")
+    cost_manifest_snapshot.write_text("{}", encoding="utf-8")
+
+    def relative(path: Path) -> str:
+        return str(path.relative_to(tmp_path))
+
+    (active / "current_wizard_hyperliquid_observed_cost_replay_manifest.json").write_text(
+        json.dumps(
+            {
+                "observed_cost_replay_id": "observed-blocked",
+                "cost_evidence_id": "cost-blocked",
+                "artifacts": {
+                    "snapshot_results": relative(observed_path),
+                    "snapshot_manifest": relative(observed_manifest_snapshot),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (active / "current_wizard_hyperliquid_cost_manifest.json").write_text(
+        json.dumps(
+            {
+                "cost_evidence_id": "cost-blocked",
+                "artifacts": {
+                    "snapshot_pairs": relative(pair_costs_path),
+                    "snapshot_manifest": relative(cost_manifest_snapshot),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    walkforward = run_current_wizard_hyperliquid_walkforward(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 15, 0, tzinfo=timezone.utc),
+    )
+    for name in ("candidates", "ranked", "folds", "trades", "bars"):
+        frame = pd.read_csv(walkforward.paths[name], keep_default_na=False)
+        assert frame.empty
+        assert "experiment_id" in frame.columns
+
+    regimes = build_current_wizard_hyperliquid_regime_attribution(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 15, 30, tzinfo=timezone.utc),
+    )
+    regime_status = pd.read_csv(regimes.paths["status"], keep_default_na=False)
+    assert regime_status["regime_status"].eq("NOT_SELECTED_PRIOR_WALK_FORWARD_GATE").all()
+
+
+def test_chain_validation_resolves_refresh_from_frozen_handoff(
+    tmp_path: Path,
+) -> None:
+    frozen = tmp_path / "snapshots" / "refresh.json"
+    validation = tmp_path / "snapshots" / "validation.csv"
+    handoff = tmp_path / "active" / "handoff.json"
+    fallback = (
+        tmp_path / "active" / "newer_refresh.json",
+        tmp_path / "active" / "newer_validation.csv",
+        "refresh_id",
+    )
+    frozen.parent.mkdir(parents=True)
+    handoff.parent.mkdir(parents=True)
+    validation.write_text("check,status\nfrozen,PASS\n", encoding="utf-8")
+    frozen.write_text(
+        json.dumps(
+            {
+                "refresh_id": "frozen-refresh",
+                "artifacts": {"snapshot_validation": str(validation.relative_to(tmp_path))},
+            }
+        ),
+        encoding="utf-8",
+    )
+    handoff.write_text(
+        json.dumps(
+            {
+                "refresh_id": "frozen-refresh",
+                "input_snapshots": {"refresh_manifest": str(frozen.relative_to(tmp_path))},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    resolved = _frozen_refresh_stage_paths(
+        root=tmp_path,
+        handoff_manifest_path=handoff,
+        fallback=fallback,
+    )
+
+    assert resolved == (frozen, validation, "refresh_id")
 
 
 def test_verified_snapshot_reference_fails_closed_for_invalid_lineage(
@@ -984,12 +1046,15 @@ def test_verified_snapshot_reference_fails_closed_for_invalid_lineage(
         }
     }
 
-    assert verified_snapshot_reference(
-        root=tmp_path,
-        active_path=active,
-        upstream_manifest=manifest,
-        artifact_key="data",
-    ) == snapshot
+    assert (
+        verified_snapshot_reference(
+            root=tmp_path,
+            active_path=active,
+            upstream_manifest=manifest,
+            artifact_key="data",
+        )
+        == snapshot
+    )
 
     active.write_text("value\n2\n", encoding="utf-8")
     with pytest.raises(ValueError, match="artifacts differ"):
@@ -1026,16 +1091,12 @@ def test_storage_reclamation_plan_protects_current_lineage_and_moves_nothing(
     tmp_path: Path,
 ) -> None:
     active = tmp_path / "reports" / "active"
-    snapshots = (
-        tmp_path / "reports" / "snapshots" / "current_wizard_hyperliquid"
-    )
+    snapshots = tmp_path / "reports" / "snapshots" / "current_wizard_hyperliquid"
     current = snapshots / "run" / "cwcadence_current"
     old = snapshots / "run" / "cwconcentration_old"
     old_child = old / "failure_attribution" / "cwfailure_old"
     incomplete = snapshots / "run" / "cwfailure_incomplete"
-    exhaustive = (
-        tmp_path / "reports" / "snapshots" / "exhaustive_wizard_hyperliquid"
-    )
+    exhaustive = tmp_path / "reports" / "snapshots" / "exhaustive_wizard_hyperliquid"
     exhaustive_current = exhaustive / "ewhl_current"
     exhaustive_old = exhaustive / "ewhl_old"
     for path in (
@@ -1059,9 +1120,7 @@ def test_storage_reclamation_plan_protects_current_lineage_and_moves_nothing(
         json.dumps(
             {
                 "artifacts": {
-                    "snapshot_manifest": str(
-                        (current / "manifest.json").relative_to(tmp_path)
-                    )
+                    "snapshot_manifest": str((current / "manifest.json").relative_to(tmp_path))
                 }
             }
         ),

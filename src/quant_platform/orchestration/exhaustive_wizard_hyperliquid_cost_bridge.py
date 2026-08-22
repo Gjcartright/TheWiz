@@ -2,21 +2,28 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-
+from quant_platform.orchestration.canonical_wizard_hyperliquid_contract import (
+    MAXIMUM_FEE_EVIDENCE_AGE_DAYS,
+    MINIMUM_PROVISIONAL_FUNDED_ROWS,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_cost_bridge.v1"
-MIN_PROVISIONAL_FUNDED_ROWS = 250
-MAX_FEE_EVIDENCE_AGE_DAYS = 30
+MIN_PROVISIONAL_FUNDED_ROWS = MINIMUM_PROVISIONAL_FUNDED_ROWS
+MAX_FEE_EVIDENCE_AGE_DAYS = MAXIMUM_FEE_EVIDENCE_AGE_DAYS
 
 
 def build_exhaustive_wizard_hyperliquid_cost_evidence(
@@ -103,8 +110,7 @@ def build_exhaustive_wizard_hyperliquid_cost_evidence(
     for name, source in paths_in.items():
         if not source.exists():
             continue
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     funding_cutoff_safe = bool(
@@ -159,10 +165,10 @@ def build_exhaustive_wizard_hyperliquid_cost_evidence(
         "snapshot_manifest": snapshot_dir / "manifest.json",
         "snapshot_summary_md": snapshot_dir / "summary.md",
     }
-    pair_frame.to_csv(paths["pair_cost_evidence"], index=False)
-    pair_frame.to_csv(paths["snapshot_pair_cost_evidence"], index=False)
-    experiment_frame.to_csv(paths["experiment_cost_readiness"], index=False)
-    experiment_frame.to_csv(paths["snapshot_experiment_cost_readiness"], index=False)
+    atomic_write_csv(pair_frame, paths["pair_cost_evidence"], index=False)
+    atomic_write_csv(pair_frame, paths["snapshot_pair_cost_evidence"], index=False)
+    atomic_write_csv(experiment_frame, paths["experiment_cost_readiness"], index=False)
+    atomic_write_csv(experiment_frame, paths["snapshot_experiment_cost_readiness"], index=False)
 
     pair_status_counts = _status_counts(pair_frame, "cost_evidence_status")
     experiment_status_counts = _status_counts(experiment_frame, "cost_replay_status")
@@ -199,10 +205,10 @@ def build_exhaustive_wizard_hyperliquid_cost_evidence(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -225,7 +231,18 @@ def _pair_cost_row(
     funding = funding or {}
     cost = cost or {}
     cadence = cadence_lookup.get(_text(cost.get("pair")), {})
-    history_ready = _text(history.history_status) == "READY_FOR_CANONICAL_REPLAY"
+    history_research_ready = _truthy(
+        getattr(history, "research_history_ready", False)
+    ) and _text(history.history_status) in {
+        "READY_FOR_CANONICAL_REPLAY",
+        "READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY",
+    }
+    history_acceptance_ready = _truthy(
+        getattr(history, "acceptance_history_ready", False)
+    ) and _text(history.history_status) == "READY_FOR_CANONICAL_REPLAY"
+    short_history = _text(getattr(history, "history_lane", "")) == (
+        "SHORT_HISTORY_RESEARCH_ONLY"
+    )
     enriched_path = _text(funding.get("enriched_history_path"))
     funded_rows = _integer(funding.get("funding_both_aligned_rows"))
     contiguous_funded_rows = _integer(funding.get("funding_longest_contiguous_rows"))
@@ -244,7 +261,7 @@ def _pair_cost_row(
     )
     pair_slippage = _number(cost.get("pair_one_way_slippage_bps"))
     provisional_ready = bool(
-        history_ready
+        history_research_ready
         and funding_cutoff_safe
         and enriched_path
         and contiguous_funded_rows >= MIN_PROVISIONAL_FUNDED_ROWS
@@ -255,11 +272,17 @@ def _pair_cost_row(
         and l2_fresh
     )
     acceptance_ready = bool(
-        provisional_ready and funding_ready and slippage_ready and required_samples > 0
+        provisional_ready
+        and history_acceptance_ready
+        and funding_ready
+        and slippage_ready
+        and required_samples > 0
     )
     blockers: list[str] = []
-    if not history_ready:
+    if not history_research_ready:
         blockers.append(_text(history.history_blocker) or "pair_history_not_ready")
+    elif short_history:
+        blockers.append("short_history_research_only")
     if not funding_cutoff_safe:
         blockers.append("funding_evidence_cutoff_or_timestamp_invalid")
     if not enriched_path or contiguous_funded_rows < MIN_PROVISIONAL_FUNDED_ROWS:
@@ -288,7 +311,11 @@ def _pair_cost_row(
         status = "READY_FOR_COST_CALIBRATED_REPLAY"
         next_step = "run_cost_calibrated_point_in_time_replay"
     elif provisional_ready:
-        status = "READY_FOR_PROVISIONAL_COST_RESEARCH"
+        status = (
+            "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+            if short_history
+            else "READY_FOR_PROVISIONAL_COST_RESEARCH"
+        )
         next_step = "run_observed_intersection_replay_and_continue_l2_cadence"
     else:
         status = "BLOCKED_COST_EVIDENCE"
@@ -316,6 +343,9 @@ def _pair_cost_row(
         "asset_y": _text(history.asset_y),
         "history_status": _text(history.history_status),
         "history_blocker": _text(history.history_blocker),
+        "history_lane": _text(getattr(history, "history_lane", "")),
+        "acceptance_history_ready": history_acceptance_ready,
+        "research_history_ready": history_research_ready,
         "history_rows": _integer(history.history_rows),
         "funding_status": _text(funding.get("funding_status")),
         "funding_blocker": _text(funding.get("funding_blocker")),
@@ -381,7 +411,11 @@ def _experiment_cost_row(
         status = "READY_FOR_COST_CALIBRATED_REPLAY"
         blocker = ""
     elif _truthy(pair_cost.get("provisional_cost_research_ready")):
-        status = "READY_FOR_PROVISIONAL_COST_RESEARCH"
+        status = (
+            "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+            if _text(pair_cost.get("history_lane")) == "SHORT_HISTORY_RESEARCH_ONLY"
+            else "READY_FOR_PROVISIONAL_COST_RESEARCH"
+        )
         blocker = _text(pair_cost.get("cost_blocker"))
     else:
         status = "BLOCKED_COST_EVIDENCE"
@@ -409,6 +443,11 @@ def _experiment_cost_row(
         "asset_y": _text(experiment.asset_y),
         "preflight_status": preflight_status,
         "cost_evidence_status": _text(pair_cost.get("cost_evidence_status")),
+        "history_lane": _text(pair_cost.get("history_lane")),
+        "acceptance_history_ready": _truthy(
+            pair_cost.get("acceptance_history_ready")
+        ),
+        "research_history_ready": _truthy(pair_cost.get("research_history_ready")),
         "provisional_cost_research_ready": _truthy(
             pair_cost.get("provisional_cost_research_ready")
         ),

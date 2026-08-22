@@ -20,30 +20,33 @@ from quant_platform.active_pipeline import (
     system_check,
     train_trade_gate,
 )
-from quant_platform.orchestration.reporting import stage_result_from_command, write_project_spine_audit
-from quant_platform.orchestration.state import OrchestratorState, StageResult, StageStatus
-from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
-from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
-from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
-from quant_platform.orchestration.dynamic_stage_runner import DYNAMIC_STAGE_NAMES, run_dynamic_stage
-from quant_platform.rl.rl_backtest import run_rl_research
-from quant_platform.rl.rl_learning_agent import (
-    run_magicka_learning_cycle,
-    run_sequential_thinking_magicka,
-)
-from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
-from quant_platform.wizard_evidence import build_wizard_replay_handoff, build_wizard_research_pack
-from quant_platform.wizard_control_plane import build_wizard_control_plane
-from quant_platform.wizard_local_verification import verify_wizard_local_mode
 from quant_platform.hyperliquid import (
     build_hyperliquid_evidence_cadence,
     build_hyperliquid_research_bundle,
     refresh_hyperliquid_execution_cost_snapshot,
     refresh_hyperliquid_market_context,
 )
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.dynamic_stage_runner import DYNAMIC_STAGE_NAMES, run_dynamic_stage
+from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
+from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
+from quant_platform.orchestration.reporting import (
+    stage_result_from_command,
+    write_project_spine_audit,
+)
+from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
+from quant_platform.orchestration.state import OrchestratorState, StageResult, StageStatus
+from quant_platform.rl.rl_backtest import run_rl_research
+from quant_platform.rl.rl_idea_engine import run_rl_idea_scout
+from quant_platform.rl.rl_learning_agent import (
+    run_magicka_learning_cycle,
+    run_sequential_thinking_magicka,
+)
+from quant_platform.wizard_control_plane import build_wizard_control_plane
+from quant_platform.wizard_evidence import build_wizard_replay_handoff, build_wizard_research_pack
 from quant_platform.wizard_hyperliquid_bridge import build_hyperliquid_wizard_hypothesis_queue
+from quant_platform.wizard_local_verification import verify_wizard_local_mode
 from quant_platform.youtube_brain import run_youtube_brain_cycle
-
 
 STAGE_GROUPS: dict[str, list[str]] = {
     "all": [
@@ -124,7 +127,6 @@ def run_stage(stage: str, state: OrchestratorState, root: Path = ROOT) -> StageR
         "run_rl_research",
         "run_rl_idea_scout",
         "run_sequential_thinking_magicka",
-        "youtube_research_brain",
         "wizard_control_plane",
         "mini_agents",
         "orchestrator_assistant",
@@ -145,7 +147,9 @@ def run_stage(stage: str, state: OrchestratorState, root: Path = ROOT) -> StageR
         "project_spine_audit": lambda: _spine_audit_result(stage, root),
         "wizard_control_plane": lambda: _wizard_control_plane_result(stage, root),
         "discover_wizard_candidates": lambda: _wizard_discovery_result(stage, root),
-        "youtube_research_brain": lambda: stage_result_from_command(stage, run_youtube_brain_cycle(root=root)),
+        "youtube_research_brain": lambda: stage_result_from_command(
+            stage, run_youtube_brain_cycle(root=root)
+        ),
         "build_multi_venue_history_readiness": lambda: stage_result_from_command(stage, build_multi_venue_history_readiness(root=root)),
         "build_wizard_replay_handoff": lambda: stage_result_from_command(stage, build_wizard_replay_handoff(root=root)),
         "verify_wizard_local_mode": lambda: stage_result_from_command(stage, verify_wizard_local_mode(root=root)),
@@ -191,7 +195,7 @@ def run_stage(stage: str, state: OrchestratorState, root: Path = ROOT) -> StageR
     try:
         return stage_functions[stage]()
     except Exception as exc:
-        return StageResult(stage=stage, status=StageStatus.FAILED, blocker=type(exc).__name__, reason=str(exc), next_step="inspect stage evidence and rerun")
+        return StageResult(stage=stage, status=StageStatus.FAILED, blocker=type(exc).__name__, reason=safe_exception_code(exc), next_step="inspect stage evidence and rerun")
 
 
 def _spine_audit_result(stage: str, root: Path) -> StageResult:

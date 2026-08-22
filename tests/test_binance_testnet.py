@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pandas as pd
+import pytest
 
 from quant_platform.binance_testnet import (
     BinanceSpotTestnetOrderAdapter,
@@ -12,7 +13,13 @@ from quant_platform.binance_testnet import (
     binance_testnet_preflight,
     execute_binance_testnet_pair,
 )
-from quant_platform.execution import ExecutionMode, OrderIntent, build_execution_venue, validate_venue_order_client_adapter
+from quant_platform.execution import (
+    ExecutionMode,
+    OrderIntent,
+    build_execution_venue,
+    validate_venue_order_client_adapter,
+)
+from quant_platform.orchestration.effect_authority import EffectAuthorityError
 
 
 class FakeResponse:
@@ -89,16 +96,14 @@ class SecondLegFailureAdapter(BinanceUsdmTestnetOrderAdapter):
         return super().place_order(intent, config)
 
 
-def test_spot_testnet_blocks_without_credentials_or_submit_flag():
+def test_spot_testnet_blocks_on_missing_gate00g_authority_before_config_or_network():
     adapter = BinanceSpotTestnetOrderAdapter(session=FakeSession())
-    fill = adapter.place_order(OrderIntent(market="ETH-USDT", side="BUY", size=0.25))
-
-    assert fill.status.startswith("paper_blocked_")
-    assert "submit_orders_false" in fill.status
-    assert "missing_api_key" in fill.status
+    with pytest.raises(EffectAuthorityError, match="gate00g_order_authority_missing"):
+        adapter.place_order(OrderIntent(market="ETH-USDT", side="BUY", size=0.25))
+    assert adapter.session.posts == []
 
 
-def test_usdm_testnet_submits_only_to_official_testnet_endpoint():
+def test_usdm_testnet_current_call_is_blocked_before_official_endpoint():
     session = FakeSession()
     config = replace(
         BinanceTestnetConfig.usdm_testnet(),
@@ -108,12 +113,12 @@ def test_usdm_testnet_submits_only_to_official_testnet_endpoint():
     )
     adapter = BinanceUsdmTestnetOrderAdapter(session=session)
 
-    fill = adapter.place_order(OrderIntent(market="BTC-USDT", side="SELL", size=0.25, limit_price=100.5), config)
-
-    assert fill.status == "paper_submitted"
-    assert session.posts[0]["url"] == "https://testnet.binancefuture.com/fapi/v1/order"
-    assert session.posts[0]["params"]["symbol"] == "BTCUSDT"
-    assert session.posts[0]["params"]["signature"]
+    with pytest.raises(EffectAuthorityError, match="gate00g_order_authority_missing"):
+        adapter.place_order(
+            OrderIntent(market="BTC-USDT", side="SELL", size=0.25, limit_price=100.5),
+            config,
+        )
+    assert session.posts == []
 
 
 def test_testnet_adapter_refuses_non_testnet_base_url():
@@ -125,9 +130,7 @@ def test_testnet_adapter_refuses_non_testnet_base_url():
         api_secret="test-secret",
         submit_orders=True,
     )
-    fill = BinanceSpotTestnetOrderAdapter(session=session).place_order(OrderIntent(market="ETHUSDT", side="BUY", size=1), config)
-
-    assert "unsafe_non_testnet_base_url" in fill.status
+    assert "unsafe_non_testnet_base_url" in config.paper_trading_blockers()
     assert session.posts == []
 
 
@@ -173,7 +176,7 @@ def test_pair_preflight_reads_symbol_rules_and_keeps_submission_separate(tmp_pat
     assert (tmp_path / "reports" / "active" / "binance_testnet_pair_preflight.csv").exists()
 
 
-def test_pair_execution_attempts_usdm_rollback_after_second_leg_failure(tmp_path):
+def test_pair_execution_denies_unapproved_adapter_before_rollback_or_journal(tmp_path):
     config = replace(
         BinanceTestnetConfig.usdm_testnet(),
         api_key="test-key",
@@ -186,16 +189,12 @@ def test_pair_execution_attempts_usdm_rollback_after_second_leg_failure(tmp_path
         OrderIntent(market="ETHUSDT", side="SELL", size=0.1),
     )
 
-    result = execute_binance_testnet_pair(
-        intents=intents,
-        config=config,
-        adapter=adapter,
-        journal_path=tmp_path / "journal.csv",
-    )
-
-    assert result.status == "second_leg_failed_rollback_attempted"
-    assert result.rollback_fills[0].status == "paper_submitted"
-    rollback_request = adapter.session.posts[-1]["params"]
-    assert rollback_request["side"] == "SELL"
-    assert rollback_request["reduceOnly"] == "true"
-    assert (tmp_path / "journal.csv").exists()
+    with pytest.raises(ValueError, match="gate00g_binance_order_adapter_denied"):
+        execute_binance_testnet_pair(
+            intents=intents,
+            config=config,
+            adapter=adapter,
+            journal_path=tmp_path / "journal.csv",
+        )
+    assert adapter.session.posts == []
+    assert not (tmp_path / "journal.csv").exists()

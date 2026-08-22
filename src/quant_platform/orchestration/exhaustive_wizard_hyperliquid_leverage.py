@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 
 import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-
+from quant_platform.economic_contract import normalized_two_leg_weight_magnitudes
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_leverage.v1"
@@ -225,8 +229,11 @@ def build_exhaustive_wizard_hyperliquid_leverage_surface(
     snapshot_inputs_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = snapshot_inputs_dir / f"{name}{source.suffix or '.dat'}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(
+            source,
+            snapshot_inputs_dir,
+            artifact_name=name,
+        )
         snapshot_inputs[name] = target
 
     scenario_rows: list[dict[str, object]] = []
@@ -433,8 +440,8 @@ def build_exhaustive_wizard_hyperliquid_leverage_surface(
         (candidate_frame, paths["candidates"], paths["snapshot_candidates"]),
         (scenario_frame, paths["scenarios"], paths["snapshot_scenarios"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = _status_counts(status_frame, "leverage_surface_status")
     summary: dict[str, object] = {
@@ -475,10 +482,10 @@ def build_exhaustive_wizard_hyperliquid_leverage_surface(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary, candidate_frame)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -492,8 +499,7 @@ def _margin_metrics(
     market_y: dict[str, object],
     tiers: pd.DataFrame,
 ) -> dict[str, object]:
-    weight_x = hedge_ratio_abs / (1.0 + hedge_ratio_abs)
-    weight_y = 1.0 / (1.0 + hedge_ratio_abs)
+    weight_x, weight_y = normalized_two_leg_weight_magnitudes(hedge_ratio_abs)
     effective = requested_leverage
     tier_x: dict[str, object] | None = None
     tier_y: dict[str, object] | None = None
@@ -628,7 +634,7 @@ def _simulate_leverage_path(
         if (equity <= 0.0).any() or not np.isfinite(equity).all():
             ruin = True
         equity = equity.clip(lower=0.0)
-        peak = equity.cummax().replace(0.0, np.nan)
+        peak = equity.cummax().clip(lower=1.0).replace(0.0, np.nan)
         drawdown = (1.0 - equity / peak).fillna(1.0)
         max_drawdown = max(max_drawdown, float(drawdown.max()))
         fold_returns.append(float(equity.iloc[-1] - 1.0))

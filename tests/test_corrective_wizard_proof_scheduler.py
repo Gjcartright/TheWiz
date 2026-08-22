@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import plistlib
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
@@ -10,13 +11,28 @@ import pytest
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration import corrective_wizard_proof_scheduler
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    external_effect_issuer_session,
+    read_authorized_credential,
+    reserved_external_effect_session,
+)
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     _load_or_create_source_receipt,
 )
 from quant_platform.orchestration.corrective_wizard_proof_scheduler import (
     PROOF_LOCK_TIMEOUT_SECONDS,
+    WIZARD_BACKTEST_ENDPOINT,
+    WIZARD_COPULA_ENDPOINT,
+    WIZARD_CREDITS_ENDPOINT,
     _launch_agent_plist,
     run_corrective_wizard_proof_cycle,
+)
+from quant_platform.orchestration.effect_authority import EffectAuthority
+from quant_platform.orchestration.corrective_runtime import (
+    SCHEDULER_BOOTSTRAP_MODULE,
+    SCHEDULER_CAPABILITY_PROFILES,
+    scheduler_contract,
 )
 from quant_platform.wizard_credit_ledger import (
     PROOF_LANE,
@@ -32,6 +48,49 @@ from tests.capture_reconciliation_support import (
 
 NOW = datetime(2026, 8, 10, 0, 5, tzinfo=UTC)
 SECRET = "wizard-secret-value"
+HASH = "a" * 64
+
+
+@pytest.fixture(autouse=True)
+def _authorized_external_effect_issuer(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    def unexpected_live_credit_fetch(**_kwargs):
+        raise AssertionError("scheduler_test_unmocked_live_credit_fetch")
+
+    monkeypatch.setattr(
+        corrective_wizard_proof_scheduler,
+        "fetch_credits_used",
+        unexpected_live_credit_fetch,
+    )
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"scheduler-test-effect-authority-secret",
+        issuer_id="scheduler-test-supervisor",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id="scheduler-test-run",
+        intended_slot_id="scheduler-test-slot",
+        source_fingerprint_sha256=HASH,
+        runtime_fingerprint_sha256=HASH,
+        configuration_fingerprint_sha256=HASH,
+        provider_id="crypto_wizards",
+        account_scope_id="wizard-research-test-account",
+        allowed_targets=frozenset(
+            {
+                WIZARD_BACKTEST_ENDPOINT,
+                WIZARD_COPULA_ENDPOINT,
+                WIZARD_CREDITS_ENDPOINT,
+            }
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=10_000,
+        max_total_credits=10_000,
+    ):
+        yield
 
 
 def _queue_builder(root: Path, *, eligible: int = 5) -> CommandResult:
@@ -787,6 +846,7 @@ def test_fresh_scheduler_window_reconciles_ou_v3_capture_credits(tmp_path, monke
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=None,
+        credits_fetcher=lambda **_: {"credits_used": 30},
     )
 
     assert len(ou_calls) == 1
@@ -881,6 +941,7 @@ def test_fresh_scheduler_window_governs_ou_v4_capture_and_credits(tmp_path, monk
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=None,
+        credits_fetcher=lambda **_: {"credits_used": 38},
     )
 
     assert len(calls) == 1
@@ -977,6 +1038,7 @@ def test_fresh_scheduler_window_governs_ou_v5_capture_and_credits(tmp_path, monk
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=None,
+        credits_fetcher=lambda **_: {"credits_used": 38},
     )
 
     assert len(calls) == 1
@@ -1062,6 +1124,7 @@ def test_fresh_scheduler_window_governs_final_ou_v6_capture_without_activation(
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=None,
+        credits_fetcher=lambda **_: {"credits_used": 38},
     )
 
     assert len(calls) == 1
@@ -1158,6 +1221,7 @@ def test_terminal_ou_v6_failure_cannot_invoke_registered_rerun(tmp_path, monkeyp
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=lambda **kwargs: registered_calls.append(kwargs),
+        credits_fetcher=lambda **_: {"credits_used": 38},
     )
 
     assert result.summary["status"] == "BLOCKED_OU_V6_TERMINAL_FAILURE"
@@ -1235,6 +1299,7 @@ def test_frozen_manifest_blocks_unlisted_external_lanes_before_runner_call(tmp_p
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=None,
+        credits_fetcher=lambda **_: {"credits_used": 16},
     )
 
     assert exact_calls == []
@@ -1398,9 +1463,9 @@ def test_same_day_budget_expansion_defers_with_verified_prior_credit_evidence(
     )
 
     assert result.summary["status"] == "DEFERRED_CAPTURE_MANIFEST_WINDOW"
-    assert result.summary["api_key_check_performed"] is True
-    assert result.summary["api_key_present"] is True
-    assert result.summary["api_key_source"] == ".env.local"
+    assert result.summary["api_key_check_performed"] is False
+    assert result.summary["api_key_present"] is False
+    assert result.summary["api_key_source"] == "not_checked_before_reservation"
     assert result.summary["credit_reservation_status"] == ("PRIOR_RESERVATION_VERIFIED")
     assert result.summary["credit_reconciliation_status"] == ("PRIOR_RECONCILIATION_VERIFIED")
     assert result.summary["credit_reservation_blocker"] == ""
@@ -1477,6 +1542,7 @@ def test_execute_batches_to_queue_completion_then_refreshes_evidence(tmp_path, m
         input_auditor=_input_auditor,
         parity_refresher=parity_refresher,
         checkpoint_refresher=checkpoint_refresher,
+        credits_fetcher=lambda **_: {"credits_used": 30},
     )
 
     assert result.summary["status"] == "COMPLETE_QUEUE"
@@ -1490,7 +1556,7 @@ def test_execute_batches_to_queue_completion_then_refreshes_evidence(tmp_path, m
     receipt = result.paths["cycle_receipt"].read_text(encoding="utf-8")
     assert SECRET not in receipt
     receipt_payload = json.loads(receipt)
-    assert receipt_payload["api_key_source"] == ".env.local"
+    assert receipt_payload["api_key_source"] == "authorized_selected_environment"
     assert receipt_payload["final_immutable_receipt_required"] is True
     assert (
         result.paths["immutable_cycle_receipt"].read_bytes()
@@ -1683,6 +1749,7 @@ def test_completed_parity_queue_hands_off_to_registered_research_rerun(tmp_path,
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=checkpoint_refresher,
         registered_rerun_runner=registered_rerun_runner,
+        credits_fetcher=lambda **_: {"credits_used": 22},
     )
 
     assert result.summary["status"] == "COMPLETE_QUEUE"
@@ -1743,6 +1810,7 @@ def test_immutable_publication_failure_is_durable_and_blocks_stage4(
             ),
             checkpoint_refresher=None,
             registered_rerun_runner=lambda **kwargs: rerun_calls.append(kwargs),
+            credits_fetcher=lambda **_: {"credits_used": 22},
         )
 
     latest_path = tmp_path / "reports" / "active" / "corrective_wizard_proof_scheduler_status.json"
@@ -1807,6 +1875,7 @@ def test_transient_immutable_publication_failure_stays_blocked_for_cycle(
         ),
         checkpoint_refresher=None,
         registered_rerun_runner=lambda **kwargs: rerun_calls.append(kwargs),
+        credits_fetcher=lambda **_: {"credits_used": 22},
     )
 
     assert attempts == 2
@@ -1969,6 +2038,7 @@ def test_post_registered_rerun_checkpoint_failure_is_persisted_fail_closed(tmp_p
             paths={"execution_receipt": execution_receipt},
             summary={"status": "PASS_REGISTERED_RERUN_ACCOUNTED"},
         ),
+        credits_fetcher=lambda **_: {"credits_used": 22},
     )
 
     assert result.summary["registered_rerun_status"] == "PASS_REGISTERED_RERUN_ACCOUNTED"
@@ -2048,6 +2118,7 @@ def test_mixed_formula_and_copula_completion_hands_off_without_formula_relabel(
             paths={}, summary={"operational_acceptance_status": "BLOCKED"}
         ),
         registered_rerun_runner=registered_runner,
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
 
     assert result.summary["status"] == "COMPLETE_ACCEPTED_MODE_EVIDENCE"
@@ -2118,6 +2189,7 @@ def test_copula_pass_without_immutable_cohort_cannot_handoff(tmp_path, monkeypat
             paths={}, summary={"operational_acceptance_status": "BLOCKED"}
         ),
         registered_rerun_runner=lambda **kwargs: rerun_calls.append(kwargs),
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
 
     assert result.summary["status"] == ("BLOCKED_ACCEPTED_MODE_EVIDENCE_MISMATCH")
@@ -2182,6 +2254,7 @@ def test_copula_pass_with_incomplete_response_accounting_cannot_handoff(tmp_path
             paths={}, summary={"operational_acceptance_status": "BLOCKED"}
         ),
         registered_rerun_runner=lambda **kwargs: rerun_calls.append(kwargs),
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
 
     assert result.summary["status"] == "BLOCKED_ACCEPTED_MODE_EVIDENCE_MISMATCH"
@@ -2211,7 +2284,12 @@ def test_reviewed_dynamic_and_ou_v4_activations_complete_full_mixed_handoff_same
     (config / "wizard_copula_behavioral_parity.json").write_text("{}", encoding="utf-8")
     (config / "wizard_dynamic_comparator_v2_holdout.json").write_text("{}", encoding="utf-8")
     (config / "wizard_ou_comparator_v4_holdout.json").write_text("{}", encoding="utf-8")
-    state = {"completed": 8, "responses": 8, "reviewed": False}
+    state = {
+        "completed": 8,
+        "responses": 8,
+        "reviewed": False,
+        "external_exact_calls": 0,
+    }
     proof_calls = []
     copula_calls = []
     registered_calls = []
@@ -2229,15 +2307,18 @@ def test_reviewed_dynamic_and_ou_v4_activations_complete_full_mixed_handoff_same
 
     def proof_runner(**kwargs):
         proof_calls.append(kwargs)
-        state.update({"completed": 8, "responses": 28})
+        remaining = 20 - state["external_exact_calls"]
+        selected = min(int(kwargs["max_pairs"]), remaining)
+        state["external_exact_calls"] += selected
+        state["responses"] = 8 + state["external_exact_calls"]
         return _result(
             eligible=28,
-            selected=20,
+            selected=selected,
             completed=8,
             selected_completed=0,
-            responses_captured=28,
-            selected_responses_captured=20,
-            external_proof_requests=20,
+            responses_captured=state["responses"],
+            selected_responses_captured=selected,
+            external_proof_requests=selected,
         )
 
     def dynamic_result(name, summary):
@@ -2414,13 +2495,14 @@ def test_reviewed_dynamic_and_ou_v4_activations_complete_full_mixed_handoff_same
             paths={}, summary={"operational_acceptance_status": "BLOCKED"}
         ),
         "registered_rerun_runner": registered_runner,
+        "credits_fetcher": lambda **_: {"credits_used": 68},
     }
 
     first = run_corrective_wizard_proof_cycle(now=NOW, **common)
     state["reviewed"] = True
     second = run_corrective_wizard_proof_cycle(now=NOW + timedelta(minutes=10), **common)
 
-    assert len(proof_calls) == 1
+    assert len(proof_calls) == 7
     assert [call["execute"] for call in copula_calls] == [True, False]
     assert first.summary["accepted_mode_evidence_cells"] == 12
     assert first.summary["registered_rerun_status"] == "NOT_EVALUATED"
@@ -2526,6 +2608,7 @@ def test_real_proof_request_enforces_same_day_attempt_cap(tmp_path, monkeypatch)
             summary={"status": "PASS", "ready_rows": 3, "blocked_rows": 0},
         ),
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
     planning = run_corrective_wizard_proof_cycle(
         root=tmp_path,
@@ -2538,6 +2621,7 @@ def test_real_proof_request_enforces_same_day_attempt_cap(tmp_path, monkeypatch)
             summary={"status": "PASS", "ready_rows": 3, "blocked_rows": 0},
         ),
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
     second = run_corrective_wizard_proof_cycle(
         root=tmp_path,
@@ -2550,6 +2634,7 @@ def test_real_proof_request_enforces_same_day_attempt_cap(tmp_path, monkeypatch)
             summary={"status": "PASS", "ready_rows": 3, "blocked_rows": 0},
         ),
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
 
     assert first.summary["status"] == "COMPLETE_QUEUE"
@@ -2614,6 +2699,7 @@ def test_copula_behavioral_endpoint_executes_only_with_fresh_parent_attempt(tmp_
         ),
         copula_behavioral_runner=copula_runner,
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 34},
     )
     second = run_corrective_wizard_proof_cycle(
         root=tmp_path,
@@ -2629,6 +2715,7 @@ def test_copula_behavioral_endpoint_executes_only_with_fresh_parent_attempt(tmp_
         ),
         copula_behavioral_runner=copula_runner,
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 34},
     )
 
     assert [call["execute"] for call in copula_calls] == [True, False]
@@ -2791,6 +2878,7 @@ def test_executing_manifest_cannot_complete_with_pending_reconciliation(tmp_path
         parity_refresher=lambda **_: CommandResult(paths={}, summary={"status": "PASS"}),
         checkpoint_refresher=None,
         registered_rerun_runner=lambda **kwargs: registered_calls.append(kwargs),
+        credits_fetcher=lambda **_: {"credits_used": 22},
     )
 
     assert result.summary["status"] == "BLOCKED_CAPTURE_MANIFEST_RECONCILIATION"
@@ -3120,6 +3208,7 @@ def test_tampered_unresolved_source_snapshot_blocks_before_external_calls(tmp_pa
         (tmp_path / prior_manifest.summary["source_receipt_path"]).read_text(encoding="utf-8")
     )
     snapshot = tmp_path / source_receipt["source_artifacts"][0]["snapshot_path"]
+    snapshot.chmod(0o600)
     snapshot.write_text("tampered\n", encoding="utf-8")
     vendor_calls = []
     reservation_calls = []
@@ -3210,6 +3299,7 @@ def test_external_attempt_without_progress_still_refreshes_checkpoint(tmp_path, 
                 summary={"operational_acceptance_status": "BLOCKED"},
             )
         ),
+        credits_fetcher=lambda **_: {"credits_used": 26},
     )
 
     assert result.summary["status"] == "BLOCKED_NO_PROGRESS"
@@ -3267,6 +3357,7 @@ def test_quarantined_failed_batch_continues_to_unrelated_queue_cells(tmp_path, m
         proof_runner=lambda **kwargs: calls.append(kwargs) or next(results),
         input_auditor=_input_auditor,
         checkpoint_refresher=None,
+        credits_fetcher=lambda **_: {"credits_used": 30},
     )
 
     assert result.summary["status"] == "BLOCKED_REMAINING_REQUESTS_FAILED"
@@ -3360,6 +3451,7 @@ def test_response_capture_progress_does_not_masquerade_as_formula_completion(tmp
                 summary={"operational_acceptance_status": "BLOCKED"},
             )
         ),
+        credits_fetcher=lambda **_: {"credits_used": 30},
     )
 
     assert result.summary["status"] == ("COMPLETE_RESPONSE_CAPTURE_FORMULA_PROOF_INCOMPLETE")
@@ -3391,15 +3483,16 @@ def test_insecure_secret_file_blocks_before_api_call(tmp_path, monkeypatch):
     )
 
     assert result.summary["status"] == "BLOCKED_ENVIRONMENT"
-    assert result.summary["api_key_check_performed"] is True
+    assert result.summary["api_key_check_performed"] is False
     assert result.summary["api_key_present"] is False
+    assert result.summary["api_key_source"] == "not_checked_before_reservation"
     assert result.summary["insecure_secret_files"] == [".env.local"]
     assert result.summary["blockers"] == ["secret_file_permissions_too_open"]
     assert "CRYPTO_WIZARDS_API_KEY" not in corrective_wizard_proof_scheduler.os.environ
     assert calls == []
 
 
-def test_scheduler_environment_prefers_env_local_over_env(tmp_path, monkeypatch):
+def test_authorized_scheduler_environment_prefers_env_local_over_env(tmp_path, monkeypatch):
     monkeypatch.delenv("CRYPTO_WIZARDS_API_KEY", raising=False)
     env = tmp_path / ".env"
     env.write_text("CRYPTO_WIZARDS_API_KEY=base-key\n", encoding="utf-8")
@@ -3408,29 +3501,41 @@ def test_scheduler_environment_prefers_env_local_over_env(tmp_path, monkeypatch)
     local.write_text("CRYPTO_WIZARDS_API_KEY=local-key\n", encoding="utf-8")
     local.chmod(0o600)
 
-    security = corrective_wizard_proof_scheduler._load_and_validate_environment(tmp_path)
+    with reserved_external_effect_session(
+        reservation_id="environment-precedence-local",
+        reservation_sha256=HASH,
+        max_total_requests=1,
+        max_total_credits=0,
+    ):
+        value = read_authorized_credential(
+            "CRYPTO_WIZARDS_API_KEY",
+            reader=lambda key: corrective_wizard_proof_scheduler._deferred_credential_reader(
+                tmp_path, key
+            ),
+        )
 
-    assert security == {
-        "api_key_present": True,
-        "key_source": ".env.local",
-        "check_performed": True,
-        "insecure_secret_files": [],
-    }
+    assert value == "local-key"
     assert corrective_wizard_proof_scheduler.os.environ["CRYPTO_WIZARDS_API_KEY"] == ("local-key")
 
 
-def test_scheduler_process_environment_precedes_secret_files(tmp_path, monkeypatch):
+def test_authorized_scheduler_process_environment_precedes_secret_files(tmp_path, monkeypatch):
     monkeypatch.setenv("CRYPTO_WIZARDS_API_KEY", "process-key")
     _write_secure_env(tmp_path)
 
-    security = corrective_wizard_proof_scheduler._load_and_validate_environment(tmp_path)
+    with reserved_external_effect_session(
+        reservation_id="environment-precedence-process",
+        reservation_sha256=HASH,
+        max_total_requests=1,
+        max_total_credits=0,
+    ):
+        value = read_authorized_credential(
+            "CRYPTO_WIZARDS_API_KEY",
+            reader=lambda key: corrective_wizard_proof_scheduler._deferred_credential_reader(
+                tmp_path, key
+            ),
+        )
 
-    assert security == {
-        "api_key_present": True,
-        "key_source": "process_environment",
-        "check_performed": True,
-        "insecure_secret_files": [],
-    }
+    assert value == "process-key"
     assert corrective_wizard_proof_scheduler.os.environ["CRYPTO_WIZARDS_API_KEY"] == ("process-key")
 
 
@@ -3558,7 +3663,7 @@ def test_orphaned_proof_reservation_blocks_crash_retry_before_api_call(
         planned_credits=2,
         now=NOW,
     )
-    assert orphaned.summary["external_spend_authorized"] is True
+    assert orphaned.summary["external_spend_authorized"] is False
     proof_calls: list[dict[str, object]] = []
 
     result = run_corrective_wizard_proof_cycle(
@@ -3587,7 +3692,7 @@ def test_orphaned_proof_reservation_blocks_crash_retry_before_api_call(
 
 
 def test_launch_agent_contains_no_secret_or_order_capability(tmp_path):
-    python = tmp_path / ".venv312" / "bin" / "python"
+    python = tmp_path / ".venv" / "bin" / "python3"
     python.parent.mkdir(parents=True)
     python.write_text("", encoding="utf-8")
     logs = tmp_path / "reports" / "active" / "schedule_logs"
@@ -3600,18 +3705,35 @@ def test_launch_agent_contains_no_secret_or_order_capability(tmp_path):
         interval_seconds=600,
     )
 
-    assert "corrective_wizard_proof_launcher" in plist
-    assert "corrective_wizard_proof_scheduler" not in plist
-    assert "--execute" in plist
-    assert "<key>StartInterval</key><integer>600</integer>" in plist
+    payload = plistlib.loads(plist.encode("utf-8"))
+    contract = scheduler_contract("wizard_proof")
+    capability = SCHEDULER_CAPABILITY_PROFILES[contract.capability_profile]
+    assert payload["ProgramArguments"] == [
+        str(python),
+        "-m",
+        SCHEDULER_BOOTSTRAP_MODULE,
+        str(tmp_path.resolve()),
+        contract.key,
+    ]
+    assert contract.module.endswith("corrective_wizard_proof_launcher")
+    assert not contract.module.endswith("corrective_wizard_proof_scheduler")
+    assert contract.action == "--execute"
+    assert capability.wizard_api_allowed is True
+    assert capability.wizard_credit_spend_allowed is True
+    assert capability.keychain_allowed is False
+    assert capability.order_adapter_allowed is False
+    assert capability.order_submission_allowed is False
+    assert payload["StartInterval"] == 600
     assert "CRYPTO_WIZARDS_API_KEY" not in plist
     assert SECRET not in plist
     assert "testnet" not in plist.lower()
     assert "live" not in plist.lower()
     assert "order" not in plist.lower()
-    assert f"<key>TMPDIR</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TEMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
+    environment = payload["EnvironmentVariables"]
+    assert environment["TMPDIR"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TEMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TZ"] == "America/New_York"
 
 
 def test_queue_completion_count_excludes_unrelated_legacy_proofs(tmp_path):

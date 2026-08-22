@@ -1,14 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 import json
 import os
 import socket
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlsplit
 
 import pandas as pd
 import requests
+
+from quant_platform.crypto_wizards_catalog import BASE_URL
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+)
 
 
 @dataclass(frozen=True)
@@ -47,7 +54,7 @@ class CryptoWizardsLiveConfig:
         base_url_env: str = "CRYPTO_WIZARDS_BASE_URL",
         api_key_env: str = "CRYPTO_WIZARDS_API_KEY",
         endpoints_env: str = "CRYPTO_WIZARDS_ENDPOINTS",
-    ) -> "CryptoWizardsLiveConfig":
+    ) -> CryptoWizardsLiveConfig:
         configured_endpoints = endpoints if endpoints is not None else parse_endpoint_specs(os.getenv(endpoints_env, ""))
         return cls(
             base_url=os.getenv(base_url_env),
@@ -94,17 +101,36 @@ class CryptoWizardsExtractor:
         headers["Content-Type"] = "application/json"
         url = self.endpoint_url(endpoint)
         try:
-            response = requests.request(
-                endpoint.method,
-                url,
-                params=endpoint.params,
-                headers=headers,
-                timeout=30,
-            )
-            response.raise_for_status()
+            if _is_official_wizard_api_url(url):
+                from quant_platform.crypto_wizards_history import (
+                    fetch_crypto_wizards_json,
+                )
+
+                method = endpoint.method.strip().upper()
+                payload = fetch_crypto_wizards_json(
+                    method=method,
+                    url=url,
+                    params=endpoint.params if method == "GET" else None,
+                    payload=endpoint.params if method == "POST" else None,
+                    api_key=self.api_key,
+                    timeout=30,
+                )
+            else:
+                response = requests.request(
+                    endpoint.method,
+                    url,
+                    params=endpoint.params,
+                    headers=headers,
+                    timeout=30,
+                )
+                response.raise_for_status()
+                payload = response.json()
         except requests.exceptions.RequestException as exc:
             raise CryptoWizardsFetchError(f"failed to fetch endpoint {endpoint.name} at {url}: {exc}") from exc
-        payload = response.json()
+        except ValueError as exc:
+            raise CryptoWizardsFetchError(
+                f"failed to fetch endpoint {endpoint.name} at {url}: {exc}"
+            ) from exc
         self.archive(endpoint.name, payload)
         return payload
 
@@ -118,7 +144,7 @@ class CryptoWizardsExtractor:
         cls,
         config: CryptoWizardsLiveConfig,
         archive_dir: str | Path = "data/raw",
-    ) -> "CryptoWizardsExtractor":
+    ) -> CryptoWizardsExtractor:
         missing = config.missing_requirements()
         if missing:
             raise ValueError(f"Crypto Wizards live config missing: {', '.join(missing)}")
@@ -129,6 +155,40 @@ class CryptoWizardsExtractor:
 
     def diagnose_endpoint(self, endpoint: EndpointSpec, timeout: float = 10.0) -> CryptoWizardsEndpointDiagnostic:
         url = self.endpoint_url(endpoint)
+        if _is_official_wizard_api_url(url):
+            try:
+                from quant_platform.crypto_wizards_history import (
+                    fetch_crypto_wizards_json,
+                )
+
+                method = endpoint.method.strip().upper()
+                fetch_crypto_wizards_json(
+                    method=method,
+                    url=url,
+                    params=endpoint.params if method == "GET" else None,
+                    payload=endpoint.params if method == "POST" else None,
+                    api_key=self.api_key,
+                    timeout=timeout,
+                )
+                return CryptoWizardsEndpointDiagnostic(
+                    name=endpoint.name,
+                    url=url,
+                    dns_ok=True,
+                    dns_error="",
+                    http_ok=True,
+                    status_code=200,
+                    error="",
+                )
+            except (CryptoWizardsFetchError, ValueError) as exc:
+                return CryptoWizardsEndpointDiagnostic(
+                    name=endpoint.name,
+                    url=url,
+                    dns_ok=False,
+                    dns_error="not_probed_outside_effect_authority",
+                    http_ok=False,
+                    status_code=None,
+                    error=str(exc),
+                )
         host = requests.utils.urlparse(url).hostname or ""
         dns_error = ""
         dns_ok = False
@@ -167,7 +227,7 @@ class CryptoWizardsExtractor:
 
     def archive(self, name: str, payload: dict[str, Any]) -> Path:
         path = self.archive_dir / f"{name}.json"
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return path
 
     @staticmethod
@@ -189,4 +249,14 @@ class CryptoWizardsExtractor:
             for row in CryptoWizardsExtractor.discover_fields(payload):
                 row["endpoint"] = endpoint
                 all_rows.append(row)
-        pd.DataFrame(all_rows).drop_duplicates().to_csv(output_path, index=False)
+        atomic_write_csv(pd.DataFrame(all_rows).drop_duplicates(), output_path, index=False)
+
+
+def _is_official_wizard_api_url(url: str) -> bool:
+    parsed = urlsplit(url)
+    official = urlsplit(BASE_URL)
+    return (
+        parsed.scheme == official.scheme
+        and parsed.hostname == official.hostname
+        and parsed.port == official.port
+    )

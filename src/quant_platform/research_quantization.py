@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 
 import pandas as pd
@@ -27,10 +31,10 @@ def quantize_family_matrix(
     summary_path = output / "research_quantization_summary.csv"
     notes_path = output / "research_quantization_runbook.md"
 
-    ranked.to_csv(ranked_path, index=False)
-    top.to_csv(top_path, index=False)
-    _summary_frame(ranked, top_n=top_n).to_csv(summary_path, index=False)
-    notes_path.write_text(_runbook_text(base, ranked, top), encoding="utf-8")
+    atomic_write_csv(ranked, ranked_path, index=False)
+    atomic_write_csv(top, top_path, index=False)
+    atomic_write_csv(_summary_frame(ranked, top_n=top_n), summary_path, index=False)
+    atomic_write_text(notes_path, _runbook_text(base, ranked, top), encoding="utf-8")
 
     return {
         "ranked": ranked_path,

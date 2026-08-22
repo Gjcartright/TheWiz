@@ -204,15 +204,9 @@ def _build_fixture(root, *, asset_y="ETH", mapped=True):
                         "pair_group_id": pair["pair_group_id"],
                         "exact_mode": mode,
                         "orientation": orientation,
-                        "capture_status": (
-                            "NOT_AVAILABLE_ON_PAIR_PAGE" if mode == "OU (Optimal)" else "CAPTURED"
-                        ),
-                        "capture_blocker": (
-                            "mode_not_offered_by_current_pair_page_selector"
-                            if mode == "OU (Optimal)"
-                            else ""
-                        ),
-                        "orientation_verified": mode != "OU (Optimal)",
+                        "capture_status": "CAPTURED",
+                        "capture_blocker": "",
+                        "orientation_verified": True,
                         "entry_long": 0.20 if mode == "Copula" else -0.50,
                         "entry_short": 0.80 if mode == "Copula" else 0.50,
                         "exit_long": 0.45 if mode == "Copula" else 0.0,
@@ -271,19 +265,30 @@ def test_replay_preflight_accounts_every_cell_and_deduplicates_only_fetches(tmp_
     )
 
     experiments = pd.read_csv(result.paths["experiment_preflight"])
+    validation_queue = pd.read_csv(result.paths["current_cycle_validation_queue"])
     pairs = pd.read_csv(result.paths["pair_history_queue"])
     fetches = pd.read_csv(result.paths["asset_fetch_queue"])
     assert len(experiments) == len(EXACT_MODES) * len(ORIENTATIONS)
     assert experiments["experiment_id"].nunique() == len(experiments)
     assert experiments["preflight_status"].eq("READY_FOR_HISTORY").sum() == 14
-    assert experiments["preflight_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 2
+    assert experiments["preflight_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 0
+    assert len(validation_queue) == 10
+    assert not validation_queue["exact_mode"].str.startswith("OU").any()
+    ou_rows = experiments.loc[experiments["exact_mode"].str.startswith("OU")]
+    assert ou_rows["validation_lane"].eq("DIAGNOSTIC_ONLY").all()
+    assert ou_rows["acceptance_policy_status"].eq("BLOCKED").all()
+    assert ou_rows["acceptance_policy_blocker"].eq("ou_family_terminal_research_only").all()
     assert pairs["history_request_status"].eq("READY_TO_FETCH").all()
-    assert pairs["ready_mode_orientation_cells"].item() == 14
+    assert pairs["ready_mode_orientation_cells"].item() == 10
+    assert pairs["current_cycle_planned_mode_orientation_cells"].item() == 10
+    assert pairs["diagnostic_only_mode_orientation_cells"].item() == 4
     assert set(fetches["asset"]) == {"BTC", "ETH"}
     assert fetches["hyperliquid_interval"].eq("1d").all()
     assert fetches["fetch_end_at"].str.startswith("2026-08-07T12:30:00").all()
     assert result.summary["experiments"] == run.summary["planned_experiments"]
     assert result.summary["network_request_deduplication_only"] is True
+    assert result.summary["current_cycle_validation_experiments"] == 10
+    assert result.summary["ou_diagnostic_only_experiments"] == 4
     assert not experiments["discovery_prefilter_applied"].astype(bool).any()
     assert not experiments["live_trading_authorized"].astype(bool).any()
     assert result.paths["snapshot_manifest"].exists()
@@ -548,7 +553,7 @@ def test_validation_runner_uses_fixed_stage_order_and_fail_closed_manifest(
                 paths={"manifest": manifest, "snapshot_manifest": snapshot_manifest},
                 summary={
                     "run_id": "run-1",
-                    "experiments": 16,
+                    "experiments": 14,
                     "experiment_status_accounted": True,
                     key: f"stage-id-{position}",
                     "acceptance_eligible_replays": 0,
@@ -581,8 +586,8 @@ def test_validation_runner_uses_fixed_stage_order_and_fail_closed_manifest(
             summary={
                 "run_id": "run-1",
                 "learning_ledger_id": "learning-1",
-                "records": 16,
-                "unique_experiment_ids": 16,
+                "records": 14,
+                "unique_experiment_ids": 14,
                 "experiment_status_accounted": True,
                 "outcome_type": "backtest_research_outcome",
                 "record_granularity": "experiment_summary",
@@ -612,7 +617,7 @@ def test_validation_runner_uses_fixed_stage_order_and_fail_closed_manifest(
     assert result.summary["stage_accounting_complete"] is True
     assert result.summary["order_submission_performed"] is False
     assert result.summary["live_trading_authorized"] is False
-    assert result.summary["learning_ledger"]["records"] == 16
+    assert result.summary["learning_ledger"]["records"] == 14
     assert result.summary["learning_ledger"]["training_eligible_records"] == 0
     assert all(
         row["manifest_path"].startswith("reports/snapshots/")
@@ -672,6 +677,181 @@ def test_materialize_history_retains_insufficient_history_blockers(tmp_path):
     assert result.summary["pair_histories_blocked"] == 1
 
 
+def test_short_history_research_lane_does_not_weaken_acceptance(tmp_path):
+    run = _build_fixture(tmp_path)
+    build_exhaustive_wizard_hyperliquid_replay_preflight(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 5, tzinfo=timezone.utc),
+    )
+
+    history = materialize_exhaustive_wizard_hyperliquid_history(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 6, tzinfo=timezone.utc),
+        fetcher=_fake_candle_fetcher(rows=627),
+        sleep=lambda _: None,
+    )
+
+    assets = pd.read_csv(history.paths["asset_results"])
+    pairs = pd.read_csv(history.paths["pair_results"])
+    assert assets["history_status"].eq("COMPLETE_RESEARCH_ONLY").all()
+    assert assets["history_lane"].eq("SHORT_HISTORY_RESEARCH_ONLY").all()
+    assert not assets["acceptance_history_ready"].astype(bool).any()
+    assert assets["research_history_ready"].astype(bool).all()
+    assert pairs["history_status"].eq(
+        "READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY"
+    ).all()
+    assert pairs["history_rows"].eq(627).all()
+    assert pairs["history_path"].astype(str).str.len().gt(0).all()
+    assert history.summary["pair_histories_ready"] == 0
+    assert history.summary["pair_histories_short_research_ready"] == 1
+
+    replay = run_exhaustive_wizard_hyperliquid_canonical_replay(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 7, tzinfo=timezone.utc),
+    )
+    results = pd.read_csv(replay.paths["results"], keep_default_na=False)
+    completed = results.loc[
+        results["replay_status"].eq("SHORT_HISTORY_RESEARCH_REPLAY_COMPLETE")
+    ]
+    assert len(completed) == 10
+    assert completed["history_validation_lane"].eq(
+        "SHORT_HISTORY_RESEARCH_ONLY"
+    ).all()
+    assert completed["acceptance_status"].eq("BLOCKED").all()
+    assert completed["acceptance_reason"].str.contains(
+        "short_history_research_only"
+    ).all()
+    assert not completed["research_rank_eligible"].astype(bool).any()
+    assert replay.summary["short_history_research_replays_complete"] == 10
+    assert replay.summary["acceptance_eligible_replays"] == 0
+    assert len(results) == run.summary["planned_experiments"]
+
+
+def test_short_history_lane_propagates_through_cost_and_walkforward(tmp_path):
+    _build_fixture(tmp_path)
+    active = tmp_path / "reports" / "active"
+    build_exhaustive_wizard_hyperliquid_replay_preflight(root=tmp_path)
+    materialize_exhaustive_wizard_hyperliquid_history(
+        root=tmp_path,
+        fetcher=_fake_candle_fetcher(rows=627),
+        sleep=lambda _: None,
+    )
+    run_exhaustive_wizard_hyperliquid_canonical_replay(root=tmp_path)
+
+    funding = materialize_exhaustive_hyperliquid_funding_evidence(
+        root=tmp_path,
+        fetcher=_fake_funding_fetcher,
+        sleep=lambda _: None,
+    )
+    funding_queue = pd.read_csv(funding.paths["queue"], keep_default_na=False)
+    funding_pairs = pd.read_csv(funding.paths["pair_coverage"], keep_default_na=False)
+    assert set(funding_queue["asset"]) == {"BTC", "ETH"}
+    assert funding_pairs["funding_status"].eq(
+        "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+    ).all()
+    assert funding_pairs["funding_research_ready"].astype(bool).all()
+    assert not funding_pairs["funding_acceptance_ready"].astype(bool).any()
+
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "asset_x": "BTC",
+                "asset_y": "ETH",
+                "fee_profile_id": "test-fee-v1",
+                "taker_fee_bps": 4.5,
+                "execution_risk_bps": 2.0,
+                "fee_source_checked_at": "2026-08-07",
+                "cost_model_status": "official_base_tier_conservative_fee_profile",
+                "cost_model_ready": True,
+                "slippage_model_status": "insufficient_l2_depth_samples",
+                "slippage_model_ready": False,
+                "slippage_samples_x": 2,
+                "slippage_samples_y": 2,
+                "required_slippage_samples": 12,
+                "slippage_window_hours": 24,
+                "slippage_x_p95_bps": 1.0,
+                "slippage_y_p95_bps": 2.0,
+                "pair_one_way_slippage_bps": 1.5,
+                "estimated_pair_round_trip_cost_bps": 16.0,
+                "freshest_sample_at": "2026-08-08T04:30:00+00:00",
+                "evidence_path": "data/processed/l2.csv",
+            }
+        ]
+    ).to_csv(active / "hyperliquid_pair_cost_model.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "pair": "BTC-USD-ETH-USD",
+                "status": "waiting_for_next_capture",
+                "next_sample_due_at": "2026-08-08T04:40:00+00:00",
+                "evidence_path": "reports/active/cadence.csv",
+            }
+        ]
+    ).to_csv(active / "hyperliquid_evidence_cadence.csv", index=False)
+
+    costs = build_exhaustive_wizard_hyperliquid_cost_evidence(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 5, tzinfo=timezone.utc),
+    )
+    pair_costs = pd.read_csv(costs.paths["pair_cost_evidence"], keep_default_na=False)
+    experiment_costs = pd.read_csv(
+        costs.paths["experiment_cost_readiness"], keep_default_na=False
+    )
+    assert pair_costs["cost_evidence_status"].eq(
+        "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+    ).all()
+    assert pair_costs["history_lane"].eq("SHORT_HISTORY_RESEARCH_ONLY").all()
+    assert not pair_costs["cost_acceptance_ready"].astype(bool).any()
+    assert experiment_costs["cost_replay_status"].eq(
+        "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+    ).sum() == 14
+
+    replay = run_exhaustive_wizard_hyperliquid_observed_cost_replay(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 5, 5, tzinfo=timezone.utc),
+    )
+    replay_rows = pd.read_csv(replay.paths["results"], keep_default_na=False)
+    completed = replay_rows.loc[
+        replay_rows["replay_status"].eq(
+            "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE"
+        )
+    ]
+    assert len(completed) == 10
+    assert completed["history_validation_lane"].eq(
+        "SHORT_HISTORY_RESEARCH_ONLY"
+    ).all()
+    assert not completed["research_rank_eligible"].astype(bool).any()
+    assert completed["research_rank_blocker"].str.contains(
+        "short_history_research_only"
+    ).all()
+    assert replay.summary["short_history_observed_cost_replays_complete"] == 10
+
+    walkforward = run_exhaustive_wizard_hyperliquid_walkforward(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 5, 10, tzinfo=timezone.utc),
+    )
+    statuses = pd.read_csv(walkforward.paths["status"], keep_default_na=False)
+    candidates = pd.read_csv(walkforward.paths["candidates"], keep_default_na=False)
+    ranked = pd.read_csv(walkforward.paths["ranked"], keep_default_na=False)
+    assert len(statuses) == len(EXACT_MODES) * len(ORIENTATIONS)
+    assert len(candidates) == 10
+    assert candidates["history_validation_lane"].eq(
+        "SHORT_HISTORY_RESEARCH_ONLY"
+    ).all()
+    assert not candidates["walkforward_rank_eligible"].astype(bool).any()
+    assert candidates["walkforward_rank_blocker"].eq(
+        "short_history_research_only"
+    ).all()
+    assert ranked["walkforward_rank"].fillna("").astype(str).str.len().eq(0).all()
+    assert candidates["acceptance_reason"].str.contains(
+        "short_history_research_only"
+    ).all()
+    assert walkforward.summary["short_history_walkforward_candidates"] == 10
+    assert walkforward.summary["acceptance_eligible_replays"] == 0
+    assert walkforward.summary["live_trading_authorized"] is False
+
+
 def test_canonical_replay_accounts_for_every_experiment_without_accepting_research(tmp_path):
     run = _build_fixture(tmp_path)
     build_exhaustive_wizard_hyperliquid_replay_preflight(
@@ -696,7 +876,7 @@ def test_canonical_replay_accounts_for_every_experiment_without_accepting_resear
     assert results["experiment_id"].nunique() == len(results)
     assert results["replay_status"].eq("RESEARCH_REPLAY_COMPLETE").sum() == 10
     assert results["replay_status"].eq("BLOCKED_DYNAMIC_EXPOSURE_RULE").sum() == 4
-    assert results["replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 2
+    assert results["replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 0
     assert len(ranked) == 10
     assert {"research_rank", "research_rank_eligible", "research_rank_blocker"}.issubset(
         ranked.columns
@@ -877,7 +1057,7 @@ def test_cost_bridge_accounts_all_pairs_and_experiments_without_promoting_provis
     assert len(experiments) == len(EXACT_MODES) * len(ORIENTATIONS)
     assert experiments["experiment_id"].nunique() == len(experiments)
     assert experiments["cost_replay_status"].eq("READY_FOR_PROVISIONAL_COST_RESEARCH").sum() == 14
-    assert experiments["cost_replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 2
+    assert experiments["cost_replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 0
     assert result.summary["pair_status_accounted"] is True
     assert result.summary["experiment_status_accounted"] is True
     assert result.summary["pairs_ready_for_cost_calibrated_replay"] == 0
@@ -892,7 +1072,7 @@ def test_cost_bridge_accounts_all_pairs_and_experiments_without_promoting_provis
     assert replay_rows["experiment_id"].nunique() == len(replay_rows)
     assert replay_rows["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE").sum() == 10
     assert replay_rows["replay_status"].eq("BLOCKED_DYNAMIC_EXPOSURE_RULE").sum() == 4
-    assert replay_rows["replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 2
+    assert replay_rows["replay_status"].eq("NOT_APPLICABLE_WIZARD_MODE").sum() == 0
     completed = replay_rows.loc[
         replay_rows["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE")
     ]

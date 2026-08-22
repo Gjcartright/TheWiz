@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 import json
 from pathlib import Path
 import re
@@ -503,5 +505,5 @@ def write_feature_schema(path: Path, columns: list[str] | None = None) -> Path:
             "excludes_dashboard_return_and_sharpe": True,
         },
     }
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return path

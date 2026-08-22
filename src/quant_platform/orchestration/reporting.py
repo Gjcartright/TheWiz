@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 
 import pandas as pd
@@ -17,8 +21,8 @@ def write_orchestrator_reports(state: OrchestratorState, root: Path = ROOT) -> C
     events_path = active / "orchestrator_events.jsonl"
 
     frame = pd.DataFrame([result.to_row(state.run_id, state.pair_id) for result in state.results])
-    frame.to_csv(status_path, index=False)
-    md_path.write_text(_status_markdown(frame, state), encoding="utf-8")
+    atomic_write_csv(frame, status_path, index=False)
+    atomic_write_text(md_path, _status_markdown(frame, state), encoding="utf-8")
     for result in state.results:
         append_stage_event(events_path, run_id=state.run_id, pair_id=state.pair_id, result=result)
     return CommandResult(
@@ -41,7 +45,7 @@ def write_project_spine_audit(root: Path = ROOT) -> Path:
     for area, evidence in checks.items():
         status = "present" if evidence.exists() else "missing"
         rows.append(f"| {area} | {status} | `{evidence.relative_to(root) if evidence.exists() else evidence}` |")
-    path.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    atomic_write_text(path, "\n".join(rows) + "\n", encoding="utf-8")
     return path
 
 

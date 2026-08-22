@@ -227,9 +227,10 @@ def test_unattended_preflight_defers_without_spend_when_producer_lock_is_busy(
 
     assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
     assert any(
-        blocker.startswith("unattended_locked_canonical_refresh_failed:FileExistsError:busy")
+        blocker.startswith("unattended_locked_canonical_refresh_failed:FileExistsError:")
         for blocker in result.summary["blockers"]
     )
+    assert "busy" not in "|".join(result.summary["blockers"])
     assert credit_calls == []
 
 
@@ -302,9 +303,10 @@ def test_unattended_preflight_does_not_call_credit_endpoint_when_checkpoint_refr
 
     assert result.summary["status"] == "BLOCKED_UNATTENDED_EXTERNAL_PREFLIGHT"
     assert any(
-        blocker.startswith("unattended_checkpoint_refresh_failed:RuntimeError:locked")
+        blocker.startswith("unattended_checkpoint_refresh_failed:RuntimeError:")
         for blocker in result.summary["blockers"]
     )
+    assert "locked" not in "|".join(result.summary["blockers"])
     assert "unattended_checkpoint_refresh_not_current" in result.summary["blockers"]
     assert credit_calls == []
 
@@ -328,7 +330,7 @@ def _launcher_preflight(root: Path, *, passed: bool) -> CommandResult:
 
 
 def _python(root: Path) -> Path:
-    path = root / ".venv312" / "bin" / "python"
+    path = root / ".venv" / "bin" / "python3"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("", encoding="utf-8")
     return path

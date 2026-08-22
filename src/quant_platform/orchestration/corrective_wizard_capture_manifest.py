@@ -10,11 +10,15 @@ from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    promote_staged_file,
+    write_immutable_bytes,
+)
 from quant_platform.orchestration.corrective_wizard_copula_behavioral import (
     _apply_source_orientation_contract,
     _artifact_paths,
@@ -166,7 +170,7 @@ def build_corrective_wizard_capture_manifest(
         copula_plans = provider(root)
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         copula_plans = []
-        blockers.append(f"copula_capture_plan_invalid:{type(exc).__name__}:{exc}")
+        blockers.append(f"copula_capture_plan_invalid:{safe_exception_code(exc)}")
     copula_rows, copula_blockers = _pending_copula_rows(
         plans=copula_plans,
         exact_queue=queue,
@@ -1707,25 +1711,10 @@ def _write_or_validate_immutable_bytes(
     *,
     conflict_message: str,
 ) -> None:
-    if path.exists():
-        if path.is_symlink() or path.read_bytes() != payload:
-            raise ValueError(conflict_message)
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
     try:
-        with temporary.open("xb") as handle:
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        try:
-            os.link(temporary, path)
-        except FileExistsError:
-            if path.is_symlink() or path.read_bytes() != payload:
-                raise ValueError(conflict_message)
-        _fsync_directory(path.parent)
-    finally:
-        temporary.unlink(missing_ok=True)
+        write_immutable_bytes(path, payload)
+    except ValueError as exc:
+        raise ValueError(conflict_message) from exc
 
 
 def _fsync_directory(path: Path) -> None:
@@ -1745,7 +1734,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
@@ -1756,7 +1745,7 @@ def _atomic_text(value: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(value, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _relative(path: Path, root: Path) -> str:

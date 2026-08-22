@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -259,8 +261,8 @@ def write_scanner_reports(input_dir: str | Path, output_dir: str | Path) -> dict
     rows = load_scanner_rows(input_dir)
     rows_path = output / "crypto_wizards_scanner_rows.csv"
     fields_path = output / "crypto_wizards_scanner_field_dictionary.csv"
-    pd.DataFrame([row.to_row() for row in rows], columns=SCANNER_COLUMNS).to_csv(rows_path, index=False)
-    pd.DataFrame(scanner_field_rows(rows)).to_csv(fields_path, index=False)
+    atomic_write_csv(pd.DataFrame([row.to_row() for row in rows], columns=SCANNER_COLUMNS), rows_path, index=False)
+    atomic_write_csv(pd.DataFrame(scanner_field_rows(rows)), fields_path, index=False)
     return {"rows": rows_path, "fields": fields_path}
 
 

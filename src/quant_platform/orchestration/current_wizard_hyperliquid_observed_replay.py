@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
@@ -18,6 +17,12 @@ from quant_platform.backtest import (
     CostModel,
     FundingPolicy,
     backtest_two_leg_spread_with_ledger,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
     MINIMUM_RESEARCH_RANK_TRADES,
@@ -30,7 +35,6 @@ from quant_platform.orchestration.current_wizard_hyperliquid_replay import (
     _rank_blocker,
 )
 from quant_platform.wizard_mode_replay import build_local_mode_signal
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_observed_cost_replay.v1"
@@ -66,9 +70,14 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
     canonical = pd.read_csv(input_paths["canonical"])
     pair_costs = pd.read_csv(input_paths["pair_costs"])
     experiment_costs = pd.read_csv(input_paths["experiment_costs"])
-    if canonical["experiment_id"].duplicated().any() or experiment_costs["experiment_id"].duplicated().any():
+    if (
+        canonical["experiment_id"].duplicated().any()
+        or experiment_costs["experiment_id"].duplicated().any()
+    ):
         raise ValueError("Current observed-cost inputs contain duplicate experiment ids")
-    if set(canonical["experiment_id"].astype(str)) != set(experiment_costs["experiment_id"].astype(str)):
+    if set(canonical["experiment_id"].astype(str)) != set(
+        experiment_costs["experiment_id"].astype(str)
+    ):
         raise ValueError("Current cost readiness does not account for canonical experiments")
     if pair_costs["pair_group_key"].duplicated().any():
         raise ValueError("Current pair cost evidence contains duplicate pair keys")
@@ -80,23 +89,18 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
         "as_of": as_of.isoformat(),
         "input_hashes": {name: _file_hash(path) for name, path in input_paths.items()},
     }
-    observed_replay_id = "cwobserved_" + sha256(
-        _canonical_json(material).encode()
-    ).hexdigest()[:20]
+    observed_replay_id = "cwobserved_" + sha256(_canonical_json(material).encode()).hexdigest()[:20]
     cost_snapshot_manifest = input_paths["cost_manifest"]
     snapshot_dir = cost_snapshot_manifest.parent / "observed_replays" / observed_replay_id
     input_dir = snapshot_dir / "inputs"
     input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     pair_lookup = {_text(row.pair_group_key): row for row in pair_costs.itertuples()}
-    readiness_lookup = {
-        _text(row.experiment_id): row for row in experiment_costs.itertuples()
-    }
+    readiness_lookup = {_text(row.experiment_id): row for row in experiment_costs.itertuples()}
     history_cache: dict[str, pd.DataFrame] = {}
     result_rows: list[dict[str, object]] = []
     trade_rows: list[dict[str, object]] = []
@@ -151,17 +155,17 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
             if test_rows <= 0 or test_rows > len(oriented):
                 raise ValueError("canonical_test_window_invalid")
             test = oriented.iloc[-test_rows:].copy()
+            prior_history = oriented.iloc[:-test_rows].copy()
             settings = json.loads(_text(row.settings_json))
             test["hedge_ratio"] = _exposure_hedge_ratio(
                 test,
                 exact_mode=exact_mode,
                 settings=settings,
+                prior_history=prior_history,
             )
             mode_result = build_local_mode_signal(test, settings, exact_mode=exact_mode)
             if mode_result.mode_replay_status != "READY_FOR_RESEARCH_REPLAY":
-                raise ValueError(
-                    "mode_inputs_unavailable:" + ";".join(mode_result.missing_inputs)
-                )
+                raise ValueError("mode_inputs_unavailable:" + ";".join(mode_result.missing_inputs))
             costs = _cost_model(pair_cost, timeframe=_text(row.timeframe))
             result, ledger = backtest_two_leg_spread_with_ledger(
                 test,
@@ -174,7 +178,7 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
                 {
                     **base,
                     "replay_status": "BLOCKED_REPLAY_ERROR",
-                    "replay_blocker": f"{type(exc).__name__}:{exc}",
+                    "replay_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -265,8 +269,8 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
         (trades, "trades", "snapshot_trades"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     status_counts = results["replay_status"].value_counts().to_dict()
     summary: dict[str, object] = {
         **material,
@@ -287,16 +291,14 @@ def run_current_wizard_hyperliquid_observed_cost_replay(
         "live_trading_authorized": False,
         "status_counts": status_counts,
         "artifacts": {name: _relative(path, root) for name, path in paths.items()},
-        "input_snapshots": {
-            name: _relative(path, root) for name, path in snapshot_inputs.items()
-        },
+        "input_snapshots": {name: _relative(path, root) for name, path in snapshot_inputs.items()},
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -358,14 +360,23 @@ def _validation(canonical: pd.DataFrame, results: pd.DataFrame) -> pd.DataFrame:
     checks = {
         "experiment_count_preserved": len(canonical) == len(results),
         "experiment_ids_unique": results["experiment_id"].nunique() == len(results),
-        "experiment_ids_preserved": set(canonical["experiment_id"].astype(str)) == set(results["experiment_id"].astype(str)),
+        "experiment_ids_preserved": set(canonical["experiment_id"].astype(str))
+        == set(results["experiment_id"].astype(str)),
         "statuses_accounted": results["replay_status"].astype(str).ne("").all(),
         "one_x_only": results["canonical_replay_leverage"].eq(1.0).all(),
-        "acceptance_disabled": results.get("acceptance_status", pd.Series("BLOCKED", index=results.index)).fillna("BLOCKED").eq("BLOCKED").all(),
+        "acceptance_disabled": results.get(
+            "acceptance_status", pd.Series("BLOCKED", index=results.index)
+        )
+        .fillna("BLOCKED")
+        .eq("BLOCKED")
+        .all(),
         "live_trading_disabled": not results["live_trading_authorized"].astype(bool).any(),
     }
     return pd.DataFrame(
-        [{"check": check, "status": "PASS" if passed else "FAIL"} for check, passed in checks.items()]
+        [
+            {"check": check, "status": "PASS" if passed else "FAIL"}
+            for check, passed in checks.items()
+        ]
     )
 
 

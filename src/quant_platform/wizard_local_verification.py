@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import asdict
 from datetime import datetime, timezone
 import json
@@ -11,6 +15,7 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.backtest import BacktestResult, CostModel, backtest_two_leg_spread
+from quant_platform.economic_contract import normalized_two_leg_weights
 from quant_platform.wizard_evidence import _ensure_wizard_evidence, _wizard_setup_identity
 from quant_platform.wizard_mode_replay import WizardModeReplayResult, build_local_mode_signal
 
@@ -1043,12 +1048,11 @@ def _attach_trade_returns(
     returns_y = price_y.pct_change().fillna(0.0)
     hedge_ratio = pd.to_numeric(data.get("hedge_ratio", 1.0), errors="coerce").fillna(1.0)
     signal_position = data["signal"].shift(1).fillna(0.0)
-    gross_scale = 1.0 + hedge_ratio.abs()
-    weight_y = signal_position / gross_scale
-    weight_x = -signal_position * hedge_ratio / gross_scale
+    weight_x, weight_y = normalized_two_leg_weights(signal_position, hedge_ratio)
     gross_return = weight_x * returns_x + weight_y * returns_y
-    target_weight_y = data["signal"] / gross_scale
-    target_weight_x = -data["signal"] * hedge_ratio / gross_scale
+    target_weight_x, target_weight_y = normalized_two_leg_weights(
+        data["signal"], hedge_ratio
+    )
     turnover = target_weight_x.diff().abs().fillna(target_weight_x.abs()) + target_weight_y.diff().abs().fillna(target_weight_y.abs())
     funding_x = _series_or_default(data, "funding_x_bps", cost_model.funding_bps_per_day)
     funding_y = _series_or_default(data, "funding_y_bps", cost_model.funding_bps_per_day)
@@ -1276,9 +1280,9 @@ def _read_json(path: Path) -> dict[str, object]:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")

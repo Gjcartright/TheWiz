@@ -15,6 +15,10 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.ml_filter import available_model_specs
+from quant_platform.orchestration.corrective_runtime import (
+    promote_staged_file,
+    write_immutable_bytes,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 CONFIG_SCHEMA = "thewiz.registered_stage5_protocol_config.v1"
@@ -278,16 +282,15 @@ def _safe_relative_path(root: Path, relative: str) -> Path:
 
 
 def _write_immutable_json(payload: dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.is_file():
-        if _read_json(path) != payload:
-            raise ValueError(f"immutable registered Stage 5 protocol conflict: {path}")
-        return
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    descriptor = os.open(path, flags, 0o600)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True, allow_nan=False)
-        handle.write("\n")
+    encoded = (
+        json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    ).encode("utf-8")
+    try:
+        write_immutable_bytes(path, encoded)
+    except ValueError as exc:
+        raise ValueError(
+            f"immutable registered Stage 5 protocol conflict: {path}"
+        ) from exc
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
@@ -297,7 +300,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
         json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    os.replace(temporary, path)
+    promote_staged_file(temporary, path)
 
 
 def _payload_hash(payload: dict[str, Any]) -> str:

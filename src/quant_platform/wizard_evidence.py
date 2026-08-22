@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
@@ -10,6 +14,7 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.economic_contract import action_for_threshold_operator, tail_actions
 from quant_platform.pair_detail_ingestion import extract_history_rows, snapshot_from_payload
 from quant_platform.strategies import STRATEGIES
 from quant_platform.wizard_mode_replay import mode_requirements, normalize_exact_mode
@@ -3122,6 +3127,41 @@ def _backtest_settings_status(
         missing.append("entry_direction_mapping")
     elif not all(_valid_capture_position(_first_present(row, [field])) for field in ["entry_long_position", "entry_short_position"]):
         missing.append("invalid_entry_direction_mapping")
+    else:
+        direction_view = _first_present(
+            row,
+            ["copula_direction_view", "copula_directional_entry_rule"],
+        )
+        try:
+            lower_action, upper_action = tail_actions(
+                exact_mode,
+                copula_direction_view=direction_view or "u1_given_u2",
+            )
+        except ValueError:
+            pass
+        else:
+            if exact_mode == "Copula":
+                expected_entries = (
+                    ("lower", lower_action, "entry_long_position"),
+                    ("upper", upper_action, "entry_short_position"),
+                )
+            else:
+                expected_entries = []
+                for rule_name in ("entry_long", "entry_short"):
+                    expected = action_for_threshold_operator(
+                        exact_mode,
+                        _first_present(row, [f"{rule_name}_operator"]),
+                    )
+                    if expected is not None:
+                        tail_name, action = expected
+                        expected_entries.append(
+                            (tail_name, action, f"{rule_name}_position")
+                        )
+            for tail_name, action, position_field in expected_entries:
+                if _normalized_capture_position(
+                    _first_present(row, [position_field])
+                ) != action.value:
+                    missing.append(f"{tail_name}_tail_position_contract_mismatch")
     if not _has_all_values(row, ["exit_long_operator", "exit_long_value", "exit_short_operator", "exit_short_value"]):
         missing.append("exit_thresholds")
     elif not all(_valid_capture_operator(_first_present(row, [field])) for field in ["exit_long_operator", "exit_short_operator"]):
@@ -3246,8 +3286,12 @@ def _valid_capture_operator(value: object) -> bool:
 
 
 def _valid_capture_position(value: object) -> bool:
-    normalized = _text_value(value).lower().replace("-", "_").replace(" ", "_")
+    normalized = _normalized_capture_position(value)
     return normalized in {"long_x_short_y", "short_x_long_y"}
+
+
+def _normalized_capture_position(value: object) -> str:
+    return _text_value(value).lower().replace("-", "_").replace(" ", "_")
 
 
 def _valid_dynamic_hedge_ratio_method(value: object) -> bool:
@@ -3929,12 +3973,12 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")
 
 
 def _wizard_evidence_markdown(frame: pd.DataFrame) -> str:

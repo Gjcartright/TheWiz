@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
 import csv
 import json
+from datetime import datetime, timezone
+from io import StringIO
+from pathlib import Path
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
 from quant_platform.wizard_pair_matrix import (
     compare_hourly_matrix,
     detect_matrix_anomalies,
@@ -464,14 +466,15 @@ def _read_csv_rows(path: Path) -> list[dict[str, object]]:
 
 def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     if not rows:
-        path.write_text("", encoding="utf-8")
+        atomic_write_text(path, "", encoding="utf-8")
         return
     fieldnames: list[str] = []
     for row in rows:
         for key in row:
             if key not in fieldnames:
                 fieldnames.append(key)
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+    buffer = StringIO(newline="")
+    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+    atomic_write_text(path, buffer.getvalue(), encoding="utf-8")

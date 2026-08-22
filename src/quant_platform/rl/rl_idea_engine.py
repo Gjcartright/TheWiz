@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 
 import numpy as np
@@ -121,8 +123,8 @@ def run_rl_idea_scout(
         timestamp=timestamp,
     )
 
-    ideas_frame.to_csv(ideas_path, index=False)
-    similarity_frame.to_csv(sim_path, index=False)
+    atomic_write_csv(ideas_frame, ideas_path, index=False)
+    atomic_write_csv(similarity_frame, sim_path, index=False)
     summary = pd.DataFrame(
         [
             {
@@ -135,7 +137,7 @@ def run_rl_idea_scout(
             }
         ]
     )
-    summary.to_csv(summary_path, index=False)
+    atomic_write_csv(summary, summary_path, index=False)
 
     return CommandResult(
         paths={"rl_ideas": ideas_path, "rl_pair_similarity": sim_path, "rl_idea_summary": summary_path},
@@ -542,9 +544,9 @@ def _write_empty_idea_artifacts(
         ],
         columns=RL_IDEA_SUMMARY_COLUMNS,
     )
-    empty_ideas.to_csv(ideas_path, index=False)
-    empty_sim.to_csv(sim_path, index=False)
-    empty_summary.to_csv(summary_path, index=False)
+    atomic_write_csv(empty_ideas, ideas_path, index=False)
+    atomic_write_csv(empty_sim, sim_path, index=False)
+    atomic_write_csv(empty_summary, summary_path, index=False)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

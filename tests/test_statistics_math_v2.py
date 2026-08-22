@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from quant_platform.statistics.math_v2 import (
     estimate_hurst_dfa,
+    fit_ecm,
     fit_engle_granger,
     fit_gaussian_copula,
     fit_ou,
@@ -15,11 +17,11 @@ from quant_platform.statistics.math_v2 import (
 
 def _cointegrated_prices(rows: int = 600):
     rng = np.random.default_rng(5)
-    log_y = 4.0 + np.cumsum(rng.normal(0.0, 0.01, rows))
+    log_x = 4.0 + np.cumsum(rng.normal(0.0, 0.01, rows))
     residual = np.zeros(rows)
     for index in range(1, rows):
         residual[index] = 0.8 * residual[index - 1] + rng.normal(0.0, 0.008)
-    log_x = 0.3 + 1.1 * log_y + residual
+    log_y = 0.3 + 1.1 * log_x + residual
     return pd.Series(np.exp(log_x)), pd.Series(np.exp(log_y)), pd.Series(residual)
 
 
@@ -39,6 +41,15 @@ def test_cointegration_and_ou_estimators_recover_known_process():
     ou = fit_ou(residual)
     assert cointegration.validity_status == "valid"
     assert cointegration.values["cointegration_pvalue"] < 0.05
+    assert cointegration.values["alpha"] == pytest.approx(0.3, abs=0.15)
+    assert cointegration.values["hedge_ratio"] == pytest.approx(1.1, abs=0.04)
+    assert cointegration.values["hedge_ratio_orientation"] == "beta_y_on_x"
+    expected_residual = (
+        np.log(price_y)
+        - cointegration.values["alpha"]
+        - cointegration.values["hedge_ratio"] * np.log(price_x)
+    )
+    pd.testing.assert_series_equal(cointegration.values["residual"], expected_residual)
     assert ou.validity_status == "valid"
     assert 0.7 < ou.values["phi"] < 0.9
     assert ou.values["half_life"] > 0
@@ -49,6 +60,36 @@ def test_invalid_ou_is_not_clipped_into_validity():
     assert result.validity_status == "invalid"
     assert result.values["phi"] >= 1.0
     assert "half_life" not in result.values
+
+
+def test_ou_rejects_nonpositive_time_step():
+    result = fit_ou(pd.Series(np.arange(100), dtype=float), delta_t=0.0)
+
+    assert result.validity_status == "invalid"
+    assert result.validity_reason == "invalid_delta_t"
+
+
+def test_ecm_recovers_expected_two_leg_correction_signs():
+    rng = np.random.default_rng(101)
+    rows = 1500
+    common = 4.0 + np.cumsum(rng.normal(0.0, 0.006, rows))
+    residual = np.zeros(rows)
+    for index in range(1, rows):
+        residual[index] = 0.65 * residual[index - 1] + rng.normal(0.0, 0.004)
+    log_x = common - 0.5 * residual
+    log_y = 0.2 + common + 0.5 * residual
+    price_x = pd.Series(np.exp(log_x))
+    price_y = pd.Series(np.exp(log_y))
+
+    cointegration = fit_engle_granger(price_x, price_y)
+    ecm = fit_ecm(price_x, price_y, cointegration)
+
+    assert ecm.validity_status == "valid"
+    assert ecm.values["gamma_x"] > 0.0
+    assert ecm.values["gamma_y"] < 0.0
+    assert ecm.values["ecm_strength"] == 1.0
+    assert ecm.values["expected_gamma_x_sign"] == "positive"
+    assert ecm.values["expected_gamma_y_sign"] == "negative"
 
 
 def test_hurst_has_minimum_sample_gate():

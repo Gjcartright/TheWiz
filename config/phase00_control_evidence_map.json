@@ -1,0 +1,220 @@
+{
+  "schema_version": "thewiz.phase00.control_evidence_map.v1",
+  "acceptance_controls": {
+    "P00-SL-001": [
+      "tests.test_corrective_publication_registry::test_current_tree_has_no_unmigrated_or_unpaired_publication_surface",
+      "tests.test_corrective_phase00_control::test_every_canonical_publication_boundary_blocks_during_maintenance"
+    ],
+    "P00-SL-002": [
+      "tests.test_corrective_phase00_control::test_every_canonical_publication_boundary_blocks_during_maintenance"
+    ],
+    "P00-SL-003": [
+      "tests.test_corrective_scheduler_lock::test_generation_mutation_blocks_final_publication",
+      "tests.test_corrective_scheduler_lock::test_publication_target_outside_root_is_denied",
+      "tests.test_corrective_scheduler_lock::test_cross_scope_reentry_is_denied",
+      "tests.test_corrective_scheduler_lock::test_replaced_lock_inode_invalidates_lease"
+    ],
+    "P00-SL-004": [
+      "tests.test_phase00_supreme_diagnostics::test_p00_sl_004_child_cannot_publish_after_launcher_exit"
+    ],
+    "P00-SL-005": [
+      "tests.test_corrective_scheduler_lock::test_governed_evidence_lock_is_reentrant_in_one_process",
+      "tests.test_corrective_scheduler_lock::test_atomic_writer_reuses_current_lease"
+    ],
+    "P00-SL-006": [
+      "tests.test_corrective_lineage::test_registry_accounts_for_all_74_audited_candidates",
+      "tests.test_phase00_active_artifact_envelopes::test_bundle_covers_all_74_registered_artifacts_and_every_validator"
+    ],
+    "P00-SL-007": [
+      "tests.test_corrective_lineage::test_typed_resolver_ignores_receipt_ids_and_validates_nested_paths",
+      "tests.test_corrective_lineage::test_declared_multi_path_field_is_split_without_treating_ids_as_paths"
+    ],
+    "P00-SL-008": [
+      "tests.test_phase00_active_artifact_envelopes::test_valid_manifest_resolves_research_view_and_mutation_revokes_it",
+      "tests.test_corrective_phase00_descendants::test_observer_rejects_hash_valid_path_substitution"
+    ],
+    "P00-SL-009": [
+      "tests.test_phase00_active_artifact_envelopes::test_unproven_authority_is_sealed_as_null_target_blocked",
+      "tests.test_phase00_active_artifact_envelopes::test_blocked_decision_requires_null_target_and_zero_authority"
+    ],
+    "P00-SL-010": [
+      "tests.test_phase00_active_artifact_envelopes::test_integrity_defect_is_superseded_without_rehashing_original"
+    ],
+    "P00-SL-011": [
+      "tests.test_phase00_active_artifact_envelopes::test_bundle_covers_all_74_registered_artifacts_and_every_validator",
+      "tests.test_phase00_active_artifact_envelopes::test_blocked_decision_with_nonzero_authority_invalidates_bundle"
+    ],
+    "P00-SL-012": [
+      "tests.test_phase00_scheduler_supervisor::test_missing_launchd_provenance_blocks_before_callback"
+    ],
+    "P00-SL-013": [
+      "tests.test_phase00_effect_guard::test_guard_denies_network_and_keychain_subprocesses",
+      "tests.test_phase00_effect_authority::test_phase00_profile_denies_every_external_or_trading_effect",
+      "tests.test_corrective_phase00_closure::test_sanitized_verification_environment_excludes_credentials",
+      "tests.test_corrective_phase00_closure::test_pytest_command_is_kernel_contained",
+      "tests.test_phase00_test_containment::test_unit_test_containment_denies_dns_and_socket_variants",
+      "tests.test_phase00_test_containment::test_unit_test_containment_denies_keychain_and_network_popen",
+      "tests.test_phase00_external_effects::test_all_raw_keychain_subprocess_sinks_are_private_and_frozen",
+      "tests.test_phase00_hyperliquid_network_authority::test_missing_public_authority_stops_transport_before_call",
+      "tests.test_phase00_hyperliquid_network_authority::test_all_hyperliquid_raw_network_sinks_are_private_and_frozen"
+    ],
+    "P00-SL-014": [
+      "tests.test_gate00g_order_authority::test_missing_authority_stops_all_three_venue_sinks_before_effects",
+      "tests.test_gate00g_order_authority::test_gate00g_direct_sink_inventory_and_private_sink_signatures_are_frozen"
+    ],
+    "P00-SL-015": [
+      "tests.test_corrective_scheduler_terminal::test_every_terminal_status_has_one_enforced_state_rule",
+      "tests.test_phase00_scheduler_supervisor::test_callback_crash_is_receipted_then_reraised"
+    ],
+    "P00-SL-016": [
+      "tests.test_phase00_external_effects::test_missing_credential_consumes_no_network_or_credit_budget",
+      "tests.test_phase00_hyperliquid_network_authority::test_target_drift_fails_before_transport",
+      "tests.test_phase00_hyperliquid_network_authority::test_durable_response_failure_leaves_effect_unknown",
+      "tests.test_corrective_wizard_proof_scheduler::test_unresolved_frozen_manifest_drift_blocks_before_credit_or_vendor_calls",
+      "tests.test_corrective_wizard_proof_scheduler::test_tampered_unresolved_source_snapshot_blocks_before_external_calls"
+    ],
+    "P00-SL-017": [
+      "tests.test_corrective_scheduler_lock::test_atomic_writer_killpoints_expose_only_complete_generations",
+      "tests.test_corrective_scheduler_runtime_readiness::test_immutable_receipt_collision_fails_before_active_aliases_change"
+    ],
+    "P00-SL-018": [
+      "tests.test_corrective_phase00_control::test_mutation_between_manifests_blocks_snapshot",
+      "tests.test_phase00_supreme_diagnostics::test_t00_001_source_freeze_manifest_is_repeatable_and_quiesced"
+    ],
+    "P00-SL-019": [
+      "tests.test_corrective_phase00_closure::test_closure_bundle_is_immutable_complete_and_research_only",
+      "tests.test_corrective_phase00_closure::test_control_evidence_defaults_to_not_proven"
+    ],
+    "P00-SL-020": [],
+    "P00-SL-021": [],
+    "P00-SL-022": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_log_retention_policy_must_match_runtime_contract",
+      "tests.test_corrective_scheduler_runtime_readiness::test_log_redaction_blocks_without_exposing_secret"
+    ]
+  },
+  "fault_contracts": {
+    "T00-001": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_001_source_freeze_manifest_is_repeatable_and_quiesced"
+    ],
+    "T00-002": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_public_installers_publish_exact_readiness_contract"
+    ],
+    "T00-003": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_live_identity_mismatch_blocks",
+      "tests.test_corrective_scheduler_runtime_readiness::test_source_mutation_after_install_blocks_static_runtime_identity"
+    ],
+    "T00-004": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_explicit_loaded_state_accepts_only_canonical_current_terminal_receipts"
+    ],
+    "T00-005": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_immutable_receipt_collision_fails_before_active_aliases_change",
+      "tests.test_corrective_scheduler_runtime_readiness::test_schema_less_substituted_terminal_receipt_cannot_pass_readiness"
+    ],
+    "T00-006": [
+      "tests.test_corrective_phase00_control::test_every_canonical_publication_boundary_blocks_during_maintenance",
+      "tests.test_corrective_publication_registry::test_current_tree_has_no_unmigrated_or_unpaired_publication_surface"
+    ],
+    "T00-007": [
+      "tests.test_phase00_scheduler_contention::test_real_scheduler_process_contention_has_one_commit_and_one_noncredit_terminal"
+    ],
+    "T00-008": [
+      "tests.test_phase00_scheduler_contention::test_old_malformed_age_with_dead_owner_is_quarantined",
+      "tests.test_phase00_scheduler_contention::test_malformed_age_cannot_evict_a_proven_live_process_generation"
+    ],
+    "T00-009": [
+      "tests.test_phase00_scheduler_contention::test_stale_nonowner_generation_is_quarantined_and_replaced"
+    ],
+    "T00-010": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_010_atomic_writer_concurrency_exact_10000"
+    ],
+    "T00-011": [
+      "tests.test_corrective_scheduler_lock::test_atomic_writer_killpoints_expose_only_complete_generations"
+    ],
+    "T00-012": [
+      "tests.test_corrective_scheduler_lock::test_atomic_writer_io_fault_preserves_prior_value",
+      "tests.test_corrective_scheduler_lock::test_directory_fsync_fault_exposes_only_complete_new_value"
+    ],
+    "T00-013": [
+      "tests.test_corrective_daily_scheduler::test_successful_scheduled_run_refreshes_non_order_checkpoint",
+      "tests.test_corrective_daily_scheduler::test_checkpoint_failure_publishes_bound_blocked_handoff_and_no_slot_credit"
+    ],
+    "T00-014": [
+      "tests.test_corrective_l2_scheduler::test_complete_supervised_l2_result_contains_full_monotone_lattice",
+      "tests.test_corrective_l2_scheduler::test_incomplete_l2_lattice_denies_terminal_slot_credit"
+    ],
+    "T00-015": [
+      "tests.test_corrective_data_evidence::test_registered_hypotheses_are_normalized_for_public_l2_collection"
+    ],
+    "T00-016": [
+      "tests.test_gate00g_order_authority::test_gate00g_direct_sink_inventory_and_private_sink_signatures_are_frozen",
+      "tests.test_corrective_publication_registry::test_current_tree_has_no_unmigrated_or_unpaired_publication_surface"
+    ],
+    "T00-017": [
+      "tests.test_corrective_scheduler_terminal::test_every_terminal_status_has_one_enforced_state_rule",
+      "tests.test_corrective_scheduler_terminal::test_terminal_state_rule_rejects_cross_field_contradictions"
+    ],
+    "T00-018": [
+      "tests.test_phase00_scheduler_supervisor::test_missing_launchd_provenance_blocks_before_callback",
+      "tests.test_phase00_scheduler_supervisor::test_valid_provenance_passes_and_publishes_terminal_receipt"
+    ],
+    "T00-019": [
+      "tests.test_phase00_scheduler_supervisor::test_same_scheduler_slot_executes_once_and_second_run_gets_no_credit"
+    ],
+    "T00-020": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_020_cadence_slo_replay"
+    ],
+    "T00-021": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_021_calendar_boundary_matrix"
+    ],
+    "T00-022": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_022_credit_reset_boundary"
+    ],
+    "T00-023": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_023_provider_failure_matrix"
+    ],
+    "T00-024": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_launchctl_timeout_is_bounded_and_blocks",
+      "tests.test_corrective_scheduler_runtime_readiness::test_non_state_launchctl_results_never_satisfy_unloaded_policy"
+    ],
+    "T00-025": [
+      "tests.test_corrective_scheduler_runtime_readiness::test_log_retention_policy_must_match_runtime_contract",
+      "tests.test_corrective_scheduler_runtime_readiness::test_log_redaction_blocks_without_exposing_secret"
+    ],
+    "T00-026": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_026_warning_policy_is_error"
+    ],
+    "T00-027": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_027_wrong_interpreter_fails_before_numerical_imports"
+    ],
+    "T00-028": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_028_schema_fuzz_fails_closed"
+    ],
+    "T00-029": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_029_idempotent_replay"
+    ],
+    "T00-030": [],
+    "T00-031": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_031_one_year_resource_retention_simulation"
+    ],
+    "T00-032": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_032_bounded_state_machine_model_check"
+    ],
+    "T00-033": [
+      "tests.test_phase00_supreme_diagnostics::test_t00_033_active_pointer_rotation"
+    ],
+    "T00-034": [
+      "tests.test_phase00_redaction::test_recursive_redaction_removes_all_common_secret_forms",
+      "tests.test_phase00_redaction::test_orchestration_has_no_unreviewed_raw_exception_string_surfaces"
+    ],
+    "T00-035": [],
+    "T00-036": [
+      "tests.test_phase00_effect_guard::test_guard_denies_socket_before_operating_system_connection",
+      "tests.test_phase00_effect_guard::test_guard_denies_network_and_keychain_subprocesses",
+      "tests.test_phase00_test_containment::test_unit_test_containment_denies_dns_and_socket_variants",
+      "tests.test_phase00_test_containment::test_unit_test_containment_denies_keychain_and_network_popen",
+      "tests.test_phase00_hyperliquid_network_authority::test_missing_public_authority_stops_transport_before_call",
+      "tests.test_phase00_hyperliquid_network_authority::test_all_hyperliquid_raw_network_sinks_are_private_and_frozen",
+      "tests.test_gate00g_order_authority::test_missing_authority_stops_all_three_venue_sinks_before_effects"
+    ]
+  }
+}

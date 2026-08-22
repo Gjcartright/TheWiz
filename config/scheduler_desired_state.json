@@ -1,0 +1,14 @@
+{
+  "schema_version": "thewiz.scheduler_desired_state.v1",
+  "generation": 1,
+  "services": {
+    "daily_research": "UNLOADED",
+    "hyperliquid_l2": "UNLOADED",
+    "wizard_proof": "UNLOADED"
+  },
+  "reason": "phase00_maintenance_and_foundation_verification",
+  "reload_requires_separate_operator_approval": true,
+  "promotion_authority": false,
+  "testnet_order_authority": false,
+  "live_trading_authorized": false
+}

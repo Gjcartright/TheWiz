@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import time
+from collections.abc import Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, replace
 from datetime import UTC, datetime, timedelta
@@ -77,6 +78,7 @@ from quant_platform.crypto_wizards_history import (
 from quant_platform.crypto_wizards_scanner import load_scanner_rows, write_scanner_reports
 from quant_platform.crypto_wizards_sweep import (
     restore_complete_wizard_sweep_from_raw,
+    run_authorized_wizard_discovery_sweep,
     run_wizard_discovery_sweep,
 )
 from quant_platform.dydx_candles import (
@@ -173,6 +175,7 @@ from quant_platform.hyperliquid_testnet import (
     write_hyperliquid_testnet_margin_snapshot,
     write_hyperliquid_testnet_preflight_report,
 )
+from quant_platform.math_v2_acceptance import build_math_v2_acceptance
 from quant_platform.meta_learning import (
     JsonlTradeStore,
     TradeRecord,
@@ -211,11 +214,36 @@ from quant_platform.orchestration.corrective_live_canary_executor import (
 from quant_platform.orchestration.corrective_live_parity_capture import (
     capture_live_input_parity_evidence,
 )
+from quant_platform.orchestration.corrective_phase00_control import (
+    build_phase00_quiesced_checkpoint,
+    resume_phase00_maintenance,
+    seal_phase00_active_artifact_lineage,
+    start_phase00_maintenance,
+)
+from quant_platform.orchestration.corrective_phase00_descendants import (
+    build_phase00_descendant_invalidation,
+)
+from quant_platform.orchestration.corrective_phase00_closure import (
+    build_phase00_closure_verification,
+)
 from quant_platform.orchestration.corrective_program import complete_corrective_plan
 from quant_platform.orchestration.corrective_registered_learning_protocol import (
     build_registered_stage5_protocol,
 )
 from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    atomic_write_bytes,
+    atomic_write_csv,
+    atomic_write_text,
+    build_canonical_scheduler_runtime_contract,
+    promote_staged_file,
+)
+from quant_platform.orchestration.corrective_scheduler_lock import (
+    GovernedEvidenceLockBusy,
+    GovernedEvidenceMaintenanceActive,
+    governed_evidence_write_lock,
+)
 from quant_platform.orchestration.corrective_scheduler_runtime_readiness import (
     build_corrective_scheduler_runtime_readiness,
 )
@@ -289,6 +317,9 @@ from quant_platform.orchestration.corrective_wizard_ou_v6_holdout import (
 from quant_platform.orchestration.corrective_wizard_ou_v6_supreme_review import (
     build_ou_v6_supreme_review,
 )
+from quant_platform.orchestration.corrective_wizard_ou_v6_terminal_closure import (
+    build_ou_v6_terminal_closure,
+)
 from quant_platform.orchestration.corrective_wizard_parity import build_corrective_wizard_parity
 from quant_platform.orchestration.corrective_wizard_reset_readiness import (
     build_corrective_wizard_reset_readiness,
@@ -314,6 +345,9 @@ from quant_platform.orchestration.current_wizard_hyperliquid_costs import (
 from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
     run_current_wizard_hyperliquid_daily_pipeline,
 )
+from quant_platform.orchestration.current_wizard_hyperliquid_evidence_command_center import (
+    build_current_wizard_hyperliquid_evidence_command_center,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_failure_attribution import (
     build_current_wizard_hyperliquid_failure_attribution,
     build_current_wizard_hyperliquid_failure_routing_index,
@@ -326,6 +360,9 @@ from quant_platform.orchestration.current_wizard_hyperliquid_learning import (
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_leverage import (
     build_current_wizard_hyperliquid_leverage_surface,
+)
+from quant_platform.orchestration.current_wizard_hyperliquid_math_comparison import (
+    reevaluate_current_wizard_hyperliquid_math,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_observed_replay import (
     run_current_wizard_hyperliquid_observed_cost_replay,
@@ -417,6 +454,9 @@ from quant_platform.orchestration.interactive_mixtape_graph import (
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
 from quant_platform.orchestration.orchestrator_assistant import build_orchestrator_assistant
 from quant_platform.orchestration.specialist_scoreboard import build_specialist_scoreboard
+from quant_platform.orchestration.versioned_learning_comparison import (
+    build_versioned_learning_comparison,
+)
 from quant_platform.orchestration.wizard_pair_detail_api_pilot import (
     run_wizard_pair_detail_api_pilot,
 )
@@ -453,6 +493,10 @@ from quant_platform.research_knowledge_store import (
     build_research_knowledge_store,
     research_knowledge_summary,
 )
+from quant_platform.research_paper_math_audit import run_paper_critical_checks
+from quant_platform.research_paper_reproduction import run_paper_reproduction_suite
+from quant_platform.research_paper_reviews import build_paper_adversarial_reviews
+from quant_platform.research_papers import ingest_paper_library, verify_paper_sources
 from quant_platform.research_quantization import quantize_family_matrix
 from quant_platform.rl import (
     base_rl_paper_handoff_report,
@@ -477,6 +521,7 @@ from quant_platform.trade_timing import (
     trade_timing_comparison_summary,
     write_trade_timing_template,
 )
+from quant_platform.v2_math_diagnostic import build_v2_math_diagnostic
 from quant_platform.v2_run import build_v2_preflight_run, publish_v2_run_status, validate_v2_run
 from quant_platform.wizard_control_plane import build_wizard_control_plane
 from quant_platform.wizard_credit_budget import build_wizard_credit_budget_contract
@@ -564,8 +609,9 @@ DEFAULT_INDEXER_BASE = os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade
 
 
 @contextmanager
-def _local_env_for_reports():
-    loaded = load_env_file(ROOT / ".env.local", override=False)
+def _local_env_for_reports(root: Path | None = None):
+    effective_root = root or ROOT
+    loaded = load_env_file(effective_root / ".env.local", override=False)
     try:
         yield
     finally:
@@ -584,13 +630,14 @@ DEFAULT_FAMILY_SWEEP_PAIRS = (
 )
 
 
-def _acceptance_report_path() -> Path:
+def _acceptance_report_path(root: Path | None = None) -> Path:
+    effective_root = root or ROOT
     configured = os.getenv("QPA_ACCEPTANCE_REPORT_PATH", "").strip()
     if not configured:
-        return ROOT / "reports" / "acceptance_report.csv"
+        return effective_root / "reports" / "acceptance_report.csv"
     path = Path(configured).expanduser()
     if not path.is_absolute():
-        path = ROOT / path
+        path = effective_root / path
     return path
 
 
@@ -721,9 +768,14 @@ def _native_acceptance_bridge_row(reports: Path) -> dict[str, object] | None:
     }
 
 
-def _augmented_acceptance_frame(reports: Path | None = None) -> pd.DataFrame:
-    reports_dir = reports or (ROOT / "reports")
-    acceptance = _read_csv_or_empty(_acceptance_report_path()).copy()
+def _augmented_acceptance_frame(
+    reports: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports_dir = reports or (effective_root / "reports")
+    acceptance = _read_csv_or_empty(_acceptance_report_path(effective_root)).copy()
     native_row = _native_acceptance_bridge_row(reports_dir)
     if native_row is None:
         return acceptance
@@ -1207,16 +1259,16 @@ def _write_csv_atomic(frame: pd.DataFrame, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     tmp = output.with_name(f".{output.name}.{os.getpid()}.tmp")
     frame.to_csv(tmp, index=False)
-    tmp.replace(output)
+    promote_staged_file(tmp, output)
     return output
 
 
 def build_dictionaries() -> None:
     docs = ROOT / "docs"
     docs.mkdir(exist_ok=True)
-    pd.DataFrame(field_rows()).to_csv(docs / "field_dictionary.csv", index=False)
-    pd.DataFrame(strategy_rows()).to_csv(docs / "strategy_registry.csv", index=False)
-    pd.DataFrame(endpoint_rows()).to_csv(docs / "crypto_wizards_endpoint_catalog.csv", index=False)
+    atomic_write_csv(pd.DataFrame(field_rows()), docs / "field_dictionary.csv", index=False)
+    atomic_write_csv(pd.DataFrame(strategy_rows()), docs / "strategy_registry.csv", index=False)
+    atomic_write_csv(pd.DataFrame(endpoint_rows()), docs / "crypto_wizards_endpoint_catalog.csv", index=False)
 
     formula_lines = ["# Formula Dictionary", ""]
     for name, info in FORMULAS.items():
@@ -1230,7 +1282,7 @@ def build_dictionaries() -> None:
                 "",
             ]
         )
-    (docs / "formula_dictionary.md").write_text("\n".join(formula_lines), encoding="utf-8")
+    atomic_write_text(docs / "formula_dictionary.md", "\n".join(formula_lines), encoding="utf-8")
 
     brain_lines = ["# Quant Brain", ""]
     for row in field_rows():
@@ -1247,7 +1299,7 @@ def build_dictionaries() -> None:
                 "",
             ]
         )
-    (docs / "quant_brain.md").write_text("\n".join(brain_lines), encoding="utf-8")
+    atomic_write_text(docs / "quant_brain.md", "\n".join(brain_lines), encoding="utf-8")
 
 
 def run_demo_backtest() -> None:
@@ -1264,7 +1316,7 @@ def run_demo_backtest() -> None:
     ].rolling(7).std()
     frame = frame.dropna().reset_index(drop=True)
     result = backtest_pair(frame, zscore_signal(frame), CostModel())
-    pd.DataFrame([result.__dict__]).to_csv(reports / "demo_backtest.csv", index=False)
+    atomic_write_csv(pd.DataFrame([result.__dict__]), reports / "demo_backtest.csv", index=False)
     print(result)
 
 
@@ -1316,7 +1368,7 @@ def ingest_fixtures(input_dir: Path | None = None) -> None:
         for dataset in datasets
     ]
     write_regime_dataset_report(datasets, reports / "regime_dataset_report.csv")
-    pd.DataFrame(
+    atomic_write_csv(pd.DataFrame(
         [
             {
                 "pair": dataset.pair,
@@ -1325,7 +1377,7 @@ def ingest_fixtures(input_dir: Path | None = None) -> None:
             }
             for dataset in datasets
         ]
-    ).to_csv(reports / "fixture_ingestion_summary.csv", index=False)
+    ), reports / "fixture_ingestion_summary.csv", index=False)
     print(f"field_dictionary: {field_path}")
     print(f"datasets: {len(datasets)}")
 
@@ -1353,7 +1405,7 @@ def normalize_enrichment_fixtures(
         ignore_index=True,
     )
     output_path = output_base / f"{canonical}_normalized_pairs.csv"
-    combined.to_csv(output_path, index=False)
+    atomic_write_csv(combined, output_path, index=False)
     report = pd.DataFrame(
         [
             {
@@ -1467,7 +1519,7 @@ def import_pair_detail_capture(input_path: Path, output_name: str | None = None)
     output_dir = ROOT / "data" / "raw" / "pair_details"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / filename
-    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
     rows = extract_history_rows(payload)
     paths = write_pair_detail_reports(output_dir, ROOT / "reports")
@@ -2163,11 +2215,9 @@ def _fetch_public_json(
                         response.raise_for_status()
                         try:
                             payload = response.json()
-                            output_path.write_text(
-                                json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
-                            )
+                            atomic_write_text(output_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
                         except ValueError:
-                            output_path.write_text(response.text, encoding="utf-8")
+                            atomic_write_text(output_path, response.text, encoding="utf-8")
                         return output_path
                     except requests.exceptions.RequestException as exc:
                         last_exc = exc
@@ -2278,7 +2328,7 @@ def _fetch_public_json(
         ) from (curl_exc or last_exc)
     try:
         payload = json.loads(output_path.read_text(encoding="utf-8"))
-        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(output_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     except json.JSONDecodeError:
         pass
     return output_path
@@ -2804,14 +2854,11 @@ def strategy_family_sweep_report(
     )
 
     notes_path = output / "strategy_family_sweep_notes.md"
-    notes_path.write_text(
-        _strategy_family_sweep_notes(selected_pairs, summary, best_by_family, shortlist),
-        encoding="utf-8",
-    )
+    atomic_write_text(notes_path, _strategy_family_sweep_notes(selected_pairs, summary, best_by_family, shortlist), encoding="utf-8")
     failure_attribution_path = output / "strategy_family_failure_attribution.csv"
     family_failure_attribution_report(output, failure_attribution_path)
     failure_notes_path = output / "strategy_family_failure_attribution.md"
-    failure_notes_path.write_text(_strategy_family_failure_notes(output), encoding="utf-8")
+    atomic_write_text(failure_notes_path, _strategy_family_failure_notes(output), encoding="utf-8")
 
     return {
         "detail": detail_path,
@@ -4403,7 +4450,7 @@ def import_crypto_wizards_payload(input_path: Path, endpoint_name: str = "manual
     raw_dir = ROOT / "data" / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     output_payload = raw_dir / f"{endpoint_name}.json"
-    shutil.copyfile(input_path, output_payload)
+    atomic_copy_file(input_path, output_payload)
 
     dictionary_path = ROOT / "docs" / "crypto_wizards_live_field_dictionary.csv"
     dictionary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -4471,13 +4518,23 @@ def print_dydx_order_adapter_contract(output_path: Path | None = None) -> None:
     print(f"dydx_order_adapter_contract: {output}")
 
 
-def dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
-    with _local_env_for_reports():
-        return _dydx_execution_checklist_report(output_path)
+def dydx_execution_checklist_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    with _local_env_for_reports(effective_root):
+        return _dydx_execution_checklist_report(output_path, root=effective_root)
 
 
-def _dydx_execution_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def _dydx_execution_checklist_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "dydx_execution_checklist.csv"
     config = DydxNetworkConfig.paper_testnet_from_env()
@@ -4492,12 +4549,12 @@ def _dydx_execution_checklist_report(output_path: Path | None = None) -> pd.Data
         order_client_wired=order_client is not None and adapter_submission_capable,
         indexer_adapter_wired=indexer_wired,
     )
-    acceptance_path = _acceptance_report_path()
+    acceptance_path = _acceptance_report_path(effective_root)
     strategy_ready = False
     two_leg_passing_pairs = 0
     production_eligible = 0
     if acceptance_path.exists():
-        acceptance = _augmented_acceptance_frame(ROOT / "reports")
+        acceptance = _augmented_acceptance_frame(reports, root=effective_root)
         production_eligible = int(
             acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum()
         )
@@ -4667,8 +4724,15 @@ def _normalize_report_pair(value: object) -> str:
     return str(value or "").replace("_", "-").replace("/", "-").upper().strip()
 
 
-def _check_exchange_cost_model_alignment_from_quality(results: pd.DataFrame) -> dict[str, object]:
-    quality = _read_csv_or_empty(ROOT / "reports" / "pair_detail_quality_report.csv")
+def _check_exchange_cost_model_alignment_from_quality(
+    results: pd.DataFrame,
+    *,
+    root: Path | None = None,
+) -> dict[str, object]:
+    effective_root = root or ROOT
+    quality = _read_csv_or_empty(
+        effective_root / "reports" / "pair_detail_quality_report.csv"
+    )
     if quality.empty:
         return {
             "ready": False,
@@ -4747,15 +4811,20 @@ def _check_exchange_cost_model_alignment_from_quality(results: pd.DataFrame) -> 
     }
 
 
-def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def strategy_acceptance_checklist_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "strategy_acceptance_checklist.csv"
-    acceptance_path = _acceptance_report_path()
+    acceptance_path = _acceptance_report_path(effective_root)
     results_path = reports / "experiment_results.csv"
     funding_coverage_path = reports / "funding_coverage.csv"
     funding_requirements_path = reports / "funding_requirements.csv"
-    acceptance = _augmented_acceptance_frame(reports)
+    acceptance = _augmented_acceptance_frame(reports, root=effective_root)
     results = _read_csv_or_empty(results_path)
     funding_coverage = _read_csv_or_empty(funding_coverage_path)
 
@@ -4799,7 +4868,10 @@ def strategy_acceptance_checklist_report(output_path: Path | None = None) -> pd.
         funding_requirements,
         funding_requirements_path,
     )
-    cost_model_alignment = _check_exchange_cost_model_alignment_from_quality(results)
+    cost_model_alignment = _check_exchange_cost_model_alignment_from_quality(
+        results,
+        root=effective_root,
+    )
 
     rows = [
         _execution_check_row(
@@ -4901,12 +4973,17 @@ def print_strategy_acceptance_checklist() -> None:
     print(f"strategy_acceptance_checklist: {output}")
 
 
-def strategy_failure_attribution_report(output_path: Path | None = None) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def strategy_failure_attribution_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "strategy_failure_attribution.csv"
     results = _read_csv_or_empty(reports / "experiment_results.csv")
-    acceptance = _augmented_acceptance_frame(reports)
+    acceptance = _augmented_acceptance_frame(reports, root=effective_root)
     if results.empty:
         frame = pd.DataFrame(
             [
@@ -5043,14 +5120,22 @@ def print_strategy_failure_attribution(output_path: Path | None = None) -> None:
     print(f"strategy_failure_attribution: {output}")
 
 
-def research_unblock_plan_report(output_path: Path | None = None) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def research_unblock_plan_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "research_unblock_plan.csv"
-    failures = strategy_failure_attribution_report(reports / "strategy_failure_attribution.csv")
+    failures = strategy_failure_attribution_report(
+        reports / "strategy_failure_attribution.csv",
+        root=effective_root,
+    )
     results = _read_csv_or_empty(reports / "experiment_results.csv")
     quality = _read_csv_or_empty(reports / "pair_detail_quality_report.csv")
-    acceptance = _augmented_acceptance_frame(reports)
+    acceptance = _augmented_acceptance_frame(reports, root=effective_root)
 
     rows: list[dict[str, object]] = []
     evaluated = (
@@ -5240,7 +5325,7 @@ def zscore_threshold_sweep_report(
     cost_buckets = ExperimentConfig().cost_buckets
     for dataset in datasets:
         frame = dataset.frame
-        if not {"price_x", "price_y", "zscore"}.issubset(frame.columns):
+        if not {"price_x", "price_y", "hedge_ratio", "zscore"}.issubset(frame.columns):
             continue
         for threshold in thresholds:
             signal = zscore_signal(frame, entry=threshold)
@@ -6047,7 +6132,7 @@ def materialize_p2_rerun_subset(
             detail = "source_missing"
         else:
             target = subset_dir / chosen.name
-            target.write_bytes(chosen.read_bytes())
+            atomic_write_bytes(target, chosen.read_bytes())
             detail = (
                 "long_history_replacement"
                 if replacement is not None and chosen == replacement
@@ -6137,11 +6222,18 @@ def print_run_dydx_pair_expansion(
 def priority_spine_dashboard_report(
     readiness: pd.DataFrame | None = None,
     output_path: Path | None = None,
+    *,
+    root: Path | None = None,
 ) -> pd.DataFrame:
-    reports = ROOT / "reports"
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_spine_dashboard.csv"
-    readiness = readiness if readiness is not None else priority_readiness_report()
+    readiness = (
+        readiness
+        if readiness is not None
+        else priority_readiness_report(root=effective_root)
+    )
     gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
     capture = _read_csv_or_empty(reports / "pair_detail_capture_checklist.csv")
     quality = _read_csv_or_empty(reports / "pair_detail_quality_report.csv")
@@ -6261,9 +6353,11 @@ def priority_spine_dashboard_report(
 
 def print_priority_dashboard() -> None:
     output = ROOT / "reports" / "priority_spine_dashboard.csv"
-    readiness = priority_readiness_report()
-    paper_execution_preflight_report(ROOT / "reports" / "paper_execution_preflight.csv")
-    frame = priority_spine_dashboard_report(readiness, output)
+    readiness = priority_readiness_report(root=ROOT)
+    paper_execution_preflight_report(
+        ROOT / "reports" / "paper_execution_preflight.csv", root=ROOT
+    )
+    frame = priority_spine_dashboard_report(readiness, output, root=ROOT)
     print(frame.to_string(index=False))
     print(f"priority_spine_dashboard: {output}")
 
@@ -6272,10 +6366,16 @@ def priority_runbook(output_path: Path | None = None) -> Path:
     reports = ROOT / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_runbook.md"
-    readiness = priority_readiness_report()
-    paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
-    dashboard = priority_spine_dashboard_report(readiness, reports / "priority_spine_dashboard.csv")
-    gap_test = priority_gap_test_report(readiness, reports / "priority_gap_test.csv")
+    readiness = priority_readiness_report(root=ROOT)
+    paper_execution_preflight_report(
+        reports / "paper_execution_preflight.csv", root=ROOT
+    )
+    dashboard = priority_spine_dashboard_report(
+        readiness, reports / "priority_spine_dashboard.csv", root=ROOT
+    )
+    gap_test = priority_gap_test_report(
+        readiness, reports / "priority_gap_test.csv", root=ROOT
+    )
     actions = priority_action_plan(readiness, reports / "priority_action_plan.csv")
 
     lines = [
@@ -6378,7 +6478,7 @@ def priority_runbook(output_path: Path | None = None) -> Path:
             "",
         ]
     )
-    output.write_text("\n".join(lines), encoding="utf-8")
+    atomic_write_text(output, "\n".join(lines), encoding="utf-8")
     return output
 
 
@@ -6396,19 +6496,33 @@ def print_priority_runbook() -> None:
 def paper_execution_preflight_report(
     output_path: Path | None = None,
     readiness: pd.DataFrame | None = None,
+    *,
+    root: Path | None = None,
 ) -> pd.DataFrame:
-    with _local_env_for_reports():
-        return _paper_execution_preflight_report(output_path=output_path, readiness=readiness)
+    effective_root = root or ROOT
+    with _local_env_for_reports(effective_root):
+        return _paper_execution_preflight_report(
+            output_path=output_path,
+            readiness=readiness,
+            root=effective_root,
+        )
 
 
 def _paper_execution_preflight_report(
     output_path: Path | None = None,
     readiness: pd.DataFrame | None = None,
+    *,
+    root: Path | None = None,
 ) -> pd.DataFrame:
-    reports = ROOT / "reports"
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "paper_execution_preflight.csv"
-    readiness = readiness if readiness is not None else priority_readiness_report()
+    readiness = (
+        readiness
+        if readiness is not None
+        else priority_readiness_report(root=effective_root)
+    )
     gates = readiness.set_index("gate") if not readiness.empty else pd.DataFrame()
     strategy = _read_csv_or_empty(reports / "strategy_acceptance_checklist.csv")
     dydx = _read_csv_or_empty(reports / "dydx_execution_checklist.csv")
@@ -6416,9 +6530,13 @@ def _paper_execution_preflight_report(
     paper_journal = reports / "paper_trading_journal.csv"
     route_candidates = _read_csv_or_empty(reports / "rl" / "base_rl_route_candidates.csv")
     route_markets = _route_markets_from_candidates(route_candidates)
-    compatibility = dydx_execution_compatibility_snapshot(route_markets, root=ROOT)
+    compatibility = dydx_execution_compatibility_snapshot(
+        route_markets,
+        root=effective_root,
+    )
     account_state = effective_dydx_account_state_snapshot(
-        DydxNetworkConfig.paper_testnet_from_env(), root=ROOT
+        DydxNetworkConfig.paper_testnet_from_env(),
+        root=effective_root,
     )
     compatibility_ready = bool(compatibility.get("checked", False)) and not compatibility.get(
         "blocker"
@@ -6584,10 +6702,14 @@ def refresh_execution_truth_surfaces(root: Path = ROOT) -> dict[str, str]:
     refresh_injective_mirror_candidate_queue(root=root)
     refresh_injective_spot_supported_pair_universe(root=root)
     refresh_injective_spot_first_candidate_shortlist(root=root)
-    gmx_inventory = refresh_gmx_testnet_market_inventory(root=root)
+    gmx_inventory = _read_csv_or_empty(
+        active / "gmx_testnet_market_inventory.csv"
+    )
     gmx_compatibility = refresh_gmx_execution_compatibility_table(root=root)
     refresh_gmx_testnet_candidate_shortlist(root=root)
-    hyperliquid_inventory = refresh_hyperliquid_testnet_market_inventory(root=root)
+    hyperliquid_inventory = _read_csv_or_empty(
+        active / "hyperliquid_testnet_market_inventory.csv"
+    )
     hyperliquid_compatibility = refresh_hyperliquid_execution_compatibility_table(root=root)
     refresh_hyperliquid_testnet_candidate_shortlist(root=root)
     refresh_non_eth_route_submit_queue(root=root)
@@ -6596,7 +6718,7 @@ def refresh_execution_truth_surfaces(root: Path = ROOT) -> dict[str, str]:
     refresh_paper_trade_price_journal(root=root)
     shortlist = paper_candidate_shortlist_rows(root=root)
     shortlist_path = active / "compatibility_first_candidate_shortlist.csv"
-    shortlist.to_csv(shortlist_path, index=False)
+    atomic_write_csv(shortlist, shortlist_path, index=False)
     refresh_paper_trade_decision_report(root=root)
     live_monitor_paths = refresh_live_paper_trade_monitor(root=root)
     base_rl_paper_handoff_report(root=root)
@@ -6700,12 +6822,17 @@ def paper_venue_preflight_report(
     pair: str | None = None,
     output_path: Path | None = None,
     max_pairs: int = 25,
+    *,
+    root: Path | None = None,
 ) -> pd.DataFrame:
     """Build compact per-venue paper readiness for one pair or top pairs."""
-    reports = ROOT / "reports"
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "paper_venue_preflight.csv"
-    universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
+    universe = _read_csv_or_empty(
+        effective_root / "data" / "processed" / "pair_universe.csv"
+    )
     rows: list[dict[str, object]] = []
 
     if pair:
@@ -6751,7 +6878,7 @@ def paper_venue_preflight_report(
         return frame
 
     for candidate_pair in pair_rows:
-        options = _build_paper_venue_options(candidate_pair)
+        options = _build_paper_venue_options(candidate_pair, root=effective_root)
         if not options:
             rows.append(
                 {
@@ -7070,6 +7197,7 @@ def run_research_sweep(
     source_filter: str | None = None,
     wait_seconds: int = 90,
     do_fetch: bool = True,
+    apify_actor_credit_ceiling: int = 0,
     readiness_threshold: float = 0.65,
 ) -> dict[str, object]:
     if mode not in SWEEP_MODES:
@@ -7122,6 +7250,7 @@ def run_research_sweep(
                 do_fetch=do_fetch,
                 api_token=api_token if api_token else None,
                 wait_seconds=wait_seconds,
+                actor_credit_ceiling=apify_actor_credit_ceiling,
             )
             rows.append(
                 _sweep_row(
@@ -7314,8 +7443,7 @@ def run_research_sweep(
         else ";".join(blocked["next_action"].dropna().astype(str).head(3).tolist())
         or "review readiness blockers",
     }
-    summary_path.write_text(
-        json.dumps(
+    atomic_write_text(summary_path, json.dumps(
             {
                 "summary": summary,
                 "paths": {
@@ -7327,9 +7455,7 @@ def run_research_sweep(
                 },
             },
             indent=2,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "summary": summary,
         "paths": {
@@ -7367,14 +7493,20 @@ def _priority_gap_frame_from_dashboard(dashboard: pd.DataFrame, output: Path) ->
     return frame
 
 
-def _append_current_state_operational_gaps(frame: pd.DataFrame, output: Path) -> pd.DataFrame:
-    current_path = ROOT / "reports" / "active" / "current_state.csv"
+def _append_current_state_operational_gaps(
+    frame: pd.DataFrame,
+    output: Path,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    current_path = effective_root / "reports" / "active" / "current_state.csv"
     current = _read_csv_or_empty(current_path)
     if current.empty or "area" not in current.columns:
         return frame
 
     canonical_authority = _read_csv_or_empty(
-        ROOT / "reports" / "active" / "hyperliquid_authority_state.csv"
+        effective_root / "reports" / "active" / "hyperliquid_authority_state.csv"
     )
     critical_areas = (
         [
@@ -7471,7 +7603,15 @@ def _seven_stage_priority_gap_frame(root: Path = ROOT) -> pd.DataFrame:
     if stages.astype(int).duplicated().any():
         return pd.DataFrame()
 
-    severity = {1: "medium", 2: "critical", 3: "critical", 4: "critical", 5: "high", 6: "high", 7: "high"}
+    severity = {
+        1: "medium",
+        2: "critical",
+        3: "critical",
+        4: "critical",
+        5: "high",
+        6: "high",
+        7: "high",
+    }
     rows: list[dict[str, object]] = []
     for _, row in checkpoint.assign(_stage=stages.astype(int)).sort_values("_stage").iterrows():
         stage = int(row["_stage"])
@@ -7496,21 +7636,31 @@ def priority_gap_test_report(
     readiness: pd.DataFrame | None = None,
     output_path: Path | None = None,
     refresh_paper_preflight: bool = True,
+    *,
+    root: Path | None = None,
 ) -> pd.DataFrame:
-    reports = ROOT / "reports"
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_gap_test.csv"
-    seven_stage = _seven_stage_priority_gap_frame(ROOT)
+    seven_stage = _seven_stage_priority_gap_frame(effective_root)
     if not seven_stage.empty:
         _write_csv_atomic(seven_stage, output)
         return seven_stage
-    readiness = readiness if readiness is not None else priority_readiness_report()
+    readiness = (
+        readiness
+        if readiness is not None
+        else priority_readiness_report(root=effective_root)
+    )
     if refresh_paper_preflight:
-        paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
-    dashboard = priority_spine_dashboard_report(readiness)
+        paper_execution_preflight_report(
+            reports / "paper_execution_preflight.csv",
+            root=effective_root,
+        )
+    dashboard = priority_spine_dashboard_report(readiness, root=effective_root)
     frame = _priority_gap_frame_from_dashboard(dashboard, output)
     canonical_authority = _read_csv_or_empty(
-        ROOT / "reports" / "active" / "hyperliquid_authority_state.csv"
+        effective_root / "reports" / "active" / "hyperliquid_authority_state.csv"
     )
     if not canonical_authority.empty and "area" in frame.columns:
         historical_mask = frame["area"].astype(str).eq("crypto_wizards_capture")
@@ -7530,7 +7680,11 @@ def priority_gap_test_report(
         }
         frame = frame.loc[~frame["area"].astype(str).isin(legacy_areas)].copy()
         _write_csv_atomic(frame, output)
-    return _append_current_state_operational_gaps(frame, output)
+    return _append_current_state_operational_gaps(
+        frame,
+        output,
+        root=effective_root,
+    )
 
 
 def print_gap_test() -> None:
@@ -7632,8 +7786,8 @@ def print_gap_analysis_checklist(run_dir: Path | None = None) -> tuple[Path, Pat
 
     latest_md = output_dir / "latest_gap_analysis.md"
     checkpoint_md = output_dir / f"{run_id}.md"
-    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
-    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+    atomic_write_text(checkpoint_md, "\n".join(lines), encoding="utf-8")
+    atomic_write_text(latest_md, checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
 
     index_path = reports / "gap_analysis_index.csv"
     index_frame = _read_csv_or_empty(index_path)
@@ -7806,8 +7960,8 @@ def print_pre_mortem_checklist(
 
     latest_md = output_dir / "latest_pre_mortem.md"
     checkpoint_md = output_dir / f"{run_id}.md"
-    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
-    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+    atomic_write_text(checkpoint_md, "\n".join(lines), encoding="utf-8")
+    atomic_write_text(latest_md, checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
 
     index_path = reports / "pre_mortem_index.csv"
     index_frame = _read_csv_or_empty(index_path)
@@ -7997,8 +8151,8 @@ def print_post_mortem_checklist(
 
     latest_md = output_dir / "latest_post_mortem.md"
     checkpoint_md = output_dir / f"{run_id}.md"
-    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
-    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+    atomic_write_text(checkpoint_md, "\n".join(lines), encoding="utf-8")
+    atomic_write_text(latest_md, checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
 
     index_path = reports / "post_mortem_index.csv"
     index_frame = _read_csv_or_empty(index_path)
@@ -8173,8 +8327,8 @@ def print_red_team_checklist(run_dir: Path | None = None) -> tuple[Path, Path]:
 
     latest_md = output_dir / "latest_red_team.md"
     checkpoint_md = output_dir / f"{run_id}.md"
-    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
-    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+    atomic_write_text(checkpoint_md, "\n".join(lines), encoding="utf-8")
+    atomic_write_text(latest_md, checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
 
     index_path = reports / "red_team_index.csv"
     index_frame = _read_csv_or_empty(index_path)
@@ -8456,8 +8610,8 @@ def print_supreme_team_checkpoint(run_dir: Path | None = None) -> tuple[Path, Pa
 
     checkpoint_md = output_dir / f"{run_id}.md"
     latest_md = output_dir / "latest_supreme_team.md"
-    checkpoint_md.write_text("\n".join(lines), encoding="utf-8")
-    latest_md.write_text(checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
+    atomic_write_text(checkpoint_md, "\n".join(lines), encoding="utf-8")
+    atomic_write_text(latest_md, checkpoint_md.read_text(encoding="utf-8"), encoding="utf-8")
 
     index_path = reports / "supreme_team_index.csv"
     index_frame = _read_csv_or_empty(index_path)
@@ -8670,21 +8824,31 @@ def print_dydx_execution_checklist(output_path: Path | None = None) -> None:
     print(f"dydx_execution_checklist: {output}")
 
 
-def priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
-    with _local_env_for_reports():
-        return _priority_readiness_report(output_path)
+def priority_readiness_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    with _local_env_for_reports(effective_root):
+        return _priority_readiness_report(output_path, root=effective_root)
 
 
-def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
-    reports = ROOT / "reports"
+def _priority_readiness_report(
+    output_path: Path | None = None,
+    *,
+    root: Path | None = None,
+) -> pd.DataFrame:
+    effective_root = root or ROOT
+    reports = effective_root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     output = output_path or reports / "priority_readiness.csv"
     rows: list[dict[str, object]] = []
 
-    live_dictionary = ROOT / "docs" / "crypto_wizards_live_field_dictionary.csv"
+    live_dictionary = effective_root / "docs" / "crypto_wizards_live_field_dictionary.csv"
     raw_payloads = sorted(
         path
-        for path in (ROOT / "data" / "raw").glob("*.json")
+        for path in (effective_root / "data" / "raw").glob("*.json")
         if not path.name.startswith("crypto_wizards_pair_metrics_sample")
     )
     live_ready = bool(raw_payloads) and live_dictionary.exists()
@@ -8701,7 +8865,7 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
         )
     )
 
-    pair_detail_dir = ROOT / "data" / "raw" / "pair_details"
+    pair_detail_dir = effective_root / "data" / "raw" / "pair_details"
     pair_detail_cache_status = "NO_SOURCE_DIRECTORY"
     if pair_detail_dir.exists():
         pair_detail_evidence = load_or_refresh_pair_detail_evidence_cache(
@@ -8851,13 +9015,16 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
         )
     )
 
-    acceptance_path = _acceptance_report_path()
+    acceptance_path = _acceptance_report_path(effective_root)
     acceptance_checklist_path = reports / "strategy_acceptance_checklist.csv"
-    strategy_acceptance_checklist_report(acceptance_checklist_path)
+    strategy_acceptance_checklist_report(
+        acceptance_checklist_path,
+        root=effective_root,
+    )
     research_unblock_path = reports / "research_unblock_plan.csv"
-    research_unblock_plan_report(research_unblock_path)
+    research_unblock_plan_report(research_unblock_path, root=effective_root)
     if acceptance_path.exists():
-        acceptance = _augmented_acceptance_frame(reports)
+        acceptance = _augmented_acceptance_frame(reports, root=effective_root)
         production_ready = int(
             acceptance.get("production_eligible", pd.Series(dtype=bool)).fillna(False).sum()
         )
@@ -8906,7 +9073,7 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
         indexer_adapter_wired=build_dydx_indexer_adapter(config) is not None,
     )
     dydx_checklist_path = reports / "dydx_execution_checklist.csv"
-    dydx_execution_checklist_report(dydx_checklist_path)
+    dydx_execution_checklist_report(dydx_checklist_path, root=effective_root)
     dydx_blockers = list(dydx_report.get("blockers", []))
     if order_adapter_error or (adapter_contract["configured"] and not adapter_contract["valid"]):
         dydx_blockers.append("invalid_dydx_order_client_adapter")
@@ -8954,7 +9121,7 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     )
 
     paper_journal = reports / "paper_trading_journal.csv"
-    trade_store = ROOT / "data" / "meta_learning" / "trades.jsonl"
+    trade_store = effective_root / "data" / "meta_learning" / "trades.jsonl"
     learning_summary_path = reports / "learning_event_summary.csv"
     write_learning_event_summary_report(paper_journal, trade_store, learning_summary_path)
     learning_summary = _read_csv_or_empty(learning_summary_path)
@@ -8997,7 +9164,11 @@ def _priority_readiness_report(output_path: Path | None = None) -> pd.DataFrame:
     frame = pd.DataFrame(rows)
     _write_csv_atomic(frame, output)
     _write_csv_atomic(priority_action_plan(frame), reports / "priority_action_plan.csv")
-    dashboard = priority_spine_dashboard_report(frame, reports / "priority_spine_dashboard.csv")
+    dashboard = priority_spine_dashboard_report(
+        frame,
+        reports / "priority_spine_dashboard.csv",
+        root=effective_root,
+    )
     _priority_gap_frame_from_dashboard(dashboard, reports / "priority_gap_test.csv")
     return frame
 
@@ -10841,13 +11012,20 @@ def _venue_asset_key(value: str) -> str:
     return text
 
 
-def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
+def _build_paper_venue_options(
+    pair: str,
+    *,
+    root: Path | None = None,
+) -> list[dict[str, object]]:
+    effective_root = root or ROOT
     parts = _split_pair_assets(pair)
     if len(parts) != 2:
         return []
     x, y = parts
 
-    context = _read_csv_or_empty(ROOT / "data" / "processed" / "market_venue_context.csv")
+    context = _read_csv_or_empty(
+        effective_root / "data" / "processed" / "market_venue_context.csv"
+    )
     if not context.empty:
         context["asset_key"] = context["asset"].map(_venue_asset_key)
         context["venue"] = context["venue"].astype(str)
@@ -10857,7 +11035,9 @@ def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
         for (asset_key, venue), row in context.groupby(["asset_key", "venue"]):
             context_by_asset.setdefault(asset_key, {})[str(venue).lower()] = row.iloc[0]
 
-    universe = _read_csv_or_empty(ROOT / "data" / "processed" / "pair_universe.csv")
+    universe = _read_csv_or_empty(
+        effective_root / "data" / "processed" / "pair_universe.csv"
+    )
     row = _lookup_pair_universe_row(universe, pair)
     preferred = ""
     preferreds: list[str] = []
@@ -10867,7 +11047,7 @@ def _build_paper_venue_options(pair: str) -> list[dict[str, object]]:
         preferreds = [venue.strip().lower() for venue in available.split(";") if venue.strip()]
 
     recommendations = _read_csv_or_empty(
-        ROOT / "reports" / "active" / "venue_route_recommendations.csv"
+        effective_root / "reports" / "active" / "venue_route_recommendations.csv"
     )
     route_row = _lookup_pair_universe_row(recommendations, pair)
     if not route_row.empty:
@@ -11058,6 +11238,12 @@ def run_paper_plan(
     venue: str | None = None,
     order_approval_id: str | None = None,
 ) -> None:
+    effective_journal_path = journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+    watch_output_path = (
+        None
+        if journal_path is None
+        else effective_journal_path.with_name("current_paper_watch_positions.csv")
+    )
     venue = (venue or "").lower().strip() or "auto"
     selected_venue = _resolve_paper_venue(pair, venue)
     venue_options = _build_paper_venue_options(pair)
@@ -11084,10 +11270,11 @@ def run_paper_plan(
     if plan.status != "paper_ready":
         path = append_paper_trading_record(
             paper_trading_record(plan, dashboard_snapshot=dashboard_snapshot),
-            journal_path or ROOT / "reports" / "paper_trading_journal.csv",
+            effective_journal_path,
         )
         watch_path = refresh_current_paper_watch_positions(
-            journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+            effective_journal_path,
+            output_path=watch_output_path,
         )
         print(f"paper_trading_journal: {path}")
         print(f"current_paper_watch_positions: {watch_path}")
@@ -11152,10 +11339,11 @@ def run_paper_plan(
             paper_trading_record(
                 blocked_plan, blockers=blockers, dashboard_snapshot=dashboard_snapshot
             ),
-            journal_path or ROOT / "reports" / "paper_trading_journal.csv",
+            effective_journal_path,
         )
         watch_path = refresh_current_paper_watch_positions(
-            journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+            effective_journal_path,
+            output_path=watch_output_path,
         )
         print(f"paper_trading_journal: {path}")
         print(f"current_paper_watch_positions: {watch_path}")
@@ -11174,10 +11362,11 @@ def run_paper_plan(
         paper_trading_record(
             plan, fills=fills, blockers=blockers, dashboard_snapshot=dashboard_snapshot
         ),
-        journal_path or ROOT / "reports" / "paper_trading_journal.csv",
+        effective_journal_path,
     )
     watch_path = refresh_current_paper_watch_positions(
-        journal_path or ROOT / "reports" / "paper_trading_journal.csv"
+        effective_journal_path,
+        output_path=watch_output_path,
     )
     print(f"paper_trading_journal: {path}")
     print(f"current_paper_watch_positions: {watch_path}")
@@ -11463,7 +11652,11 @@ def _blocked_direct_wizard_external_execution(
     )
 
 
-def main() -> None:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    load_environment: bool = True,
+) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "command",
@@ -11477,6 +11670,7 @@ def main() -> None:
             "build-wizard-ou-v4-supreme-review",
             "build-wizard-ou-v5-supreme-review",
             "build-wizard-ou-v6-supreme-review",
+            "close-wizard-ou-v6-terminal",
             "build-wizard-ou-v4-failure-attribution",
             "build-wizard-ou-v5-failure-attribution",
             "evaluate-wizard-ou-v2-holdout",
@@ -11484,6 +11678,13 @@ def main() -> None:
             "build-wizard-credit-budget",
             "build-wizard-next-capture-manifest",
             "build-wizard-reset-readiness",
+            "phase00-maintenance-start",
+            "phase00-checkpoint",
+            "phase00-lineage-seal",
+            "phase00-descendant-invalidate",
+            "phase00-closure-verify",
+            "phase00-maintenance-resume",
+            "build-canonical-runtime-contract",
             "build-scheduler-runtime-readiness",
             "build-wizard-comparator-review-control",
             "build-stage4-handoff-readiness",
@@ -11516,6 +11717,7 @@ def main() -> None:
             "corrective-artifact-retention",
             "build-artifact-index",
             "current-state",
+            "build-wizard-research-journal",
             "build-pair-universe",
             "build-trade-dataset",
             "promote-trade-dataset",
@@ -11523,6 +11725,9 @@ def main() -> None:
             "run-model-gated-backtest",
             "export-trade-gate-model",
             "build-command-dashboard",
+            "build-v2-math-diagnostic",
+            "reevaluate-current-wizard-hyperliquid-math",
+            "build-math-v2-acceptance",
             "build-v2-preflight-run",
             "validate-v2-run",
             "publish-v2-run-status",
@@ -11544,6 +11749,12 @@ def main() -> None:
             "train-rl-ppo",
             "export-rl-policy",
             "ingest-research-source",
+            "ingest-paper-library",
+            "verify-paper-sources",
+            "build-paper-adversarial-reviews",
+            "run-paper-critical-checks",
+            "run-paper-reproduction-suite",
+            "build-v1-v1-1-comparison",
             "build-research-source-registry",
             "research-source-audit",
             "extract-research-knowledge",
@@ -11604,6 +11815,7 @@ def main() -> None:
             "build-current-wizard-hyperliquid-operating-cadence",
             "run-current-wizard-hyperliquid-daily-pipeline",
             "build-current-wizard-hyperliquid-completion-audit",
+            "build-current-wizard-hyperliquid-evidence-command-center",
             "build-current-wizard-hyperliquid-storage-reclamation-plan",
             "stage-current-wizard-hyperliquid-archive-copy",
             "plan-current-wizard-hyperliquid-archive-release",
@@ -11780,6 +11992,12 @@ def main() -> None:
         ],
     )
     parser.add_argument("--input-dir", type=Path, default=None)
+    parser.add_argument(
+        "--old-replay-manifest",
+        type=Path,
+        default=None,
+        help="Frozen legacy canonical replay manifest used for math re-evaluation.",
+    )
     parser.add_argument("--run-id", default=None, help="Immutable V2 run identifier.")
     parser.add_argument(
         "--execute-live-canary",
@@ -11794,6 +12012,14 @@ def main() -> None:
     parser.add_argument("--authorization-sha256", default="")
     parser.add_argument("--approval-id", default="")
     parser.add_argument("--live-canary-acknowledgement", default="")
+    parser.add_argument(
+        "--phase00-reason",
+        default="approved_phase00_corrective_repair",
+        help="Operator reason recorded in the immutable Phase 00 maintenance receipt.",
+    )
+    parser.add_argument("--phase00-maintenance-id", default="")
+    parser.add_argument("--phase00-ttl-seconds", type=int, default=7200)
+    parser.add_argument("--phase00-wait-timeout-seconds", type=float, default=60.0)
     parser.add_argument(
         "--execute-testnet-collateral-transfer",
         action="store_true",
@@ -11844,6 +12070,12 @@ def main() -> None:
     parser.add_argument("--pair", default=None)
     parser.add_argument("--pair-ids", default="")
     parser.add_argument("--source", default=None)
+    parser.add_argument(
+        "--paper-dir",
+        type=Path,
+        default=None,
+        help="Directory of PDF papers to inventory and ingest as research-only evidence.",
+    )
     parser.add_argument("--source-type", default=None)
     parser.add_argument("--title", default=None)
     parser.add_argument("--author", default="")
@@ -11906,6 +12138,16 @@ def main() -> None:
     )
     parser.add_argument("--wizard-daily-credit-limit", type=int, default=1000)
     parser.add_argument("--wizard-reserved-credits", type=int, default=100)
+    parser.add_argument(
+        "--wizard-credit-lane",
+        default="exhaustive_discovery_sweep",
+        choices=("exhaustive_discovery_sweep", "daily_discovery_refresh"),
+        help=(
+            "Immutable credit-reservation lane for a Wizard sweep. Use "
+            "daily_discovery_refresh only for an explicitly authorized second "
+            "Daily snapshot after the exhaustive lane has been reconciled."
+        ),
+    )
     parser.add_argument(
         "--wizard-pair-group-key",
         default="binance|daily|ETH|WIF",
@@ -12260,6 +12502,12 @@ def main() -> None:
         help="Skip actor runs while building the Apify source coverage table",
     )
     parser.add_argument("--apify-token", default=None, help="Optional APIFY_API_TOKEN override")
+    parser.add_argument(
+        "--apify-actor-credit-ceiling",
+        type=int,
+        default=0,
+        help="Required per-actor reserved credit ceiling for authorized Apify fetches",
+    )
     parser.add_argument("--endpoint-name", default="manual")
     parser.add_argument("--output-name", default=None)
     parser.add_argument("--realized-return", type=float, default=None)
@@ -12301,8 +12549,28 @@ def main() -> None:
         action="store_true",
         help="For run-orchestrator, only build reporting stages.",
     )
-    args = parser.parse_args()
-    load_env_file(args.env_file)
+    args = parser.parse_args(argv)
+    authority_gated_environment_commands = {
+        "crypto-wizards-full-sweep",
+        "hyperliquid-testnet-market-inventory",
+        "phase00-checkpoint",
+        "phase00-closure-verify",
+        "phase00-descendant-invalidate",
+        "phase00-lineage-seal",
+        "phase00-maintenance-resume",
+        "phase00-maintenance-start",
+        "refresh-apify-sources",
+    }
+    phase00_no_external_mode = (
+        os.getenv("QPA_PHASE00_EXTERNAL_EFFECT_MODE", "").strip()
+        == "NO_EXTERNAL_NO_ORDER"
+    )
+    if (
+        load_environment
+        and not phase00_no_external_mode
+        and args.command not in authority_gated_environment_commands
+    ):
+        load_env_file(args.env_file)
     if not args.indexer_base:
         args.indexer_base = (
             os.getenv("QPA_INDEXER_BASE", "https://indexer.dydx.trade").strip()
@@ -12413,6 +12681,17 @@ def main() -> None:
         )
     elif args.command == "build-wizard-ou-v6-supreme-review":
         result = build_ou_v6_supreme_review(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "close-wizard-ou-v6-terminal":
+        result = build_ou_v6_terminal_closure(root=ROOT)
         print(
             json.dumps(
                 {
@@ -12764,7 +13043,18 @@ def main() -> None:
             )
         )
     elif args.command == "build-corrective-daily-cadence":
-        result = build_corrective_daily_cadence(root=ROOT, install=True)
+        try:
+            with governed_evidence_write_lock(ROOT, blocking=False):
+                result = build_corrective_daily_cadence(root=ROOT, install=True)
+        except (GovernedEvidenceMaintenanceActive, GovernedEvidenceLockBusy) as exc:
+            result = CommandResult(
+                paths={},
+                summary={
+                    "status": "DEFERRED_PHASE00_OR_GOVERNED_LOCK",
+                    "blockers": [str(exc)],
+                    "live_trading_authorized": False,
+                },
+            )
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
@@ -12772,7 +13062,26 @@ def main() -> None:
             )
         )
     elif args.command == "run-corrective-l2-capture":
-        result = run_corrective_l2_capture(root=ROOT)
+        try:
+            with governed_evidence_write_lock(ROOT, blocking=False):
+                result = run_corrective_l2_capture(root=ROOT)
+        except (GovernedEvidenceMaintenanceActive, GovernedEvidenceLockBusy) as exc:
+            result = CommandResult(
+                paths={},
+                summary={
+                    "status": "DEFERRED_PHASE00_OR_GOVERNED_LOCK",
+                    "blockers": [str(exc)],
+                    "live_trading_authorized": False,
+                },
+            )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-current-wizard-hyperliquid-evidence-command-center":
+        result = build_current_wizard_hyperliquid_evidence_command_center(root=ROOT)
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
@@ -12780,7 +13089,15 @@ def main() -> None:
             )
         )
     elif args.command == "install-corrective-l2-cadence":
-        result = install_corrective_l2_launch_agent(root=ROOT)
+        try:
+            with governed_evidence_write_lock(ROOT, blocking=False):
+                result = install_corrective_l2_launch_agent(root=ROOT)
+        except (GovernedEvidenceMaintenanceActive, GovernedEvidenceLockBusy) as exc:
+            result = {
+                "status": "DEFERRED_PHASE00_OR_GOVERNED_LOCK",
+                "blockers": [str(exc)],
+                "live_trading_authorized": False,
+            }
         print(json.dumps(result, indent=2, default=str))
     elif args.command == "build-corrective-agent-governance":
         result = build_corrective_agent_governance(root=ROOT)
@@ -12803,6 +13120,113 @@ def main() -> None:
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-maintenance-start":
+        result = start_phase00_maintenance(
+            root=ROOT,
+            reason=str(args.phase00_reason),
+            ttl_seconds=int(args.phase00_ttl_seconds),
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-checkpoint":
+        result = build_phase00_quiesced_checkpoint(
+            root=ROOT,
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-lineage-seal":
+        result = seal_phase00_active_artifact_lineage(
+            root=ROOT,
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {
+                        key: str(value) for key, value in result.paths.items()
+                    },
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-descendant-invalidate":
+        result = build_phase00_descendant_invalidation(
+            root=ROOT,
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {
+                        key: str(value) for key, value in result.paths.items()
+                    },
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-closure-verify":
+        result = build_phase00_closure_verification(
+            root=ROOT,
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {
+                        key: str(value) for key, value in result.paths.items()
+                    },
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "phase00-maintenance-resume":
+        result = resume_phase00_maintenance(
+            root=ROOT,
+            maintenance_id=str(args.phase00_maintenance_id),
+            wait_timeout_seconds=float(args.phase00_wait_timeout_seconds),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
+                indent=2,
+            )
+        )
+    elif args.command == "build-canonical-runtime-contract":
+        result = build_canonical_scheduler_runtime_contract(
+            root=ROOT,
+            now_iso=datetime.now(UTC).isoformat(),
+        )
+        print(
+            json.dumps(
+                {
+                    "summary": result.summary,
+                    "paths": {key: str(value) for key, value in result.paths.items()},
+                },
                 indent=2,
             )
         )
@@ -12904,6 +13328,14 @@ def main() -> None:
         )
     elif args.command == "current-state":
         result = current_state()
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-wizard-research-journal":
+        result = build_wizard_research_journal(root=ROOT)
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
@@ -13125,6 +13557,12 @@ def main() -> None:
     elif args.command == "hyperliquid-testnet-market-inventory":
         frame = refresh_hyperliquid_testnet_market_inventory(root=ROOT)
         output = ROOT / "reports" / "active" / "hyperliquid_testnet_market_inventory.csv"
+        evidence = (
+            ROOT
+            / "reports"
+            / "active"
+            / "hyperliquid_testnet_market_inventory_evidence.json"
+        )
         checked = pd.to_datetime(
             frame.get("checked_at_utc", pd.Series(dtype=str)), utc=True, errors="coerce"
         )
@@ -13161,7 +13599,10 @@ def main() -> None:
                         "testnet_order_authority": False,
                         "live_trading_authorized": False,
                     },
-                    "paths": {"inventory": str(output)},
+                    "paths": {
+                        "inventory": str(output),
+                        "inventory_evidence": str(evidence),
+                    },
                 },
                 indent=2,
             )
@@ -13425,7 +13866,7 @@ def main() -> None:
         frame = pd.DataFrame(rows)
         output = ROOT / "reports" / "active" / "binance_testnet_adapter_contract.csv"
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         print(frame.to_string(index=False))
         print(f"binance_testnet_adapter_contract: {output}")
     elif args.command == "binance-testnet-pair-preflight":
@@ -13598,6 +14039,44 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "build-v2-math-diagnostic":
+        result = build_v2_math_diagnostic(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "reevaluate-current-wizard-hyperliquid-math":
+        old_manifest = args.old_replay_manifest or (
+            ROOT
+            / "reports"
+            / "active"
+            / "current_wizard_hyperliquid_canonical_replay_manifest.json"
+        )
+        result = reevaluate_current_wizard_hyperliquid_math(
+            root=ROOT,
+            old_manifest_path=old_manifest,
+        )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-math-v2-acceptance":
+        result = build_math_v2_acceptance(root=ROOT)
+        print(
+            json.dumps(
+                {
+                    **{key: value for key, value in result.items() if not isinstance(value, Path)},
+                    "paths": {
+                        key: str(value) for key, value in result.items() if isinstance(value, Path)
+                    },
+                },
+                indent=2,
+            )
+        )
     elif args.command == "build-v2-preflight-run":
         result = build_v2_preflight_run(root=ROOT)
         print(
@@ -13625,21 +14104,21 @@ def main() -> None:
         frame = apify_cost_audit_rows()
         output = ROOT / "reports" / "dashboard" / "apify_cost_audit.csv"
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         print(frame.to_string(index=False))
         print(f"apify_cost_audit: {output}")
     elif args.command == "paper-candidate-shortlist":
         frame = paper_candidate_shortlist_rows()
         output = ROOT / "reports" / "dashboard" / "paper_candidate_shortlist.csv"
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         print(frame.to_string(index=False))
         print(f"paper_candidate_shortlist: {output}")
     elif args.command == "focused-paper-validation":
         frame = focused_paper_validation_rows()
         output = ROOT / "reports" / "dashboard" / "focused_paper_validation.csv"
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         print(frame.to_string(index=False))
         print(f"focused_paper_validation: {output}")
     elif args.command == "run-langgraph-agent-workflow":
@@ -13824,6 +14303,56 @@ def main() -> None:
             notes=args.notes,
             source_id=args.source_id,
         )
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "ingest-paper-library":
+        if args.paper_dir is None:
+            raise SystemExit("ingest-paper-library requires --paper-dir")
+        result = ingest_paper_library(source_dir=args.paper_dir, root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "verify-paper-sources":
+        result = verify_paper_sources(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-paper-adversarial-reviews":
+        result = build_paper_adversarial_reviews(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-paper-critical-checks":
+        result = run_paper_critical_checks(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "run-paper-reproduction-suite":
+        result = run_paper_reproduction_suite(root=ROOT)
+        print(
+            json.dumps(
+                {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
+                indent=2,
+            )
+        )
+    elif args.command == "build-v1-v1-1-comparison":
+        result = build_versioned_learning_comparison(root=ROOT)
         print(
             json.dumps(
                 {"summary": result.summary, "paths": {k: str(v) for k, v in result.paths.items()}},
@@ -14034,7 +14563,7 @@ def main() -> None:
         )
         output = ROOT / "reports" / "rl" / "base_rl_promotion_readiness.csv"
         output.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(output, index=False)
+        atomic_write_csv(frame, output, index=False)
         print(frame.to_string(index=False))
         print(f"promotion_readiness_report: {output}")
     elif args.command == "refresh-base-rl-feedback":
@@ -14936,14 +15465,14 @@ def main() -> None:
         mcp_url = args.mcp_url or os.getenv("APIFY_MCP_SERVER_URL", "").strip()
         if not mcp_url:
             raise SystemExit("refresh-apify-sources requires --mcp-url or APIFY_MCP_SERVER_URL")
-        token = args.apify_token or os.getenv("APIFY_API_TOKEN", "").strip()
         result = refresh_apify_sources(
             root=ROOT,
             mcp_url=mcp_url,
             source_filter=args.source_filter,
             do_fetch=not args.no_fetch,
-            api_token=token if token else None,
+            api_token=args.apify_token,
             wait_seconds=args.wait_seconds,
+            actor_credit_ceiling=args.apify_actor_credit_ceiling,
         )
         print(
             json.dumps(
@@ -15167,10 +15696,11 @@ def main() -> None:
             mode=args.sweep_mode,
             root=ROOT,
             mcp_url=args.mcp_url or os.getenv("APIFY_MCP_SERVER_URL", "").strip() or None,
-            api_token=args.apify_token or os.getenv("APIFY_API_TOKEN", "").strip() or None,
+            api_token=args.apify_token,
             source_filter=args.source_filter,
             wait_seconds=args.wait_seconds,
             do_fetch=not args.no_fetch,
+            apify_actor_credit_ceiling=args.apify_actor_credit_ceiling,
             readiness_threshold=args.readiness_threshold,
         )
         print(json.dumps(result, indent=2))
@@ -15260,26 +15790,30 @@ def main() -> None:
     elif args.command == "crawl-crypto-wizards":
         crawl_crypto_wizards(args.endpoint)
     elif args.command == "crypto-wizards-full-sweep":
-        result = run_wizard_discovery_sweep(
-            root=ROOT,
-            execute=args.execute_wizard_sweep,
-            api_key=os.getenv("CRYPTO_WIZARDS_API_KEY"),
-            exchanges=tuple(
+        sweep_kwargs = {
+            "root": ROOT,
+            "api_key": None,
+            "exchanges": tuple(
                 value.strip() for value in args.wizard_exchanges.split(",") if value.strip()
             ),
-            intervals=tuple(
+            "intervals": tuple(
                 value.strip() for value in args.wizard_intervals.split(",") if value.strip()
             ),
-            strategies=tuple(
+            "strategies": tuple(
                 value.strip() for value in args.wizard_strategies.split(",") if value.strip()
             ),
-            priorities=tuple(
+            "priorities": tuple(
                 value.strip() for value in args.wizard_priorities.split(",") if value.strip()
             ),
-            daily_credit_limit=args.wizard_daily_credit_limit,
-            reserved_credits=args.wizard_reserved_credits,
-            publish_active=not args.wizard_attempt_only,
-        )
+            "daily_credit_limit": args.wizard_daily_credit_limit,
+            "reserved_credits": args.wizard_reserved_credits,
+            "credit_lane": args.wizard_credit_lane,
+            "publish_active": not args.wizard_attempt_only,
+        }
+        if args.execute_wizard_sweep:
+            result = run_authorized_wizard_discovery_sweep(**sweep_kwargs)
+        else:
+            result = run_wizard_discovery_sweep(execute=False, **sweep_kwargs)
         print(
             json.dumps(
                 {

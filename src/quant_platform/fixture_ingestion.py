@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Iterable
-from functools import lru_cache
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import re
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Iterable
 
 import pandas as pd
 
 from quant_platform.derived_features import add_derived_beta_from_prices
+from quant_platform.economic_contract import y_on_x_log_spread
 from quant_platform.experiments import PairDataset
 from quant_platform.zscore_utils import rolling_zscore
-
 
 CANONICAL_ALIASES: dict[str, tuple[str, ...]] = {
     "timestamp": ("timestamp", "time", "datetime", "date"),
@@ -22,7 +24,13 @@ CANONICAL_ALIASES: dict[str, tuple[str, ...]] = {
     "price_x": ("price_x", "x_price", "asset_x_price", "price_asset_x"),
     "price_y": ("price_y", "y_price", "asset_y_price", "price_asset_y"),
     "cointegration": ("cointegration", "is_cointegrated", "coint_eg", "johansen_coint"),
-    "cointegration_pvalue": ("cointegration_pvalue", "cointegration_p_value", "coint_pvalue", "coint_eg_p", "pvalue"),
+    "cointegration_pvalue": (
+        "cointegration_pvalue",
+        "cointegration_p_value",
+        "coint_pvalue",
+        "coint_eg_p",
+        "pvalue",
+    ),
     "hedge_ratio": ("hedge_ratio", "hedge", "beta_hedge"),
     "beta": ("beta", "pair_beta"),
     "ecm_x": ("ecm_x", "ecm(x)", "ecm_asset_x", "ecmX"),
@@ -31,7 +39,13 @@ CANONICAL_ALIASES: dict[str, tuple[str, ...]] = {
     "half_life": ("half_life", "halflife"),
     "hurst": ("hurst", "hurst_exponent"),
     "zscore": ("zscore", "z_score", "z", "spread_zscore", "zscore_last"),
-    "rolling_zscore": ("rolling_zscore", "zscore_roll", "zscore_rolling", "rolling_z_score", "zscore_roll_last"),
+    "rolling_zscore": (
+        "rolling_zscore",
+        "zscore_roll",
+        "zscore_rolling",
+        "rolling_z_score",
+        "zscore_roll_last",
+    ),
     "spread": ("spread", "pair_spread", "residual_spread"),
     "pearson": ("pearson", "pearson_corr", "pearson_correlation"),
     "spearman": ("spearman", "spearman_corr", "spearman_correlation"),
@@ -103,9 +117,19 @@ def load_fixture_payloads(input_dir: str | Path) -> list[FixturePayload]:
     payloads: list[FixturePayload] = []
     for path in sorted(root.glob("**/*")):
         if path.suffix.lower() == ".json":
-            payloads.append(FixturePayload(endpoint=path.stem, path=path, payload=json.loads(path.read_text(encoding="utf-8"))))
+            payloads.append(
+                FixturePayload(
+                    endpoint=path.stem,
+                    path=path,
+                    payload=json.loads(path.read_text(encoding="utf-8")),
+                )
+            )
         elif path.suffix.lower() == ".csv":
-            payloads.append(FixturePayload(endpoint=path.stem, path=path, payload=pd.read_csv(path).to_dict("records")))
+            payloads.append(
+                FixturePayload(
+                    endpoint=path.stem, path=path, payload=pd.read_csv(path).to_dict("records")
+                )
+            )
     return payloads
 
 
@@ -126,7 +150,13 @@ def _record_score(record: dict[str, Any]) -> int:
     normalized = {snake_case(key.split(".")[-1]) for key in record}
     score = 0
     score += 3 if normalized.intersection({"pair", "symbol_pair", "market_pair"}) else 0
-    score += 3 if normalized.intersection({"spread", "zscore", "z_score", "conditional_probability_distortion"}) else 0
+    score += (
+        3
+        if normalized.intersection(
+            {"spread", "zscore", "z_score", "conditional_probability_distortion"}
+        )
+        else 0
+    )
     score += 2 if normalized.intersection({"timestamp", "time", "datetime"}) else 0
     return score
 
@@ -191,39 +221,54 @@ def normalize_crypto_wizards_records(records: list[dict[str, Any]]) -> pd.DataFr
         normalized[canonical] = raw[sources].bfill(axis=1).iloc[:, 0]
 
     if "pair" not in normalized and {"asset_x", "asset_y"}.issubset(normalized.columns):
-        normalized["pair"] = normalized["asset_x"].astype(str) + "-" + normalized["asset_y"].astype(str)
+        normalized["pair"] = (
+            normalized["asset_x"].astype(str) + "-" + normalized["asset_y"].astype(str)
+        )
     if "pair" in normalized:
-        normalized["pair"] = normalized["pair"].astype(str).str.replace("/", "-", regex=False).str.upper()
+        normalized["pair"] = (
+            normalized["pair"].astype(str).str.replace("/", "-", regex=False).str.upper()
+        )
 
-    numeric_columns = [column for column in normalized.columns if column not in {"timestamp", "pair", "asset_x", "asset_y", "copula", "regime"}]
+    numeric_columns = [
+        column
+        for column in normalized.columns
+        if column not in {"timestamp", "pair", "asset_x", "asset_y", "copula", "regime"}
+    ]
     for column in numeric_columns:
         normalized[column] = pd.to_numeric(normalized[column], errors="coerce")
 
     if "spread" not in normalized and {"price_x", "price_y"}.issubset(normalized.columns):
         hedge_coeff = normalized.get("hedge_ratio")
-        if hedge_coeff is None or hedge_coeff.isna().all():
-            hedge_coeff = normalized.get("beta")
-        if hedge_coeff is None:
-            hedge_coeff = pd.Series([1.0] * len(normalized), index=normalized.index)
+        if hedge_coeff is None or hedge_coeff.isna().any() or hedge_coeff.le(0.0).any():
+            normalized["spread_source"] = "not_derived_missing_valid_hedge_ratio"
         else:
-            hedge_coeff = hedge_coeff.fillna(1.0)
-        if not hedge_coeff.isna().all():
-            normalized["spread"] = normalized["price_x"] - hedge_coeff * normalized["price_y"]
-            normalized["spread_source"] = "derived_from_prices"
-        else:
-            normalized["spread_source"] = None
+            normalized["spread"] = y_on_x_log_spread(
+                normalized["price_x"], normalized["price_y"], hedge_coeff
+            )
+            normalized["spread_source"] = "derived_y_on_x_log_from_explicit_hedge_ratio"
+            normalized["spread_orientation"] = "log_y_minus_beta_y_on_x_times_log_x"
+            normalized["spread_point_in_time_status"] = "unknown_research_only"
     elif "spread" in normalized:
         normalized["spread_source"] = "provider" if has_spread_input else "derived"
 
-    if "conditional_probability_distortion" not in normalized and {"u1_given_u2", "u2_given_u1"}.issubset(normalized.columns):
-        normalized["conditional_probability_distortion"] = normalized["u1_given_u2"] - normalized["u2_given_u1"]
+    if "conditional_probability_distortion" not in normalized and {
+        "u1_given_u2",
+        "u2_given_u1",
+    }.issubset(normalized.columns):
+        normalized["conditional_probability_distortion"] = (
+            normalized["u1_given_u2"] - normalized["u2_given_u1"]
+        )
     if "zscore" in normalized:
-        normalized["zscore_source"] = "provider" if (has_zscore_input or has_rolling_zscore_input) else "passed_through"
+        normalized["zscore_source"] = (
+            "provider" if (has_zscore_input or has_rolling_zscore_input) else "passed_through"
+        )
     if "zscore" not in normalized and "rolling_zscore" in normalized:
         normalized["zscore"] = normalized["rolling_zscore"]
         normalized["zscore_source"] = "provider"
     if "zscore" not in normalized and "spread" in normalized:
-        normalized["zscore"] = rolling_zscore(normalized["spread"], window=ZSCORE_WINDOW, min_periods=ZSCORE_MIN_PERIODS)
+        normalized["zscore"] = rolling_zscore(
+            normalized["spread"], window=ZSCORE_WINDOW, min_periods=ZSCORE_MIN_PERIODS
+        )
         normalized["zscore_source"] = "derived_from_spread_rolling"
         normalized["zscore_reconstructed"] = normalized["zscore"]
     elif "zscore" in normalized:
@@ -239,7 +284,11 @@ def normalize_crypto_wizards_records(records: list[dict[str, Any]]) -> pd.DataFr
     if "timestamp" in normalized:
         normalized = normalized.sort_values("timestamp")
     normalized = add_derived_beta_from_prices(normalized)
-    return normalized.dropna(subset=["pair", "spread"], how="any") if {"pair", "spread"}.issubset(normalized.columns) else normalized
+    return (
+        normalized.dropna(subset=["pair", "spread"], how="any")
+        if {"pair", "spread"}.issubset(normalized.columns)
+        else normalized
+    )
 
 
 def datasets_from_fixtures(input_dir: str | Path) -> list[PairDataset]:
@@ -255,7 +304,9 @@ def datasets_from_fixtures(input_dir: str | Path) -> list[PairDataset]:
         return []
     datasets = []
     for pair, frame in normalized.groupby("pair", sort=True):
-        clean = frame.drop(columns=[column for column in ("pair",) if column in frame.columns]).reset_index(drop=True)
+        clean = frame.drop(
+            columns=[column for column in ("pair",) if column in frame.columns]
+        ).reset_index(drop=True)
         datasets.append(PairDataset(pair=str(pair), frame=clean))
     return datasets
 
@@ -267,7 +318,11 @@ def discovered_field_rows(input_dir: str | Path) -> list[dict[str, str | float]]
             for field, value in record.items():
                 leaf = snake_case(field.split(".")[-1])
                 canonical = next(
-                    (name for name, aliases in CANONICAL_ALIASES.items() if leaf in {snake_case(alias) for alias in aliases}),
+                    (
+                        name
+                        for name, aliases in CANONICAL_ALIASES.items()
+                        if leaf in {snake_case(alias) for alias in aliases}
+                    ),
                     leaf,
                 )
                 rows.append(
@@ -284,15 +339,28 @@ def discovered_field_rows(input_dir: str | Path) -> list[dict[str, str | float]]
     if not rows:
         return []
     frame = pd.DataFrame(rows).drop_duplicates(subset=["name", "endpoint", "notes"])
-    return frame.sort_values(["importance_score", "name"], ascending=[False, True]).to_dict("records")
+    return frame.sort_values(["importance_score", "name"], ascending=[False, True]).to_dict(
+        "records"
+    )
 
 
 def write_fixture_field_dictionary(input_dir: str | Path, output_path: str | Path) -> Path:
     rows = discovered_field_rows(input_dir)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows, columns=["name", "description", "type", "example_value", "endpoint", "importance_score", "notes"]).to_csv(
-        output, index=False
-    )
+    atomic_write_csv(pd.DataFrame(
+        rows,
+        columns=[
+            "name",
+            "description",
+            "type",
+            "example_value",
+            "endpoint",
+            "importance_score",
+            "notes",
+        ],
+    ), output, index=False)
     return output
+
+
 from functools import lru_cache

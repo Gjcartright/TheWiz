@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -60,9 +64,9 @@ def build_specialist_scoreboard(root: Path = ROOT) -> CommandResult:
     scoreboard_path = output_dir / "specialist_strategy_scoreboard.csv"
     scoreboard_md_path = output_dir / "specialist_strategy_scoreboard.md"
     horizontal_path = output_dir / "horizontal_agent_scores.csv"
-    scoreboard.to_csv(scoreboard_path, index=False)
-    horizontal.to_csv(horizontal_path, index=False)
-    scoreboard_md_path.write_text(_scoreboard_markdown(scoreboard, horizontal), encoding="utf-8")
+    atomic_write_csv(scoreboard, scoreboard_path, index=False)
+    atomic_write_csv(horizontal, horizontal_path, index=False)
+    atomic_write_text(scoreboard_md_path, _scoreboard_markdown(scoreboard, horizontal), encoding="utf-8")
 
     return CommandResult(
         paths={

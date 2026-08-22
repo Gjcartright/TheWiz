@@ -15,6 +15,7 @@ from quant_platform.active_pipeline import CommandResult
 from quant_platform.orchestration.corrective_data_evidence import (
     validate_pair_cost_bundle_artifacts,
 )
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.corrective_wizard_capture_manifest import (
     validate_capture_manifest_source_receipt,
 )
@@ -1628,7 +1629,7 @@ def resolve_registered_source_family(
     else:
         temporary = frozen_matrix.with_suffix(frozen_matrix.suffix + ".tmp")
         temporary.write_bytes(expected_bytes)
-        temporary.replace(frozen_matrix)
+        promote_staged_file(temporary, frozen_matrix)
     receipt_core = {
         "schema_version": SOURCE_FAMILY_SCHEMA_VERSION,
         "contract_id": contract_id,
@@ -2295,7 +2296,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
@@ -2304,7 +2305,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     temporary.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_or_validate_immutable_json(
@@ -2321,7 +2322,7 @@ def _write_or_validate_immutable_json(
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(expected)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
     return expected_hash
 
 

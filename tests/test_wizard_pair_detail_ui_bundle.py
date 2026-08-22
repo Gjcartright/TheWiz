@@ -229,9 +229,9 @@ def test_ingest_accounts_for_all_modes_and_orientations(tmp_path):
     ledger = pd.read_csv(result.paths["mode_ledger"])
     progress = pd.read_csv(result.paths["capture_progress"])
 
-    assert len(ledger) == 16
+    assert len(ledger) == 14
     assert ledger["capture_status"].eq("CAPTURED").sum() == 7
-    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 2
+    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 0
     assert ledger["capture_status"].eq("PENDING_REVERSE_RECALCULATION").sum() == 7
     assert set(ledger["orientation"]) == {"original", "reverse"}
     captured = ledger[ledger["capture_status"].eq("CAPTURED")]
@@ -248,7 +248,7 @@ def test_ingest_accounts_for_all_modes_and_orientations(tmp_path):
     assert progress.loc[progress["pair_group_key"].eq("coinbase|hourly|DOT|ZRO"), "capture_status"].item() == "PARTIAL"
     assert progress.loc[progress["pair_group_key"].eq("coinbase|hourly|BTC|ETH"), "capture_status"].item() == "NOT_CAPTURED"
     assert result.paths["snapshot_mode_ledger"].exists()
-    assert len(pd.read_csv(result.paths["snapshot_mode_ledger"])) == 16
+    assert len(pd.read_csv(result.paths["snapshot_mode_ledger"])) == 14
 
 
 def test_legacy_self_asserted_auth_capture_is_retained_but_not_counted(tmp_path):
@@ -409,7 +409,7 @@ def test_explicit_wizard_route_unavailable_accounts_for_every_planned_cell(tmp_p
     progress = pd.read_csv(result.paths["capture_progress"])
     validation = pd.read_csv(result.paths["coverage_validation"])
 
-    assert len(ledger) == 16
+    assert len(ledger) == 14
     assert ledger["capture_status"].eq("PAIR_ROUTE_NOT_AVAILABLE").all()
     assert ledger["pair_group_key"].eq("bybit|hourly|DRAM|ETHUSDT").all()
     assert ledger["capture_blocker"].str.contains("No data found").all()
@@ -417,12 +417,12 @@ def test_explicit_wizard_route_unavailable_accounts_for_every_planned_cell(tmp_p
     assert not ledger["live_trading_authorized"].any()
     assert progress["capture_status"].item() == "ROUTE_UNAVAILABLE"
     assert progress["pair_detail_route_status"].item() == "NOT_AVAILABLE_ON_WIZARD"
-    assert progress["accounted_planned_cells"].item() == 16
-    assert progress["unavailable_planned_cells"].item() == 16
+    assert progress["accounted_planned_cells"].item() == 14
+    assert progress["unavailable_planned_cells"].item() == 14
     assert validation["status"].eq("PASS").all()
     assert result.summary["pair_groups_captured"] == 0
     assert result.summary["pair_groups_route_unavailable"] == 1
-    assert result.summary["route_unavailable_cells"] == 16
+    assert result.summary["route_unavailable_cells"] == 14
     assert result.summary["queue_pairs_complete"] == 0
     assert result.summary["queue_pairs_terminally_accounted"] == 1
     assert result.summary["coverage_failures"] == 0
@@ -516,7 +516,7 @@ def test_verified_reverse_orientation_completes_pair_capture(tmp_path):
     validation = pd.read_csv(result.paths["coverage_validation"])
 
     assert ledger["capture_status"].eq("CAPTURED").sum() == 14
-    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 2
+    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 0
     reverse = ledger[
         ledger["orientation"].eq("reverse") & ledger["capture_status"].eq("CAPTURED")
     ]
@@ -650,10 +650,10 @@ def test_separate_original_and_reverse_route_bundles_consolidate_without_drops(t
     progress = pd.read_csv(result.paths["capture_progress"])
     validation = pd.read_csv(result.paths["coverage_validation"])
 
-    assert len(ledger) == 16
+    assert len(ledger) == 14
     assert ledger["capture_candidate_count"].eq(2).all()
     assert ledger["capture_status"].eq("CAPTURED").sum() == 14
-    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 2
+    assert ledger["capture_status"].eq("NOT_AVAILABLE_ON_PAIR_PAGE").sum() == 0
     assert ledger.loc[
         ledger["orientation"].eq("original")
         & ledger["capture_status"].eq("CAPTURED"),
@@ -674,7 +674,7 @@ def test_separate_original_and_reverse_route_bundles_consolidate_without_drops(t
     assert validation.loc[
         validation["check"].eq("all_reverse_pair_page_modes"), "status"
     ].eq("PASS").all()
-    assert result.summary["candidate_cells_before_consolidation"] == 32
+    assert result.summary["candidate_cells_before_consolidation"] == 28
 
 
 def test_bundle_missing_from_current_queue_is_historical_warning_not_failure(tmp_path):

@@ -449,6 +449,11 @@ def test_trade_dataset_promotion_preserves_prior_dataset_and_verifies_hashes(
     assert active["dataset_id"] == "tradedataset-test"
     assert active["model_retraining_required"] is True
     assert pd.read_csv(result.paths["dataset_csv"])["trade_id"].tolist() == ["new"]
+    assert result.paths["dataset_csv"].stat().st_nlink == 1
+    assert (
+        result.paths["dataset_csv"].stat().st_ino
+        != artifacts["dataset"].stat().st_ino
+    )
     superseded = tmp_path / active["superseded_dataset_receipt"]
     assert superseded.is_file()
     preserved = pd.read_csv(superseded.parent / "trade_training_dataset.csv")

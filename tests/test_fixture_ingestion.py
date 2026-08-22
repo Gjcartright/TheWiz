@@ -1,10 +1,16 @@
 import json
 
-import pytest
+import numpy as np
 import pandas as pd
+import pytest
 
-from quant_platform.experiments import AcceptanceGate, CostBucket, ExperimentConfig, ExperimentHarness
 from quant_platform.backtest import CostModel
+from quant_platform.experiments import (
+    AcceptanceGate,
+    CostBucket,
+    ExperimentConfig,
+    ExperimentHarness,
+)
 from quant_platform.fixture_ingestion import (
     datasets_from_fixtures,
     discovered_field_rows,
@@ -83,7 +89,9 @@ def test_fixture_ingestion_normalizes_pair_datasets_and_copula_distortion(tmp_pa
 
     assert {dataset.pair for dataset in datasets} == {"ETH-BTC", "SOL-ETH"}
     eth = next(dataset for dataset in datasets if dataset.pair == "ETH-BTC")
-    assert {"spread", "zscore", "conditional_probability_distortion", "regime"}.issubset(eth.frame.columns)
+    assert {"spread", "zscore", "conditional_probability_distortion", "regime"}.issubset(
+        eth.frame.columns
+    )
     assert eth.frame["conditional_probability_distortion"].iloc[0] == pytest.approx(-0.5)
 
 
@@ -141,7 +149,7 @@ def test_fixture_ingestion_derives_beta_from_leg_prices_when_missing():
     assert set(normalized["beta_source"]) == {"derived_from_price_returns"}
 
 
-def test_fixture_ingestion_reconstructs_spread_and_zscore_with_provenance():
+def test_fixture_ingestion_does_not_invent_spread_without_hedge_ratio():
     records = []
     for idx in range(30):
         records.append(
@@ -155,12 +163,37 @@ def test_fixture_ingestion_reconstructs_spread_and_zscore_with_provenance():
 
     normalized = normalize_crypto_wizards_records(records)
 
+    assert "spread" not in normalized.columns
+    assert "zscore" not in normalized.columns
     assert "spread_source" in normalized.columns
+    assert set(normalized["spread_source"]) == {"not_derived_missing_valid_hedge_ratio"}
+
+
+def test_fixture_ingestion_reconstructs_y_on_x_log_spread_with_provenance():
+    records = []
+    for idx in range(30):
+        records.append(
+            {
+                "pair": "BTC/ETH",
+                "timestamp": f"2026-06-15T{idx:02d}:00:00Z",
+                "price_x": 100.0 + idx,
+                "price_y": 25.0 + idx * 0.25,
+                "hedge_ratio": 0.75,
+            }
+        )
+
+    normalized = normalize_crypto_wizards_records(records)
+    expected = np.log(normalized["price_y"]) - 0.75 * np.log(normalized["price_x"])
+
     assert "zscore_reconstructed" in normalized.columns
     assert "zscore_source" in normalized.columns
-    assert set(normalized["spread_source"]) == {"derived_from_prices"}
+    assert set(normalized["spread_source"]) == {"derived_y_on_x_log_from_explicit_hedge_ratio"}
+    assert set(normalized["spread_orientation"]) == {"log_y_minus_beta_y_on_x_times_log_x"}
+    assert np.allclose(normalized["spread"], expected)
     assert set(normalized["zscore_source"]) == {"derived_from_spread_rolling"}
     # first 6 rows are not computable with min_periods=7
     assert normalized.loc[:5, "zscore"].isna().all()
     assert normalized.loc[6:, "zscore"].notna().all()
-    assert pd.Series(normalized["zscore"], index=normalized.index).equals(normalized["zscore_reconstructed"])
+    assert pd.Series(normalized["zscore"], index=normalized.index).equals(
+        normalized["zscore_reconstructed"]
+    )

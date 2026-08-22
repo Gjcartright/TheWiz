@@ -1,0 +1,150 @@
+{
+  "schema_version": "thewiz.phase00_expansion_interfaces.v1",
+  "contract_version": "2026-08-21.1",
+  "phase00_effect_policy": {
+    "pure_validators_only": true,
+    "network_allowed": false,
+    "credentials_allowed": false,
+    "package_installs_allowed": false,
+    "scheduler_control_allowed": false,
+    "live_evidence_publication_allowed": false,
+    "order_submission_allowed": false,
+    "permit_minting_allowed": false
+  },
+  "identity_bindings": {
+    "identity_ontology_version": "thewiz.identity_ontology.v2",
+    "venue_policy_schema_version": "thewiz.venue_policy.v2"
+  },
+  "instrument_registry": {
+    "source_precedence": [
+      "venue_public_api",
+      "ccxt_public",
+      "crypto_wizards",
+      "apify_public"
+    ],
+    "consensus_fields": [
+      "venue_id",
+      "product_lane_id",
+      "venue_market_id",
+      "unified_symbol",
+      "base_asset_id",
+      "quote_asset_id",
+      "settle_asset_id",
+      "instrument_id"
+    ],
+    "unknown_source_policy": "abstain",
+    "stale_observation_policy": "abstain",
+    "identity_conflict_policy": "abstain",
+    "duplicate_source_policy": "abstain"
+  },
+  "unknown_exchange_onboarding": {
+    "states": [
+      "discovered",
+      "quarantined",
+      "identity_verified",
+      "public_data_verified",
+      "costs_verified",
+      "execution_contract_verified",
+      "testnet_eligible",
+      "rejected"
+    ],
+    "legal_transitions": {
+      "discovered": ["quarantined", "rejected"],
+      "quarantined": ["identity_verified", "rejected"],
+      "identity_verified": ["public_data_verified", "rejected"],
+      "public_data_verified": ["costs_verified", "rejected"],
+      "costs_verified": ["execution_contract_verified", "rejected"],
+      "execution_contract_verified": ["testnet_eligible", "rejected"],
+      "testnet_eligible": [],
+      "rejected": []
+    },
+    "known_venue_policy": "reject_from_unknown_onboarding",
+    "live_onboarding_state": null
+  },
+  "venue_selector": {
+    "required_identity": [
+      "lane",
+      "venue_id",
+      "product_lane_id",
+      "instrument_id",
+      "account_scope_id"
+    ],
+    "required_costs_bps": [
+      "fee_bps",
+      "slippage_bps",
+      "funding_bps",
+      "borrow_short_bps",
+      "network_bps",
+      "execution_risk_bps"
+    ],
+    "cost_formula": "fee_bps + slippage_bps + funding_bps + borrow_short_bps + network_bps + execution_risk_bps",
+    "stable_tie_break": [
+      "all_in_cost_bps",
+      "venue_id",
+      "lane",
+      "instrument_id",
+      "account_scope_id"
+    ],
+    "stale_policy": "abstain_entire_selection",
+    "future_evidence_policy": "abstain_entire_selection",
+    "duplicate_route_policy": "abstain",
+    "missing_field_policy": "schema_reject"
+  },
+  "two_leg_journal": {
+    "states": [
+      "proposed",
+      "authority_confirmed",
+      "first_leg_pending",
+      "first_leg_confirmed",
+      "second_leg_pending",
+      "hedged",
+      "recovery_required",
+      "recovery_authorized",
+      "recovery_pending",
+      "completed",
+      "recovered",
+      "aborted",
+      "failed",
+      "unknown"
+    ],
+    "legal_transitions": {
+      "proposed": ["authority_confirmed", "aborted"],
+      "authority_confirmed": ["first_leg_pending", "aborted"],
+      "first_leg_pending": ["first_leg_confirmed", "recovery_required", "unknown"],
+      "first_leg_confirmed": ["second_leg_pending", "recovery_required"],
+      "second_leg_pending": ["hedged", "recovery_required", "unknown"],
+      "hedged": ["completed", "recovery_required"],
+      "recovery_required": ["recovery_authorized", "unknown"],
+      "recovery_authorized": ["recovery_pending", "unknown"],
+      "recovery_pending": ["recovered", "failed", "unknown"],
+      "completed": [],
+      "recovered": [],
+      "aborted": [],
+      "failed": [],
+      "unknown": []
+    },
+    "terminal_states": ["completed", "recovered", "aborted", "failed", "unknown"],
+    "idempotency": "unique_event_id_and_idempotency_key",
+    "recovery_authority": "trusted_external_receipt_id_and_hash_required",
+    "execution_implementation": false
+  },
+  "proposal_capabilities": {
+    "required_roles": ["teacher", "student", "ml", "rl", "shadow", "specialist"],
+    "allowed_outputs": ["proposal", "score", "explanation", "hypothesis", "evaluation"],
+    "execution_authority": false,
+    "can_mint_permits": false,
+    "can_submit_orders": false,
+    "can_publish_live_evidence": false
+  },
+  "outcome_labels": {
+    "lanes": ["backtest", "shadow", "testnet", "canary", "live"],
+    "partition_policy": "one_lane_only",
+    "cross_lane_merge_policy": "reject"
+  },
+  "held_out_validation": {
+    "required_dimensions": ["venue", "pair", "time", "regime"],
+    "training_holdout_overlap_policy": "reject",
+    "time_boundary_policy": "training_end_strictly_before_held_out_start",
+    "missing_dimension_policy": "schema_reject"
+  }
+}

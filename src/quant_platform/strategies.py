@@ -6,6 +6,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
+from quant_platform.economic_contract import copula_distortion_signal
 from quant_platform.zscore_utils import coalesce_zscore
 
 SignalFunction = Callable[[pd.DataFrame], pd.Series]
@@ -90,10 +91,7 @@ def _stateful_zscore_entry(
 
 
 def _copula_entry_direction(distortion: pd.Series, threshold: float) -> pd.Series:
-    signal = pd.Series(0.0, index=distortion.index, dtype="float64")
-    signal[distortion > threshold] = -1.0
-    signal[distortion < -threshold] = 1.0
-    return signal
+    return copula_distortion_signal(distortion, threshold)
 
 
 def copula_signal(frame: pd.DataFrame, threshold: float = 0.20) -> pd.Series:

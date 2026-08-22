@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-import json
 from typing import Any
 
 import pandas as pd
+
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    atomic_write_csv,
+)
 
 
 @dataclass(frozen=True)
@@ -30,8 +35,7 @@ class JsonlTradeStore:
     def append(self, record: TradeRecord) -> None:
         payload = asdict(record)
         payload["timestamp"] = record.timestamp.isoformat()
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(payload, sort_keys=True) + "\n")
+        atomic_append_text(self.path, json.dumps(payload, sort_keys=True) + "\n")
 
     def trade_ids(self) -> set[str]:
         return {str(record.get("trade_id", "")) for record in self.read_all() if record.get("trade_id")}
@@ -114,10 +118,10 @@ def write_learning_event_summary_report(
 ) -> Path:
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(
+    atomic_write_csv(pd.DataFrame(
         learning_event_summary(paper_journal_path, trade_store_path, min_modeling_events),
         columns=LEARNING_EVENT_SUMMARY_COLUMNS,
-    ).to_csv(output, index=False)
+    ), output, index=False)
     return output
 
 

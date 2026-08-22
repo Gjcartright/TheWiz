@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_replay import _load_history
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
     CORRELATION_WINDOW,
@@ -25,7 +30,6 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_regimes import (
     _regime_details,
     build_causal_pair_regime_features,
 )
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_regime_attribution.v1"
@@ -98,8 +102,7 @@ def build_current_wizard_hyperliquid_regime_attribution(
     input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     pair_lookup = {_text(row.pair_group_key): row for row in pair_costs.itertuples()}
@@ -179,7 +182,7 @@ def build_current_wizard_hyperliquid_regime_attribution(
                 {
                     **base,
                     "regime_status": "BLOCKED_REGIME_INPUTS",
-                    "regime_blocker": f"{type(exc).__name__}:{exc}",
+                    "regime_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -225,8 +228,8 @@ def build_current_wizard_hyperliquid_regime_attribution(
         (trades_frame, "trades", "snapshot_trades"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     counts = status["regime_status"].value_counts().to_dict()
     summary: dict[str, object] = {
         **material,
@@ -249,10 +252,10 @@ def build_current_wizard_hyperliquid_regime_attribution(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

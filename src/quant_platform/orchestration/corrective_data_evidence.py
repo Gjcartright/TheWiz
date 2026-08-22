@@ -11,7 +11,9 @@ from typing import Any
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_text, promote_staged_file
+from quant_platform.runtime_types import CommandResult
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.corrective_data_evidence.v1"
@@ -278,9 +280,7 @@ def build_external_source_contract_attacks(
     contract = {**SOURCE_CONTRACTS["hyperliquid_inventory"], "minimum_rows": 2}
     for case, frame in cases.items():
         fixture_path = fixtures / f"hyperliquid_inventory_{case}.json"
-        fixture_path.write_text(
-            frame.to_json(orient="records", date_format="iso", indent=2) + "\n", encoding="utf-8"
-        )
+        atomic_write_text(fixture_path, frame.to_json(orient="records", date_format="iso", indent=2) + "\n", encoding="utf-8")
         blockers = validate_source_frame(frame, contract, now=now)
         expected_pass = case == "valid"
         actual_pass = not blockers
@@ -530,6 +530,17 @@ def build_l2_capture_candidate_set(*, root: Path = ROOT) -> dict[str, Any]:
         # the Stage 2 collection authority. Once a contract exists, only its
         # immutable candidates control Stage 2 acceptance.
         frame["stage_two_candidate"] = True
+    current_board_rows = _current_wizard_board_l2_rows(
+        root=root,
+        market_path=market_path,
+        markets=markets,
+    )
+    if current_board_rows:
+        frame = pd.concat(
+            [frame, pd.DataFrame(current_board_rows, columns=columns)],
+            ignore_index=True,
+            sort=False,
+        )
     exhaustive = _read_csv(exhaustive_replay_path)
     historical_diagnostic_rows: list[dict[str, Any]] = []
     exhaustive_required = {
@@ -634,6 +645,7 @@ def build_l2_capture_candidate_set(*, root: Path = ROOT) -> dict[str, Any]:
         "historical_diagnostics_path": historical_path,
         "registered_hypotheses": len(registered_rows) if contract else len(hypotheses),
         "registered_contract_candidates": len(registered_rows),
+        "current_board_collection_pairs": len(current_board_rows),
         "candidate_pairs": len(frame),
         "historical_diagnostic_pairs": len(historical),
         "eligible_pairs": int(
@@ -650,6 +662,103 @@ def build_l2_capture_candidate_set(*, root: Path = ROOT) -> dict[str, Any]:
         "testnet_order_authority": False,
         "live_trading_authorized": False,
     }
+
+
+def _current_wizard_board_l2_rows(
+    *,
+    root: Path,
+    market_path: Path,
+    markets: pd.DataFrame,
+) -> list[dict[str, Any]]:
+    """Expose the frozen board's selected pairs to prospective L2 collection.
+
+    These rows expand collection coverage only. They never become registered
+    hypotheses, Stage 2 candidates, promotion evidence, or order authority.
+    Fresh samples are intended for a later Wizard cutoff and cannot repair the
+    already-frozen board that selected the pairs.
+    """
+
+    active = root / "reports" / "active"
+    manifest_path = active / "current_wizard_hyperliquid_cost_manifest.json"
+    manifest = _read_json(manifest_path)
+    if not manifest:
+        return []
+    cost_evidence_id = _text(manifest.get("cost_evidence_id"))
+    selected = {
+        _text(value)
+        for value in manifest.get("selected_pair_group_keys", [])
+        if _text(value)
+    }
+    artifacts = manifest.get("artifacts", {})
+    if not cost_evidence_id or not selected or not isinstance(artifacts, dict):
+        return []
+    pairs_relative = _text(artifacts.get("snapshot_pairs") or artifacts.get("pairs"))
+    pairs_path = root / pairs_relative
+    pairs = _read_csv(pairs_path)
+    required = {
+        "cost_evidence_id",
+        "pair_group_key",
+        "pair",
+        "asset_x",
+        "asset_y",
+        "selected_for_cost_evidence",
+    }
+    if pairs.empty or not required.issubset(pairs.columns):
+        return []
+    if set(pairs["cost_evidence_id"].astype(str)) != {cost_evidence_id}:
+        raise ValueError("current Wizard pair-cost evidence identity mismatch")
+    selected_rows = pairs.loc[
+        pairs["selected_for_cost_evidence"].map(_truthy)
+        & pairs["pair_group_key"].astype(str).isin(selected)
+    ].copy()
+    if set(selected_rows["pair_group_key"].astype(str)) != selected:
+        raise ValueError("current Wizard selected pair-cost set is incomplete")
+    tradable_assets = set()
+    if not markets.empty and {"asset", "tradable"}.issubset(markets.columns):
+        tradable_assets = {
+            _text(value).upper()
+            for value in markets.loc[markets["tradable"].map(_truthy), "asset"]
+        }
+    rows: list[dict[str, Any]] = []
+    for rank, row in enumerate(
+        selected_rows.sort_values(["pair_group_key"]).to_dict("records"), start=1
+    ):
+        asset_x = _text(row.get("asset_x")).upper()
+        asset_y = _text(row.get("asset_y")).upper()
+        blockers: list[str] = []
+        if not asset_x or not asset_y:
+            blockers.append("normalized_pair_legs_missing")
+        elif not {asset_x, asset_y}.issubset(tradable_assets):
+            blockers.append("one_or_both_legs_not_currently_tradable_on_hyperliquid")
+        pair_group_key = _text(row.get("pair_group_key"))
+        rows.append(
+            {
+                "experiment_id": f"prospective_collection::{pair_group_key}",
+                "pair_group_key": pair_group_key,
+                "pair": _text(row.get("pair")),
+                "asset_x": asset_x,
+                "asset_y": asset_y,
+                "overall_research_rank": 100_000 + rank,
+                "confirmation_role": "prospective_next_wizard_cutoff_cost_coverage",
+                "source_family": "current_wizard_cost_selected_collection",
+                "semantic_hypothesis_id": "",
+                "registered_contract_id": "",
+                "registered_contract_candidate": False,
+                "stage_two_candidate": False,
+                "collection_eligible": not blockers,
+                "blocker": ";".join(blockers),
+                "evidence_path": ";".join(
+                    (
+                        _relative(manifest_path, root),
+                        _relative(pairs_path, root),
+                        _relative(market_path, root),
+                    )
+                ),
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            }
+        )
+    return rows
 
 
 def _read_l2_failure_attribution_routes(
@@ -985,6 +1094,12 @@ def build_pair_cost_stress_surfaces(
     candidates = candidates.loc[
         candidates.get("collection_eligible", pd.Series(False, index=candidates.index)).map(_truthy)
     ].copy()
+    if "source_family" in candidates:
+        candidates = candidates.loc[
+            candidates["source_family"].astype(str).ne(
+                "current_wizard_cost_selected_collection"
+            )
+        ].copy()
     statuses = _read_csv(status_path)
     status_by_asset = {
         _text(row.get("asset")).upper(): row
@@ -2165,7 +2280,7 @@ def _l2_readiness_refresh_evidence(*, root: Path) -> dict[str, Any]:
         validation = {
             "status": "BLOCKED",
             "blockers": [
-                f"l2_readiness_refresh_validation_error:{type(exc).__name__}:{exc}"
+                f"l2_readiness_refresh_validation_error:{safe_exception_code(exc)}"
             ],
             "immutable_receipt_path": "",
         }
@@ -2273,7 +2388,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
@@ -2282,7 +2397,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     temporary.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _csv_bytes(frame: pd.DataFrame) -> bytes:
@@ -2297,7 +2412,7 @@ def _write_or_validate_immutable_bytes(payload: bytes, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(payload)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _finite(value: Any, *, default: float = math.nan) -> float:

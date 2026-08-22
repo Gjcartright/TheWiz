@@ -5,36 +5,22 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from enum import StrEnum
 from hashlib import sha256
-import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from quant_platform.economic_contract import (
+    EXACT_MODES,
+    ExactMode,
+    TradeAction as TeacherAction,
+    normalize_exact_mode,
+)
 from quant_platform.orchestration.contracts import CandidateIdentity, normalize_pair
+from quant_platform.performance_math import MATH_VERSION
 
 
 TEACHER_COUNCIL_SCHEMA_VERSION = "teacher_council.v1"
-MATH_V2 = "math-v2"
-
-
-class ExactMode(StrEnum):
-    STATIC_SPREAD = "Static Spread"
-    STATIC_ZSCORER = "Static ZScoreR"
-    DYN_SPREAD = "Dyn Spread"
-    DYN_ZSCORER = "Dyn ZScoreR"
-    OU_SPREAD = "OU Spread"
-    OU_ZSCORER = "OU ZScoreR"
-    COPULA = "Copula"
-
-
-EXACT_MODES: tuple[ExactMode, ...] = tuple(ExactMode)
-
-
-class TeacherAction(StrEnum):
-    LONG_X_SHORT_Y = "long_x_short_y"
-    SHORT_X_LONG_Y = "short_x_long_y"
-    FLAT = "flat"
-    ABSTAIN = "abstain"
+MATH_V2 = MATH_VERSION
 
 
 class EvidenceAuthority(StrEnum):
@@ -67,27 +53,6 @@ class CouncilStatus(StrEnum):
     RESEARCH_ONLY = "RESEARCH_ONLY"
     BLOCKED = "BLOCKED"
     ABSTAIN = "ABSTAIN"
-
-
-def normalize_exact_mode(value: str | ExactMode) -> ExactMode:
-    if isinstance(value, ExactMode):
-        return value
-    key = re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
-    aliases = {
-        "staticspread": ExactMode.STATIC_SPREAD,
-        "staticzscorer": ExactMode.STATIC_ZSCORER,
-        "dynamicspread": ExactMode.DYN_SPREAD,
-        "dynspread": ExactMode.DYN_SPREAD,
-        "dynamiczscorer": ExactMode.DYN_ZSCORER,
-        "dynzscorer": ExactMode.DYN_ZSCORER,
-        "ouspread": ExactMode.OU_SPREAD,
-        "ouzscorer": ExactMode.OU_ZSCORER,
-        "copula": ExactMode.COPULA,
-    }
-    try:
-        return aliases[key]
-    except KeyError as exc:
-        raise ValueError(f"unsupported exact mode: {value}") from exc
 
 
 def council_context_id_for(

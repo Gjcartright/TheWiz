@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -14,6 +18,12 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.backtest import BacktestResult, CostModel, FundingPolicy, backtest_two_leg_spread
+from quant_platform.economic_contract import (
+    ECONOMIC_CONTRACT_VERSION,
+    action_for_signal,
+    tail_actions,
+    y_on_x_log_spread,
+)
 from quant_platform.orchestration.teacher_contracts import EXACT_MODES, MATH_V2, REQUIRED_CRITICS, ExactMode
 from quant_platform.orchestration.hyperliquid_run_manifest import build_hyperliquid_run_manifest
 from quant_platform.statistics.math_v2 import (
@@ -26,8 +36,8 @@ from quant_platform.wizard_mode_replay import build_local_mode_signal
 
 
 ROOT = Path(__file__).resolve().parents[3]
-FORMULA_VERSION = "local-seven-mode-math-v2.1"
-SETTINGS_VERSION = "anchored-local-policy-v1"
+FORMULA_VERSION = "local-seven-mode-math-v2.3-y-on-x"
+SETTINGS_VERSION = "anchored-local-policy-v3-y-on-x"
 
 MODE_REPLAY_NAMES: dict[ExactMode, str] = {
     ExactMode.STATIC_SPREAD: "Static (Spread)",
@@ -142,8 +152,7 @@ def materialize_teacher_evidence(
         critic_frame.get("verdict", pd.Series(dtype=str)).fillna("").astype(str).str.lower().eq("veto").sum()
     ) if not critic_frame.empty else 0
     status = "MATERIALIZED" if math_ready and complete_contexts > 0 else "BLOCKED"
-    summary_path.write_text(
-        _markdown(
+    atomic_write_text(summary_path, _markdown(
             status=status,
             math_ready=math_ready,
             bundle_rows=len(bundle),
@@ -153,9 +162,7 @@ def materialize_teacher_evidence(
             eligible_teachers=eligible_teachers,
             critic_vetoes=critic_vetoes,
             next_actions=next_actions,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "status": status,
         "run_id": str(manifest_result.get("run_id", "")),
@@ -217,15 +224,36 @@ def _materialize_context(
     age_hours = (now - latest).total_seconds() / 3600.0
     history_fresh = 0.0 <= age_hours <= policy.max_history_age_hours
     snapshot_id = "teacher_snapshot_" + sha256(
-        "|".join([pair, history_hash, SETTINGS_VERSION, cost_model_version, latest.isoformat()]).encode("utf-8")
+        "|".join(
+            [
+                pair,
+                history_hash,
+                SETTINGS_VERSION,
+                ECONOMIC_CONTRACT_VERSION,
+                cost_model_version,
+                latest.isoformat(),
+            ]
+        ).encode("utf-8")
     ).hexdigest()[:20]
     nominated_mode = _nominated_mode(queue, pair)
 
     engle_granger = fit_engle_granger(train["price_x"], train["price_y"])
     hedge_ratio = _fitted_hedge_ratio(engle_granger)
+    if not math.isfinite(hedge_ratio) or hedge_ratio <= 0.0:
+        return [], [], {
+            "run_id": run_id,
+            "candidate_set_id": candidate_set_id,
+            "pair": pair,
+            "teacher_rows": 0,
+            "critic_rows": 0,
+            "blocker": "positive_y_on_x_hedge_ratio_unavailable",
+        }
     frame["hedge_ratio"] = hedge_ratio
     train["hedge_ratio"] = hedge_ratio
-    static_spread = np.log(frame["price_x"]) - hedge_ratio * np.log(frame["price_y"])
+    test["hedge_ratio"] = hedge_ratio
+    static_spread = y_on_x_log_spread(
+        frame["price_x"], frame["price_y"], hedge_ratio
+    )
     ou = fit_ou(static_spread.iloc[:split])
     hurst = estimate_hurst_dfa(static_spread.iloc[:split])
     copula = rolling_gaussian_copula_conditionals(
@@ -322,6 +350,7 @@ def _materialize_context(
                 "point_in_time_status": "confirmed",
                 "history_hash": history_hash,
                 "settings_version": SETTINGS_VERSION,
+                "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
                 "cost_model_version": cost_model_version,
                 "train_start": train.index[0].isoformat(),
                 "train_end": train.index[-1].isoformat(),
@@ -406,20 +435,29 @@ def _settings_for_mode(
     ou: Any,
     policy: TeacherMaterializationPolicy,
 ) -> tuple[dict[str, object], tuple[str, ...]]:
-    spread = np.log(frame["price_x"]) - hedge_ratio * np.log(frame["price_y"])
+    spread = y_on_x_log_spread(frame["price_x"], frame["price_y"], hedge_ratio)
     ou_valid = ou.validity_status == "valid"
     ou_mu = float(ou.values.get("mu", spread.iloc[:split].mean()))
-    ou_sigma = float(ou.values.get("innovation_sigma", spread.iloc[:split].std(ddof=1)))
+    innovation_sigma = float(
+        ou.values.get("innovation_sigma", spread.iloc[:split].std(ddof=1))
+    )
+    phi = float(ou.values.get("phi", 0.0))
+    denominator = math.sqrt(max(1.0 - phi**2, np.finfo(float).eps))
+    ou_sigma = innovation_sigma / denominator
     if not math.isfinite(ou_sigma) or ou_sigma <= 0.0:
         ou_sigma = 1.0
+    lower_action, upper_action = tail_actions(
+        mode,
+        copula_direction_view="u1_given_u2",
+    )
     settings: dict[str, object] = {
         "capture_confirmed": True,
         "entry_long_operator": "<=",
         "entry_long_value": -2.0,
-        "entry_long_position": "long_x_short_y",
+        "entry_long_position": lower_action.value,
         "entry_short_operator": ">=",
         "entry_short_value": 2.0,
-        "entry_short_position": "short_x_long_y",
+        "entry_short_position": upper_action.value,
         "exit_long_operator": ">=",
         "exit_long_value": 0.0,
         "exit_short_operator": "<=",
@@ -437,6 +475,7 @@ def _settings_for_mode(
         "copula_entry_upper": 0.90,
         "copula_exit_lower": 0.45,
         "copula_exit_upper": 0.55,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
     }
     blockers: list[str] = []
     if mode in {ExactMode.STATIC_SPREAD, ExactMode.DYN_SPREAD}:
@@ -455,8 +494,13 @@ def _settings_for_mode(
         settings["entry_short_value"] = 2.0 * ou_sigma
     if mode in {ExactMode.OU_SPREAD, ExactMode.OU_ZSCORER} and not ou_valid:
         blockers.append(f"ou_fit_invalid:{ou.validity_reason}")
-    if mode == ExactMode.COPULA and pd.to_numeric(frame["u1_given_u2"], errors="coerce").iloc[:split].dropna().empty:
-        blockers.append("causal_copula_training_values_missing")
+    if mode == ExactMode.COPULA:
+        conditional = pd.to_numeric(
+            frame.get("u1_given_u2", pd.Series(np.nan, index=frame.index)),
+            errors="coerce",
+        )
+        if conditional.iloc[:split].dropna().empty:
+            blockers.append("causal_copula_training_values_missing")
     return settings, tuple(blockers)
 
 
@@ -626,16 +670,12 @@ def _fitted_hedge_ratio(result: Any) -> float:
     try:
         number = float(value)
     except (TypeError, ValueError):
-        return 1.0
-    return number if math.isfinite(number) and number != 0.0 else 1.0
+        return float("nan")
+    return number if math.isfinite(number) and number > 0.0 else float("nan")
 
 
 def _teacher_action(signal: float) -> str:
-    if signal < 0.0:
-        return "long_x_short_y"
-    if signal > 0.0:
-        return "short_x_long_y"
-    return "flat"
+    return action_for_signal(signal).value
 
 
 def _confidence(result: BacktestResult) -> float:
@@ -756,7 +796,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

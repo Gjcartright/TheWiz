@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -22,6 +21,12 @@ from quant_platform.crypto_wizards_history import (
     fetch_custom_series_backtest,
 )
 from quant_platform.crypto_wizards_sweep import parse_wizard_credit_usage
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
+    promote_staged_file,
+    write_immutable_json,
+)
 from quant_platform.wizard_hyperliquid_mode_proof import (
     _ou_trend_aware_profile_beta_v3_candidate,
     _ou_trend_aware_profile_spread_v3_candidate,
@@ -351,7 +356,9 @@ def run_ou_v3_prospective_holdout(
         for binding in bindings
         if not (root / _text(binding.get("response_path"))).is_file()
     ]
-    key = api_key or os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip()
+    key = api_key or (
+        os.getenv("CRYPTO_WIZARDS_API_KEY", "").strip() if execute else ""
+    )
     credits_used: int | None = None
     blocker = ""
     if execute and missing:
@@ -368,7 +375,7 @@ def run_ou_v3_prospective_holdout(
                 else:
                     credits_used = usage.used
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                blocker = f"credit_preflight_failed:{type(exc).__name__}:{exc}"
+                blocker = f"credit_preflight_failed:{safe_exception_code(exc)}"
             required_credits = len(missing) * 2
             if (
                 credits_used is not None
@@ -406,7 +413,7 @@ def run_ou_v3_prospective_holdout(
                 _write_or_validate_immutable_json(response, response_path)
                 responses_captured += 1
             except (CryptoWizardsFetchError, OSError, TypeError, ValueError) as exc:
-                errors.append(f"vendor_capture_failed:{type(exc).__name__}:{exc}")
+                errors.append(f"vendor_capture_failed:{safe_exception_code(exc)}")
                 break
 
     attempt = {
@@ -1577,37 +1584,21 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> None:
-    canonical = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    if path.exists():
-        if path.read_text(encoding="utf-8") != canonical:
-            raise ValueError(f"immutable OU v2 artifact conflict: {path}")
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
     try:
-        with temporary.open("x", encoding="utf-8") as handle:
-            handle.write(canonical)
-            handle.flush()
-            os.fsync(handle.fileno())
-        try:
-            os.link(temporary, path)
-        except FileExistsError:
-            if path.read_text(encoding="utf-8") != canonical:
-                raise ValueError(f"immutable OU v2 artifact conflict: {path}")
-        _fsync_directory(path.parent)
-    finally:
-        temporary.unlink(missing_ok=True)
+        write_immutable_json(path, payload)
+    except ValueError as exc:
+        raise ValueError(f"immutable OU v2 artifact conflict: {path}") from exc
 
 
 def _fsync_directory(path: Path) -> None:
@@ -1630,7 +1621,7 @@ def _write_or_validate_immutable_csv(frame: pd.DataFrame, path: Path) -> None:
             raise ValueError(f"immutable OU selector artifact conflict: {path}")
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(canonical, encoding="utf-8")
+    atomic_write_text(path, canonical, encoding="utf-8")
 
 
 def _file_hash(path: Path) -> str:

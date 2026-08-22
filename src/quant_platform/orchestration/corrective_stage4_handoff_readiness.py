@@ -17,6 +17,7 @@ from quant_platform.orchestration.corrective_registered_learning_protocol import
 from quant_platform.orchestration.corrective_registered_rerun import (
     validate_registered_rerun_contract_identity,
 )
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.corrective_wizard_reset_readiness import (
     validate_wizard_reset_readiness_receipt,
     wizard_reset_readiness_state_sha256,
@@ -789,7 +790,7 @@ def _write_csv(rows: list[dict[str, str]], path: Path) -> None:
         )
         writer.writeheader()
         writer.writerows(rows)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json(payload: dict[str, Any], path: Path) -> None:
@@ -809,7 +810,7 @@ def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(text, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _markdown(payload: dict[str, Any], checks: list[dict[str, str]]) -> str:

@@ -9,20 +9,21 @@ from typing import TypeVar
 import pandas as pd
 from pydantic import BaseModel, ValidationError
 
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 from quant_platform.orchestration.student_readiness import write_student_training_readiness
 from quant_platform.orchestration.teacher_contracts import (
-    CouncilDecision,
-    CriticAssessment,
     EXACT_MODES,
     MATH_V2,
     REQUIRED_CRITICS,
+    CouncilDecision,
+    CriticAssessment,
     StudentOutcomeForecast,
     StudentRouterPrediction,
     TeacherProposal,
     normalize_exact_mode,
 )
 from quant_platform.orchestration.teacher_council import arbitrate_teacher_council
-
 
 ROOT = Path(__file__).resolve().parents[3]
 T = TypeVar("T", bound=BaseModel)
@@ -44,9 +45,9 @@ def build_teacher_council_control_plane(*, root: Path = ROOT) -> dict[str, objec
     wizard_path = directory / "wizard_discovery_hypotheses.csv"
 
     registry = _teacher_registry()
-    registry.to_csv(registry_path, index=False)
+    atomic_write_csv(registry, registry_path, index=False)
     wizard = _wizard_discovery_hypotheses(root)
-    wizard.to_csv(wizard_path, index=False)
+    atomic_write_csv(wizard, wizard_path, index=False)
 
     proposals, proposal_errors = _read_models(directory / "teacher_proposals.jsonl", TeacherProposal)
     assessments, assessment_errors = _read_models(directory / "critic_assessments.jsonl", CriticAssessment)
@@ -57,20 +58,17 @@ def build_teacher_council_control_plane(*, root: Path = ROOT) -> dict[str, objec
         directory / "student_outcome_forecasts.jsonl", StudentOutcomeForecast
     )
     errors = pd.DataFrame([*proposal_errors, *assessment_errors, *router_errors, *outcome_errors])
-    errors.to_csv(errors_path, index=False)
+    atomic_write_csv(errors, errors_path, index=False)
 
     proposal_frame = pd.DataFrame([_proposal_row(record) for record in proposals])
     critic_frame = pd.DataFrame([_critic_row(record) for record in assessments])
-    proposal_frame.to_csv(proposal_report_path, index=False)
-    critic_frame.to_csv(critic_report_path, index=False)
+    atomic_write_csv(proposal_frame, proposal_report_path, index=False)
+    atomic_write_csv(critic_frame, critic_report_path, index=False)
 
     decisions = _run_councils(proposals, assessments, router_predictions, outcome_forecasts)
     decision_frame = pd.DataFrame([_decision_row(record) for record in decisions])
-    decision_frame.to_csv(decision_report_path, index=False)
-    decision_jsonl_path.write_text(
-        "".join(json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n" for record in decisions),
-        encoding="utf-8",
-    )
+    atomic_write_csv(decision_frame, decision_report_path, index=False)
+    atomic_write_text(decision_jsonl_path, "".join(json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n" for record in decisions), encoding="utf-8")
 
     student = write_student_training_readiness(root=root)
     readiness = _readiness(
@@ -84,18 +82,15 @@ def build_teacher_council_control_plane(*, root: Path = ROOT) -> dict[str, objec
         supervised_status=str(student["supervised_status"]),
         bandit_status=str(student["bandit_status"]),
     )
-    readiness.to_csv(readiness_path, index=False)
+    atomic_write_csv(readiness, readiness_path, index=False)
     shadow_blocked = readiness["status"].eq("BLOCKED") & readiness["blocking_for_shadow"].astype(bool)
     overall = "BLOCKED" if shadow_blocked.any() else "READY_FOR_SHADOW_ONLY"
-    markdown_path.write_text(
-        _control_plane_markdown(
+    atomic_write_text(markdown_path, _control_plane_markdown(
             readiness,
             registry=registry,
             decisions=decision_frame,
             overall=overall,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "status": overall,
         "teacher_count": len(EXACT_MODES),
@@ -309,7 +304,7 @@ def _read_models(path: Path, model: type[T]) -> tuple[list[T], list[dict[str, ob
                     "path": str(path),
                     "line_number": line_number,
                     "model": model.__name__,
-                    "error": str(exc).replace("\n", " | "),
+                    "error": safe_exception_code(exc),
                 }
             )
     return records, errors

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.corrective_wizard_capture_reconciliation import (
     frozen_capture_manifest_mutation_blockers,
 )
@@ -432,7 +433,7 @@ def _operator_command_fields(
     }[comparator]
     option_prefix = comparator.replace("_", "-")
     base = (
-        "PYTHONPATH=src .venv312/bin/python -m quant_platform.cli "
+        "PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli "
         f"{command} --{option_prefix}-review-packet-id {packet_id}"
     )
     if not apply_window_open:
@@ -633,7 +634,7 @@ def _write_csv(rows: list[dict[str, object]], path: Path) -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _write_json(payload: dict[str, Any], path: Path) -> None:
@@ -653,7 +654,7 @@ def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(text, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _control_markdown(payload: dict[str, Any], rows: list[dict[str, object]]) -> str:

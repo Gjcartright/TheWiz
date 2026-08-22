@@ -8,15 +8,23 @@ replace the evidence required by the frozen test.
 
 ## Candidate Lanes
 
-The read-only Hyperliquid L2 collector maintains two explicit lanes:
+The read-only Hyperliquid L2 collector maintains three explicit lanes:
 
 - `registered_rerun_contract`: frozen candidates that control Stage 2 acceptance.
 - `current_wizard_family`: rotating exploratory candidates that continue collecting
   evidence but do not invalidate an already registered test.
+- `current_wizard_cost_selected_collection`: all mapped pairs selected by the
+  current cost manifest. This lane gathers prospective rolling asset evidence for
+  the next Wizard cutoff and is never a Stage 2 or execution-authority lane.
 
 If the same asset pair appears in both lanes, the frozen contract identity wins the
 deduplication. Every row remains research-only and carries no Testnet or live order
 authority.
+
+The current board remains immutable. A public L2 observation captured after its
+scanner cutoff cannot repair that snapshot. The evidence command center reports
+the frozen result separately from rolling strict/provisional coverage for the next
+snapshot.
 
 ## Stage 2 Authority
 

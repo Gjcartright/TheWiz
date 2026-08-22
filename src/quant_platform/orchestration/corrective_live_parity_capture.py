@@ -13,6 +13,9 @@ from typing import Any
 import pandas as pd
 import requests
 
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
 from quant_platform.orchestration.corrective_live_canary import (
     PARITY_ARTIFACT_SCHEMA_VERSION,
     PARITY_INPUT_CONTRACTS,
@@ -23,6 +26,9 @@ from quant_platform.orchestration.corrective_live_canary import (
     _policy_id,
     _validate_policy_core,
 )
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+from quant_platform.orchestration.effect_authority import EffectAuthorityError
 
 ROOT = Path(__file__).resolve().parents[3]
 HYPERLIQUID_TESTNET_INFO_URL = "https://api.hyperliquid-testnet.xyz/info"
@@ -186,8 +192,15 @@ def capture_live_input_parity_evidence(
             )
             for environment, payloads in raw.items()
         }
-    except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as exc:
-        blockers = [f"live_input_parity_capture_failed:{type(exc).__name__}:{exc}"]
+    except (
+        EffectAuthorityError,
+        KeyError,
+        OSError,
+        TypeError,
+        ValueError,
+        requests.RequestException,
+    ) as exc:
+        blockers = [f"live_input_parity_capture_failed:{safe_exception_code(exc)}"]
         status = _capture_status(
             generated_at=as_of,
             status="BLOCKED_CAPTURE_FAILED",
@@ -203,7 +216,7 @@ def capture_live_input_parity_evidence(
     try:
         _relative(calculation_path, root)
     except (OSError, ValueError) as exc:
-        blockers = [f"live_input_parity_calculation_artifact_invalid:{exc}"]
+        blockers = [f"live_input_parity_calculation_artifact_invalid:{safe_exception_code(exc)}"]
         status = _capture_status(
             generated_at=as_of,
             status="BLOCKED_CAPTURE_FAILED",
@@ -323,33 +336,69 @@ def _capture_info_request(
     captured_at: datetime,
     timeout: int,
 ) -> dict[str, Any]:
-    if info_url not in {HYPERLIQUID_TESTNET_INFO_URL, HYPERLIQUID_LIVE_INFO_URL}:
+    expected_urls = {
+        "testnet": HYPERLIQUID_TESTNET_INFO_URL,
+        "live": HYPERLIQUID_LIVE_INFO_URL,
+    }
+    if environment not in expected_urls or info_url != expected_urls[environment]:
         raise ValueError("unsafe_hyperliquid_non_info_endpoint")
     if payload.get("type") not in ALLOWED_INFO_REQUEST_TYPES:
         raise ValueError("unsafe_hyperliquid_info_request_type")
-    response = session.post(info_url, json=payload, timeout=timeout)
-    response.raise_for_status()
-    parsed = response.json()
     raw_path = raw_root / f"{environment}-{request_name}.json"
-    raw_receipt = {
-        "schema_version": "thewiz.hyperliquid_readonly_parity_raw.v1",
-        "environment": environment,
-        "info_url": info_url,
-        "request": payload,
-        "captured_at_utc": captured_at.isoformat(),
-        "response": parsed,
-        "read_only_info_request": True,
-        "private_key_accessed": False,
-        "order_submission_performed": False,
-    }
-    raw_receipt["receipt_sha256"] = _payload_hash(raw_receipt)
-    _atomic_json(raw_receipt, raw_path)
+    raw_receipt: dict[str, Any] = {}
+
+    def record_response(parsed: Any) -> str:
+        raw_receipt.update(
+            {
+                "schema_version": "thewiz.hyperliquid_readonly_parity_raw.v1",
+                "environment": environment,
+                "info_url": info_url,
+                "request": payload,
+                "captured_at_utc": captured_at.isoformat(),
+                "response": parsed,
+                "read_only_info_request": True,
+                "private_key_accessed": False,
+                "order_submission_performed": False,
+            }
+        )
+        raw_receipt["receipt_sha256"] = _payload_hash(raw_receipt)
+        _atomic_json(raw_receipt, raw_path)
+        return _file_hash(raw_path)
+
+    parsed = run_authorized_hyperliquid_info_call(
+        target=info_url,
+        payload=payload,
+        operation_prefix=(
+            "HYPERLIQUID_TESTNET"
+            if environment == "testnet"
+            else "HYPERLIQUID_MAINNET"
+        ),
+        transport=lambda: _raw_hyperliquid_parity_info_call(
+            session=session,
+            info_url=info_url,
+            payload=payload,
+            timeout=timeout,
+        ),
+        result_recorder=record_response,
+    )
     return {
         "payload": parsed,
         "path": _relative(raw_path, root),
         "sha256": _file_hash(raw_path),
         "request_type": str(payload["type"]),
     }
+
+
+def _raw_hyperliquid_parity_info_call(
+    *,
+    session: requests.Session,
+    info_url: str,
+    payload: dict[str, Any],
+    timeout: int,
+) -> Any:
+    response = session.post(info_url, json=payload, timeout=timeout)
+    response.raise_for_status()
+    return response.json()
 
 
 def _normalize_environment(
@@ -659,14 +708,14 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _as_utc(value: datetime | None) -> datetime:

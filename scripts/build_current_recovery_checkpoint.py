@@ -42,6 +42,16 @@ EVIDENCE_FILES = (
     "reports/active/system_check.csv",
     "reports/active/system_check.md",
     "reports/active/artifact_index.csv",
+    "reports/active/quant_release_index.csv",
+    "reports/active/quant_release_index.md",
+    "reports/active/evidence_registry.csv",
+    "reports/active/evidence_registry.md",
+    "reports/active/evidence_source_health.csv",
+    "reports/active/canonical_wizard_hyperliquid_contract.json",
+    "reports/active/canonical_wizard_hyperliquid_contract.md",
+    "reports/active/canonical_wizard_hyperliquid_stages.csv",
+    "reports/research/udemy_transcript_vault_manifest.csv",
+    "reports/research/udemy_transcript_capture_queue.csv",
     "reports/active/corrective_plan_completion.json",
     "reports/active/corrective_plan_completion.md",
     "reports/active/corrective_plan_phase_status.csv",
@@ -64,6 +74,10 @@ SMOKE_TESTS = (
     "tests/test_wizard_research_journal.py::test_detail_records_preserve_top_metrics_separately_from_detail_metrics",
     "tests/test_ml_filter.py::test_shadow_trade_filter_predictions_rejects_tampered_model_before_deserialization",
     "tests/test_corrective_wizard_reset_readiness.py::test_reset_readiness_passes_without_granting_authority",
+    "tests/test_udemy_transcript_vault.py",
+    "tests/test_statistical_validation.py",
+    "tests/test_evidence_registry.py",
+    "tests/test_canonical_wizard_hyperliquid_contract.py",
 )
 
 

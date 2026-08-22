@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -373,7 +377,7 @@ def _fetch_live_catalog(channel_url: str, snapshot_dir: Path) -> Path:
     )
     payload = json.loads(result.stdout)
     output = snapshot_dir / f"channel_videos_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -785,12 +789,12 @@ def _safe_int(value: object) -> int:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _write_text(text: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")
 
 
 def _now() -> str:

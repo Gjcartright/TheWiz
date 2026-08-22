@@ -7,6 +7,7 @@ from hashlib import sha256
 from quant_platform.hyperliquid_testnet import (
     HyperliquidPairExecutionResult,
     HyperliquidTestnetConfig,
+    HyperliquidTestnetPairExecutor,
 )
 from quant_platform.orchestration.corrective_testnet_pair_execution import (
     ENABLE_ENV,
@@ -157,6 +158,14 @@ class _FakeExecutor:
         )
 
 
+def _canonical_fake_executor(root, fake, monkeypatch):
+    executor = HyperliquidTestnetPairExecutor(
+        state_path=root / "reports" / "active" / "test-execution-state.json"
+    )
+    monkeypatch.setattr(executor, "submit_pair", fake.submit_pair)
+    return executor
+
+
 def test_status_only_entry_preflight_never_invokes_executor(tmp_path, monkeypatch):
     _write_sources(tmp_path)
     preflight = build_testnet_pair_execution_preflight(
@@ -201,6 +210,7 @@ def test_explicit_entry_executes_exact_sealed_intents_once(tmp_path, monkeypatch
         info_client=_info_client(),
     )
     fake = _FakeExecutor()
+    executor = _canonical_fake_executor(tmp_path, fake, monkeypatch)
     monkeypatch.setenv(ENABLE_ENV, "true")
 
     result = run_testnet_pair_execution(
@@ -212,7 +222,7 @@ def test_explicit_entry_executes_exact_sealed_intents_once(tmp_path, monkeypatch
         execute=True,
         config=_config(submit_orders=True),
         now=now,
-        pair_executor=fake,
+        pair_executor=executor,
     )
     replay = run_testnet_pair_execution(
         root=tmp_path,
@@ -223,7 +233,7 @@ def test_explicit_entry_executes_exact_sealed_intents_once(tmp_path, monkeypatch
         execute=True,
         config=_config(submit_orders=True),
         now=now,
-        pair_executor=fake,
+        pair_executor=executor,
     )
 
     assert result.summary["status"] == "pair_submitted"
@@ -272,6 +282,7 @@ def test_exit_preflight_uses_current_positions_and_bounded_ioc_limits(tmp_path, 
     assert intents[1]["limit_price"] >= 2_500.0
 
     fake = _FakeExecutor()
+    executor = _canonical_fake_executor(tmp_path, fake, monkeypatch)
     monkeypatch.setenv(ENABLE_ENV, "true")
     result = run_testnet_pair_execution(
         root=tmp_path,
@@ -281,7 +292,7 @@ def test_exit_preflight_uses_current_positions_and_bounded_ioc_limits(tmp_path, 
         acknowledgement=EXIT_ACKNOWLEDGEMENT,
         execute=True,
         config=_config(submit_orders=True),
-        pair_executor=fake,
+        pair_executor=executor,
     )
 
     assert result.summary["status"] == "pair_submitted"
@@ -322,4 +333,40 @@ def test_execution_blocks_source_drift_before_executor_or_key_access(tmp_path, m
         blocker.startswith("testnet_pair_preflight_source_changed:")
         for blocker in result.summary["blockers"]
     )
+    assert fake.calls == []
+
+
+def test_execute_rejects_substituted_pair_executor_before_invocation(
+    tmp_path,
+    monkeypatch,
+):
+    _write_sources(tmp_path)
+    now = datetime.now(UTC)
+    preflight = build_testnet_pair_execution_preflight(
+        root=tmp_path,
+        action="entry",
+        approval_id="approval-1",
+        config=_config(),
+        now=now,
+        approval_validator=_approval_validator,
+        candidate_validator=lambda root, candidate: (True, []),
+        info_client=_info_client(),
+    )
+    fake = _FakeExecutor()
+    monkeypatch.setenv(ENABLE_ENV, "true")
+
+    result = run_testnet_pair_execution(
+        root=tmp_path,
+        action="entry",
+        preflight_id=preflight.summary["preflight_id"],
+        approval_id="approval-1",
+        acknowledgement=ENTRY_ACKNOWLEDGEMENT,
+        execute=True,
+        config=_config(submit_orders=True),
+        now=now,
+        pair_executor=fake,
+    )
+
+    assert result.summary["status"] == "BLOCKED_BEFORE_KEY_ACCESS"
+    assert "gate00g_testnet_pair_executor_type_invalid" in result.summary["blockers"]
     assert fake.calls == []

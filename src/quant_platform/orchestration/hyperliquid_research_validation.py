@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -12,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.backtest import backtest_two_leg_spread_with_ledger
+from quant_platform.economic_contract import y_on_x_log_spread
 from quant_platform.hyperliquid import build_hyperliquid_research_bundle
 from quant_platform.orchestration.hyperliquid_run_manifest import load_hyperliquid_run_manifest
 from quant_platform.orchestration.teacher_contracts import EXACT_MODES, ExactMode
@@ -25,18 +30,23 @@ from quant_platform.orchestration.teacher_evidence_materializer import (
     _resolve_path,
     _settings_for_mode,
 )
+from quant_platform.performance_math import MATH_VERSION
 from quant_platform.statistics.math_v2 import (
     estimate_hurst_dfa,
     fit_engle_granger,
     fit_ou,
     rolling_gaussian_copula_conditionals,
 )
+from quant_platform.statistical_validation import (
+    benjamini_hochberg,
+    circular_block_bootstrap_mean,
+)
 from quant_platform.trade_ledger import TradeLedgerResult
 from quant_platform.wizard_mode_replay import build_local_mode_signal
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VALIDATION_VERSION = "purged-expanding-walkforward-v2"
+VALIDATION_VERSION = "purged-expanding-walkforward-v3-y-on-x"
 
 
 @dataclass(frozen=True)
@@ -105,7 +115,7 @@ def build_hyperliquid_walkforward_validation(
     _atomic_csv(trades, trades_path)
     _atomic_csv(summary, summary_path)
     _atomic_csv(selection, selection_path)
-    markdown_path.write_text(_markdown(folds, summary, selection, policy), encoding="utf-8")
+    atomic_write_text(markdown_path, _markdown(folds, summary, selection, policy), encoding="utf-8")
     status = "MATERIALIZED" if not folds.empty else "BLOCKED"
     accepted = int(selection.get("selection_status", pd.Series(dtype=str)).eq("PASS").sum()) if not selection.empty else 0
     return {
@@ -248,8 +258,7 @@ def build_hyperliquid_research_family_controls(
         .sum()
     ) if not controls.empty else 0
     total_passes = int(controls.get("selection_status", pd.Series(dtype=str)).astype(str).eq("PASS").sum())
-    markdown_path.write_text(
-        "\n".join(
+    atomic_write_text(markdown_path, "\n".join(
             [
                 "# Hyperliquid Research-Family Selection Controls",
                 "",
@@ -266,9 +275,7 @@ def build_hyperliquid_research_family_controls(
                 "Daily and auxiliary tests share one Benjamini-Hochberg family. Repeated non-identical looks consume an idempotent alpha-spending budget.",
                 "",
             ]
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "status": "MATERIALIZED" if not controls.empty else "BLOCKED",
         "family_complete": family_complete,
@@ -358,9 +365,13 @@ def _candidate_folds(
         test = causal.iloc[test_start:test_end].copy()
         dependency = fit_engle_granger(train["price_x"], train["price_y"])
         hedge_ratio = _fitted_hedge_ratio(dependency)
+        if not math.isfinite(hedge_ratio) or hedge_ratio <= 0.0:
+            continue
         causal["hedge_ratio"] = hedge_ratio
         train["hedge_ratio"] = hedge_ratio
-        spread = np.log(causal["price_x"]) - hedge_ratio * np.log(causal["price_y"])
+        spread = y_on_x_log_spread(
+            causal["price_x"], causal["price_y"], hedge_ratio
+        )
         ou = fit_ou(spread.iloc[:train_end])
         hurst = estimate_hurst_dfa(spread.iloc[:train_end])
         copula = rolling_gaussian_copula_conditionals(
@@ -523,7 +534,7 @@ def _trade_event_rows(
                 "feature_timestamp": feature_timestamp.isoformat(),
                 "label_timestamp": label_timestamp.isoformat(),
                 "point_in_time_status": "confirmed",
-                "math_version": "math-v2",
+                "math_version": MATH_VERSION,
                 "source_system": "hyperliquid_walkforward_trade_ledger",
                 "label_source": "backtest_label",
                 "uses_wizard_as_label": False,
@@ -659,8 +670,7 @@ def _selection_controls(
             blockers.append("walkforward_drawdown_gate_failed")
         if str(row.get("parameter_stability_status")) != "PASS":
             blockers.append("hedge_ratio_instability")
-        if int(row.get("folds", 0)) < 5:
-            blockers.append("deflated_sharpe_blocked_fewer_than_5_folds")
+        blockers.append("deflated_sharpe_blocked_return_series_required")
         rows.append(
             {
                 "run_id": row.get("run_id", ""),
@@ -673,7 +683,7 @@ def _selection_controls(
                 "raw_pvalue": row.get("raw_pvalue", float("nan")),
                 "bh_qvalue": row.get("bh_qvalue", float("nan")),
                 "false_discovery_rate": policy.false_discovery_rate,
-                "deflated_sharpe_status": "PASS" if int(row.get("folds", 0)) >= 5 else "BLOCKED",
+                "deflated_sharpe_status": "BLOCKED_RETURN_SERIES_REQUIRED",
                 "parameter_stability_status": row.get("parameter_stability_status", "BLOCKED"),
                 "selection_status": "PASS" if not blockers else "BLOCKED",
                 "selection_blocker": ";".join(blockers),
@@ -684,27 +694,11 @@ def _selection_controls(
 
 
 def _benjamini_hochberg(pvalues: pd.Series) -> pd.Series:
-    values = pd.to_numeric(pvalues, errors="coerce")
-    result = pd.Series(float("nan"), index=values.index, dtype="float64")
-    valid = values.dropna().clip(0.0, 1.0).sort_values()
-    if valid.empty:
-        return result
-    count = len(valid)
-    adjusted = valid * count / np.arange(1, count + 1)
-    adjusted = pd.Series(np.minimum.accumulate(adjusted.iloc[::-1])[::-1], index=valid.index).clip(upper=1.0)
-    result.loc[adjusted.index] = adjusted
-    return result
+    return benjamini_hochberg(pvalues)
 
 
 def _one_sided_mean_pvalue(values: pd.Series) -> float:
-    clean = pd.to_numeric(values, errors="coerce").dropna()
-    if len(clean) < 3:
-        return float("nan")
-    standard_error = float(clean.std(ddof=1) / math.sqrt(len(clean)))
-    if not math.isfinite(standard_error) or standard_error <= 0.0:
-        return 0.0 if float(clean.mean()) > 0.0 else 1.0
-    zscore = float(clean.mean() / standard_error)
-    return float(0.5 * math.erfc(zscore / math.sqrt(2.0)))
+    return circular_block_bootstrap_mean(values).pvalue
 
 
 def _weighted_mean(values: pd.Series, weights: pd.Series) -> float:
@@ -867,7 +861,7 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _relative(path: Path, root: Path) -> str:

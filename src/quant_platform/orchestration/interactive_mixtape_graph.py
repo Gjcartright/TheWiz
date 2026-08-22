@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -61,8 +63,8 @@ def build_interactive_mixtape_solution(
     slug = _slug(brand_name)
     md_path = output_base / f"{slug}_langgraph_solution.md"
     json_path = output_base / f"{slug}_langgraph_state.json"
-    md_path.write_text(str(state["markdown"]), encoding="utf-8")
-    json_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(md_path, str(state["markdown"]), encoding="utf-8")
+    atomic_write_text(json_path, json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
 
     agents = state.get("agents", {})
     solution = state.get("solution", {})

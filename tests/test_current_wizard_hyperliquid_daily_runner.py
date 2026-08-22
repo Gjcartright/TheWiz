@@ -3,28 +3,92 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
+import time
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
 
 import pandas as pd
 import pytest
 
-from quant_platform.crypto_wizards_sweep import run_wizard_discovery_sweep
+from quant_platform import cli as quant_cli
+from quant_platform.crypto_wizards_catalog import BASE_URL
+from quant_platform.crypto_wizards_sweep import (
+    WizardSweepResult,
+    run_authorized_wizard_discovery_sweep,
+)
 from quant_platform.orchestration import current_wizard_hyperliquid_daily_runner
+from quant_platform.orchestration.corrective_effect_guard import phase00_effect_guard
+from quant_platform.orchestration.corrective_external_effects import (
+    external_effect_issuer_session,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_cadence import (
     MINIMUM_FREE_BYTES,
 )
 from quant_platform.orchestration.current_wizard_hyperliquid_daily_runner import (
     STAGE3_PROOF_COMMANDS,
     _build_stage_semantic_evidence,
+    _run_cli_stage_in_process,
     _secure_daily_child_environment,
     _validate_stage3_command_isolation,
     run_current_wizard_hyperliquid_daily_pipeline,
 )
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
+)
+
+TEST_HASH = "a" * 64
 
 
 @pytest.fixture(autouse=True)
 def _default_wizard_api_key(monkeypatch):
     monkeypatch.setenv("CRYPTO_WIZARDS_API_KEY", "test-wizard-key")
+
+
+def _credit_usage_fetcher(*used_values: int):
+    readings = iter(used_values)
+
+    def fetcher(**_):
+        return {"credits_used": next(readings), "credit_limit": 1000}
+
+    return fetcher
+
+
+def _run_authorized_sweep(root, **kwargs):
+    authority = EffectAuthority(
+        root=root,
+        secret=b"daily-runner-test-authority-secret",
+        issuer_id="daily-runner-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id="daily-runner-wizard-test",
+        intended_slot_id="daily-runner-wizard-slot",
+        source_fingerprint_sha256=TEST_HASH,
+        runtime_fingerprint_sha256=TEST_HASH,
+        configuration_fingerprint_sha256=TEST_HASH,
+        provider_id="crypto_wizards",
+        account_scope_id="crypto_wizards:research:test",
+        allowed_targets=frozenset(
+            {
+                f"{BASE_URL}/v1beta/credits-used",
+                f"{BASE_URL}/v1beta/prescanned",
+            }
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=100,
+        max_total_credits=1000,
+    ):
+        return run_authorized_wizard_discovery_sweep(root=root, **kwargs)
+
+
+def _stub_wizard_stage(**_kwargs):
+    return WizardSweepResult(
+        paths={},
+        summary={"sweep_complete": True, "research_only": True},
+    )
 
 
 def _write_pair_queue(root):
@@ -107,10 +171,15 @@ def test_planning_run_cannot_overwrite_active_execution_artifacts(tmp_path):
 def test_daily_runner_executes_all_research_stages_and_resolves_pair_keys(tmp_path):
     _write_pair_queue(tmp_path)
     calls = []
+    wizard_calls = []
 
     def successful_runner(command, **kwargs):
         calls.append(command)
         return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
+
+    def successful_wizard_stage(**kwargs):
+        wizard_calls.append(kwargs)
+        return _stub_wizard_stage(**kwargs)
 
     result = run_current_wizard_hyperliquid_daily_pipeline(
         root=tmp_path,
@@ -118,6 +187,7 @@ def test_daily_runner_executes_all_research_stages_and_resolves_pair_keys(tmp_pa
         now=datetime(2026, 8, 8, 13, 0, tzinfo=UTC),
         available_disk_bytes=MINIMUM_FREE_BYTES + 1,
         command_runner=successful_runner,
+        wizard_stage_runner=successful_wizard_stage,
         semantic_evidence_builder=lambda **_: {
             "status": "PASS",
             "blocker": "",
@@ -128,8 +198,12 @@ def test_daily_runner_executes_all_research_stages_and_resolves_pair_keys(tmp_pa
     frame = pd.read_csv(result.paths["daily_run_status"], keep_default_na=False)
 
     assert result.summary["run_status"] == "PASS"
-    assert len(calls) == 19
+    assert len(calls) == 18
+    assert len(wizard_calls) == 1
     assert frame["status"].eq("PASS").all()
+    wizard = frame.loc[frame["stage"].eq("wizard_exhaustive_discovery")].iloc[0]
+    assert wizard["execution_mode"] == "EXECUTED_IN_PROCESS_AUTHORITY_BOUND"
+    assert not any("crypto-wizards-full-sweep" in command for command in calls)
     history = next(command for command in calls if "materialize-current-wizard-hyperliquid-history" in command)
     keys = history[history.index("--current-pair-group-keys") + 1]
     assert keys == "binance|daily|BTC|ETH,binance|daily|SOL|WLD"
@@ -143,6 +217,175 @@ def test_daily_runner_executes_all_research_stages_and_resolves_pair_keys(tmp_pa
     assert result.summary["stage3_external_execution_included"] is False
 
 
+def test_daily_runner_real_guarded_topology_uses_no_subprocess_or_env_reload(
+    tmp_path,
+    monkeypatch,
+):
+    _write_pair_queue(tmp_path)
+    observed: list[tuple[list[str], bool]] = []
+    monkeypatch.setattr(quant_cli, "ROOT", tmp_path)
+
+    def fake_main(argv=None, *, load_environment=True):
+        observed.append((list(argv or ()), load_environment))
+        print(json.dumps({"summary": {"research_only": True}, "paths": {}}))
+
+    monkeypatch.setattr(quant_cli, "main", fake_main)
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"guarded-topology-test-authority-secret",
+        issuer_id="guarded-topology-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    with (
+        external_effect_issuer_session(
+            authority=authority,
+            run_id="guarded-topology-test",
+            intended_slot_id="guarded-topology-slot",
+            source_fingerprint_sha256=TEST_HASH,
+            runtime_fingerprint_sha256=TEST_HASH,
+            configuration_fingerprint_sha256=TEST_HASH,
+            provider_id="hyperliquid_public",
+            account_scope_id="hyperliquid:testnet:public_research:test",
+            allowed_targets=frozenset(
+                {"https://api.hyperliquid-testnet.xyz/info"}
+            ),
+            allowed_credential_keys=frozenset(),
+            max_total_requests=2,
+            max_total_credits=0,
+        ),
+        phase00_effect_guard(),
+    ):
+        result = run_current_wizard_hyperliquid_daily_pipeline(
+            root=tmp_path,
+            execute=True,
+            now=datetime(2026, 8, 21, 13, 0, tzinfo=UTC),
+            available_disk_bytes=MINIMUM_FREE_BYTES + 1,
+            wizard_stage_runner=_stub_wizard_stage,
+            semantic_evidence_builder=lambda **_: {
+                "status": "PASS",
+                "blocker": "",
+                "evidence_path": "reports/runs/test/semantic.json",
+                "evidence_sha256": "a" * 64,
+            },
+            stage_timeout_seconds=1,
+        )
+
+    frame = pd.read_csv(result.paths["daily_run_status"], keep_default_na=False)
+    assert result.summary["run_status"] == "PASS"
+    assert len(observed) == 18
+    assert all(load_environment is False for _argv, load_environment in observed)
+    assert frame["execution_mode"].eq("EXECUTED_IN_PROCESS_AUTHORITY_BOUND").all()
+
+
+def test_in_process_stage_command_substitution_and_timeout_fail_closed(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setattr(quant_cli, "ROOT", tmp_path)
+    valid = [sys.executable, "-m", "quant_platform.cli", "system-check"]
+    hostile = [sys.executable, "-m", "quant_platform.cli", "build-artifact-index"]
+
+    with pytest.raises(
+        RuntimeError,
+        match="daily_in_process_command_identity_mismatch",
+    ):
+        _run_cli_stage_in_process(
+            hostile,
+            root=tmp_path,
+            stage="storage_preflight",
+            timeout=1,
+        )
+
+    def slow_main(_argv=None, *, load_environment=True):
+        del load_environment
+        time.sleep(0.1)
+
+    monkeypatch.setattr(quant_cli, "main", slow_main)
+    with pytest.raises(subprocess.TimeoutExpired):
+        _run_cli_stage_in_process(
+            valid,
+            root=tmp_path,
+            stage="storage_preflight",
+            timeout=0.01,
+        )
+
+
+def test_daily_summary_matches_durable_full_sweep_effect_accounting(tmp_path):
+    _write_pair_queue(tmp_path)
+    now = datetime(2026, 8, 21, 13, 0, tzinfo=UTC)
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"daily-accounting-test-authority-secret",
+        issuer_id="daily-accounting-test-supervisor",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
+    )
+    run_id = "daily-accounting-test"
+    slot_id = "daily-accounting-slot"
+    credit_fetcher = _credit_usage_fetcher(0, 300)
+
+    def wizard_stage(**kwargs):
+        return run_authorized_wizard_discovery_sweep(
+            **kwargs,
+            credits_fetcher=credit_fetcher,
+            prescanned_fetcher=lambda **_: {"pairs": []},
+        )
+
+    with (
+        external_effect_issuer_session(
+            authority=authority,
+            run_id=run_id,
+            intended_slot_id=slot_id,
+            source_fingerprint_sha256=TEST_HASH,
+            runtime_fingerprint_sha256=TEST_HASH,
+            configuration_fingerprint_sha256=TEST_HASH,
+            provider_id="crypto_wizards",
+            account_scope_id="crypto_wizards:research:test",
+            allowed_targets=frozenset(
+                {
+                    f"{BASE_URL}/v1beta/credits-used",
+                    f"{BASE_URL}/v1beta/prescanned",
+                }
+            ),
+            allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+            max_total_requests=100,
+            max_total_credits=1000,
+        ),
+        phase00_effect_guard(),
+    ):
+        result = run_current_wizard_hyperliquid_daily_pipeline(
+            root=tmp_path,
+            execute=True,
+            now=now,
+            available_disk_bytes=MINIMUM_FREE_BYTES + 1,
+            command_runner=lambda command, **_: subprocess.CompletedProcess(
+                command,
+                0,
+                stdout="{}",
+                stderr="",
+            ),
+            wizard_stage_runner=wizard_stage,
+            semantic_evidence_builder=lambda **_: {
+                "status": "PASS",
+                "blocker": "",
+                "evidence_path": "reports/runs/test/semantic.json",
+                "evidence_sha256": "a" * 64,
+            },
+        )
+
+    accounting = authority.run_accounting(
+        run_id=run_id,
+        intended_slot_id=slot_id,
+    )
+    assert result.summary["external_calls"] == 32
+    assert result.summary["external_credits_reserved"] == 300
+    assert result.summary["external_credits_consumed"] == 300
+    assert result.summary["external_credits_reconciled"] == 300
+    assert accounting["external_calls"] == 32
+    assert accounting["external_credits_reserved"] == 300
+    assert accounting["external_credits_consumed"] == 300
+    assert accounting["accounting_complete"] is True
+
+
 def test_daily_runner_loads_owner_only_wizard_key_for_launchd_child_without_leaking_it(
     tmp_path, monkeypatch
 ):
@@ -153,10 +396,15 @@ def test_daily_runner_loads_owner_only_wizard_key_for_launchd_child_without_leak
     env_file.write_text(f"CRYPTO_WIZARDS_API_KEY={secret}\n", encoding="utf-8")
     env_file.chmod(0o600)
     child_environments = []
+    wizard_arguments = []
 
     def successful_runner(command, **kwargs):
         child_environments.append(dict(kwargs["env"]))
         return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
+
+    def successful_wizard_stage(**kwargs):
+        wizard_arguments.append(kwargs)
+        return _stub_wizard_stage(**kwargs)
 
     result = run_current_wizard_hyperliquid_daily_pipeline(
         root=tmp_path,
@@ -164,6 +412,7 @@ def test_daily_runner_loads_owner_only_wizard_key_for_launchd_child_without_leak
         now=datetime(2026, 8, 13, 10, 15, tzinfo=UTC),
         available_disk_bytes=MINIMUM_FREE_BYTES + 1,
         command_runner=successful_runner,
+        wizard_stage_runner=successful_wizard_stage,
         semantic_evidence_builder=lambda **_: {
             "status": "PASS",
             "blocker": "",
@@ -173,10 +422,15 @@ def test_daily_runner_loads_owner_only_wizard_key_for_launchd_child_without_leak
     )
 
     assert result.summary["run_status"] == "PASS"
-    assert result.summary["wizard_api_credential_status"] == "PASS"
+    assert result.summary["wizard_api_credential_status"] == (
+        "PASS_UNVERIFIED_UNTIL_AUTHORIZED_READ"
+    )
     assert result.summary["wizard_api_credential_source"] == ".env.local"
     assert child_environments
-    assert all(env["CRYPTO_WIZARDS_API_KEY"] == secret for env in child_environments)
+    assert len(wizard_arguments) == 1
+    assert wizard_arguments[0]["api_key"] is None
+    assert callable(wizard_arguments[0]["credential_reader"])
+    assert all("CRYPTO_WIZARDS_API_KEY" not in env for env in child_environments)
     published = "\n".join(
         path.read_text(encoding="utf-8")
         for path in result.paths.values()
@@ -235,7 +489,7 @@ def test_daily_child_environment_prefers_process_key_over_secure_local_file(
 
     env, credential = _secure_daily_child_environment(tmp_path)
 
-    assert env["CRYPTO_WIZARDS_API_KEY"] == "process-key"
+    assert "CRYPTO_WIZARDS_API_KEY" not in env
     assert credential == {
         "status": "PASS",
         "source": "process_environment",
@@ -429,12 +683,13 @@ def test_zero_exit_with_blocked_wizard_semantics_halts_daily_run(tmp_path):
         now=datetime(2026, 8, 11, 6, 15, tzinfo=UTC),
         available_disk_bytes=MINIMUM_FREE_BYTES + 1,
         command_runner=successful_runner,
+        wizard_stage_runner=_stub_wizard_stage,
         semantic_evidence_builder=semantics,
     )
     frame = pd.read_csv(result.paths["daily_run_status"], keep_default_na=False)
 
     assert result.summary["run_status"] == "FAILED"
-    assert len(calls) == 2
+    assert len(calls) == 1
     wizard = frame.loc[frame["stage"].eq("wizard_exhaustive_discovery")].iloc[0]
     assert wizard["status"] == "FAILED_SEMANTIC"
     assert wizard["semantic_validation_status"] == "BLOCKED"
@@ -444,12 +699,11 @@ def test_zero_exit_with_blocked_wizard_semantics_halts_daily_run(tmp_path):
 
 def test_wizard_semantic_receipt_binds_full_sweep_raw_and_credit_evidence(tmp_path):
     now = datetime(2026, 8, 11, 6, 15, tzinfo=UTC)
-    sweep = run_wizard_discovery_sweep(
+    sweep = _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="test-key",
         now=now,
-        credits_fetcher=lambda **_: {"credits_used": 0, "credit_limit": 1000},
+        credits_fetcher=_credit_usage_fetcher(0, 300),
         prescanned_fetcher=lambda **_: {"pairs": []},
     )
     stdout = json.dumps(
@@ -474,6 +728,11 @@ def test_wizard_semantic_receipt_binds_full_sweep_raw_and_credit_evidence(tmp_pa
     assert result["status"] == "PASS"
     receipt = json.loads((tmp_path / result["evidence_path"]).read_text(encoding="utf-8"))
     assert receipt["raw_snapshot_count"] == 30
+    assert receipt["credit_usage_snapshot_count"] == 2
+    assert {row["phase"] for row in receipt["credit_usage_bindings"]} == {
+        "before",
+        "after",
+    }
     assert receipt["credit_evidence"]["status"] == "PASS"
     assert receipt["credit_evidence"]["attempted_credits"] == 300
     assert receipt["testnet_order_authority"] is False
@@ -485,12 +744,11 @@ def test_daily_runner_reuses_complete_same_day_wizard_sweep_without_api_call(
 ):
     now = datetime(2026, 8, 11, 6, 15, tzinfo=UTC)
     _write_pair_queue(tmp_path)
-    run_wizard_discovery_sweep(
+    _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="test-key",
         now=now.replace(hour=1),
-        credits_fetcher=lambda **_: {"credits_used": 0, "credit_limit": 1000},
+        credits_fetcher=_credit_usage_fetcher(0, 300),
         prescanned_fetcher=lambda **_: {"pairs": []},
     )
     calls = []
@@ -532,19 +790,23 @@ def test_daily_runner_reuses_complete_same_day_wizard_sweep_without_api_call(
 def test_daily_runner_does_not_reuse_prior_day_wizard_sweep(tmp_path):
     now = datetime(2026, 8, 12, 6, 15, tzinfo=UTC)
     _write_pair_queue(tmp_path)
-    run_wizard_discovery_sweep(
+    _run_authorized_sweep(
         root=tmp_path,
-        execute=True,
         api_key="test-key",
         now=now.replace(day=11, hour=1),
-        credits_fetcher=lambda **_: {"credits_used": 0, "credit_limit": 1000},
+        credits_fetcher=_credit_usage_fetcher(0, 300),
         prescanned_fetcher=lambda **_: {"pairs": []},
     )
     calls = []
+    wizard_calls = []
 
     def successful_runner(command, **kwargs):
         calls.append(command)
         return subprocess.CompletedProcess(command, 0, stdout="{}", stderr="")
+
+    def successful_wizard_stage(**kwargs):
+        wizard_calls.append(kwargs)
+        return _stub_wizard_stage(**kwargs)
 
     run_current_wizard_hyperliquid_daily_pipeline(
         root=tmp_path,
@@ -552,6 +814,7 @@ def test_daily_runner_does_not_reuse_prior_day_wizard_sweep(tmp_path):
         now=now,
         available_disk_bytes=MINIMUM_FREE_BYTES + 1,
         command_runner=successful_runner,
+        wizard_stage_runner=successful_wizard_stage,
         semantic_evidence_builder=lambda **_: {
             "status": "PASS",
             "blocker": "",
@@ -560,7 +823,8 @@ def test_daily_runner_does_not_reuse_prior_day_wizard_sweep(tmp_path):
         },
     )
 
-    assert any("crypto-wizards-full-sweep" in command for command in calls)
+    assert len(wizard_calls) == 1
+    assert not any("crypto-wizards-full-sweep" in command for command in calls)
 
 
 def _build_generic_semantics(
@@ -602,6 +866,115 @@ def _write_snapshot_contract(tmp_path, *, validation_status: str = "PASS"):
         "snapshot_manifest": str(manifest),
         "snapshot_output": str(output),
     }
+
+
+def _write_hyperliquid_inventory_evidence(tmp_path):
+    refresh_id = "hlinventory_test"
+    reservation = (
+        tmp_path
+        / "data"
+        / "research"
+        / "hyperliquid_public_ledger"
+        / "2026-08-21"
+        / f"{refresh_id}.json"
+    )
+    reservation.parent.mkdir(parents=True)
+    reservation.write_text(
+        json.dumps(
+            {
+                "schema_version": "thewiz.hyperliquid_public_reservation.v1",
+                "reservation_id": refresh_id,
+                "provider_id": "hyperliquid_public",
+                "account_scope_id": "hyperliquid:testnet:public_research:test",
+                "target": "https://api.hyperliquid-testnet.xyz/info",
+                "max_total_requests": 2,
+                "max_total_credits": 0,
+                "created_at_utc": datetime.now(UTC).isoformat(),
+                "order_submission_included": False,
+                "live_trading_authorized": False,
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    raw = (
+        tmp_path
+        / "data"
+        / "raw"
+        / "hyperliquid"
+        / "testnet_market_inventory"
+        / "2026-08-21"
+    )
+    raw.mkdir(parents=True)
+    bindings = []
+    for request_type in ("meta", "allMids"):
+        response = {"request_type": request_type}
+        response_hash = sha256(
+            json.dumps(
+                response,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+        path = raw / f"{refresh_id}_{request_type}.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "capture_metadata": {
+                        "schema_version": "thewiz.hyperliquid_public_response.v1",
+                        "refresh_id": refresh_id,
+                        "request_type": request_type,
+                        "captured_at_utc": datetime.now(UTC).isoformat(),
+                        "response_sha256": response_hash,
+                    },
+                    "request": {"type": request_type},
+                    "response": response,
+                },
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        bindings.append(
+            {
+                "request_type": request_type,
+                "path": str(path.relative_to(tmp_path)),
+                "sha256": sha256(path.read_bytes()).hexdigest(),
+            }
+        )
+    manifest = (
+        tmp_path
+        / "reports"
+        / "active"
+        / "hyperliquid_testnet_market_inventory_evidence.json"
+    )
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": "thewiz.hyperliquid_public_inventory_evidence.v1",
+                "refresh_id": refresh_id,
+                "created_at_utc": datetime.now(UTC).isoformat(),
+                "reservation_path": str(reservation.relative_to(tmp_path)),
+                "reservation_sha256": sha256(reservation.read_bytes()).hexdigest(),
+                "response_bindings": bindings,
+                "response_binding_set_sha256": sha256(
+                    json.dumps(
+                        bindings,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                ).hexdigest(),
+                "external_requests": 2,
+                "external_credits": 0,
+                "blockers": [],
+                "order_submission_included": False,
+                "live_trading_authorized": False,
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return manifest
 
 
 def test_snapshot_stage_semantics_seal_fresh_passing_artifacts(tmp_path):
@@ -696,6 +1069,7 @@ def test_inventory_semantics_require_fresh_complete_tradable_inventory(tmp_path)
     pd.DataFrame(
         [{"symbol": "BTC", "tradable_perp": True, "checked_at_utc": now.isoformat()}]
     ).to_csv(inventory, index=False)
+    evidence = _write_hyperliquid_inventory_evidence(tmp_path)
 
     result = _build_generic_semantics(
         tmp_path,
@@ -706,12 +1080,57 @@ def test_inventory_semantics_require_fresh_complete_tradable_inventory(tmp_path)
             "fetch_blocked_rows": 0,
             "checked_at_max_utc": now.isoformat(),
         },
-        paths={"inventory": str(inventory)},
+        paths={
+            "inventory": str(inventory),
+            "inventory_evidence": str(evidence),
+        },
         started=now - timedelta(seconds=1),
         completed=now + timedelta(seconds=1),
     )
 
     assert result["status"] == "PASS"
+
+
+@pytest.mark.parametrize("tamper_target", ["reservation", "raw_response"])
+def test_inventory_semantics_reject_tampered_provider_evidence(
+    tmp_path,
+    tamper_target,
+):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    inventory = active / "hyperliquid_testnet_market_inventory.csv"
+    now = datetime.now(UTC)
+    pd.DataFrame(
+        [{"symbol": "BTC", "tradable_perp": True, "checked_at_utc": now.isoformat()}]
+    ).to_csv(inventory, index=False)
+    evidence_path = _write_hyperliquid_inventory_evidence(tmp_path)
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    target = (
+        tmp_path / evidence["reservation_path"]
+        if tamper_target == "reservation"
+        else tmp_path / evidence["response_bindings"][0]["path"]
+    )
+    target.write_bytes(target.read_bytes() + b"\n")
+
+    result = _build_generic_semantics(
+        tmp_path,
+        stage="hyperliquid_market_inventory",
+        summary={
+            "rows": 1,
+            "tradable_perps": 1,
+            "fetch_blocked_rows": 0,
+            "checked_at_max_utc": now.isoformat(),
+        },
+        paths={
+            "inventory": str(inventory),
+            "inventory_evidence": str(evidence_path),
+        },
+        started=now - timedelta(seconds=1),
+        completed=now + timedelta(seconds=1),
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert "hyperliquid_inventory_evidence_invalid" in result["blocker"]
 
 
 def test_storage_semantics_allow_accounted_research_blockers(tmp_path):

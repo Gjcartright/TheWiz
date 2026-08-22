@@ -8,38 +8,38 @@ frozen exhaustive run.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.crypto_wizards_sweep import (
-    WIZARD_CRYPTO_EXCHANGES,
-    WIZARD_DISCOVERY_INTERVALS,
-    WIZARD_DISCOVERY_PRIORITIES,
-    WIZARD_DISCOVERY_STRATEGIES,
     build_wizard_sweep_cells,
+)
+from quant_platform.economic_contract import SCANNER_OVERLAYS
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    atomic_write_csv,
+    atomic_write_text,
+)
+from quant_platform.orchestration.corrective_wizard_browser_auth import (
+    validate_wizard_browser_auth_readiness,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_run import (
     EXACT_MODES,
     ORIENTATIONS,
 )
-from quant_platform.orchestration.corrective_wizard_browser_auth import (
-    validate_wizard_browser_auth_readiness,
-)
 from quant_platform.wizard_run_config import canonical_wizard_interval
 from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_api_refresh.v1"
 DISCOVERY_POLICY = "exhaustive_no_prefilter"
-PAIR_PAGE_EXACT_MODES = tuple(mode for mode in EXACT_MODES if mode != "OU (Optimal)")
+PAIR_PAGE_EXACT_MODES = EXACT_MODES
 
 
 def build_exhaustive_wizard_api_refresh_delta(
@@ -215,8 +215,8 @@ def build_exhaustive_wizard_api_refresh_delta(
         ),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     _copy(candidates_path, paths["snapshot_api_candidates"])
     _copy(sweep_manifest_path, paths["snapshot_api_sweep_manifest"])
     _copy(sweep_summary_path, paths["snapshot_api_sweep_summary"])
@@ -281,7 +281,7 @@ def build_exhaustive_wizard_api_refresh_delta(
         "pair_detail_browser_route_observed_at": browser_route["observed_at"],
         "pair_detail_browser_route_evidence_path": browser_route["evidence_path"],
         "exact_modes_required": list(PAIR_PAGE_EXACT_MODES),
-        "scanner_overlays_required": ["OU (Optimal)"],
+        "scanner_overlays_required": list(SCANNER_OVERLAYS),
         "orientations_required": list(ORIENTATIONS),
         "no_silent_drops": True,
         "discovery_authority": "API_REFRESH_DISCOVERY_ONLY",
@@ -303,10 +303,10 @@ def build_exhaustive_wizard_api_refresh_delta(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -317,12 +317,29 @@ def _validate_complete_sweep(
     *,
     root: Path,
 ) -> None:
+    dimension_columns = {
+        "priority": "sweep_priority",
+        "strategy": "sweep_strategy",
+        "exchange": "sweep_exchange",
+        "interval": "sweep_interval",
+    }
+    dimension_values: dict[str, tuple[str, ...]] = {}
+    for manifest_column, candidate_column in dimension_columns.items():
+        source = (
+            manifest[manifest_column]
+            if manifest_column in manifest.columns
+            else candidates[candidate_column]
+        )
+        values = tuple(sorted({_text(value) for value in source if _text(value)}))
+        if not values:
+            raise ValueError(f"Wizard sweep has no {manifest_column} dimension values")
+        dimension_values[manifest_column] = values
     expected_cells = build_wizard_sweep_cells(
         sweep_id=_text(summary.get("sweep_id")) or "validation",
-        exchanges=WIZARD_CRYPTO_EXCHANGES,
-        intervals=WIZARD_DISCOVERY_INTERVALS,
-        strategies=WIZARD_DISCOVERY_STRATEGIES,
-        priorities=WIZARD_DISCOVERY_PRIORITIES,
+        exchanges=dimension_values["exchange"],
+        intervals=dimension_values["interval"],
+        strategies=dimension_values["strategy"],
+        priorities=dimension_values["priority"],
     )
     expected_request_ids = {cell.request_id for cell in expected_cells}
     required_manifest = {"request_id", "status", "row_count", "evidence_path"}
@@ -341,9 +358,28 @@ def _validate_complete_sweep(
         raise ValueError("Wizard sweep manifest is missing required columns")
     if not required_candidates.issubset(candidates.columns):
         raise ValueError("Wizard sweep candidates are missing required columns")
+    expected_cell_count = len(expected_cells)
+    declared_planned_cells = int(summary.get("planned_cells", expected_cell_count) or 0)
+    if declared_planned_cells != expected_cell_count:
+        raise ValueError(
+            "Wizard API refresh dimensions do not match its declared planned cell count"
+        )
+    if "planned_cells" in manifest.columns:
+        manifest_planned_cells = set(
+            pd.to_numeric(manifest["planned_cells"], errors="coerce")
+            .dropna()
+            .astype(int)
+            .tolist()
+        )
+        if manifest_planned_cells != {expected_cell_count}:
+            raise ValueError(
+                "Wizard API refresh manifest has inconsistent planned cell counts"
+            )
     actual_request_ids = set(manifest["request_id"].astype(str))
     if actual_request_ids != expected_request_ids or len(manifest) != len(expected_cells):
-        raise ValueError("Wizard API refresh does not contain the expected 30 request cells")
+        raise ValueError(
+            f"Wizard API refresh does not contain the expected {expected_cell_count} request cells"
+        )
     if not manifest["status"].astype(str).eq("completed").all():
         raise ValueError("Wizard API refresh contains an incomplete request cell")
     if not _truthy(summary.get("sweep_complete")):
@@ -976,8 +1012,18 @@ def _build_validation(
         .gt(0)
         .all()
     )
+    declared_cells = len(sweep_manifest)
+    if "planned_cells" in sweep_manifest.columns:
+        planned = pd.to_numeric(sweep_manifest["planned_cells"], errors="coerce").dropna()
+        if not planned.empty:
+            declared_cells = int(planned.iloc[0])
     checks = [
-        ("complete_30_cell_api_sweep", len(sweep_manifest) == 30 and sweep_manifest["status"].astype(str).eq("completed").all(), f"cells={len(sweep_manifest)}"),
+        (
+            "complete_declared_api_sweep",
+            len(sweep_manifest) == declared_cells
+            and sweep_manifest["status"].astype(str).eq("completed").all(),
+            f"cells={len(sweep_manifest)} declared={declared_cells}",
+        ),
         ("every_api_source_row_accounted", len(source_accounting) == len(candidates), f"accounted={len(source_accounting)} expected={len(candidates)}"),
         ("api_source_row_ids_unique", source_accounting["api_source_row_id"].nunique() == len(candidates), f"unique={source_accounting['api_source_row_id'].nunique()} expected={len(candidates)}"),
         ("every_frozen_pair_group_accounted", frozen_groups == len(frozen_pairs), f"groups={frozen_groups} rows={len(frozen_pairs)}"),
@@ -1135,7 +1181,7 @@ def _file_hash(path: Path) -> str:
 
 def _copy(source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, destination)
+    atomic_copy_file(source, destination, immutable=True)
 
 
 def _relative(path: Path, root: Path) -> str:

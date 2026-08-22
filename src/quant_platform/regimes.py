@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,7 +55,8 @@ def classify_regimes(frame: pd.DataFrame, config: RegimeConfig | None = None) ->
     rolling_return = returns.rolling(config.lookback, min_periods=2).sum().fillna(0.0)
     rolling_vol = returns.rolling(config.lookback, min_periods=2).std().fillna(0.0)
     equity = (1.0 + returns).cumprod()
-    drawdown = (equity.cummax() - equity) / equity.cummax().replace(0, np.nan)
+    peak = equity.cummax().clip(lower=1.0)
+    drawdown = (peak - equity) / peak.replace(0, np.nan)
     drawdown = drawdown.fillna(0.0)
     vol_threshold = float(rolling_vol.quantile(config.crisis_vol_quantile)) if len(rolling_vol) else 0.0
 
@@ -92,7 +95,7 @@ def write_regime_dataset_report(datasets: list, output_path: str | Path, regime_
             rows.append({"pair": dataset.pair, **row})
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows, columns=["pair", "regime", "observations", "observation_share"]).to_csv(output, index=False)
+    atomic_write_csv(pd.DataFrame(rows, columns=["pair", "regime", "observations", "observation_share"]), output, index=False)
     return output
 
 
@@ -126,4 +129,3 @@ def regime_pair_strategy_report(results: pd.DataFrame) -> pd.DataFrame:
         )
         .sort_values(["pair", "regime", "eligible_runs", "median_profit_factor"], ascending=[True, True, False, False])
     )
-

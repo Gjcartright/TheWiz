@@ -42,7 +42,7 @@ def test_copula_signal_uses_distinct_entry_and_neutral_exit_bands():
 
     signal = copula_signal(frame)
 
-    assert signal.tolist() == [0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, 0.0]
+    assert signal.tolist() == [0.0, 1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 0.0]
 
 
 def test_backtest_includes_costs_and_returns_metrics():
@@ -153,3 +153,27 @@ def test_two_leg_backtest_weights_leg_specific_slippage_by_hedge_exposure():
 
     assert ledger.bar_ledger["slippage"].tolist() == pytest.approx([0.0008, 0.0008, 0.0])
     assert result.total_slippage == pytest.approx(0.0016)
+
+
+def test_two_leg_backtest_fails_closed_on_missing_hedge_ratio_or_bad_prices():
+    frame = pd.DataFrame(
+        {
+            "price_x": [100.0, 101.0, 102.0],
+            "price_y": [50.0, 51.0, 52.0],
+        }
+    )
+    signal = pd.Series([0.0, 1.0, 0.0])
+    with pytest.raises(ValueError, match="hedge_ratio"):
+        backtest_two_leg_spread(frame, signal)
+
+    with_hedge = frame.assign(hedge_ratio=1.0)
+    with_hedge.loc[1, "price_x"] = float("nan")
+    with pytest.raises(ValueError, match="complete, finite, and positive"):
+        backtest_two_leg_spread(with_hedge, signal)
+
+
+def test_cost_model_rejects_impossible_parameters():
+    with pytest.raises(ValueError, match="slippage_bps"):
+        CostModel(slippage_bps=-1.0)
+    with pytest.raises(ValueError, match="partial_fill_probability"):
+        CostModel(partial_fill_probability=1.1)

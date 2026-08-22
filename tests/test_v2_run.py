@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 
 import pandas as pd
 import pytest
@@ -12,7 +12,6 @@ from quant_platform.v2_run import (
     validate_v2_run,
 )
 from quant_platform.wizard_policy import DEFAULT_WIZARD_DISCOVERY_POLICY
-
 
 NOW = datetime(2026, 8, 7, 18, 0, tzinfo=timezone.utc)
 CANDIDATE_SET_ID = "whlset_fixture_current"
@@ -185,6 +184,7 @@ def test_tampering_invalidates_seal_and_cannot_publish_completion(tmp_path):
     result = build_v2_preflight_run(root=tmp_path, now=NOW)
     run_id = result.summary["run_id"]
     snapshot = result.paths["run_dir"] / "wizard_capture" / "hyperliquid_wizard_hypothesis_queue.csv"
+    snapshot.chmod(0o600)
     snapshot.write_text("tampered", encoding="utf-8")
 
     validation = validate_v2_run(root=tmp_path, run_id=run_id)

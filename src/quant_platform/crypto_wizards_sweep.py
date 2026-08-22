@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -19,6 +20,18 @@ from quant_platform.crypto_wizards_history import (
     fetch_prescanned_payload,
     prescanned_pairs_from_payload,
 )
+from quant_platform.orchestration.corrective_external_effects import (
+    current_external_effect_issuer,
+    read_authorized_credential,
+    reserved_external_effect_session,
+    run_authorized_credit_call,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    write_immutable_bytes,
+)
+from quant_platform.orchestration.effect_authority import EffectAuthorityError
 from quant_platform.wizard_credit_ledger import (
     DISCOVERY_LANE,
     reconcile_wizard_credit_lane,
@@ -249,10 +262,10 @@ def restore_complete_wizard_sweep_from_raw(
         "summary_md": reports_dir / "wizard_sweep_summary.md",
         "raw_snapshot_dir": raw_base,
     }
-    pd.DataFrame(manifest_rows, columns=_manifest_columns()).to_csv(paths["manifest"], index=False)
-    _candidate_frame(candidate_rows).to_csv(paths["candidates"], index=False)
-    paths["summary"].write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_csv(pd.DataFrame(manifest_rows, columns=_manifest_columns()), paths["manifest"], index=False)
+    atomic_write_csv(_candidate_frame(candidate_rows), paths["candidates"], index=False)
+    atomic_write_text(paths["summary"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return WizardSweepResult(paths=paths, summary=summary)
 
 
@@ -421,6 +434,7 @@ def run_wizard_discovery_sweep(
     prescanned_fetcher: PrescannedFetcher | None = None,
     credit_reserver: Callable[..., Any] | None = None,
     credit_reconciler: Callable[..., Any] | None = None,
+    credit_lane: str = DISCOVERY_LANE,
     publish_active: bool = True,
 ) -> WizardSweepResult:
     if daily_credit_limit <= 0:
@@ -446,6 +460,16 @@ def run_wizard_discovery_sweep(
         / "prescanned"
         / started_at.date().isoformat()
     )
+    credit_raw_dir = (
+        Path(root)
+        / "data"
+        / "raw"
+        / "crypto_wizards"
+        / "credit_usage"
+        / started_at.date().isoformat()
+    )
+    credit_usage_before_evidence = credit_raw_dir / f"{sweep_id}_before.json"
+    credit_usage_after_evidence = credit_raw_dir / f"{sweep_id}_after.json"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     credit_usage = WizardCreditUsage(None, daily_credit_limit, None, False, "")
@@ -465,11 +489,12 @@ def run_wizard_discovery_sweep(
             try:
                 reservation = (credit_reserver or reserve_wizard_credit_lane)(
                     root=Path(root),
-                    lane=DISCOVERY_LANE,
+                    lane=credit_lane,
                     planned_credits=planned_credits,
                     now=started_at,
                     daily_credit_limit=daily_credit_limit,
                     protected_reserve=reserved_credits,
+                    max_external_requests=len(cells) + 2,
                 )
                 credit_reservation_status = str(reservation.summary.get("status", "BLOCKED"))
                 credit_reservation_blocker = str(reservation.summary.get("blocker", ""))
@@ -480,11 +505,8 @@ def run_wizard_discovery_sweep(
                 remaining_lane_credits = int(
                     reservation.summary.get("lane_remaining_reserved_credits", 0) or 0
                 )
-                external_spend_authorized = bool(
-                    reservation.summary.get(
-                        "external_spend_authorized",
-                        credit_reservation_status == "PASS",
-                    )
+                external_spend_authorized = (
+                    reservation.summary.get("external_spend_authorized") is True
                 )
                 if credit_reservation_status not in {"PASS", "REUSED"}:
                     preflight_blocker = "shared_credit_reservation_blocked:" + (
@@ -497,10 +519,18 @@ def run_wizard_discovery_sweep(
                 elif planned_credits > remaining_lane_credits:
                     preflight_blocker = "insufficient_lane_reservation_remaining_for_complete_sweep"
                 else:
-                    credit_payload = (credits_fetcher or fetch_credits_used)(
+                    credit_payload = _fetch_credit_usage(
+                        fetcher=credits_fetcher,
                         api_key=api_key,
                         base_url=base_url,
                         timeout=timeout,
+                        result_recorder=lambda payload: _write_credit_usage_snapshot(
+                            credit_usage_before_evidence,
+                            sweep_id=sweep_id,
+                            phase="before",
+                            captured_at=datetime.now(UTC).isoformat(),
+                            payload=payload,
+                        ),
                     )
                     credit_usage = parse_wizard_credit_usage(
                         credit_payload,
@@ -531,7 +561,9 @@ def run_wizard_discovery_sweep(
             requested_at = datetime.now(UTC).isoformat()
             attempted_credits += cell.credit_cost
             try:
-                payload = (prescanned_fetcher or fetch_prescanned_payload)(
+                raw_path = raw_dir / f"{sweep_id}_{cell.request_id}.json"
+                payload = _fetch_prescanned(
+                    fetcher=prescanned_fetcher,
                     api_key=api_key,
                     base_url=base_url,
                     priority=cell.priority,
@@ -539,18 +571,20 @@ def run_wizard_discovery_sweep(
                     exchange=cell.exchange,
                     interval=cell.interval,
                     timeout=timeout,
+                    result_recorder=lambda value,
+                    evidence_path=raw_path,
+                    sweep_cell=cell,
+                    captured_at=requested_at: _write_raw_snapshot(
+                        evidence_path,
+                        cell=sweep_cell,
+                        captured_at=captured_at,
+                        payload=value,
+                        response_hash=_json_hash(value),
+                    ),
                 )
-                pairs = prescanned_pairs_from_payload(payload)
                 response_hash = _json_hash(payload)
-                raw_path = raw_dir / f"{sweep_id}_{cell.request_id}.json"
-                _write_raw_snapshot(
-                    raw_path,
-                    cell=cell,
-                    captured_at=requested_at,
-                    payload=payload,
-                    response_hash=response_hash,
-                )
                 raw_response_path = str(raw_path.relative_to(Path(root)))
+                pairs = prescanned_pairs_from_payload(payload)
                 row_count = len(pairs)
                 completed_at = datetime.now(UTC).isoformat()
                 completed_credits += cell.credit_cost
@@ -603,17 +637,60 @@ def run_wizard_discovery_sweep(
             }
         )
 
+    credits_used_after: int | None = credit_usage.used
+    if execute and attempted_credits > 0:
+        try:
+            after_payload = _fetch_credit_usage(
+                fetcher=credits_fetcher,
+                api_key=api_key,
+                base_url=base_url,
+                timeout=timeout,
+                result_recorder=lambda payload: _write_credit_usage_snapshot(
+                    credit_usage_after_evidence,
+                    sweep_id=sweep_id,
+                    phase="after",
+                    captured_at=datetime.now(UTC).isoformat(),
+                    payload=payload,
+                ),
+            )
+            credits_used_after = parse_wizard_credit_usage(
+                after_payload,
+                configured_limit=daily_credit_limit,
+            ).used
+        except (CryptoWizardsFetchError, OSError, ValueError, TypeError) as exc:
+            credits_used_after = None
+            credit_reconciliation_blocker = (
+                f"vendor_credit_after_fetch_failed:{_safe_error(exc)}"
+            )
+
     if execute and credit_reservation_id:
         try:
+            activity_rows = [
+                {
+                    "lane": str(row["request_id"]),
+                    "external_requests": 1,
+                    "credit_cost": int(row["credit_cost"]),
+                    "attempted_credits": int(row["credit_cost"]),
+                    "completed_credits": (
+                        int(row["credit_cost"])
+                        if row["status"] == "completed"
+                        else 0
+                    ),
+                }
+                for row in manifest_rows
+                if bool(row["requested_at"])
+            ]
             reconciliation = (credit_reconciler or reconcile_wizard_credit_lane)(
                 root=Path(root),
-                lane=DISCOVERY_LANE,
+                lane=credit_lane,
                 reservation_id=credit_reservation_id,
                 reconciliation_key=sweep_id,
                 attempted_credits=attempted_credits,
                 completed_credits=completed_credits,
                 external_requests=sum(bool(row["requested_at"]) for row in manifest_rows),
                 observed_used_before=credit_usage.used,
+                observed_used_after=credits_used_after,
+                activity_rows=activity_rows,
                 now=started_at,
             )
             credit_reconciliation_status = str(reconciliation.summary.get("status", "BLOCKED"))
@@ -624,7 +701,9 @@ def run_wizard_discovery_sweep(
             )
         except (OSError, TypeError, ValueError) as exc:
             credit_reconciliation_status = "BLOCKED"
-            credit_reconciliation_blocker = f"credit_reconciliation_failed:{_safe_error(exc)}"
+            credit_reconciliation_blocker = credit_reconciliation_blocker or (
+                f"credit_reconciliation_failed:{_safe_error(exc)}"
+            )
 
     completed_cells = sum(row["status"] == "completed" for row in manifest_rows)
     failed_cells = sum(row["status"] == "failed" for row in manifest_rows)
@@ -664,6 +743,12 @@ def run_wizard_discovery_sweep(
                 "completed_credits": completed_credits,
                 "attempted_credits": attempted_credits,
                 "credits_used_before": credit_usage.used,
+                "credits_used_after": credits_used_after,
+                "observed_credit_delta": (
+                    credits_used_after - credit_usage.used
+                    if credits_used_after is not None and credit_usage.used is not None
+                    else None
+                ),
                 "credit_limit": credit_usage.limit,
                 "credits_remaining_before": credit_usage.remaining,
                 "reserved_credits": reserved_credits,
@@ -691,8 +776,8 @@ def run_wizard_discovery_sweep(
     attempt_summary_md_path = reports_dir / "wizard_sweep_latest_attempt_summary.md"
     manifest_frame = pd.DataFrame(manifest_rows, columns=_manifest_columns())
     candidate_frame = _candidate_frame(candidate_rows)
-    manifest_frame.to_csv(attempt_manifest_path, index=False)
-    candidate_frame.to_csv(attempt_candidates_path, index=False)
+    atomic_write_csv(manifest_frame, attempt_manifest_path, index=False)
+    atomic_write_csv(candidate_frame, attempt_candidates_path, index=False)
 
     prior_active_candidates = _read_csv(candidates_path)
     publish_current_snapshot = bool(sweep_complete and publish_active)
@@ -702,8 +787,8 @@ def run_wizard_discovery_sweep(
         and manifest_path.exists()
     )
     if publish_current_snapshot or not active_snapshot_preserved:
-        manifest_frame.to_csv(manifest_path, index=False)
-        candidate_frame.to_csv(candidates_path, index=False)
+        atomic_write_csv(manifest_frame, manifest_path, index=False)
+        atomic_write_csv(candidate_frame, candidates_path, index=False)
     summary: dict[str, object] = {
         "schema_version": WIZARD_SWEEP_SCHEMA_VERSION,
         "sweep_id": sweep_id,
@@ -717,6 +802,12 @@ def run_wizard_discovery_sweep(
         "completed_credits": completed_credits,
         "attempted_credits": attempted_credits,
         "credits_used_before": credit_usage.used,
+        "credits_used_after": credits_used_after,
+        "observed_credit_delta": (
+            credits_used_after - credit_usage.used
+            if credits_used_after is not None and credit_usage.used is not None
+            else None
+        ),
         "credit_limit": credit_usage.limit,
         "credits_remaining_before": credit_usage.remaining,
         "reserved_credits": reserved_credits,
@@ -729,6 +820,20 @@ def run_wizard_discovery_sweep(
         "credit_reconciliation_id": credit_reconciliation_id,
         "credit_reconciliation_path": credit_reconciliation_path,
         "credit_usage_known": credit_usage.known,
+        "credit_usage_before_evidence_path": _relative_path(
+            credit_usage_before_evidence if credit_usage_before_evidence.is_file() else None,
+            root=Path(root),
+        ),
+        "credit_usage_before_evidence_sha256": _path_sha256(
+            credit_usage_before_evidence
+        ),
+        "credit_usage_after_evidence_path": _relative_path(
+            credit_usage_after_evidence if credit_usage_after_evidence.is_file() else None,
+            root=Path(root),
+        ),
+        "credit_usage_after_evidence_sha256": _path_sha256(
+            credit_usage_after_evidence
+        ),
         "candidate_rows": len(candidate_rows),
         "publish_active_requested": publish_active,
         "published_active_snapshot": publish_current_snapshot,
@@ -740,25 +845,233 @@ def run_wizard_discovery_sweep(
         "discovery_authority": authority,
         "blocker": blocker,
     }
-    attempt_summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
-    attempt_summary_md_path.write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(attempt_summary_path, json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(attempt_summary_md_path, _summary_markdown(summary), encoding="utf-8")
     if publish_current_snapshot or not active_snapshot_preserved:
-        summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
-        summary_md_path.write_text(_summary_markdown(summary), encoding="utf-8")
+        atomic_write_text(summary_path, json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(summary_md_path, _summary_markdown(summary), encoding="utf-8")
+    result_paths = {
+        "manifest": attempt_manifest_path,
+        "candidates": attempt_candidates_path,
+        "summary": attempt_summary_path,
+        "summary_md": attempt_summary_md_path,
+        "active_manifest": manifest_path,
+        "active_candidates": candidates_path,
+        "active_summary": summary_path,
+        "active_summary_md": summary_md_path,
+        "raw_snapshot_dir": raw_dir,
+    }
+    if credit_usage_before_evidence.is_file():
+        result_paths["credit_usage_before_evidence"] = credit_usage_before_evidence
+    if credit_usage_after_evidence.is_file():
+        result_paths["credit_usage_after_evidence"] = credit_usage_after_evidence
     return WizardSweepResult(
-        paths={
-            "manifest": attempt_manifest_path,
-            "candidates": attempt_candidates_path,
-            "summary": attempt_summary_path,
-            "summary_md": attempt_summary_md_path,
-            "active_manifest": manifest_path,
-            "active_candidates": candidates_path,
-            "active_summary": summary_path,
-            "active_summary_md": summary_md_path,
-            "raw_snapshot_dir": raw_dir,
-        },
+        paths=result_paths,
         summary=summary,
     )
+
+
+def run_authorized_wizard_discovery_sweep(
+    *,
+    root: str | Path,
+    api_key: str | None = None,
+    credential_reader: Callable[[str], str | None] | None = None,
+    now: datetime | None = None,
+    exchanges: Iterable[str] = WIZARD_CRYPTO_EXCHANGES,
+    intervals: Iterable[str] = WIZARD_DISCOVERY_INTERVALS,
+    strategies: Iterable[str] = WIZARD_DISCOVERY_STRATEGIES,
+    priorities: Iterable[str] = WIZARD_DISCOVERY_PRIORITIES,
+    daily_credit_limit: int = 1000,
+    reserved_credits: int = 100,
+    timeout: float = 30.0,
+    credits_fetcher: CreditsFetcher | None = None,
+    prescanned_fetcher: PrescannedFetcher | None = None,
+    credit_reconciler: Callable[..., Any] | None = None,
+    credit_lane: str = DISCOVERY_LANE,
+    publish_active: bool = True,
+) -> WizardSweepResult:
+    """Execute one sweep under the supervisor's exact ledger reservation."""
+
+    issuer = current_external_effect_issuer()
+    if issuer is None:
+        raise EffectAuthorityError("wizard_discovery_effect_issuer_missing")
+    root_path = Path(root)
+    observed = _as_utc(now or datetime.now(UTC))
+    selected_exchanges = tuple(exchanges)
+    selected_intervals = tuple(intervals)
+    selected_strategies = tuple(strategies)
+    selected_priorities = tuple(priorities)
+    cells = build_wizard_sweep_cells(
+        sweep_id=observed.strftime("%Y%m%dT%H%M%S%fZ"),
+        exchanges=selected_exchanges,
+        intervals=selected_intervals,
+        strategies=selected_strategies,
+        priorities=selected_priorities,
+    )
+    planned_credits = sum(cell.credit_cost for cell in cells)
+    request_ceiling = len(cells) + 2
+    reservation = reserve_wizard_credit_lane(
+        root=root_path,
+        lane=credit_lane,
+        planned_credits=planned_credits,
+        now=observed,
+        daily_credit_limit=daily_credit_limit,
+        protected_reserve=reserved_credits,
+        max_external_requests=request_ceiling,
+    )
+
+    def execute_with_reservation(authorized_key: str) -> WizardSweepResult:
+        return run_wizard_discovery_sweep(
+            root=root_path,
+            execute=True,
+            api_key=authorized_key,
+            exchanges=selected_exchanges,
+            intervals=selected_intervals,
+            strategies=selected_strategies,
+            priorities=selected_priorities,
+            daily_credit_limit=daily_credit_limit,
+            reserved_credits=reserved_credits,
+            timeout=timeout,
+            now=observed,
+            credits_fetcher=credits_fetcher,
+            prescanned_fetcher=prescanned_fetcher,
+            credit_reserver=lambda **_kwargs: reservation,
+            credit_reconciler=credit_reconciler,
+            credit_lane=credit_lane,
+            publish_active=publish_active,
+        )
+
+    if reservation.summary.get("external_spend_authorized") is not True:
+        return execute_with_reservation(api_key or "")
+    reservation_path = Path(reservation.paths["reservation"])
+    if not _reservation_path_is_valid(root_path, reservation_path):
+        raise EffectAuthorityError("wizard_discovery_reservation_path_invalid")
+    reservation_id = str(reservation.summary.get("reservation_id", ""))
+    binding_id = str(
+        reservation.summary.get("effect_reservation_binding_id", "")
+    )
+    if not reservation_id or not binding_id:
+        raise EffectAuthorityError("wizard_discovery_reservation_binding_missing")
+    reservation_sha256 = sha256(reservation_path.read_bytes()).hexdigest()
+    with reserved_external_effect_session(
+        reservation_id=reservation_id,
+        reservation_sha256=reservation_sha256,
+        max_total_requests=request_ceiling,
+        max_total_credits=planned_credits,
+        reservation_binding_id=binding_id,
+    ):
+        authorized_key = read_authorized_credential(
+            "CRYPTO_WIZARDS_API_KEY",
+            reader=credential_reader
+            or (lambda _key: api_key or os.getenv("CRYPTO_WIZARDS_API_KEY")),
+        )
+        return execute_with_reservation(authorized_key)
+
+
+def _fetch_credit_usage(
+    *,
+    fetcher: CreditsFetcher | None,
+    api_key: str,
+    base_url: str,
+    timeout: float,
+    result_recorder: Callable[[Any], str] | None = None,
+) -> Any:
+    if fetcher is None:
+        return fetch_credits_used(
+            api_key=api_key,
+            base_url=base_url,
+            timeout=timeout,
+            result_recorder=result_recorder,
+        )
+    target = f"{base_url.rstrip('/')}/v1beta/credits-used"
+    request_payload = json.dumps(
+        {"method": "GET", "target": target, "timeout_seconds": timeout},
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return run_authorized_credit_call(
+        target=target,
+        operation="credits_used_get",
+        method="GET",
+        request_payload=request_payload,
+        request_count=1,
+        credit_cost=0,
+        callback=lambda: fetcher(
+            api_key=api_key,
+            base_url=base_url,
+            timeout=timeout,
+        ),
+        result_recorder=result_recorder,
+    )
+
+
+def _fetch_prescanned(
+    *,
+    fetcher: PrescannedFetcher | None,
+    api_key: str,
+    base_url: str,
+    priority: str,
+    strategy: str,
+    exchange: str,
+    interval: str,
+    timeout: float,
+    result_recorder: Callable[[Any], str] | None = None,
+) -> Any:
+    if fetcher is None:
+        return fetch_prescanned_payload(
+            api_key=api_key,
+            base_url=base_url,
+            priority=priority,
+            strategy=strategy,
+            exchange=exchange,
+            interval=interval,
+            timeout=timeout,
+            result_recorder=result_recorder,
+        )
+    target = f"{base_url.rstrip('/')}/v1beta/prescanned"
+    request_payload = json.dumps(
+        {
+            "exchange": exchange,
+            "interval": interval,
+            "method": "GET",
+            "priority": priority,
+            "strategy": strategy,
+            "target": target,
+            "timeout_seconds": timeout,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return run_authorized_credit_call(
+        target=target,
+        operation="prescanned_get",
+        method="GET",
+        request_payload=request_payload,
+        request_count=1,
+        credit_cost=PRESCANNED_CREDIT_COST,
+        callback=lambda: fetcher(
+            api_key=api_key,
+            base_url=base_url,
+            priority=priority,
+            strategy=strategy,
+            exchange=exchange,
+            interval=interval,
+            timeout=timeout,
+        ),
+        result_recorder=result_recorder,
+    )
+
+
+def _reservation_path_is_valid(root: Path, path: Path) -> bool:
+    if path.is_symlink() or not path.is_file():
+        return False
+    try:
+        path.resolve().relative_to(
+            root.resolve() / "data" / "research" / "wizard_credit_ledger"
+        )
+    except (OSError, ValueError):
+        return False
+    return True
 
 
 def _write_raw_snapshot(
@@ -768,7 +1081,7 @@ def _write_raw_snapshot(
     captured_at: str,
     payload: Any,
     response_hash: str,
-) -> None:
+) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     envelope = {
         "capture_metadata": {
@@ -784,7 +1097,40 @@ def _write_raw_snapshot(
         "request": cell.params(),
         "response": payload,
     }
-    path.write_text(json.dumps(envelope, indent=2, sort_keys=True), encoding="utf-8")
+    encoded = json.dumps(envelope, indent=2, sort_keys=True).encode("utf-8")
+    write_immutable_bytes(path, encoded)
+    return sha256(encoded).hexdigest()
+
+
+def _write_credit_usage_snapshot(
+    path: Path,
+    *,
+    sweep_id: str,
+    phase: str,
+    captured_at: str,
+    payload: Any,
+) -> str:
+    envelope = {
+        "capture_metadata": {
+            "schema_version": WIZARD_SWEEP_SCHEMA_VERSION,
+            "sweep_id": sweep_id,
+            "capture_type": "credit_usage",
+            "phase": phase,
+            "captured_at": captured_at,
+            "response_hash": _json_hash(payload),
+        },
+        "response": payload,
+    }
+    encoded = json.dumps(envelope, indent=2, sort_keys=True).encode("utf-8")
+    write_immutable_bytes(path, encoded)
+    return sha256(encoded).hexdigest()
+
+
+def _path_sha256(path: Path) -> str:
+    try:
+        return sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
+    except OSError:
+        return ""
 
 
 def _summary_markdown(summary: dict[str, object]) -> str:

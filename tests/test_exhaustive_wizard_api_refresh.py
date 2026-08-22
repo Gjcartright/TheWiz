@@ -85,7 +85,11 @@ def _write_browser_auth_readiness(root: Path) -> None:
     )
 
 
-def _write_inputs(root: Path) -> tuple[Path, Path, Path, Path]:
+def _write_inputs(
+    root: Path,
+    *,
+    intervals: tuple[str, ...] = ("Daily", "Hourly"),
+) -> tuple[Path, Path, Path, Path]:
     active = root / "reports" / "active"
     active.mkdir(parents=True)
     pd.DataFrame(
@@ -115,7 +119,8 @@ def _write_inputs(root: Path) -> tuple[Path, Path, Path, Path]:
     sweep_id = "20260808T120000000000Z"
     candidates: list[dict[str, object]] = []
     manifest: list[dict[str, object]] = []
-    for index, cell in enumerate(build_wizard_sweep_cells(sweep_id=sweep_id)):
+    cells = build_wizard_sweep_cells(sweep_id=sweep_id, intervals=intervals)
+    for index, cell in enumerate(cells):
         evidence = root / "data" / "raw" / f"{cell.request_id}.json"
         evidence.parent.mkdir(parents=True, exist_ok=True)
         evidence.write_text("{}", encoding="utf-8")
@@ -153,9 +158,14 @@ def _write_inputs(root: Path) -> tuple[Path, Path, Path, Path]:
         manifest.append(
             {
                 "request_id": cell.request_id,
+                "priority": cell.priority,
+                "strategy": cell.strategy,
+                "exchange": cell.exchange,
+                "interval": cell.interval,
                 "status": "completed",
                 "row_count": 1,
                 "evidence_path": str(evidence.relative_to(root)),
+                "planned_cells": len(cells),
             }
         )
     candidates_path = active / "wizard_sweep_candidates.csv"
@@ -169,8 +179,9 @@ def _write_inputs(root: Path) -> tuple[Path, Path, Path, Path]:
                 "sweep_id": sweep_id,
                 "sweep_complete": True,
                 "discovery_authority": "complete_discovery",
-                "completed_cells": 30,
-                "candidate_rows": 30,
+                "planned_cells": len(cells),
+                "completed_cells": len(cells),
+                "candidate_rows": len(cells),
             }
         ),
         encoding="utf-8",
@@ -314,6 +325,20 @@ def test_refresh_accounts_for_every_row_and_queues_every_current_pair(tmp_path: 
     assert validation["status"].eq("PASS").all()
     assert result.paths["snapshot_api_candidates"].exists()
     assert result.paths["snapshot_manifest"].exists()
+
+
+def test_refresh_accepts_complete_daily_only_sweep(tmp_path: Path) -> None:
+    _write_inputs(tmp_path, intervals=("Daily",))
+
+    result = build_exhaustive_wizard_api_refresh_delta(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, 12, 5, tzinfo=timezone.utc),
+    )
+
+    assert result.summary["sweep_complete"] is True
+    assert result.summary["api_source_rows"] == 15
+    validation = pd.read_csv(result.paths["validation"], keep_default_na=False)
+    assert validation["status"].eq("PASS").all()
 
 
 def test_refresh_uses_fresh_authenticated_browser_inspector_status(tmp_path: Path) -> None:

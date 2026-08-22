@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import json
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+import pytest
 
+from quant_platform.economic_contract import EXACT_MODES, replay_label, tail_actions
 from quant_platform.math_v2_acceptance import build_math_v2_acceptance
 from quant_platform.orchestration.hyperliquid_learning_and_risk import (
     build_portfolio_critic,
@@ -21,7 +23,18 @@ from quant_platform.orchestration.hyperliquid_run_manifest import (
 )
 from quant_platform.orchestration.teacher_adapters import build_teacher_evidence_adapters
 from quant_platform.orchestration.teacher_control_plane import build_teacher_council_control_plane
-from quant_platform.orchestration.teacher_evidence_materializer import materialize_teacher_evidence
+from quant_platform.orchestration.teacher_contracts import ExactMode
+from quant_platform.orchestration.teacher_evidence_materializer import (
+    TeacherMaterializationPolicy,
+    _settings_for_mode,
+    materialize_teacher_evidence,
+)
+from quant_platform.statistics.math_v2 import (
+    fit_engle_granger,
+    fit_ou,
+    rolling_gaussian_copula_conditionals,
+)
+from quant_platform.wizard_mode_replay import build_local_mode_signal
 
 
 def _write_fixture(root):
@@ -113,6 +126,133 @@ def test_materializer_builds_seven_teachers_and_six_independent_critics(tmp_path
     assert adapter["status"] == "READY_FOR_COUNCIL"
     assert adapter["proposal_count"] == 7
     assert adapter["assessment_count"] == 6
+
+
+def test_teacher_local_spread_uses_y_on_x_orientation_and_economic_tail_positions():
+    rng = np.random.default_rng(71)
+    rows = 420
+    log_x = 4.0 + np.cumsum(rng.normal(0.0, 0.008, rows))
+    residual = np.zeros(rows)
+    for index in range(1, rows):
+        residual[index] = 0.75 * residual[index - 1] + rng.normal(0.0, 0.006)
+    log_y = 0.2 + 1.25 * log_x + residual
+    frame = pd.DataFrame(
+        {
+            "price_x": np.exp(log_x),
+            "price_y": np.exp(log_y),
+        }
+    )
+    split = 320
+    dependency = fit_engle_granger(frame["price_x"].iloc[:split], frame["price_y"].iloc[:split])
+    hedge_ratio = float(dependency.values["hedge_ratio"])
+    spread = np.log(frame["price_y"]) - hedge_ratio * np.log(frame["price_x"])
+    ou = fit_ou(spread.iloc[:split])
+    settings, blockers = _settings_for_mode(
+        ExactMode.STATIC_ZSCORER,
+        frame=frame,
+        split=split,
+        hedge_ratio=hedge_ratio,
+        ou=ou,
+        policy=TeacherMaterializationPolicy(),
+    )
+    replay = build_local_mode_signal(frame, settings, exact_mode="Static (ZScoreR)")
+    expected = spread.sub(spread.rolling(60, min_periods=60).mean()).div(
+        spread.rolling(60, min_periods=60).std(ddof=1)
+    )
+
+    pd.testing.assert_series_equal(replay.metric, expected)
+    assert blockers == ()
+    assert settings["entry_long_position"] == "short_x_long_y"
+    assert settings["entry_short_position"] == "long_x_short_y"
+
+    copula_settings, _ = _settings_for_mode(
+        ExactMode.COPULA,
+        frame=frame,
+        split=split,
+        hedge_ratio=hedge_ratio,
+        ou=ou,
+        policy=TeacherMaterializationPolicy(),
+    )
+    assert copula_settings["entry_long_position"] == "long_x_short_y"
+    assert copula_settings["entry_short_position"] == "short_x_long_y"
+
+    ou_settings, ou_blockers = _settings_for_mode(
+        ExactMode.OU_SPREAD,
+        frame=frame,
+        split=split,
+        hedge_ratio=hedge_ratio,
+        ou=ou,
+        policy=TeacherMaterializationPolicy(),
+    )
+    ou_replay = build_local_mode_signal(frame, ou_settings, exact_mode="OU (Spread)")
+    expected_ou_metric = spread - float(ou.values["mu"])
+    stationary_sigma = float(ou.values["innovation_sigma"]) / np.sqrt(
+        1.0 - float(ou.values["phi"]) ** 2
+    )
+
+    pd.testing.assert_series_equal(ou_replay.metric, expected_ou_metric)
+    assert ou_blockers == ()
+    assert ou_settings["entry_long_value"] == pytest.approx(-2.0 * stationary_sigma)
+    assert ou_settings["entry_short_value"] == pytest.approx(2.0 * stationary_sigma)
+
+
+def test_all_seven_teacher_modes_match_local_contract_in_both_orientations():
+    rng = np.random.default_rng(103)
+    rows = 440
+    log_x = 4.0 + np.cumsum(rng.normal(0.0, 0.006, rows))
+    residual = np.zeros(rows)
+    for index in range(1, rows):
+        residual[index] = 0.72 * residual[index - 1] + rng.normal(0.0, 0.004)
+    log_y = 0.3 + 1.15 * log_x + residual
+    original = pd.DataFrame(
+        {"price_x": np.exp(log_x), "price_y": np.exp(log_y)}
+    )
+
+    for frame in (
+        original,
+        original.rename(columns={"price_x": "price_y", "price_y": "price_x"})[
+            ["price_x", "price_y"]
+        ],
+    ):
+        frame = frame.copy()
+        split = 330
+        dependency = fit_engle_granger(
+            frame["price_x"].iloc[:split], frame["price_y"].iloc[:split]
+        )
+        hedge_ratio = float(dependency.values["hedge_ratio"])
+        spread = np.log(frame["price_y"]) - hedge_ratio * np.log(frame["price_x"])
+        ou = fit_ou(spread.iloc[:split])
+        copula = rolling_gaussian_copula_conditionals(
+            frame["price_x"].pct_change(),
+            frame["price_y"].pct_change(),
+            window=120,
+            min_rows=60,
+        )
+        frame["u1_given_u2"] = copula["u1_given_u2"]
+        frame["u2_given_u1"] = copula["u2_given_u1"]
+
+        for mode in EXACT_MODES:
+            settings, blockers = _settings_for_mode(
+                mode,
+                frame=frame,
+                split=split,
+                hedge_ratio=hedge_ratio,
+                ou=ou,
+                policy=TeacherMaterializationPolicy(),
+            )
+            lower_action, upper_action = tail_actions(
+                mode, copula_direction_view="u1_given_u2"
+            )
+            assert blockers == ()
+            assert settings["entry_long_position"] == lower_action.value
+            assert settings["entry_short_position"] == upper_action.value
+
+            replay = build_local_mode_signal(
+                frame,
+                settings,
+                exact_mode=replay_label(mode),
+            )
+            assert replay.mode_replay_status == "READY_FOR_RESEARCH_REPLAY"
 
 
 def test_materializer_refuses_to_emit_without_machine_math_marker(tmp_path):

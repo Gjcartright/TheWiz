@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_learning.v1"
@@ -247,10 +249,14 @@ def build_exhaustive_wizard_hyperliquid_learning_ledger(
     )
     snapshot_inputs = snapshot_dir / "inputs"
     snapshot_inputs.mkdir(parents=True, exist_ok=True)
-    for source in input_paths.values():
-        shutil.copy2(source, snapshot_inputs / source.name)
+    for name, source in input_paths.items():
+        immutable_snapshot_copy(source, snapshot_inputs, artifact_name=name)
     for stage, source in stage_manifest_paths.items():
-        shutil.copy2(source, snapshot_inputs / f"{stage}_manifest.json")
+        immutable_snapshot_copy(
+            source,
+            snapshot_inputs,
+            artifact_name=f"{stage}_manifest",
+        )
 
     ledger = matrix.loc[:, BASE_COLUMNS].copy()
     ledger = ledger.rename(
@@ -320,9 +326,9 @@ def build_exhaustive_wizard_hyperliquid_learning_ledger(
     csv_text = ledger.to_csv(index=False)
     jsonl_text = ledger.to_json(orient="records", lines=True, date_format="iso")
     for key in ("ledger", "dataset", "snapshot_ledger"):
-        paths[key].write_text(csv_text, encoding="utf-8")
+        atomic_write_text(paths[key], csv_text, encoding="utf-8")
     for key in ("ledger_jsonl", "dataset_jsonl", "snapshot_ledger_jsonl"):
-        paths[key].write_text(jsonl_text, encoding="utf-8")
+        atomic_write_text(paths[key], jsonl_text, encoding="utf-8")
 
     outcome_counts = {
         str(key): int(value)
@@ -365,9 +371,9 @@ def build_exhaustive_wizard_hyperliquid_learning_ledger(
     manifest = json.dumps(summary, indent=2, sort_keys=True)
     markdown = _summary_markdown(summary)
     for key in ("manifest", "snapshot_manifest"):
-        paths[key].write_text(manifest, encoding="utf-8")
+        atomic_write_text(paths[key], manifest, encoding="utf-8")
     for key in ("summary_md", "snapshot_summary_md"):
-        paths[key].write_text(markdown, encoding="utf-8")
+        atomic_write_text(paths[key], markdown, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

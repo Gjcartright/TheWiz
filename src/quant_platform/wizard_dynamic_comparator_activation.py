@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_bytes
+
 import csv
 import json
 from datetime import UTC, datetime
@@ -546,7 +550,7 @@ def _write_or_validate_immutable_bytes(payload: bytes, path: Path) -> None:
             raise ValueError(f"immutable dynamic v2 artifact changed: {path}")
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(payload)
+    atomic_write_bytes(path, payload)
 
 
 def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> None:
@@ -558,14 +562,14 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_text(payload: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(payload, encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_csv_rows(path: Path) -> list[dict[str, str]]:

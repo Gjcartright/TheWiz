@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import fcntl
 import json
+from hashlib import sha256
+from types import SimpleNamespace
 
+import pytest
 from eth_account import Account
 
+import quant_platform.hyperliquid_testnet as hyperliquid_module
 from quant_platform.execution import OrderIntent, hyperliquid_testnet_order_preflight_status
 from quant_platform.hyperliquid_testnet import (
+    HYPERLIQUID_AGENT_KEYCHAIN_CREDENTIAL_ID,
+    HYPERLIQUID_INFO_OPERATIONS,
+    HYPERLIQUID_TESTNET_INFO_URL,
     HyperliquidPairExecutionResult,
     HyperliquidTestnetConfig,
     HyperliquidTestnetOrderAdapter,
@@ -19,6 +26,132 @@ from quant_platform.hyperliquid_testnet import (
     write_hyperliquid_testnet_margin_snapshot,
     write_hyperliquid_testnet_preflight_report,
 )
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    ExternalEffectCallContract,
+    external_effect_authority_session,
+)
+from quant_platform.orchestration.effect_authority import (
+    EffectAuthority,
+    EffectAuthorityError,
+)
+
+_RealHyperliquidTestnetPairExecutor = HyperliquidTestnetPairExecutor
+
+
+class _LegacyAuthorizedSpec(SimpleNamespace):
+    def payload_sha256(self) -> str:
+        material = json.dumps(vars(self), sort_keys=True, default=str)
+        return sha256(material.encode("utf-8")).hexdigest()
+
+
+class _LegacyConsumedAuthority:
+    def state(self, permit_id: str) -> str:
+        return "CONSUMED"
+
+
+class _LegacyBehaviorOrderAuthority:
+    """Local-only double preserving legacy executor tests behind the new gate."""
+
+    def __init__(self) -> None:
+        self.authority = _LegacyConsumedAuthority()
+        self._counter = 0
+        self._dispatched: set[str] = set()
+        self._permits: dict[str, SimpleNamespace] = {}
+
+    def spec(self, **kwargs):
+        return _LegacyAuthorizedSpec(**kwargs)
+
+    def consume(self, spec):
+        self._counter += 1
+        permit_id = f"legacy-{self._counter}"
+        nonce = f"legacy-nonce-{self._counter}"
+        self._permits[permit_id] = SimpleNamespace(
+            nonce=nonce,
+            effect_kind=spec.effect_kind,
+        )
+        return SimpleNamespace(
+            receipt=SimpleNamespace(
+                permit_id=permit_id,
+                nonce=nonce,
+                effect_kind=spec.effect_kind,
+            ),
+            spec_sha256=spec.payload_sha256(),
+            _owner=self,
+        )
+
+    def consume_all(self, specs):
+        return tuple(self.consume(spec) for spec in specs)
+
+    def _permit_by_id(self, permit_id):
+        return self._permits[permit_id]
+
+    def claim_dispatch(self, authorization, spec) -> None:
+        if authorization is None or authorization._owner is not self:
+            raise ValueError("legacy_authorization_owner_mismatch")
+        if authorization.spec_sha256 != spec.payload_sha256():
+            raise ValueError("legacy_authorization_scope_mismatch")
+        permit_id = authorization.receipt.permit_id
+        if permit_id in self._dispatched:
+            raise ValueError("legacy_authorization_dispatch_replayed")
+        self._dispatched.add(permit_id)
+
+
+def HyperliquidTestnetPairExecutor(*args, **kwargs):
+    kwargs.setdefault("order_authority", _LegacyBehaviorOrderAuthority())
+    return _RealHyperliquidTestnetPairExecutor(*args, **kwargs)
+
+
+@pytest.fixture(autouse=True)
+def _allow_explicit_legacy_authority_double(monkeypatch):
+    real_require = hyperliquid_module.require_order_authority
+
+    def require(authority):
+        if isinstance(authority, _LegacyBehaviorOrderAuthority):
+            return authority
+        return real_require(authority)
+
+    monkeypatch.setattr(hyperliquid_module, "require_order_authority", require)
+
+
+@pytest.fixture(autouse=True)
+def _authorize_local_preflight_effects(tmp_path):
+    authority = EffectAuthority(
+        root=tmp_path,
+        secret=b"h" * 32,
+        issuer_id="hyperliquid-preflight-test",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    with external_effect_authority_session(
+        authority=authority,
+        run_id="hyperliquid-preflight-test-run",
+        intended_slot_id="hyperliquid-preflight-test-slot",
+        source_fingerprint_sha256="a" * 64,
+        runtime_fingerprint_sha256="b" * 64,
+        configuration_fingerprint_sha256="c" * 64,
+        provider_id="hyperliquid_testnet_preflight",
+        account_scope_id="hyperliquid:testnet:agent_preflight",
+        reservation_id=f"reservation-{tmp_path.name}",
+        reservation_sha256=sha256(str(tmp_path).encode()).hexdigest(),
+        allowed_targets=frozenset({HYPERLIQUID_TESTNET_INFO_URL}),
+        allowed_credential_keys=frozenset(
+            {HYPERLIQUID_AGENT_KEYCHAIN_CREDENTIAL_ID}
+        ),
+        max_total_requests=64,
+        max_total_credits=0,
+        allowed_call_contracts=frozenset(
+            {
+                ExternalEffectCallContract(
+                    operation=operation,
+                    method="POST",
+                    target=HYPERLIQUID_TESTNET_INFO_URL,
+                    credit_units_per_request=0,
+                )
+                for operation in HYPERLIQUID_INFO_OPERATIONS.values()
+            }
+        ),
+    ):
+        yield
 
 
 def test_default_executor_gate_rejects_pass_without_explicit_testnet_authority(monkeypatch):
@@ -569,16 +702,19 @@ def test_single_leg_adapter_refuses_pair_trade_submission():
     assert fill.status == "paper_blocked_hyperliquid_pair_executor_required"
 
 
-def test_pair_adapter_delegates_coordinated_submission_and_keeps_single_leg_closed():
+def test_pair_adapter_denies_substituted_executor_and_keeps_single_leg_closed():
     executor = _StubPairExecutor()
     adapter = HyperliquidTestnetPairAdapter(executor=executor)
     config, _ = _test_config()
 
-    result = adapter.submit_pair(_pair_intents(), config)
+    with pytest.raises(
+        EffectAuthorityError,
+        match="gate00g_hyperliquid_pair_executor_denied",
+    ):
+        adapter.submit_pair(_pair_intents(), config)
     single = adapter.place_order(_pair_intents()[0], config)
 
-    assert result.status == "pair_blocked"
-    assert executor.calls == [(_pair_intents(), config)]
+    assert executor.calls == []
     assert single.status == "paper_blocked_hyperliquid_pair_executor_required"
 
 
@@ -745,7 +881,7 @@ def test_approval_is_revalidated_immediately_before_submission_preparation(
     assert not state_path.exists()
 
 
-def test_approval_is_revalidated_after_leverage_but_before_bulk_submission(
+def test_approval_is_revalidated_before_leverage_and_bulk_submission(
     tmp_path,
 ):
     config, secret = _test_config(
@@ -779,7 +915,7 @@ def test_approval_is_revalidated_after_leverage_but_before_bulk_submission(
     assert result.status == "pair_blocked"
     assert result.reason == "testnet_smoke_approval_changed_before_bulk_submission"
     assert calls == 3
-    assert len(exchange.leverage_updates) == 2
+    assert exchange.leverage_updates == []
     assert exchange.requests == []
     assert state["phase"] == "PRE_SUBMISSION_FAILED"
     assert state["entry_submit_attempted"] is False

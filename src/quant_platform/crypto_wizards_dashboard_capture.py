@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult
 from quant_platform.crypto_wizards_scanner import scanner_rows_from_payload
+from quant_platform.runtime_types import CommandResult
 from quant_platform.wizard_symbols import normalize_wizard_exchange
-
 
 ROOT = Path(__file__).resolve().parents[2]
 CAPTURE_SCHEMA_VERSION = "exhaustive_wizard_dashboard_capture.v1"
@@ -185,11 +188,11 @@ def ingest_exhaustive_wizard_dashboard_captures(
         "pagination_policy": "scroll_until_five_consecutive_bottom_fetches_without_growth",
         "live_trading_authorized": False,
     }
-    rows.to_csv(paths["rows"], index=False)
-    manifest.to_csv(paths["capture_manifest"], index=False)
-    validation.to_csv(paths["coverage_validation"], index=False)
-    paths["summary"].write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_csv(rows, paths["rows"], index=False)
+    atomic_write_csv(manifest, paths["capture_manifest"], index=False)
+    atomic_write_csv(validation, paths["coverage_validation"], index=False)
+    atomic_write_text(paths["summary"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

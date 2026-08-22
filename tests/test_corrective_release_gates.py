@@ -13,6 +13,7 @@ import quant_platform.orchestration.hyperliquid_learning_and_risk as learning_ri
 from quant_platform.hyperliquid_testnet import (
     HyperliquidPairExecutionResult,
     HyperliquidTestnetConfig,
+    HyperliquidTestnetPairExecutor,
 )
 from quant_platform.orchestration.corrective_release_gates import (
     CANDIDATE_SCHEMA_VERSION,
@@ -1154,15 +1155,21 @@ def _record_testnet_attempt(
             return []
         raise AssertionError(payload)
 
-    class FailedExecutor:
-        def submit_pair(self, intents, resolved):
-            return HyperliquidPairExecutionResult(
-                status=status,
-                reason="test_attempt_result",
-                order_submission_performed=True,
-                reconciled=reconciled,
-                live_trading_authorized=False,
-            )
+    def failed_submit_pair(self, intents, resolved):
+        del self, intents, resolved
+        return HyperliquidPairExecutionResult(
+            status=status,
+            reason="test_attempt_result",
+            order_submission_performed=True,
+            reconciled=reconciled,
+            live_trading_authorized=False,
+        )
+
+    monkeypatch.setattr(
+        HyperliquidTestnetPairExecutor,
+        "submit_pair",
+        failed_submit_pair,
+    )
 
     preflight = build_testnet_pair_execution_preflight(
         root=root,
@@ -1189,7 +1196,6 @@ def _record_testnet_attempt(
             submit_orders=True,
         ),
         now=now,
-        pair_executor=FailedExecutor(),
     )
     assert result.summary["status"] == status
 

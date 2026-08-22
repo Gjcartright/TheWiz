@@ -18,12 +18,18 @@ from quant_platform.orchestration.corrective_daily_scheduler import _acquire_loc
 from quant_platform.orchestration.corrective_data_evidence import (
     validate_pair_cost_bundle_artifacts,
 )
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_registered_rerun import (
     CONCLUSION_SCHEMA_VERSION,
     _validate_ready_receipt_lineage,
     build_registered_rerun_gate,
     resolve_registered_source_family,
     validate_registered_rerun_contract_identity,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_bytes,
+    promote_staged_directory,
+    promote_staged_file,
 )
 from quant_platform.orchestration.corrective_statistical_remediation import (
     build_corrective_statistical_remediation,
@@ -420,7 +426,7 @@ def run_registered_research_rerun(
             status="BLOCKED_LOCK",
             contract={},
             execute=execute,
-            blocker=str(exc),
+            blocker=safe_exception_code(exc),
             funding_audit=funding_audit,
         )
     except Exception as exc:
@@ -430,7 +436,7 @@ def run_registered_research_rerun(
             status="FAILED",
             contract={},
             execute=execute,
-            blocker=f"{type(exc).__name__}:{exc}",
+            blocker=f"{safe_exception_code(exc)}",
             funding_audit=funding_audit,
         )
         raise
@@ -467,7 +473,7 @@ def run_registered_research_rerun(
             )
         except Exception as exc:  # noqa: BLE001 - immutable replay remains recoverable
             result.summary["checkpoint_refresh_status"] = "REFRESH_FAILED"
-            result.summary["checkpoint_refresh_blocker"] = f"{type(exc).__name__}:{exc}"
+            result.summary["checkpoint_refresh_blocker"] = f"{safe_exception_code(exc)}"
     if learning_receipt_after_unlock is not None:
         stage4_receipt = _validate_execution_receipt(
             receipt_path=learning_receipt_after_unlock,
@@ -508,7 +514,7 @@ def run_registered_research_rerun(
             except Exception as exc:  # noqa: BLE001 - Stage 4 receipt remains recoverable
                 result.summary["learning_handoff_status"] = "HANDOFF_FAILED"
                 result.summary["stage5_research_gate_pass"] = False
-                result.summary["learning_handoff_blocker"] = f"{type(exc).__name__}:{exc}"
+                result.summary["learning_handoff_blocker"] = f"{safe_exception_code(exc)}"
             if refresher is not None:
                 try:
                     checkpoint = refresher(root=root, now=requested_at)
@@ -521,7 +527,7 @@ def run_registered_research_rerun(
                 except Exception as exc:  # noqa: BLE001 - learning remains research-only
                     result.summary["checkpoint_refresh_status"] = "REFRESH_FAILED"
                     result.summary["checkpoint_refresh_blocker"] = (
-                        f"post_learning:{type(exc).__name__}:{exc}"
+                        f"post_learning:{safe_exception_code(exc)}"
                     )
         else:
             conclusion_zero = bool(
@@ -733,7 +739,7 @@ def _prepare_registered_workspace(
             raise FileNotFoundError(f"registered workspace input missing: {source}")
         target = temporary / Path(relative)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        atomic_write_bytes(target, source.read_bytes())
         seeded[_relative(target, temporary)] = _file_hash(target)
         return target
 
@@ -747,7 +753,7 @@ def _prepare_registered_workspace(
         )
         target = temporary / workspace_active / filename
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(immutable, target)
+        atomic_write_bytes(target, immutable.read_bytes())
         mutable_active_inputs[filename] = _relative(immutable, temporary)
 
     for source in _frozen_handoff_input_files(
@@ -879,7 +885,7 @@ def _prepare_registered_workspace(
     }
     _atomic_json(receipt, temporary / "workspace_receipt.json")
     workspace.parent.mkdir(parents=True, exist_ok=True)
-    temporary.replace(workspace)
+    promote_staged_directory(temporary, workspace)
     _validate_workspace_receipt(
         root=root,
         workspace=workspace,
@@ -1720,6 +1726,15 @@ def _stage_identity(summary: dict[str, Any]) -> str:
     return ""
 
 
+class ResearchAuthorityViolation(ValueError):
+    """A project-owned research result attempted to claim execution authority."""
+
+    def __init__(self, unsafe_fields: list[str]):
+        reason_code = "unexpected_research_authority:" + ",".join(sorted(unsafe_fields))
+        super().__init__(reason_code)
+        self.evidence_reason_code = reason_code
+
+
 def _assert_no_order_authority(name: str, payload: dict[str, Any]) -> None:
     forbidden = (
         "execution_authority",
@@ -1732,7 +1747,7 @@ def _assert_no_order_authority(name: str, payload: dict[str, Any]) -> None:
     )
     unsafe = [key for key in forbidden if _truthy(payload.get(key))]
     if unsafe:
-        raise ValueError(f"{name} unexpectedly acquired authority: {','.join(unsafe)}")
+        raise ResearchAuthorityViolation(unsafe)
 
 
 def _write_immutable_json(payload: dict[str, Any], path: Path) -> None:
@@ -1746,7 +1761,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

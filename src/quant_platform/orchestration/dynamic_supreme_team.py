@@ -6,6 +6,10 @@ and red-team review. It does not create strategy evidence or alter routing.
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -68,9 +72,9 @@ def build_dynamic_supreme_team_checkpoint(*, root: Path = ROOT, now: datetime | 
     ]
     frame = pd.DataFrame(rows)
     output.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     markdown = output.with_suffix(".md")
-    markdown.write_text(_markdown(frame, qualifying, rollout_blocked), encoding="utf-8")
+    atomic_write_text(markdown, _markdown(frame, qualifying, rollout_blocked), encoding="utf-8")
     return {"csv": output, "markdown": markdown, "qualifying_agreements": qualifying}
 
 

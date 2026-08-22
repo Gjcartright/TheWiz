@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
 from dataclasses import asdict
 from datetime import datetime, timezone
 import json
@@ -136,7 +138,7 @@ def _write_csv_atomic(frame: pd.DataFrame, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     tmp = output.with_name(f".{output.name}.{os.getpid()}.tmp")
     frame.to_csv(tmp, index=False)
-    tmp.replace(output)
+    promote_staged_file(tmp, output)
     return output
 
 
@@ -144,7 +146,7 @@ def _write_json_atomic(payload: object, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     tmp = output.with_name(f".{output.name}.{os.getpid()}.tmp")
     tmp.write_text(json.dumps(_json_safe(payload), indent=2, sort_keys=False), encoding="utf-8")
-    tmp.replace(output)
+    promote_staged_file(tmp, output)
     return output
 
 
@@ -152,7 +154,7 @@ def _write_text_atomic(text: str, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     tmp = output.with_name(f".{output.name}.{os.getpid()}.tmp")
     tmp.write_text(text, encoding="utf-8")
-    tmp.replace(output)
+    promote_staged_file(tmp, output)
     return output
 
 
@@ -172,7 +174,7 @@ def _matrix_source_paths(root: Path) -> list[Path]:
 
 def _schema_fields(root: Path) -> list[str]:
     schema = pd.read_csv(root / "reports" / "wizard_research_journal_schema.csv")
-    return schema["field_name"].dropna().astype(str).tolist()
+    return list(dict.fromkeys(schema["field_name"].dropna().astype(str).tolist()))
 
 
 def _load_json_list(path: Path) -> list[dict[str, object]]:
@@ -1697,6 +1699,16 @@ def build_wizard_research_journal(root: Path = ROOT) -> CommandResult:
     )
     scanner = _attach_wizard_configuration_lineage(scanner, root)
     detail = _attach_wizard_configuration_lineage(detail, root)
+    ou_v6_terminal = _read_csv_or_empty(
+        root / "reports" / "active" / "wizard_ou_v6_terminal_journal_rows.csv"
+    )
+    if not ou_v6_terminal.empty:
+        journal_columns = list(scanner.columns)
+        terminal_records = ou_v6_terminal.to_dict(orient="records")
+        ou_v6_terminal = pd.DataFrame(
+            [[record.get(field, "") for field in journal_columns] for record in terminal_records],
+            columns=journal_columns,
+        )
 
     scanner_path = root / "reports" / "active" / "wizard_research_scanner_capture.csv"
     detail_path = root / "reports" / "active" / "wizard_research_pair_detail_capture.csv"
@@ -1707,7 +1719,7 @@ def build_wizard_research_journal(root: Path = ROOT) -> CommandResult:
 
     _write_csv_atomic(scanner, scanner_path)
     _write_csv_atomic(detail, detail_path)
-    combined = pd.concat([scanner, detail], ignore_index=True, sort=False)
+    combined = pd.concat([scanner, detail, ou_v6_terminal], ignore_index=True, sort=False)
     _write_csv_atomic(combined, journal_path)
     two_hour_copula_path, two_hour_copula_md_path, two_hour_copula_rows = _build_two_hour_copula_report(combined, root)
     copula_detail_queue_path, copula_detail_queue_rows, copula_detail_pending = _build_copula_detail_capture_queue(combined, root)
@@ -1731,6 +1743,7 @@ def build_wizard_research_journal(root: Path = ROOT) -> CommandResult:
         "summary": {
             "scanner_rows": int(len(scanner)),
             "pair_detail_rows": int(len(detail)),
+            "ou_v6_terminal_rows": int(len(ou_v6_terminal)),
             "missing_timeframe_rows": int(
                 detail.get("timeframe_unavailable_flag", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
             )
@@ -1740,6 +1753,7 @@ def build_wizard_research_journal(root: Path = ROOT) -> CommandResult:
         },
         "scanner_capture": scanner.to_dict(orient="records"),
         "pair_detail_capture": detail.to_dict(orient="records"),
+        "ou_v6_terminal_evaluation": ou_v6_terminal.to_dict(orient="records"),
     }
     _write_json_atomic(current_payload, current_json_path)
     _write_text_atomic(_build_markdown(scanner, detail, current_json_path, snapshot_dir), md_path)
@@ -1760,6 +1774,7 @@ def build_wizard_research_journal(root: Path = ROOT) -> CommandResult:
         summary={
             "scanner_rows": int(len(scanner)),
             "pair_detail_rows": int(len(detail)),
+            "ou_v6_terminal_rows": int(len(ou_v6_terminal)),
             "missing_timeframes": int(
                 detail.get("timeframe_unavailable_flag", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
             )

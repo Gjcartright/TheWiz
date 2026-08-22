@@ -1,16 +1,22 @@
 # Formula Dictionary
 
 ## cointegration
-- Formula: Engle-Granger/Johansen stationarity test on residual spread: y_t - beta*x_t.
+- Formula: Active local Engle-Granger fits `log(Y_t)=alpha+beta_y_on_x*log(X_t)+e_t` and tests `e_t=log(Y_t)-alpha-beta_y_on_x*log(X_t)`. Johansen is not yet local acceptance authority.
 - Market interpretation: Tests whether a pair has a persistent equilibrium relation.
 - Use case: Filter/rank pairs before mean-reversion strategies.
 - Failure mode: Breaks during regime shifts, structural changes, or multiple-testing overfit.
 
 ## hedge_ratio
-- Formula: OLS/TLS/Kalman beta in y_t = alpha + beta*x_t + epsilon_t.
+- Formula: Active static beta is OLS in `log(Y_t)=alpha+beta_y_on_x*log(X_t)+e_t`. The named opposite-leg execution contract requires finite `beta_y_on_x>0`; other estimators and negative-beta economics require separate method/contract IDs.
 - Market interpretation: Defines spread neutrality and leg sizing.
 - Use case: Position construction and spread measurement.
 - Failure mode: Unstable beta creates hidden directional exposure.
+
+## dynamic_hedge_ratio
+- Formula: `beta_t=rolling_cov(log(X),log(Y))/rolling_var(log(X))`, in Y-on-X orientation with sample covariance/variance over the declared window. Held-out evaluation is seeded only with the trailing training observations; no future rows or backfill are used.
+- Market interpretation: Time-varying relative sensitivity between the two legs.
+- Use case: Dynamic Spread and Dynamic ZScoreR signal construction and gross-one sizing, using the same point-in-time beta series for both.
+- Failure mode: Missing, nonfinite, or nonpositive beta blocks the current opposite-leg contract; a sign-changing relationship requires a separately named economic strategy rather than a silent beta default.
 
 ## beta
 - Formula: cov(asset, benchmark) / var(benchmark), or pair beta depending on endpoint.
@@ -19,19 +25,19 @@
 - Failure mode: Nonlinear exposure is missed by linear beta.
 
 ## ecm_x
-- Formula: Delta x_t = alpha_x * error_{t-1} + lagged deltas + noise.
+- Formula: `Delta log(X_t)=gamma_x*e_{t-1}+lagged deltas+noise`, with `e=log(Y)-alpha-beta_y_on_x*log(X)` and expected correction sign `gamma_x>0`.
 - Market interpretation: Adjustment speed of X toward equilibrium.
 - Use case: Leader/follower and directional leg prediction.
 - Failure mode: Spurious adjustment under unstable cointegration.
 
 ## ecm_y
-- Formula: Delta y_t = alpha_y * error_{t-1} + lagged deltas + noise.
+- Formula: `Delta log(Y_t)=gamma_y*e_{t-1}+lagged deltas+noise`, with expected correction sign `gamma_y<0`.
 - Market interpretation: Adjustment speed of Y toward equilibrium.
 - Use case: Leader/follower and directional leg prediction.
 - Failure mode: Coefficient sign flips across regimes.
 
 ## ecm_strength
-- Formula: Function of adjustment coefficient magnitude, t-statistics, and residual correction reliability.
+- Formula: Share of the two HC1 adjustment coefficients that are significant at 5% and have the canonical expected signs (`gamma_x>0`, `gamma_y<0`).
 - Market interpretation: How forcefully the pair corrects deviations.
 - Use case: Rank mean-reversion candidates and holding period confidence.
 - Failure mode: High in-sample strength can be overfit or stale.
@@ -61,10 +67,21 @@
 - Failure mode: Window choice can chase noise or lag breaks.
 
 ## spread
-- Formula: y_t - beta*x_t - alpha.
+- Formula: Fitted residual is `log(Y_t)-alpha-beta_y_on_x*log(X_t)`. Replay execution spread is separately named `log(Y_t)-beta_y_on_x*log(X_t)`; z-scores remove the constant, while raw OU modes explicitly center it.
 - Market interpretation: Tradable disequilibrium between hedged legs.
 - Use case: Base series for stationarity, z-score, OU, and ECM.
 - Failure mode: Bad hedge ratio converts spread into directional bet.
+
+## ingested_pair_spread
+- Formula: `log(Y_t)-beta_y_on_x*log(X_t)`, constructed only when a finite positive hedge ratio is explicitly present.
+- Provenance: New dYdX history imports identify the slope as `beta_y_on_x` and mark a full-history fit as `full_sample_hindsight_research_only`. Generic fixture ingestion does not invent a missing ratio.
+- Use case: Research normalization before point-in-time refitting.
+- Failure mode: The superseded formula `price_X-beta*price_Y` has opposite orientation and different units; using it under the same field name invalidates cross-source comparisons.
+
+## two_leg_dispatch
+- Formula contract: two-leg PnL is selected only when `price_x`, `price_y`, and `hedge_ratio` are all present. Prices without a ratio may use a supplied spread for research-only replay, but cannot enter two-leg accounting.
+- Use case: Experiment harness, threshold sweeps, and ML label construction.
+- Failure mode: Selecting on prices alone previously reached an implicit `beta=1.0` path or crashed after fail-closed validation was introduced.
 
 ## crypto_wizards_static_spread_observed
 - Formula: OLS fits `y = alpha + beta*x`, then `spread = y - (alpha + beta*x)`. When the vendor response reports `log_used=true`, it instead fits `log(y) = alpha + beta*log(x)` and uses the log residual.
@@ -103,7 +120,7 @@
 - Failure mode: Probability distortions can persist instead of reverting.
 
 ## sharpe
-- Formula: annualized mean(return) / std(return).
+- Formula: `sqrt(periods_per_year)*mean(net simple return)/sample_std(net simple return,ddof=1)`, zero risk-free rate, 365-day crypto annualization. Unknown intervals, timestamp/label mismatches, tiny samples, and zero variance are blocked.
 - Market interpretation: Risk-adjusted return quality.
 - Use case: Strategy ranking and acceptance tests.
 - Failure mode: Inflated by non-normal tails, serial correlation, and selection bias.
@@ -127,7 +144,7 @@
 - Failure mode: Requires enough tail observations or robust stress modeling.
 
 ## drawdown
-- Formula: (equity_peak - equity_t) / equity_peak.
+- Formula: `max((running_peak-equity_t)/running_peak)` with initial equity `1.0` included before the first bar.
 - Market interpretation: Capital impairment from peak.
 - Use case: Risk limits, strategy rejection, and kill switches.
 - Failure mode: Backtest drawdown underestimates unseen structural breaks.

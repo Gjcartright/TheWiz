@@ -1,15 +1,35 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 
-from quant_platform.crypto_wizards_sweep import run_wizard_discovery_sweep
+from quant_platform.crypto_wizards_catalog import BASE_URL
+from quant_platform.crypto_wizards_sweep import (
+    run_authorized_wizard_discovery_sweep,
+    run_wizard_discovery_sweep,
+)
+from quant_platform.orchestration.corrective_external_effects import (
+    external_effect_issuer_session,
+)
+from quant_platform.orchestration.effect_authority import (
+    PHASE00_WIZARD_RESEARCH_PROFILE,
+    EffectAuthority,
+)
 from quant_platform.orchestration.nodes import run_stage, stages_for_group
 from quant_platform.orchestration.state import OrchestratorState, StageStatus
 from quant_platform.wizard_control_plane import build_wizard_control_plane
 from quant_platform.wizard_evidence import build_wizard_pair_settings_capture_template
 
+NOW = datetime(2026, 8, 7, 12, 0, tzinfo=UTC)
+TEST_HASH = "a" * 64
 
-NOW = datetime(2026, 8, 7, 12, 0, tzinfo=timezone.utc)
+
+def _credit_usage_fetcher(*used_values: int):
+    readings = iter(used_values)
+
+    def fetcher(**_):
+        return {"credits_used": next(readings), "credit_limit": 1000}
+
+    return fetcher
 
 
 def _complete_sweep(
@@ -36,17 +56,41 @@ def _complete_sweep(
             }
         ]
 
-    return run_wizard_discovery_sweep(
+    authority = EffectAuthority(
         root=tmp_path,
-        execute=True,
-        api_key="secret",
-        exchanges=("Dydx",),
-        intervals=("Daily",),
-        strategies=("Spread",),
-        credits_fetcher=lambda **kwargs: {"credits_used": 0, "credit_limit": 1000},
-        prescanned_fetcher=fake_prescanned,
-        now=NOW,
+        secret=b"wizard-control-plane-test-authority",
+        issuer_id="wizard-control-plane-test",
+        profile=PHASE00_WIZARD_RESEARCH_PROFILE,
     )
+    with external_effect_issuer_session(
+        authority=authority,
+        run_id="wizard-control-plane-run",
+        intended_slot_id="wizard-control-plane-slot",
+        source_fingerprint_sha256=TEST_HASH,
+        runtime_fingerprint_sha256=TEST_HASH,
+        configuration_fingerprint_sha256=TEST_HASH,
+        provider_id="crypto_wizards",
+        account_scope_id="crypto_wizards:research:test",
+        allowed_targets=frozenset(
+            {
+                f"{BASE_URL}/v1beta/credits-used",
+                f"{BASE_URL}/v1beta/prescanned",
+            }
+        ),
+        allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+        max_total_requests=3,
+        max_total_credits=10,
+    ):
+        return run_authorized_wizard_discovery_sweep(
+            root=tmp_path,
+            api_key="secret",
+            exchanges=("Dydx",),
+            intervals=("Daily",),
+            strategies=("Spread",),
+            credits_fetcher=_credit_usage_fetcher(0, 10),
+            prescanned_fetcher=fake_prescanned,
+            now=NOW,
+        )
 
 
 def test_preflight_sweep_is_visible_but_cannot_authorize_ranking(tmp_path):

@@ -13,7 +13,6 @@ import json
 import math
 import os
 import re
-import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -25,6 +24,14 @@ import requests
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
+from quant_platform.orchestration.corrective_external_effects import (
+    read_authorized_keychain_credential,
+)
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
+
 ROOT = Path(__file__).resolve().parents[3]
 HYPERLIQUID_MAINNET_URL = "https://api.hyperliquid.xyz"
 HYPERLIQUID_MAINNET_INFO_URL = f"{HYPERLIQUID_MAINNET_URL}/info"
@@ -35,6 +42,9 @@ FORBIDDEN_RAW_KEY_ENVS = (
     "HYPERLIQUID_LIVE_AGENT_PRIVATE_KEY",
     "HYPERLIQUID_AGENT_PRIVATE_KEY",
     "HYPERLIQUID_TESTNET_AGENT_PRIVATE_KEY",
+)
+HYPERLIQUID_LIVE_AGENT_KEYCHAIN_CREDENTIAL_ID = (
+    "HYPERLIQUID_LIVE_AGENT_KEYCHAIN"
 )
 
 
@@ -77,8 +87,26 @@ class HyperliquidLiveCanaryConfig:
         return blockers
 
 
-def read_live_agent_key_from_keychain(service: str, account: str) -> str:
-    """Load the dedicated mainnet agent key without printing or persisting it."""
+def read_live_agent_key_from_keychain(
+    service: str,
+    account: str,
+    *,
+    reader: Callable[[str, str], str | None] | None = None,
+) -> str:
+    """Load the mainnet agent key through exact credential authority."""
+
+    return read_authorized_keychain_credential(
+        HYPERLIQUID_LIVE_AGENT_KEYCHAIN_CREDENTIAL_ID,
+        service=service,
+        account=account,
+        reader=reader or _read_live_agent_key_from_keychain,
+    )
+
+
+def _read_live_agent_key_from_keychain(service: str, account: str) -> str:
+    """Platform adapter called only inside an authorized Keychain window."""
+
+    import subprocess
 
     result = subprocess.run(
         ["security", "find-generic-password", "-w", "-s", service, "-a", account],
@@ -182,8 +210,11 @@ def build_live_canary_executor_preflight(
         and resolved.agent_address
     ):
         try:
-            reader = keychain_reader or read_live_agent_key_from_keychain
-            secret = reader(resolved.keychain_service, resolved.agent_address)
+            secret = read_live_agent_key_from_keychain(
+                resolved.keychain_service,
+                resolved.agent_address,
+                reader=keychain_reader,
+            )
             payload["agent_key_present"] = bool(secret)
             wallet = Account.from_key(secret)
             payload["agent_key_matches_address"] = (
@@ -210,7 +241,13 @@ def build_live_canary_executor_preflight(
             blockers.append("live_canary_executor_local_signature_failed")
 
     if not blockers and resolved.master_address and resolved.agent_address:
-        fetch = info_client or _default_info_client(resolved.base_url)
+        raw_fetch = info_client or _raw_hyperliquid_mainnet_info_client(
+            resolved.base_url
+        )
+        fetch = _authorized_hyperliquid_mainnet_info_client(
+            base_url=resolved.base_url,
+            raw_fetch=raw_fetch,
+        )
         try:
             role = fetch({"type": "userRole", "user": resolved.agent_address})
             payload["agent_role_checked"] = True
@@ -402,7 +439,27 @@ def validate_live_canary_executor_preflight(
     return not blockers, sorted(set(blockers))
 
 
-def _default_info_client(base_url: str) -> Callable[[dict[str, Any]], Any]:
+def _authorized_hyperliquid_mainnet_info_client(
+    *,
+    base_url: str,
+    raw_fetch: Callable[[dict[str, Any]], Any],
+) -> Callable[[dict[str, Any]], Any]:
+    target = f"{base_url.rstrip('/')}/info"
+
+    def fetch(payload: dict[str, Any]) -> Any:
+        return run_authorized_hyperliquid_info_call(
+            target=target,
+            payload=payload,
+            operation_prefix="HYPERLIQUID_MAINNET",
+            transport=lambda: raw_fetch(payload),
+        )
+
+    return fetch
+
+
+def _raw_hyperliquid_mainnet_info_client(
+    base_url: str,
+) -> Callable[[dict[str, Any]], Any]:
     session = requests.Session()
 
     def fetch(payload: dict[str, Any]) -> Any:
@@ -461,7 +518,7 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _as_utc(value: datetime) -> datetime:

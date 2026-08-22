@@ -1,17 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import math
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
+from quant_platform.wizard_policy import (
+    DEFAULT_WIZARD_DISCOVERY_POLICY,
+    load_wizard_discovery_policy,
+)
 from quant_platform.wizard_run_config import WizardRunConfiguration, canonical_exact_mode
-from quant_platform.wizard_policy import DEFAULT_WIZARD_DISCOVERY_POLICY, load_wizard_discovery_policy
-
 
 ROOT = Path(__file__).resolve().parents[2]
 WIZARD_CONTROL_SCHEMA_VERSION = "wizard_control_plane.v1"
@@ -167,7 +173,7 @@ def build_wizard_control_plane(
     if max_settings_candidates <= 0:
         raise ValueError("max_settings_candidates must be positive")
 
-    checked_at = _as_utc(now or datetime.now(timezone.utc))
+    checked_at = _as_utc(now or datetime.now(UTC))
     policy = load_wizard_discovery_policy(root)
     min_sharpe = policy.min_sharpe if min_sharpe is None else float(min_sharpe)
     min_return = policy.min_returns_total_pct / 100.0 if min_return is None else float(min_return)
@@ -196,7 +202,7 @@ def build_wizard_control_plane(
         summary_path=sweep_summary_path,
     )
     contract_ready = not bool(
-        ((contract["blocking"] == True) & (contract["status"] == "fail")).any()  # noqa: E712
+        ((contract["blocking"] == True) & (contract["status"] == "fail")).any()
     )
 
     sweep_complete = _sweep_is_complete(manifest, sweep_summary)
@@ -227,7 +233,7 @@ def build_wizard_control_plane(
     )
 
     lineage = _build_lineage_audit(root, manifest, candidates, settings_queue)
-    required_lineage = lineage[lineage["required_for_ranking"] == True]  # noqa: E712
+    required_lineage = lineage[lineage["required_for_ranking"] == True]
     lineage_ready = bool(not required_lineage.empty and required_lineage["status"].eq("pass").all())
     ready = bool(provisional_ready and lineage_ready)
     if not settings_queue.empty:
@@ -310,12 +316,8 @@ def build_wizard_control_plane(
         "max_age_hours": max_age_hours,
         "rows": len(health),
     }
-    paths["wizard_control_plane_summary"].write_text(
-        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["wizard_control_plane_summary_md"].write_text(
-        _summary_markdown(summary, health), encoding="utf-8"
-    )
+    atomic_write_text(paths["wizard_control_plane_summary"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["wizard_control_plane_summary_md"], _summary_markdown(summary, health), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -911,13 +913,13 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 def _parse_timestamp(value: object) -> datetime | None:
@@ -931,7 +933,7 @@ def _parse_timestamp(value: object) -> datetime | None:
         if math.isfinite(numeric):
             if numeric > 10_000_000_000:
                 numeric /= 1000.0
-            return datetime.fromtimestamp(numeric, tz=timezone.utc)
+            return datetime.fromtimestamp(numeric, tz=UTC)
     except (ValueError, OverflowError, OSError):
         pass
     parsed = pd.to_datetime(text, utc=True, errors="coerce")

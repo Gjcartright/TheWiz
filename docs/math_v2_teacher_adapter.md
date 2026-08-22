@@ -2,7 +2,7 @@
 
 ## Implemented
 
-The active backtest path now uses `math-v2` and provides:
+The active backtest path now uses `math-v2.1-y-on-x` and provides:
 
 - interval-aware annualization for 1m, 5m, 15m, 1h, 4h, and 1d;
 - blocked Sharpe when interval evidence is unknown or irregular;
@@ -72,7 +72,7 @@ Their schemas are written to:
 
 For each context, the adapter requires exactly seven unique exact-mode rows
 and six unique critic rows. The venue must be Hyperliquid, math must be
-`math-v2`, timestamps must be point-in-time confirmed, and every row must have
+`math-v2.1-y-on-x`, timestamps must be point-in-time confirmed, and every row must have
 an evidence path. Wizard rows cannot be converted into local votes.
 
 An incomplete or invalid context emits no events. The adapter also clears old

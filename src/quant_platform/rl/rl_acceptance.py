@@ -116,7 +116,9 @@ def return_summary(
     losses = abs(returns[returns < 0].sum())
     profit_factor = float(gains / losses) if losses else float("inf") if gains > 0 else 0.0
     equity = (1.0 + returns).cumprod()
-    drawdown = ((equity.cummax() - equity) / equity.cummax().replace(0, np.nan)).fillna(0.0)
+    peak = equity.cummax().clip(lower=1.0)
+    drawdown = ((peak - equity) / peak.replace(0, np.nan)).fillna(0.0)
+    sample_std = float(returns.std(ddof=1)) if len(returns) > 1 else 0.0
     pair_conc = _concentration(frame, "pair")
     raw_timeframe_conc = _concentration(frame, "timeframe")
     source = source_frame if source_frame is not None else frame
@@ -126,9 +128,9 @@ def return_summary(
         "trades": int(len(returns)),
         "take_rate": float(len(returns) / max(total_rows, 1)),
         "profit_factor": profit_factor,
-        "sharpe": float(returns.mean() / returns.std(ddof=0) * np.sqrt(len(returns))) if len(returns) > 1 and returns.std(ddof=0) else 0.0,
+        "sharpe": float(returns.mean() / sample_std * np.sqrt(len(returns))) if sample_std else 0.0,
         "max_drawdown": float(drawdown.max() if not drawdown.empty else 0.0),
-        "total_return": float(returns.sum()),
+        "total_return": float((1.0 + returns).clip(lower=0.0).prod() - 1.0),
         "pair_concentration": pair_conc,
         "timeframe_concentration": timeframe_conc,
         "raw_timeframe_concentration": raw_timeframe_conc,

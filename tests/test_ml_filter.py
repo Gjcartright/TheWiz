@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from quant_platform.backtest import CostModel
 from quant_platform.experiments import PairDataset
 from quant_platform.ml_filter import (
     CATEGORICAL_FEATURES,
@@ -16,6 +17,7 @@ from quant_platform.ml_filter import (
     _build_model_pipeline,
     _chronology_isolated_fold_partitions,
     _compounded_return_path,
+    _detailed_backtest_frame,
     _model_selection_score,
     _purged_pair_aware_splits,
     _select_probability_threshold,
@@ -105,7 +107,9 @@ def _pair_history_frame(n: int = 240) -> pd.DataFrame:
 def _candidate_dataset(n: int = 180) -> pd.DataFrame:
     idx = np.arange(n)
     probability_driver = np.sin(idx / 6.0)
-    realized_return = np.where(probability_driver > 0, 0.02, -0.015) + np.where(idx % 7 == 0, -0.005, 0.0)
+    realized_return = np.where(probability_driver > 0, 0.02, -0.015) + np.where(
+        idx % 7 == 0, -0.005, 0.0
+    )
     frame = pd.DataFrame(
         {
             "trade_id": [f"trade-{i:03d}" for i in idx],
@@ -181,7 +185,13 @@ def test_build_trade_filter_dataset_creates_candidate_entry_rows():
     frame = build_trade_filter_dataset(datasets, strategies=(STRATEGIES[0],))
 
     assert not frame.empty
-    assert {"trade_id", "entry_timestamp", "exit_timestamp", "label_profitable", "realized_return"}.issubset(frame.columns)
+    assert {
+        "trade_id",
+        "entry_timestamp",
+        "exit_timestamp",
+        "label_profitable",
+        "realized_return",
+    }.issubset(frame.columns)
     assert frame["source_venue"].eq("hyperliquid").all()
     assert frame["source_path"].eq("history.json").all()
     assert frame["trade_id"].str.contains("hyperliquid").all()
@@ -213,7 +223,7 @@ def test_trade_dataset_excludes_right_censored_open_positions():
     history = _pair_history_frame().iloc[:24].copy()
     history["zscore"] = 0.0
     history["zscore_reconstructed"] = 0.0
-    history.loc[history.index[-2]:, "zscore_reconstructed"] = 2.5
+    history.loc[history.index[-2] :, "zscore_reconstructed"] = 2.5
     history["spread"] = history["zscore_reconstructed"]
 
     frame = build_trade_filter_dataset(
@@ -231,11 +241,58 @@ def test_trade_return_path_compounds_fractional_bar_returns_and_floors_bankruptc
     assert bankrupt.iloc[-1] == pytest.approx(-1.0)
 
 
+def test_ml_trade_label_accounting_matches_math_v2_and_ignores_diagnostic_beta():
+    base = pd.DataFrame(
+        {
+            "timestamp": pd.date_range("2026-01-01", periods=5, freq="1D", tz="UTC"),
+            "interval": "1d",
+            "price_x": [100.0, 100.0, 110.0, 108.0, 108.0],
+            "price_y": [100.0, 100.0, 90.0, 92.0, 92.0],
+            "spread": [0.0] * 5,
+            "zscore": [0.0] * 5,
+            "hedge_ratio": [1.5] * 5,
+        }
+    )
+    signal = pd.Series([-1.0, -1.0, -1.0, 0.0, 0.0])
+    costs = CostModel(
+        taker_fee_bps=0.0,
+        slippage_bps=0.0,
+        execution_risk_bps=0.0,
+        funding_bps_per_day=0.0,
+        partial_fill_probability=0.0,
+    )
+
+    low, _ = _detailed_backtest_frame(base.assign(beta=0.1), signal, costs)
+    high, _ = _detailed_backtest_frame(base.assign(beta=10.0), signal, costs)
+
+    pd.testing.assert_series_equal(low["gross_return"], high["gross_return"])
+    pd.testing.assert_series_equal(low["net_return"], high["net_return"])
+    assert low["gross_return"].sum() > 0.0
+
+
+def test_ml_trade_labels_do_not_select_two_leg_math_without_hedge_ratio():
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.date_range("2026-01-01", periods=5, freq="1D", tz="UTC"),
+            "price_x": [100.0, 101.0, 102.0, 103.0, 104.0],
+            "price_y": [50.0, 50.5, 51.0, 51.5, 52.0],
+            "spread": [0.0, -1.0, -0.5, 0.5, 0.0],
+        }
+    )
+    signal = pd.Series([0.0, 1.0, 1.0, 0.0, 0.0])
+
+    _, backtest_mode = _detailed_backtest_frame(frame, signal, CostModel())
+
+    assert backtest_mode == "spread"
+
+
 def test_build_trade_filter_dataset_rejects_integer_bar_indexes_as_timestamps():
     history = _pair_history_frame()
     history["timestamp"] = np.arange(len(history))
 
-    frame = build_trade_filter_dataset([PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],))
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],)
+    )
 
     assert frame.empty
 
@@ -244,7 +301,9 @@ def test_build_trade_filter_dataset_normalizes_timeframe_aliases():
     history = _pair_history_frame()
     history["interval"] = "daily"
 
-    frame = build_trade_filter_dataset([PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],))
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],)
+    )
 
     assert set(frame["timeframe"]) == {"1d"}
 
@@ -252,8 +311,7 @@ def test_build_trade_filter_dataset_normalizes_timeframe_aliases():
 def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     dataset = _candidate_dataset()
     dataset["exit_timestamp"] = (
-        pd.to_datetime(dataset["entry_timestamp"], utc=True)
-        + pd.Timedelta(minutes=30)
+        pd.to_datetime(dataset["entry_timestamp"], utc=True) + pd.Timedelta(minutes=30)
     ).map(pd.Timestamp.isoformat)
     dataset["wizard_learning_feature_state"] = "cold_start"
     dataset["experiment_id"] = [f"experiment-{index}" for index in range(len(dataset))]
@@ -266,7 +324,9 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     dataset["exact_mode"] = "Copula"
     dataset["orientation"] = "reverse"
 
-    paths = train_trade_filter_walkforward(dataset, output_dir=tmp_path, n_splits=3, min_train_rows=60)
+    paths = train_trade_filter_walkforward(
+        dataset, output_dir=tmp_path, n_splits=3, min_train_rows=60
+    )
 
     assert set(paths) == {
         "dataset",
@@ -286,7 +346,12 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     assert not leaderboard.empty
     assert leaderboard.iloc[0]["chosen_model"]
     assert leaderboard.iloc[0]["selection_rank"] == 1
-    assert {"model_name", "median_filtered_profit_factor", "profit_factor_delta", "promising"}.issubset(summary.columns)
+    assert {
+        "model_name",
+        "median_filtered_profit_factor",
+        "profit_factor_delta",
+        "promising",
+    }.issubset(summary.columns)
     assert folds["split_scheme"].eq(GLOBAL_PURGED_SPLIT_SCHEME).all()
     assert folds["global_label_purge"].map(bool).all()
     assert folds["global_label_overlap_rows_after_purge"].eq(0).all()
@@ -295,13 +360,13 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
         < pd.to_datetime(folds["test_start"], utc=True)
     ).all()
     assert folds["embargo_periods"].eq(1).all()
-    assert folds["threshold_calibration_scheme"].eq(
-        "training_only_minimum_participation_v1"
-    ).all()
+    assert folds["threshold_calibration_scheme"].eq("training_only_minimum_participation_v1").all()
     assert folds["minimum_training_take_rate"].eq(0.10).all()
-    assert folds["training_take_rate_floor_pass"].eq(
-        folds["training_take_rate_at_threshold"].ge(0.10)
-    ).all()
+    assert (
+        folds["training_take_rate_floor_pass"]
+        .eq(folds["training_take_rate_at_threshold"].ge(0.10))
+        .all()
+    )
     assert set(folds["selection_phase"]) == {
         "model_selection",
         "untouched_evaluation",
@@ -331,32 +396,22 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     assert artifact["model_name"] in set(summary["model_name"].astype(str))
     assert "estimator" in artifact
     assert "threshold" in artifact
-    assert artifact["threshold_calibration_scheme"] == (
-        "training_only_minimum_participation_v1"
-    )
+    assert artifact["threshold_calibration_scheme"] == ("training_only_minimum_participation_v1")
     assert artifact["minimum_training_take_rate"] == 0.10
     assert artifact["evaluation_scheme"] == GLOBAL_PURGED_SPLIT_SCHEME
     assert manifest["selection_isolation_scheme"] == (
         "chronological_model_selection_then_untouched_evaluation_v1"
     )
-    assert manifest["selection_evaluation_boundary_scheme"] == (
-        "label_complete_chronology_gap_v1"
-    )
+    assert manifest["selection_evaluation_boundary_scheme"] == ("label_complete_chronology_gap_v1")
     assert pd.Timestamp(manifest["selection_label_end_boundary"]) < pd.Timestamp(
         manifest["untouched_evaluation_start_boundary"]
     )
-    assert manifest["threshold_calibration_scheme"] == (
-        "training_only_minimum_participation_v1"
-    )
+    assert manifest["threshold_calibration_scheme"] == ("training_only_minimum_participation_v1")
     assert manifest["minimum_training_take_rate"] == 0.10
     assert manifest["selection_folds"] == 1
     assert manifest["untouched_evaluation_folds"] == 1
-    assert manifest["chosen_model_selection_eligible"] == bool(
-        leaderboard.iloc[0]["promising"]
-    )
-    assert manifest["selection_eligible_models"] == int(
-        leaderboard["promising"].astype(bool).sum()
-    )
+    assert manifest["chosen_model_selection_eligible"] == bool(leaderboard.iloc[0]["promising"])
+    assert manifest["selection_eligible_models"] == int(leaderboard["promising"].astype(bool).sum())
     assert manifest["selection_outcome"] in {
         "ELIGIBLE_MODEL_SELECTED",
         "NO_ELIGIBLE_MODEL_DIAGNOSTIC_ONLY",
@@ -456,10 +511,11 @@ def test_global_label_purge_removes_overlap_from_pair_absent_in_test_window():
 def test_shadow_trade_filter_predictions_scores_existing_dataset(tmp_path):
     dataset = _candidate_dataset()
     dataset["exit_timestamp"] = (
-        pd.to_datetime(dataset["entry_timestamp"], utc=True)
-        + pd.Timedelta(minutes=30)
+        pd.to_datetime(dataset["entry_timestamp"], utc=True) + pd.Timedelta(minutes=30)
     ).map(pd.Timestamp.isoformat)
-    paths = train_trade_filter_walkforward(dataset, output_dir=tmp_path / "study", n_splits=3, min_train_rows=60)
+    paths = train_trade_filter_walkforward(
+        dataset, output_dir=tmp_path / "study", n_splits=3, min_train_rows=60
+    )
 
     manifest = json.loads(paths["manifest"].read_text(encoding="utf-8"))
     output = shadow_trade_filter_predictions(
@@ -471,7 +527,9 @@ def test_shadow_trade_filter_predictions_scores_existing_dataset(tmp_path):
 
     frame = pd.read_csv(output)
     assert not frame.empty
-    assert {"probability_profitable", "shadow_take", "model_name", "threshold"}.issubset(frame.columns)
+    assert {"probability_profitable", "shadow_take", "model_name", "threshold"}.issubset(
+        frame.columns
+    )
     assert frame["shadow_take"].isin([True, False]).all()
 
 
@@ -637,12 +695,8 @@ def test_model_selection_prefers_eligible_model_over_sparse_high_score():
         )
 
     leaderboard = model_selection_leaderboard(pd.DataFrame(rows))
-    eligible = leaderboard.loc[
-        leaderboard["model_name"].eq("eligible_model")
-    ].iloc[0]
-    sparse = leaderboard.loc[
-        leaderboard["model_name"].eq("sparse_high_score_model")
-    ].iloc[0]
+    eligible = leaderboard.loc[leaderboard["model_name"].eq("eligible_model")].iloc[0]
+    sparse = leaderboard.loc[leaderboard["model_name"].eq("sparse_high_score_model")].iloc[0]
 
     assert sparse["selection_score"] > eligible["selection_score"]
     assert bool(eligible["promising"])

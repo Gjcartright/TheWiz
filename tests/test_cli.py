@@ -86,6 +86,26 @@ def test_resolve_research_funding_path_prefers_research_path(tmp_path):
     assert _resolve_research_funding_path(None, None) is None
 
 
+def test_cli_build_v2_math_diagnostic_routes_to_machine_audit(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    seen = {}
+
+    def fake_build(*, root):
+        seen["root"] = root
+        return CommandResult(
+            summary={"local_core_status": "PASS", "release_decision": "BLOCKED"},
+            paths={"report": tmp_path / "reports" / "audits" / "math.md"},
+        )
+
+    monkeypatch.setattr(cli, "build_v2_math_diagnostic", fake_build)
+    monkeypatch.setattr(sys, "argv", ["quant_platform.cli", "build-v2-math-diagnostic"])
+
+    cli.main()
+
+    assert seen["root"] == tmp_path
+    assert json.loads(capsys.readouterr().out)["summary"]["local_core_status"] == "PASS"
+
+
 def test_cli_hyperliquid_wizard_mode_proof_defaults_to_no_credit_preflight(
     tmp_path, monkeypatch, capsys
 ):
@@ -132,11 +152,12 @@ def test_cli_crypto_wizards_full_sweep_defaults_to_zero_credit_plan(tmp_path, mo
     output = json.loads(capsys.readouterr().out)
     assert seen["root"] == tmp_path
     assert seen["execute"] is False
-    assert seen["api_key"] == "secret"
+    assert seen["api_key"] is None
     assert seen["exchanges"] == ("Binance", "BinanceUs", "ByBit", "Coinbase", "Dydx")
     assert seen["intervals"] == ("Daily", "Hourly")
     assert seen["strategies"] == ("Spread", "ZScoreRoll", "Copula")
     assert seen["priorities"] == ("Sharpe",)
+    assert seen["credit_lane"] == "exhaustive_discovery_sweep"
     assert output["summary"]["planned_cells"] == 30
 
 
@@ -1237,7 +1258,8 @@ def test_cli_copula_v2_registration_is_local_only(tmp_path, monkeypatch, capsys)
     assert payload["summary"]["live_trading_authorized"] is False
 
 
-def test_cli_paper_plan_blocks_research_rejected_strategy(tmp_path):
+def test_cli_paper_plan_blocks_research_rejected_strategy(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
     acceptance_path = tmp_path / "acceptance_report.csv"
     pd.DataFrame(
         [{"strategy_id": 1, "production_eligible": False, "acceptance_reason": "passing_pairs<2"}]
@@ -1570,7 +1592,8 @@ def test_cli_paper_plan_builds_two_leg_intents_for_accepted_strategy(tmp_path):
     assert sum(intent["size"] for intent in intents) == 1000.0
 
 
-def test_cli_paper_plan_writes_journal_for_rejected_strategy(tmp_path):
+def test_cli_paper_plan_writes_journal_for_rejected_strategy(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
     acceptance_path = tmp_path / "acceptance_report.csv"
     journal_path = tmp_path / "paper_trading_journal.csv"
     pd.DataFrame(
@@ -1592,9 +1615,11 @@ def test_cli_paper_plan_writes_journal_for_rejected_strategy(tmp_path):
     assert list(journal["pair"]) == ["ETH-BTC"]
     assert list(journal["plan_status"]) == ["blocked"]
     assert list(journal["plan_reason"]) == ["research_rejected:passing_pairs<2"]
+    assert (tmp_path / "current_paper_watch_positions.csv").exists()
 
 
 def test_cli_paper_plan_journals_dydx_config_blockers_before_submission(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
     acceptance_path = tmp_path / "acceptance_report.csv"
     journal_path = tmp_path / "paper_trading_journal.csv"
     pd.DataFrame(
@@ -1622,9 +1647,11 @@ def test_cli_paper_plan_journals_dydx_config_blockers_before_submission(tmp_path
     assert "submit_orders_false" in journal["blockers"].iloc[0]
     assert "missing_private_key" in journal["blockers"].iloc[0]
     assert journal["fills_json"].iloc[0] == "[]"
+    assert (tmp_path / "current_paper_watch_positions.csv").exists()
 
 
 def test_cli_paper_plan_blocks_record_only_adapter_before_submission(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
     acceptance_path = tmp_path / "acceptance_report.csv"
     journal_path = tmp_path / "paper_trading_journal.csv"
     pd.DataFrame(
@@ -1634,6 +1661,7 @@ def test_cli_paper_plan_blocks_record_only_adapter_before_submission(tmp_path, m
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     monkeypatch.setenv(
         "DYDX_TESTNET_ORDER_CLIENT_ADAPTER",
         "quant_platform.dydx_record_only_adapter:RecordOnlyDydxOrderAdapter",
@@ -1654,6 +1682,7 @@ def test_cli_paper_plan_blocks_record_only_adapter_before_submission(tmp_path, m
     assert list(journal["plan_status"]) == ["blocked"]
     assert "record_only_dydx_order_client_adapter" in journal["plan_reason"].iloc[0]
     assert journal["fills_json"].iloc[0] == "[]"
+    assert (tmp_path / "current_paper_watch_positions.csv").exists()
 
 
 def test_resolve_paper_venue_prefers_configured_hyperliquid_route(tmp_path, monkeypatch):
@@ -1810,7 +1839,7 @@ class FakeHyperliquidAdapter:
 
     journal = pd.read_csv(journal_path)
     assert list(journal["plan_status"]) == ["blocked"]
-    assert "hyperliquid_pair_submission_not_supported" in journal["blockers"].iloc[0]
+    assert "gate00g_order_adapter_path_denied" in journal["blockers"].iloc[0]
     assert journal["fills_json"].iloc[0] == "[]"
 
 
@@ -1820,6 +1849,8 @@ def test_paper_venue_preflight_reports_missing_venue_blockers(tmp_path, monkeypa
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
+    monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
 
     adapter_module = tmp_path / "dydx_order_adapter.py"
     adapter_module.write_text(
@@ -1844,7 +1875,10 @@ class ReadyOrderAdapter:
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "dydx_order_adapter:ReadyOrderAdapter")
+    monkeypatch.setenv(
+        "DYDX_TESTNET_ORDER_CLIENT_ADAPTER",
+        "quant_platform.dydx_sdk_order_adapter:DydxSdkOrderAdapter",
+    )
 
     data_dir = tmp_path / "data" / "processed"
     reports = tmp_path / "reports"
@@ -2009,9 +2043,9 @@ class ReadyOrderAdapter:
     rows = frame.set_index("venue")
 
     assert bool(rows.loc["hyperliquid", "ready_for_submission"]) is False
-    assert bool(rows.loc["hyperliquid", "execution_ready"]) is True
-    assert bool(rows.loc["hyperliquid", "adapter_ready"]) is True
-    assert "hyperliquid_testnet_submit_orders_false" in rows.loc["hyperliquid", "blockers"]
+    assert bool(rows.loc["hyperliquid", "execution_ready"]) is False
+    assert bool(rows.loc["hyperliquid", "adapter_ready"]) is False
+    assert "gate00g_order_adapter_path_denied" in rows.loc["hyperliquid", "blockers"]
 
 
 def test_paper_venue_options_prefer_evidence_gated_route(tmp_path, monkeypatch):
@@ -2493,7 +2527,7 @@ def test_fetch_dydx_two_leg_data_downloads_builds_and_normalizes_funding(tmp_pat
     pair_payload = json.loads(paths["pair_history"].read_text(encoding="utf-8"))
     assert {"price_x", "price_y", "spread", "zscore"}.issubset(pair_payload["history"][0])
     assert {"funding_x_bps", "funding_y_bps"}.issubset(pair_payload["history"][0])
-    assert pair_payload["hedge_ratio_source"] == "derived_price_ols"
+    assert pair_payload["hedge_ratio_source"] == "derived_log_y_on_log_x_ols"
     assert pair_payload["beta_source"] == "derived_return_covariance"
     funding = pd.read_csv(paths["funding_csv"])
     assert set(funding["market"]) == {"BNB-USD", "STX-USD"}
@@ -2578,11 +2612,12 @@ def test_fetch_dydx_two_leg_data_skips_network_when_payloads_preloaded(tmp_path,
             {
                 "candles": [
                     {
-                        "startedAt": "2026-06-18T00:00:00.000Z",
+                        "startedAt": f"2026-06-18T00:{minute:02d}:00.000Z",
                         "ticker": "BNB-USD",
-                        "close": "600",
+                        "close": str(600 + idx * 6),
                         "usdVolume": "1000",
                     }
+                    for idx, minute in enumerate((0, 5, 10))
                 ]
             }
         ),
@@ -2593,11 +2628,12 @@ def test_fetch_dydx_two_leg_data_skips_network_when_payloads_preloaded(tmp_path,
             {
                 "candles": [
                     {
-                        "startedAt": "2026-06-18T00:00:00.000Z",
+                        "startedAt": f"2026-06-18T00:{minute:02d}:00.000Z",
                         "ticker": "STX-USD",
-                        "close": "1",
+                        "close": str(1.0 + idx * 0.02),
                         "usdVolume": "1000",
                     }
+                    for idx, minute in enumerate((0, 5, 10))
                 ]
             }
         ),
@@ -2930,6 +2966,7 @@ def test_priority_readiness_report_summarizes_current_gates(tmp_path, monkeypatc
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
 
     raw = tmp_path / "data" / "raw"
@@ -3840,7 +3877,7 @@ def test_build_dydx_long_history_pair_builds_from_windowed_files(tmp_path, monke
     pair = json.loads(paths["pair_history"].read_text(encoding="utf-8"))
     assert len(pair["history"]) == 5
     assert pair["pair"] == "SOL-USD-LINK-USD"
-    assert pair["hedge_ratio_source"] == "derived_price_ols"
+    assert pair["hedge_ratio_source"] == "derived_log_y_on_log_x_ols"
 
 
 def test_build_dydx_long_history_pair_can_rerun_research(tmp_path, monkeypatch):
@@ -5213,6 +5250,7 @@ def test_dydx_execution_checklist_keeps_order_adapter_as_final_gate(tmp_path, mo
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     reports = tmp_path / "reports"
     reports.mkdir()
     pd.DataFrame(
@@ -5239,7 +5277,9 @@ def test_dydx_execution_checklist_keeps_order_adapter_as_final_gate(tmp_path, mo
     assert bool(rows.loc["paper_submission_gate", "ready"]) is True
 
 
-def test_dydx_execution_checklist_accepts_configured_order_adapter(tmp_path, monkeypatch):
+def test_dydx_execution_checklist_rejects_unallowlisted_order_adapter(
+    tmp_path, monkeypatch
+):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
     monkeypatch.setattr("quant_platform.execution.dydx_v4_client_installed", lambda: True)
@@ -5286,10 +5326,12 @@ class FakeCliOrderAdapter:
     frame = dydx_execution_checklist_report()
     rows = frame.set_index("step")
 
-    assert bool(rows.loc["order_client_adapter", "ready"]) is True
-    assert rows.loc["order_client_adapter", "blocker"] == ""
-    assert "order_adapter=True" in rows.loc["order_client_adapter", "evidence"]
-    assert bool(rows.loc["paper_submission_gate", "ready"]) is True
+    assert bool(rows.loc["order_client_adapter", "ready"]) is False
+    assert rows.loc["order_client_adapter", "blocker"] == "invalid_dydx_order_client_adapter"
+    assert "gate00g_order_adapter_path_denied" in rows.loc[
+        "order_client_adapter", "evidence"
+    ]
+    assert bool(rows.loc["paper_submission_gate", "ready"]) is False
 
 
 def test_dydx_execution_checklist_rejects_record_only_adapter_for_submission(tmp_path, monkeypatch):
@@ -5328,7 +5370,9 @@ def test_dydx_execution_checklist_rejects_record_only_adapter_for_submission(tmp
     assert "record_only_dydx_order_client_adapter" in rows.loc["paper_submission_gate", "blocker"]
 
 
-def test_dydx_order_adapter_contract_report_surfaces_bad_signature(tmp_path, monkeypatch):
+def test_dydx_order_adapter_contract_report_rejects_unallowlisted_path(
+    tmp_path, monkeypatch
+):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     adapter_module = tmp_path / "bad_cli_order_adapter.py"
     adapter_module.write_text(
@@ -5348,11 +5392,11 @@ class BadCliOrderAdapter:
     row = frame.iloc[0]
 
     assert bool(row["configured"]) is True
-    assert bool(row["importable"]) is True
-    assert bool(row["has_place_order"]) is True
+    assert bool(row["importable"]) is False
+    assert bool(row["has_place_order"]) is False
     assert bool(row["signature_accepts_intent_config"]) is False
     assert bool(row["valid"]) is False
-    assert row["error"] == "place_order must accept intent and config arguments"
+    assert row["error"] == "gate00g_order_adapter_path_denied"
     assert (tmp_path / "reports" / "dydx_order_adapter_contract.csv").exists()
 
 
@@ -6447,7 +6491,11 @@ def test_print_priority_dashboard_refreshes_stale_paper_preflight(tmp_path, monk
             },
         ]
     )
-    monkeypatch.setattr(cli, "priority_readiness_report", lambda: readiness)
+    def readiness_report(*, root=None):
+        assert root == tmp_path
+        return readiness
+
+    monkeypatch.setattr(cli, "priority_readiness_report", readiness_report)
     pd.DataFrame(
         [
             {"ready": True, "next_action": "continue"},
@@ -6551,6 +6599,7 @@ def test_paper_execution_preflight_marks_submission_ready_when_dependencies_read
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     adapter_module = tmp_path / "ready_order_adapter.py"
     adapter_module.write_text(
         """
@@ -6572,7 +6621,10 @@ class ReadyOrderAdapter:
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "ready_order_adapter:ReadyOrderAdapter")
+    monkeypatch.setenv(
+        "DYDX_TESTNET_ORDER_CLIENT_ADAPTER",
+        "quant_platform.dydx_sdk_order_adapter:DydxSdkOrderAdapter",
+    )
     reports = tmp_path / "reports"
     reports.mkdir()
     pd.DataFrame(
@@ -6608,6 +6660,7 @@ def test_paper_execution_preflight_blocks_browser_account_override_when_indexer_
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     adapter_module = tmp_path / "ready_order_adapter.py"
     adapter_module.write_text(
         """
@@ -6629,7 +6682,10 @@ class ReadyOrderAdapter:
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "ready_order_adapter:ReadyOrderAdapter")
+    monkeypatch.setenv(
+        "DYDX_TESTNET_ORDER_CLIENT_ADAPTER",
+        "quant_platform.dydx_sdk_order_adapter:DydxSdkOrderAdapter",
+    )
     reports = tmp_path / "reports"
     (reports / "active").mkdir(parents=True)
     (reports / "rl").mkdir(parents=True)
@@ -6698,6 +6754,7 @@ def test_paper_execution_preflight_blocks_submission_on_execution_reality(tmp_pa
     monkeypatch.setenv("DYDX_TESTNET_WALLET_ADDRESS", "wallet")
     monkeypatch.setenv("DYDX_TESTNET_PRIVATE_KEY", "private")
     monkeypatch.setenv("DYDX_TESTNET_SUBMIT_ORDERS", "true")
+    monkeypatch.setenv("DYDX_TESTNET_ORDER_APPROVAL_ID", "approval-test")
     adapter_module = tmp_path / "ready_order_adapter.py"
     adapter_module.write_text(
         """
@@ -6719,7 +6776,10 @@ class ReadyOrderAdapter:
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.setenv("DYDX_TESTNET_ORDER_CLIENT_ADAPTER", "ready_order_adapter:ReadyOrderAdapter")
+    monkeypatch.setenv(
+        "DYDX_TESTNET_ORDER_CLIENT_ADAPTER",
+        "quant_platform.dydx_sdk_order_adapter:DydxSdkOrderAdapter",
+    )
     reports = tmp_path / "reports"
     (reports / "rl").mkdir(parents=True)
     (reports / "active").mkdir(parents=True)
@@ -6772,6 +6832,10 @@ class ReadyOrderAdapter:
 def test_refresh_execution_truth_surfaces_recomputes_queue_and_current_truth(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr("quant_platform.execution.ROOT", tmp_path)
+    monkeypatch.setattr(
+        "quant_platform.execution._injective_market_indexes",
+        lambda: ({}, {}, {}, {}, ["external_network_disabled_in_unit_test"]),
+    )
     reports = tmp_path / "reports"
     active = reports / "active"
     rl = reports / "rl"
@@ -7123,7 +7187,8 @@ def test_priority_gap_test_report_uses_paper_preflight_truth_for_p4(tmp_path, mo
         ]
     ).to_csv(reports / "learning_event_summary.csv", index=False)
 
-    def fake_preflight(output_path=None):
+    def fake_preflight(output_path=None, *, root=None):
+        assert root == tmp_path
         path = output_path or (reports / "paper_execution_preflight.csv")
         frame = pd.DataFrame(
             [
@@ -7188,7 +7253,11 @@ def test_canonical_gap_report_separates_historical_wizard_coverage_from_current_
             }
         ]
     )
-    monkeypatch.setattr(cli, "priority_spine_dashboard_report", lambda readiness: dashboard)
+    def dashboard_report(readiness, *, root=None):
+        assert root == tmp_path
+        return dashboard
+
+    monkeypatch.setattr(cli, "priority_spine_dashboard_report", dashboard_report)
 
     report = cli.priority_gap_test_report(pd.DataFrame(), refresh_paper_preflight=False)
     rows = report.set_index("area")
@@ -7226,9 +7295,7 @@ def test_priority_gap_report_prefers_active_seven_stage_checkpoint(tmp_path, mon
     assert not report["area"].str.contains("dydx", case=False).any()
     assert report.loc[report["priority"].eq("S1"), "status"].iloc[0] == "pass"
     assert report.loc[report["priority"].eq("S4"), "severity"].iloc[0] == "critical"
-    assert set(report["source_report"]) == {
-        "reports/active/seven_stage_goal_checkpoint.csv"
-    }
+    assert set(report["source_report"]) == {"reports/active/seven_stage_goal_checkpoint.csv"}
 
 
 def test_gap_analysis_checklist_builds_checkpoint_files(tmp_path, monkeypatch):

@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import gzip
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_chain_validation.v1"
@@ -111,6 +114,11 @@ def validate_current_wizard_hyperliquid_chain(
         name: (active / manifest, active / validation, identity)
         for name, (manifest, validation, identity) in STAGES.items()
     }
+    stage_paths["refresh"] = _frozen_refresh_stage_paths(
+        root=root,
+        handoff_manifest_path=stage_paths["handoff"][0],
+        fallback=stage_paths["refresh"],
+    )
     testnet_paths = {
         name: active / filename for name, filename in TESTNET_FILES.items()
     }
@@ -161,8 +169,11 @@ def validate_current_wizard_hyperliquid_chain(
     snapshot_inputs.mkdir(parents=True, exist_ok=True)
     copied_inputs: dict[str, Path] = {}
     for name, source in all_paths.items():
-        target = snapshot_inputs / f"{name}{source.suffix}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(
+            source,
+            snapshot_inputs,
+            artifact_name=name,
+        )
         copied_inputs[name] = target
 
     checks = _checks(
@@ -210,8 +221,8 @@ def validate_current_wizard_hyperliquid_chain(
         )
     )
     paths = _paths(active, snapshot_dir)
-    validation.to_csv(paths["validation"], index=False)
-    validation.to_csv(paths["snapshot_validation"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
+    atomic_write_csv(validation, paths["snapshot_validation"], index=False)
     summary: dict[str, object] = {
         **material,
         "validation_id": validation_id,
@@ -270,10 +281,38 @@ def validate_current_wizard_hyperliquid_chain(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
     for key in ("manifest", "snapshot_manifest"):
-        paths[key].write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(paths[key], manifest_text, encoding="utf-8")
     for key in ("summary_md", "snapshot_summary_md"):
-        paths[key].write_text(summary_text, encoding="utf-8")
+        atomic_write_text(paths[key], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
+
+
+def _frozen_refresh_stage_paths(
+    *,
+    root: Path,
+    handoff_manifest_path: Path,
+    fallback: tuple[Path, Path, str],
+) -> tuple[Path, Path, str]:
+    if not handoff_manifest_path.exists():
+        return fallback
+    handoff = _read_json(handoff_manifest_path)
+    input_snapshots = handoff.get("input_snapshots", {})
+    if not isinstance(input_snapshots, dict):
+        raise ValueError("Current handoff input_snapshots must be an object")
+    refresh_manifest_path = root / _text(input_snapshots.get("refresh_manifest"))
+    if not refresh_manifest_path.is_file():
+        raise FileNotFoundError("Frozen handoff refresh manifest is missing")
+    refresh = _read_json(refresh_manifest_path)
+    artifacts = refresh.get("artifacts", {})
+    if not isinstance(artifacts, dict):
+        raise ValueError("Frozen refresh artifacts must be an object")
+    snapshot_validation = _text(artifacts.get("snapshot_validation"))
+    refresh_validation_path = (
+        root / snapshot_validation if snapshot_validation else fallback[1]
+    )
+    if not refresh_validation_path.is_file():
+        raise FileNotFoundError("Frozen handoff refresh validation is missing")
+    return refresh_manifest_path, refresh_validation_path, fallback[2]
 
 
 def _checks(
@@ -529,8 +568,10 @@ def _checks(
             snapshot_key = f"snapshot_{key}"
             if snapshot_key not in artifacts:
                 continue
-            active_path = root / _text(active_value)
             snapshot_path = root / _text(artifacts[snapshot_key])
+            active_path = (
+                snapshot_path if stage == "refresh" else root / _text(active_value)
+            )
             paths_exist = active_path.is_file() and snapshot_path.is_file()
             hashes_match = bool(
                 paths_exist

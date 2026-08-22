@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 from typing import Any
 
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
-from quant_platform.orchestration.snapshot_lineage import (
-    existing_snapshot_reference,
-    unique_file_bytes,
-    verified_snapshot_reference,
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_leverage import (
     MARGIN_MODES,
@@ -29,7 +28,11 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_leverage import 
     _scenario_blockers,
     _simulate_leverage_path,
 )
-
+from quant_platform.orchestration.snapshot_lineage import (
+    existing_snapshot_reference,
+    unique_file_bytes,
+    verified_snapshot_reference,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_leverage.v1"
@@ -184,9 +187,7 @@ def build_current_wizard_hyperliquid_leverage_surface(
         source = input_paths.get(name)
         if source is None:
             continue
-        suffix = "".join(source.suffixes) or ".dat"
-        target = input_dir / f"{name}{suffix}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
         input_snapshot_modes[name] = "local_external_evidence_copy"
 
@@ -436,8 +437,8 @@ def build_current_wizard_hyperliquid_leverage_surface(
         (scenario_frame, "scenarios", "snapshot_scenarios"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     counts = status_frame["leverage_surface_status"].value_counts().to_dict()
     summary: dict[str, object] = {
         **material,
@@ -496,9 +497,9 @@ def build_current_wizard_hyperliquid_leverage_surface(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary, candidate_frame)
     for path in (paths["manifest"], paths["snapshot_manifest"]):
-        path.write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(path, manifest_text, encoding="utf-8")
     for path in (paths["summary_md"], paths["snapshot_summary_md"]):
-        path.write_text(summary_text, encoding="utf-8")
+        atomic_write_text(path, summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

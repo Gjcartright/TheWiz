@@ -367,7 +367,11 @@ def test_upstream_block_revokes_stale_preflight_without_keychain_or_network(tmp_
         "read_live_agent_key_from_keychain",
         forbidden_keychain,
     )
-    monkeypatch.setattr(executor_preflight, "_default_info_client", forbidden_network)
+    monkeypatch.setattr(
+        executor_preflight,
+        "_raw_hyperliquid_mainnet_info_client",
+        forbidden_network,
+    )
 
     result = _build(
         tmp_path,

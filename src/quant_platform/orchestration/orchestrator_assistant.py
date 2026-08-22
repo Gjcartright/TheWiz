@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid5, NAMESPACE_URL
+from uuid import NAMESPACE_URL, uuid5
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import ROOT, CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    atomic_write_csv,
+    atomic_write_text,
+)
 from quant_platform.orchestration.mini_agents import build_mini_agent_orchestration
-
 
 ORCHESTRATION_DIR = "reports/orchestration"
 AGENT_MEMORY_DIR = "data/agent_memory"
@@ -38,15 +42,15 @@ def build_orchestrator_assistant(root: Path = ROOT) -> CommandResult:
     learning_path = agent_report_dir / "agent_learning_summary.csv"
     effectiveness_path = agent_report_dir / "agent_effectiveness.csv"
 
-    tasks.to_csv(tasks_path, index=False)
+    atomic_write_csv(tasks, tasks_path, index=False)
     _write_jsonl(cards_path, task_cards)
     _append_agent_memory(root, memory_events)
     _append_agent_memory(root, outcome_events)
     learning = _learning_summary(root, registry)
     effectiveness = _effectiveness_summary(learning)
-    learning.to_csv(learning_path, index=False)
-    effectiveness.to_csv(effectiveness_path, index=False)
-    reasoning_path.write_text(_reasoning_markdown(tasks, registry, learning), encoding="utf-8")
+    atomic_write_csv(learning, learning_path, index=False)
+    atomic_write_csv(effectiveness, effectiveness_path, index=False)
+    atomic_write_text(reasoning_path, _reasoning_markdown(tasks, registry, learning), encoding="utf-8")
 
     return CommandResult(
         paths={
@@ -314,8 +318,7 @@ def _append_agent_memory(root: Path, events: list[dict[str, object]]) -> None:
     for event in events:
         agent = str(event.get("agent", "") or "unknown_agent")
         path = memory_root / f"{agent}.jsonl"
-        with path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(event, sort_keys=True) + "\n")
+        atomic_append_text(path, json.dumps(event, sort_keys=True) + "\n")
 
 
 def _learning_summary(root: Path, registry: pd.DataFrame) -> pd.DataFrame:
@@ -363,9 +366,10 @@ def _effectiveness_summary(learning: pd.DataFrame) -> pd.DataFrame:
 
 def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row, sort_keys=True) + "\n")
+    atomic_write_text(
+        path,
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+    )
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:

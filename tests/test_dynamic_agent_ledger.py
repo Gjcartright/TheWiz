@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from concurrent.futures import ThreadPoolExecutor
 import json
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from quant_platform.orchestration.contracts import CandidateIdentity, EvidencePacket, TaskCard, TaskStatus
+from quant_platform.orchestration.contracts import (
+    CandidateIdentity,
+    EvidencePacket,
+    TaskCard,
+    TaskStatus,
+)
 from quant_platform.orchestration.dynamic_ledger import DynamicAgentLedger, DynamicLedgerError
 
 
@@ -92,7 +98,11 @@ def test_only_one_worker_can_lease_a_task_during_a_same_process_race(tmp_path):
             return "rejected"
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        outcomes = list(pool.map(attempt, ["worker-a", "worker-b"]))
+        futures = [
+            pool.submit(copy_context().run, attempt, worker_id)
+            for worker_id in ("worker-a", "worker-b")
+        ]
+        outcomes = [future.result() for future in futures]
 
     assert sorted(outcomes) == ["leased", "rejected"]
     final = DynamicAgentLedger(tmp_path).get_task("task-copula-1")

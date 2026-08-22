@@ -1,27 +1,39 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult, ROOT
-from quant_platform.research_extraction import EXTRACTION_COLUMNS, normalize_extraction_rows
-from quant_platform.research_ingestion import active_research_sources, mark_research_sources_processed
-
-try:
-    import ccxt  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    ccxt = None
+from quant_platform.active_pipeline import ROOT, CommandResult
+from quant_platform.orchestration.phase00_ccxt_evidence import (
+    CcxtCaptureRequest,
+    CcxtEvidenceRuntime,
+    write_ccxt_capture_evidence,
+)
+from quant_platform.research_extraction import normalize_extraction_rows
+from quant_platform.research_ingestion import (
+    active_research_sources,
+    mark_research_sources_processed,
+)
 
 
 @dataclass(frozen=True)
 class _CcxtSourceSpec:
     exchange: str
+    lane: str
     symbols: list[str]
     timeframes: list[str]
     limit: int
+    since_ms: int | None
+    end_ms: int | None
+    captured_at_ms: int | None
+    force_market_reload: bool
 
 
 def ccxt_research_paths(root: Path = ROOT) -> dict[str, Path]:
@@ -34,37 +46,73 @@ def ccxt_research_paths(root: Path = ROOT) -> dict[str, Path]:
     }
 
 
-def extract_research_knowledge(root: Path = ROOT) -> CommandResult:
+def extract_research_knowledge(
+    root: Path = ROOT,
+    *,
+    evidence_runtime: CcxtEvidenceRuntime | None = None,
+) -> CommandResult:
     registry = active_research_sources(root)
-    ccxt_sources = registry[registry["source_type"].astype(str) == "ccxt"].copy() if not registry.empty else pd.DataFrame()
+    ccxt_sources = (
+        registry[registry["source_type"].astype(str) == "ccxt"].copy()
+        if not registry.empty
+        else pd.DataFrame()
+    )
 
-    if ccxt is None:
+    accepted_sources = 0
+    failed_sources = len(ccxt_sources)
+    capture_count = 0
+    if evidence_runtime is None:
         rows = []
         summary_lines = [
-            "ccxt module unavailable (ccxt/ccxt not installed)",
-            "install with: pip install ccxt",
+            f"sources={len(ccxt_sources)}",
+            "accepted_sources=0",
+            f"failed_sources={len(ccxt_sources)}",
+            "capture_count=0",
+            "blocker=ccxt_evidence_runtime_not_injected",
             "no_ccxt_rows_collected",
         ]
     else:
-        rows = _collect_ccxt_rows(ccxt_sources)
+        rows, accepted_sources, failed_sources, capture_count = _collect_ccxt_rows(
+            ccxt_sources,
+            evidence_runtime=evidence_runtime,
+            root=root,
+        )
         summary_lines = [
             f"sources={len(ccxt_sources)}",
+            f"accepted_sources={accepted_sources}",
+            f"failed_sources={failed_sources}",
+            f"capture_count={capture_count}",
             f"rows={len(rows)}",
-            "mode=ccxt_research_enabled",
+            "mode=phase00_ccxt_evidence_contract",
         ]
 
     normalized = normalize_extraction_rows(rows)
     paths = ccxt_research_paths(root=root)
     for path in paths.values():
         path.parent.mkdir(parents=True, exist_ok=True)
-    normalized.to_csv(paths["ccxt_research_rows"], index=False)
-    normalized[normalized["row_type"].isin(["risk_prior", "mode_preference", "regime_condition", "pair_filter", "anti_pattern", "execution_warning"])].to_csv(
-        paths["ccxt_research_rules"], index=False
-    )
-    normalized[normalized["row_type"] == "feature_idea"].to_csv(paths["ccxt_research_features"], index=False)
-    paths["ccxt_research_summary"].write_text("\n".join(summary_lines), encoding="utf-8")
+    atomic_write_csv(normalized, paths["ccxt_research_rows"], index=False)
+    atomic_write_csv(normalized[
+        normalized["row_type"].isin(
+            [
+                "risk_prior",
+                "mode_preference",
+                "regime_condition",
+                "pair_filter",
+                "anti_pattern",
+                "execution_warning",
+            ]
+        )
+    ], paths["ccxt_research_rules"], index=False)
+    atomic_write_csv(normalized[normalized["row_type"] == "feature_idea"], paths["ccxt_research_features"], index=False)
+    atomic_write_text(paths["ccxt_research_summary"], "\n".join(summary_lines), encoding="utf-8")
 
-    if not ccxt_sources.empty:
+    all_sources_accepted = (
+        not ccxt_sources.empty
+        and accepted_sources == len(ccxt_sources)
+        and failed_sources == 0
+        and bool(rows)
+    )
+    if all_sources_accepted:
         mark_research_sources_processed("ccxt", root=root)
 
     return CommandResult(
@@ -72,49 +120,115 @@ def extract_research_knowledge(root: Path = ROOT) -> CommandResult:
             **paths,
             "research_rows": paths["ccxt_research_rows"],
         },
-        summary={"rows": int(len(normalized)), "ccxt_rows": int(len(rows)), "youtube_rows": 0, "sources": int(len(ccxt_sources))},
+        summary={
+            "rows": len(normalized),
+            "ccxt_rows": len(rows),
+            "youtube_rows": 0,
+            "sources": len(ccxt_sources),
+            "accepted_sources": int(accepted_sources),
+            "failed_sources": int(failed_sources),
+            "capture_count": int(capture_count),
+            "processed": bool(all_sources_accepted),
+        },
     )
 
 
-def _collect_ccxt_rows(sources: pd.DataFrame) -> list[dict[str, object]]:
+def _collect_ccxt_rows(
+    sources: pd.DataFrame,
+    *,
+    evidence_runtime: CcxtEvidenceRuntime,
+    root: Path,
+) -> tuple[list[dict[str, object]], int, int, int]:
     rows: list[dict[str, object]] = []
+    accepted_sources = 0
+    failed_sources = 0
+    capture_count = 0
     for _, source in sources.iterrows():
         spec = _parse_ccxt_spec(str(source.get("source_path_or_url", "")))
         if spec is None:
+            failed_sources += 1
             continue
-        rows.extend(_extract_rows_for_source(source=source, spec=spec))
-    return rows
+        source_rows, source_accepted, source_capture_count = _extract_rows_for_source(
+            source=source,
+            spec=spec,
+            evidence_runtime=evidence_runtime,
+            root=root,
+        )
+        rows.extend(source_rows)
+        capture_count += source_capture_count
+        if source_accepted and source_rows:
+            accepted_sources += 1
+        else:
+            failed_sources += 1
+    return rows, accepted_sources, failed_sources, capture_count
 
 
-def _extract_rows_for_source(*, source: pd.Series, spec: _CcxtSourceSpec) -> list[dict[str, object]]:
+def _extract_rows_for_source(
+    *,
+    source: pd.Series,
+    spec: _CcxtSourceSpec,
+    evidence_runtime: CcxtEvidenceRuntime,
+    root: Path,
+) -> tuple[list[dict[str, object]], bool, int]:
     rows: list[dict[str, object]] = []
-    if ccxt is None:
-        return rows
-    exchange_id = spec.exchange.lower()
-    if not hasattr(ccxt, exchange_id):
-        return rows
-    exchange_class = getattr(ccxt, exchange_id)
-    instance = exchange_class({"enableRateLimit": True, "timeout": 120_000})
+    if not spec.lane or spec.since_ms is None or spec.end_ms is None or spec.captured_at_ms is None:
+        return rows, False, 0
+    all_captures_accepted = True
+    capture_count = 0
     for symbol in spec.symbols:
         for timeframe in spec.timeframes:
-            try:
-                payload = instance.fetch_ohlcv(symbol=symbol, timeframe=timeframe, limit=spec.limit)
-            except Exception:
+            request = CcxtCaptureRequest(
+                source_id=str(source.get("source_id", "")),
+                lane=spec.lane,
+                exchange_id=spec.exchange,
+                symbol=symbol,
+                timeframe=timeframe,
+                since_ms=spec.since_ms,
+                end_ms=spec.end_ms,
+                captured_at_ms=spec.captured_at_ms,
+                page_limit=spec.limit,
+                force_market_reload=spec.force_market_reload,
+            )
+            capture = evidence_runtime.capture(request)
+            evidence_paths = write_ccxt_capture_evidence(capture, root=root)
+            capture_count += 1
+            if not capture.accepted:
+                all_captures_accepted = False
                 continue
-            if not isinstance(payload, list) or len(payload) < 8:
-                continue
+            payload = [
+                [
+                    bar["timestamp_ms"],
+                    bar["open"],
+                    bar["high"],
+                    bar["low"],
+                    bar["close"],
+                    bar["raw_base_volume"],
+                ]
+                for bar in capture.normalized_ohlcv
+            ]
             metric_rows = _rows_from_ohlcv(
                 payload=payload,
                 source=source,
-                exchange=exchange_id,
+                exchange=spec.exchange,
                 symbol=symbol,
                 timeframe=timeframe,
+                evidence_path=str(evidence_paths["receipt"]),
             )
+            if not metric_rows:
+                all_captures_accepted = False
             rows.extend(metric_rows)
-    return rows
+    return rows, all_captures_accepted, capture_count
 
 
-def _rows_from_ohlcv(*, payload: list[list[object]], source: pd.Series, exchange: str, symbol: str, timeframe: str) -> list[dict[str, object]]:
+def _rows_from_ohlcv(
+    *,
+    payload: list[list[object]],
+    source: pd.Series,
+    exchange: str,
+    symbol: str,
+    timeframe: str,
+    evidence_path: str = "",
+) -> list[dict[str, object]]:
     rows = [item for item in payload if isinstance(item, (list, tuple))]
     if len(rows) < 8:
         return []
@@ -146,7 +260,13 @@ def _rows_from_ohlcv(*, payload: list[list[object]], source: pd.Series, exchange
         regime = f"{regime}_trend_down"
 
     pair_filter = _normalize_pair_filter(symbol)
-    base = _base_row(source, exchange, symbol, timeframe)
+    base = _base_row(
+        source,
+        exchange,
+        symbol,
+        timeframe,
+        evidence_path=evidence_path,
+    )
     rows: list[dict[str, object]] = []
     rows.append(
         {
@@ -255,7 +375,9 @@ def _parse_ccxt_spec(raw: str) -> _CcxtSourceSpec | None:
     if ":" in value and "{" not in value and "[" not in value and ";" in value:
         exchange_part, rest = value.split(":", 1)
         body = rest
-    elif ":" in value and "{" not in value and "[" not in value and ";" not in value and "," in value:
+    elif (
+        ":" in value and "{" not in value and "[" not in value and ";" not in value and "," in value
+    ):
         exchange_part, body = value.split(":", 1)
     elif value.endswith(".json") and Path(value).exists():
         return _parse_ccxt_json_manifest(Path(value))
@@ -266,30 +388,52 @@ def _parse_ccxt_spec(raw: str) -> _CcxtSourceSpec | None:
     if not exchange or not body:
         return None
 
-    symbols_part, timeframe_part, limit_part = body, "", ""
+    symbols_part = body
+    options_by_name: dict[str, str] = {}
     if ";" in body:
         first, *options = body.split(";")
         symbols_part = first
         for option in options:
-            key, _, value = option.partition("=")
+            key, separator, value = option.partition("=")
             key = key.strip().lower()
             value = value.strip()
-            if key == "timeframe":
-                timeframe_part = value
-            elif key == "limit":
-                limit_part = value
+            allowed_options = {
+                "lane",
+                "timeframe",
+                "limit",
+                "since_ms",
+                "end_ms",
+                "captured_at_ms",
+                "force_market_reload",
+            }
+            if separator != "=" or key not in allowed_options or not value:
+                return None
+            options_by_name[key] = value
     symbols = [symbol.strip() for symbol in symbols_part.split(",") if symbol.strip()]
     if not symbols:
         return None
+    timeframe_part = options_by_name.get("timeframe", "")
     timeframes = [tf.strip() for tf in (timeframe_part.split(",") if timeframe_part else ["5m"])]
-    try:
-        limit = int(limit_part) if limit_part else 300
-    except ValueError:
-        limit = 300
+    limit = _parse_optional_int(options_by_name.get("limit"), default=300)
+    if limit is None:
+        return None
     timeframes = [tf for tf in timeframes if tf]
     if not timeframes:
         timeframes = ["5m"]
-    return _CcxtSourceSpec(exchange=exchange, symbols=symbols, timeframes=timeframes, limit=limit)
+    force_reload = options_by_name.get("force_market_reload", "false").lower()
+    if force_reload not in {"0", "1", "false", "true", "no", "yes"}:
+        return None
+    return _CcxtSourceSpec(
+        exchange=exchange,
+        lane=options_by_name.get("lane", "").strip(),
+        symbols=symbols,
+        timeframes=timeframes,
+        limit=limit,
+        since_ms=_parse_optional_int(options_by_name.get("since_ms")),
+        end_ms=_parse_optional_int(options_by_name.get("end_ms")),
+        captured_at_ms=_parse_optional_int(options_by_name.get("captured_at_ms")),
+        force_market_reload=force_reload in {"1", "true", "yes"},
+    )
 
 
 def _parse_ccxt_json_manifest(path: Path) -> _CcxtSourceSpec | None:
@@ -305,16 +449,38 @@ def _parse_ccxt_json_manifest(path: Path) -> _CcxtSourceSpec | None:
         return None
     if not isinstance(data, dict):
         return None
+    if not isinstance(data.get("symbols"), list) or not isinstance(
+        data.get("timeframes", []), list
+    ):
+        return None
     exchange = str(data.get("exchange", "")).strip().lower()
     symbols = [str(item).strip() for item in data.get("symbols", []) if str(item).strip()]
     timeframes = [str(item).strip() for item in data.get("timeframes", []) if str(item).strip()]
-    limit = int(data.get("limit", 300) or 300)
-    if not exchange or not symbols:
+    limit = _parse_optional_int(data.get("limit"), default=300)
+    force_market_reload = data.get("force_market_reload", False)
+    if not exchange or not symbols or limit is None or not isinstance(force_market_reload, bool):
         return None
-    return _CcxtSourceSpec(exchange=exchange, symbols=symbols, timeframes=timeframes or ["5m"], limit=limit)
+    return _CcxtSourceSpec(
+        exchange=exchange,
+        lane=str(data.get("lane", "")).strip(),
+        symbols=symbols,
+        timeframes=timeframes or ["5m"],
+        limit=limit,
+        since_ms=_parse_optional_int(data.get("since_ms")),
+        end_ms=_parse_optional_int(data.get("end_ms")),
+        captured_at_ms=_parse_optional_int(data.get("captured_at_ms")),
+        force_market_reload=force_market_reload,
+    )
 
 
-def _base_row(source: pd.Series, exchange: str, symbol: str, timeframe: str) -> dict[str, object]:
+def _base_row(
+    source: pd.Series,
+    exchange: str,
+    symbol: str,
+    timeframe: str,
+    *,
+    evidence_path: str = "",
+) -> dict[str, object]:
     return {
         "strategy_family": "",
         "mode_preference": "",
@@ -331,7 +497,8 @@ def _base_row(source: pd.Series, exchange: str, symbol: str, timeframe: str) -> 
         "source_id": str(source.get("source_id", "")),
         "source_type": "ccxt",
         "source_title": str(source.get("title", "")),
-        "evidence_path": f"{source.get('source_path_or_url', '')}#{symbol}:{timeframe}",
+        "evidence_path": evidence_path
+        or f"{source.get('source_path_or_url', '')}#{symbol}:{timeframe}",
         "review_status": str(source.get("review_status", "unreviewed")),
         "notes": f"exchange={exchange};symbol={symbol};timeframe={timeframe}",
     }
@@ -342,6 +509,15 @@ def _safe_float(value: Any) -> float:
         return float(value)
     except (TypeError, ValueError, OverflowError):
         return 0.0
+
+
+def _parse_optional_int(value: object, *, default: int | None = None) -> int | None:
+    if value is None or str(value).strip() == "":
+        return default
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 def _normalize_pair_filter(symbol: str) -> str:

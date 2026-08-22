@@ -1,23 +1,27 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import importlib.util
 import json
-from pathlib import Path
 import re
 import subprocess
 import sys
-from typing import Any
+from datetime import datetime, timezone
+from hashlib import sha256
+from pathlib import Path
 
 import pandas as pd
 import yaml
 
-from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.active_pipeline import ROOT, CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    atomic_write_csv,
+    atomic_write_parquet,
+    atomic_write_text,
+)
 from quant_platform.research_extract_youtube import extract_youtube_research
 from quant_platform.research_knowledge_store import build_research_knowledge_store
 from quant_platform.youtube_caption_insights import build_youtube_caption_insights
-
 
 YOUTUBE_BRAIN_AGENT = "youtube_research_brain"
 YOUTUBE_BRAIN_SCHEMA_VERSION = "youtube_brain.v1"
@@ -532,10 +536,7 @@ def build_youtube_brain_dashboard(*, root: Path = ROOT) -> CommandResult:
     _write_csv(replication, paths["dashboard_replication"])
     _write_csv(recommendations, paths["dashboard_recommendations"])
     paths["dashboard_summary"].parent.mkdir(parents=True, exist_ok=True)
-    paths["dashboard_summary"].write_text(
-        _dashboard_markdown(status, hypotheses, replication, recommendations),
-        encoding="utf-8",
-    )
+    atomic_write_text(paths["dashboard_summary"], _dashboard_markdown(status, hypotheses, replication, recommendations), encoding="utf-8")
     return CommandResult(
         paths={
             "youtube_brain_status": paths["dashboard_status"],
@@ -607,7 +608,7 @@ def _fetch_live_catalog(channel_url: str, snapshot_dir: Path) -> Path:
     )
     payload = json.loads(result.stdout)
     output = snapshot_dir / f"channel_videos_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return output
 
 
@@ -1154,21 +1155,23 @@ def _read_json(path: Path) -> object:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _write_csv_and_parquet(frame: pd.DataFrame, csv_path: Path, parquet_path: Path) -> None:
     _write_csv(frame, csv_path)
     parquet_path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_parquet(parquet_path, index=False)
+    atomic_write_parquet(frame, parquet_path, index=False)
 
 
 def _write_jsonl(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        for row in frame.to_dict("records"):
-            handle.write(json.dumps(row, sort_keys=True, default=str) + "\n")
+    encoded = "".join(
+        json.dumps(row, sort_keys=True, default=str) + "\n"
+        for row in frame.to_dict("records")
+    )
+    atomic_write_text(path, encoded, encoding="utf-8")
     return path
 
 
@@ -1181,13 +1184,15 @@ def _append_unique_jsonl(events: list[dict[str, object]], path: Path) -> Path:
                 existing.add(_text(json.loads(line).get("event_id")))
             except (json.JSONDecodeError, AttributeError):
                 continue
-    with path.open("a", encoding="utf-8") as handle:
-        for event in events:
-            event_id = _text(event.get("event_id"))
-            if not event_id or event_id in existing:
-                continue
-            handle.write(json.dumps(event, sort_keys=True, default=str) + "\n")
-            existing.add(event_id)
+    appended: list[str] = []
+    for event in events:
+        event_id = _text(event.get("event_id"))
+        if not event_id or event_id in existing:
+            continue
+        appended.append(json.dumps(event, sort_keys=True, default=str) + "\n")
+        existing.add(event_id)
+    if appended:
+        atomic_append_text(path, "".join(appended), encoding="utf-8")
     return path
 
 

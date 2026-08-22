@@ -25,7 +25,13 @@ def test_immutable_capture_artifact_publication_never_leaves_partial_target(
 ) -> None:
     target = tmp_path / "immutable" / "manifest.json"
 
-    def fail_publish(_source: Path, _destination: Path) -> None:
+    def fail_publish(
+        _source: Path,
+        _destination: Path,
+        *,
+        follow_symlinks: bool,
+    ) -> None:
+        assert follow_symlinks is False
         raise OSError("simulated publication interruption")
 
     monkeypatch.setattr(corrective_wizard_capture_manifest.os, "link", fail_publish)
@@ -153,6 +159,7 @@ def test_manifest_rejects_tampered_frozen_source_snapshot(tmp_path):
         Path(first.paths["immutable_source_receipt"]).read_text(encoding="utf-8")
     )
     snapshot = tmp_path / source_receipt["source_artifacts"][0]["snapshot_path"]
+    snapshot.chmod(0o600)
     snapshot.write_text("tampered\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="source receipt invalid"):

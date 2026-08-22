@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from math import isinf
 from pathlib import Path
@@ -189,6 +191,6 @@ def write_ablation_report(
 ) -> Path:
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    ablation_report(results, specs).to_csv(output, index=False)
+    atomic_write_csv(ablation_report(results, specs), output, index=False)
     return output
 

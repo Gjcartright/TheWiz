@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_bytes
+
 from datetime import datetime, timezone
 import gzip
 from hashlib import sha256
@@ -276,9 +282,9 @@ def build_current_wizard_hyperliquid_learning_ledger(
         mtime=0,
     )
     for key in ("ledger", "dataset", "snapshot_ledger"):
-        paths[key].write_bytes(csv_bytes)
+        atomic_write_bytes(paths[key], csv_bytes)
     for key in ("ledger_jsonl", "dataset_jsonl", "snapshot_ledger_jsonl"):
-        paths[key].write_bytes(jsonl_bytes)
+        atomic_write_bytes(paths[key], jsonl_bytes)
 
     outcome_counts = {
         _text(key): int(value)
@@ -288,8 +294,8 @@ def build_current_wizard_hyperliquid_learning_ledger(
     if not validation["status"].eq("PASS").all():
         failed = validation.loc[validation["status"].ne("PASS"), "check"].tolist()
         raise ValueError("Current learning validation failed: " + ",".join(failed))
-    validation.to_csv(paths["validation"], index=False)
-    validation.to_csv(paths["snapshot_validation"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
+    atomic_write_csv(validation, paths["snapshot_validation"], index=False)
 
     summary: dict[str, object] = {
         **material,
@@ -326,9 +332,9 @@ def build_current_wizard_hyperliquid_learning_ledger(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
     for key in ("manifest", "snapshot_manifest"):
-        paths[key].write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(paths[key], manifest_text, encoding="utf-8")
     for key in ("summary_md", "snapshot_summary_md"):
-        paths[key].write_text(summary_text, encoding="utf-8")
+        atomic_write_text(paths[key], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

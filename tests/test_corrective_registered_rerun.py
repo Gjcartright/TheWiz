@@ -858,6 +858,24 @@ def test_mixed_formula_and_immutable_copula_evidence_completes_queue(tmp_path):
         attempted_credits=56,
         completed_credits=56,
         external_requests=32,
+        observed_used_before=0,
+        observed_used_after=56,
+        activity_rows=[
+            {
+                "lane": "exact_mode",
+                "external_requests": 24,
+                "credit_cost": 2,
+                "attempted_credits": 48,
+                "completed_credits": 48,
+            },
+            {
+                "lane": "copula_behavioral",
+                "external_requests": 8,
+                "credit_cost": 1,
+                "attempted_credits": 8,
+                "completed_credits": 8,
+            },
+        ],
         now=NOW,
     )
     cycle = {
@@ -998,6 +1016,7 @@ def test_mixed_formula_and_immutable_copula_evidence_completes_queue(tmp_path):
         (tmp_path / cycle["capture_manifest_source_receipt_path"]).read_text()
     )
     source_snapshot = tmp_path / source_receipt["source_artifacts"][0]["snapshot_path"]
+    source_snapshot.chmod(0o600)
     source_snapshot.write_text("tampered\n", encoding="utf-8")
     assert not _proof_scheduler_mixed_evidence_complete(
         root=tmp_path, proof_scheduler=latest
@@ -1017,8 +1036,19 @@ def test_mixed_evidence_rejects_unresolved_or_tampered_credit_lineage(tmp_path):
         reservation_id=reservation.summary["reservation_id"],
         reconciliation_key="hostile-proof-cycle",
         attempted_credits=2,
-        completed_credits=1,
+        completed_credits=2,
         external_requests=1,
+        observed_used_before=0,
+        observed_used_after=2,
+        activity_rows=[
+            {
+                "lane": "copula_behavioral",
+                "external_requests": 1,
+                "credit_cost": 2,
+                "attempted_credits": 2,
+                "completed_credits": 2,
+            }
+        ],
         now=NOW,
     )
     cohort_id = "copulacohort-hostile"

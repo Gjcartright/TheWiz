@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 import json
 import math
@@ -3552,10 +3554,10 @@ def _returns_metrics(series: pd.Series) -> dict[str, float]:
     gross_profit = float(positives.sum()) if not positives.empty else 0.0
     gross_loss = float((-negatives).sum()) if not negatives.empty else 0.0
     profit_factor = gross_profit / gross_loss if gross_loss > 0 else (float("inf") if gross_profit > 0 else 0.0)
-    std = float(values.std(ddof=0)) if len(values) > 1 else 0.0
+    std = float(values.std(ddof=1)) if len(values) > 1 else 0.0
     sharpe = float(values.mean() / std) if std > 0 else 0.0
     growth = (1.0 + values).cumprod()
-    peak = growth.cummax()
+    peak = growth.cummax().clip(lower=1.0)
     drawdown = ((peak - growth) / peak.replace(0, pd.NA)).fillna(0.0)
     max_drawdown = float(drawdown.max()) if not drawdown.empty else 0.0
     return {
@@ -3583,7 +3585,7 @@ def _read_json(path: Path) -> dict[str, object]:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

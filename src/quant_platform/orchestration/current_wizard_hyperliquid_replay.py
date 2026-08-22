@@ -7,14 +7,14 @@ one status row for every pair and every planned mode/orientation cell.
 
 from __future__ import annotations
 
+import json
+import math
+import shutil
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-import shutil
-import time
 from typing import Any, Callable, Iterable
 
 import numpy as np
@@ -22,18 +22,34 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
 from quant_platform.backtest import CostModel, backtest_two_leg_spread_with_ledger
+from quant_platform.economic_contract import (
+    ECONOMIC_CONTRACT_VERSION,
+    rolling_y_on_x_beta,
+    tail_actions,
+    y_on_x_log_spread,
+)
 from quant_platform.hyperliquid import (
     build_hyperliquid_pair_history,
     fetch_hyperliquid_candles,
 )
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 from quant_platform.statistics.math_v2 import fit_engle_granger, fit_ou
 from quant_platform.wizard_mode_replay import build_local_mode_signal
 
-
 ROOT = Path(__file__).resolve().parents[3]
 HISTORY_SCHEMA_VERSION = "current_wizard_hyperliquid_history.v1"
-REPLAY_SCHEMA_VERSION = "current_wizard_hyperliquid_canonical_replay.v1"
-LOCAL_SETTINGS_VERSION = "current_local_standardized_math_v2.v1"
+REPLAY_SCHEMA_VERSION = "current_wizard_hyperliquid_canonical_replay.v2"
+LOCAL_SETTINGS_VERSION = "current_local_standardized_math_v2.v4_y_on_x"
+MATH_IMPLEMENTATION_PATHS = (
+    "src/quant_platform/economic_contract.py",
+    "src/quant_platform/performance_math.py",
+    "src/quant_platform/backtest.py",
+    "src/quant_platform/trade_ledger.py",
+    "src/quant_platform/wizard_mode_replay.py",
+    "src/quant_platform/statistics/math_v2.py",
+    "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+)
 DEFAULT_MINIMUM_FREE_DISK_BYTES = 512 * 1024 * 1024
 ESTIMATED_ASSET_BYTES = 8 * 1024 * 1024
 ESTIMATED_PAIR_BYTES = 4 * 1024 * 1024
@@ -119,8 +135,7 @@ def materialize_current_wizard_hyperliquid_history(
     )
     selected_asset_count = int(selected_asset_mask.sum())
     estimated_bytes = (
-        selected_asset_count * ESTIMATED_ASSET_BYTES
-        + len(ready_selected) * ESTIMATED_PAIR_BYTES
+        selected_asset_count * ESTIMATED_ASSET_BYTES + len(ready_selected) * ESTIMATED_PAIR_BYTES
     )
     free_bytes = (
         int(available_disk_bytes)
@@ -140,9 +155,12 @@ def materialize_current_wizard_hyperliquid_history(
         "estimated_materialization_bytes": estimated_bytes,
     }
     token = as_of.strftime("%Y%m%dT%H%M%S%fZ")
-    history_run_id = "cwhistoryrun_" + token + "_" + sha256(
-        _canonical_json(material).encode("utf-8")
-    ).hexdigest()[:8]
+    history_run_id = (
+        "cwhistoryrun_"
+        + token
+        + "_"
+        + sha256(_canonical_json(material).encode("utf-8")).hexdigest()[:8]
+    )
     history_dir = handoff_snapshot_manifest.parent / "history_runs" / history_run_id
     asset_dir = history_dir / "assets"
     pair_dir = history_dir / "pairs"
@@ -194,7 +212,7 @@ def materialize_current_wizard_hyperliquid_history(
                     )
                     break
                 except Exception as exc:  # Every failed request remains in the ledger.
-                    last_error = f"{type(exc).__name__}:{exc}"
+                    last_error = f"{safe_exception_code(exc)}"
                     if attempt < max_attempts:
                         sleep(float(2 ** (attempt - 1)))
             metadata = _candle_metadata(output_path, cutoff=cutoff)
@@ -275,8 +293,7 @@ def materialize_current_wizard_hyperliquid_history(
                     blockers.append(f"asset_history_result_missing:{asset}")
                 elif _text(result.history_status) != "COMPLETE":
                     blockers.extend(
-                        _split_values(result.history_blocker)
-                        or [f"asset_history_blocked:{asset}"]
+                        _split_values(result.history_blocker) or [f"asset_history_blocked:{asset}"]
                     )
             if not blockers:
                 try:
@@ -291,7 +308,7 @@ def materialize_current_wizard_hyperliquid_history(
                     _trim_pair_history_to_cutoff(pair_path, cutoff=cutoff)
                 except Exception as exc:
                     blockers.append(
-                        f"hyperliquid_pair_history_build_failed:{type(exc).__name__}:{exc}"
+                        f"hyperliquid_pair_history_build_failed:{safe_exception_code(exc)}"
                     )
             metadata = _pair_metadata(pair_path, cutoff=cutoff)
             if metadata["rows"] < int(request.minimum_history_rows):
@@ -362,8 +379,8 @@ def materialize_current_wizard_hyperliquid_history(
         (pair_results, "pair_results", "snapshot_pair_results"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     pair_counts = pair_results["history_status"].value_counts().to_dict()
     asset_counts = asset_results["history_status"].value_counts().to_dict()
@@ -380,9 +397,7 @@ def materialize_current_wizard_hyperliquid_history(
         "asset_requests_accounted": int(len(asset_results)),
         "pair_status_counts": {str(key): int(value) for key, value in pair_counts.items()},
         "asset_status_counts": {str(key): int(value) for key, value in asset_counts.items()},
-        "pair_histories_ready": int(
-            pair_counts.get("READY_FOR_CANONICAL_1X_REPLAY", 0)
-        ),
+        "pair_histories_ready": int(pair_counts.get("READY_FOR_CANONICAL_1X_REPLAY", 0)),
         "storage_preflight_passed": storage_preflight_passed,
         "available_disk_bytes": free_bytes,
         "estimated_materialization_bytes": estimated_bytes,
@@ -401,10 +416,10 @@ def materialize_current_wizard_hyperliquid_history(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _history_summary(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -414,6 +429,10 @@ def run_current_wizard_hyperliquid_canonical_replay(
     now: datetime | None = None,
     policy: CurrentReplayPolicy | None = None,
     cost_model: CostModel | None = None,
+    handoff_manifest_path: Path | None = None,
+    history_manifest_path: Path | None = None,
+    output_dir: Path | None = None,
+    legacy_contract_math_audit: bool = False,
 ) -> CommandResult:
     """Attempt every current cell and run selected ready cells at normalized 1x."""
 
@@ -421,13 +440,36 @@ def run_current_wizard_hyperliquid_canonical_replay(
     policy = policy or CurrentReplayPolicy()
     _validate_replay_policy(policy)
     costs = cost_model or CostModel()
-    active = root / "reports" / "active"
-    handoff_manifest_path = active / "current_wizard_hyperliquid_handoff_manifest.json"
-    history_manifest_path = active / "current_wizard_hyperliquid_history_manifest.json"
+    active = output_dir or root / "reports" / "active"
+    active.mkdir(parents=True, exist_ok=True)
+    if legacy_contract_math_audit and (
+        handoff_manifest_path is None or history_manifest_path is None or output_dir is None
+    ):
+        raise ValueError(
+            "Legacy-contract math audit requires explicit handoff/history manifests "
+            "and a separate output_dir"
+        )
+    handoff_manifest_path = handoff_manifest_path or (
+        root / "reports" / "active" / "current_wizard_hyperliquid_handoff_manifest.json"
+    )
+    history_manifest_path = history_manifest_path or (
+        root / "reports" / "active" / "current_wizard_hyperliquid_history_manifest.json"
+    )
     if not handoff_manifest_path.exists() or not history_manifest_path.exists():
         raise FileNotFoundError("Current handoff and bounded history manifests are required")
     handoff = _read_json(handoff_manifest_path)
     history_manifest = _read_json(history_manifest_path)
+    source_contract_version = _text(handoff.get("economic_contract_version"))
+    if source_contract_version != ECONOMIC_CONTRACT_VERSION and not legacy_contract_math_audit:
+        raise ValueError(
+            "Current handoff predates the canonical seven-mode economic contract; "
+            "rebuild the handoff before replay"
+        )
+    input_contract_status = (
+        "CURRENT_CONTRACT"
+        if source_contract_version == ECONOMIC_CONTRACT_VERSION
+        else "LEGACY_FROZEN_INPUT_MATH_REEVALUATION_ONLY"
+    )
     handoff_id = _text(handoff.get("handoff_id"))
     refresh_id = _text(handoff.get("refresh_id"))
     history_run_id = _text(history_manifest.get("history_run_id"))
@@ -435,9 +477,7 @@ def run_current_wizard_hyperliquid_canonical_replay(
         history_manifest.get("refresh_id")
     ):
         raise ValueError("Current history and handoff identities do not match")
-    experiment_path = root / _text(
-        handoff.get("artifacts", {}).get("snapshot_experiments")
-    )
+    experiment_path = root / _text(handoff.get("artifacts", {}).get("snapshot_experiments"))
     pair_history_path = root / _text(
         history_manifest.get("artifacts", {}).get("snapshot_pair_results")
     )
@@ -454,11 +494,10 @@ def run_current_wizard_hyperliquid_canonical_replay(
 
     experiments = _read_csv(experiment_path)
     pair_histories = _read_csv(pair_history_path)
-    pair_lookup = {
-        _text(row.pair_group_key): row for row in pair_histories.itertuples()
-    }
+    pair_lookup = {_text(row.pair_group_key): row for row in pair_histories.itertuples()}
     cost_payload = asdict(costs)
     policy_payload = asdict(policy)
+    math_implementation_hashes = _math_implementation_hashes()
     material = {
         "schema_version": REPLAY_SCHEMA_VERSION,
         "handoff_id": handoff_id,
@@ -468,12 +507,23 @@ def run_current_wizard_hyperliquid_canonical_replay(
         "cost_model": cost_payload,
         "replay_policy": policy_payload,
         "settings_version": LOCAL_SETTINGS_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
+        "source_handoff_economic_contract_version": source_contract_version,
+        "input_contract_status": input_contract_status,
+        "historical_math_reevaluation": legacy_contract_math_audit,
+        "math_implementation_hashes": math_implementation_hashes,
     }
     token = as_of.strftime("%Y%m%dT%H%M%S%fZ")
-    replay_id = "cwcanonical_" + token + "_" + sha256(
-        _canonical_json(material).encode("utf-8")
-    ).hexdigest()[:8]
-    snapshot_dir = history_snapshot_manifest.parent / "canonical_replays" / replay_id
+    replay_id = (
+        "cwcanonical_"
+        + token
+        + "_"
+        + sha256(_canonical_json(material).encode("utf-8")).hexdigest()[:8]
+    )
+    snapshot_collection = (
+        "math_reevaluations" if legacy_contract_math_audit else "canonical_replays"
+    )
+    snapshot_dir = history_snapshot_manifest.parent / snapshot_collection / replay_id
     snapshot_dir.mkdir(parents=True, exist_ok=True)
     paths = {
         "results": active / "current_wizard_hyperliquid_canonical_replay.csv",
@@ -543,8 +593,7 @@ def run_current_wizard_hyperliquid_canonical_replay(
                 {
                     **base,
                     "replay_status": "BLOCKED_POINT_IN_TIME_HISTORY",
-                    "replay_blocker": _text(pair_row.history_blocker)
-                    or "pair_history_not_ready",
+                    "replay_blocker": _text(pair_row.history_blocker) or "pair_history_not_ready",
                 }
             )
             continue
@@ -579,7 +628,19 @@ def run_current_wizard_hyperliquid_canonical_replay(
                 test,
                 exact_mode=exact_mode,
                 settings=settings,
+                prior_history=fit["train"],
             )
+            hedge_ratio_blocker = _hedge_ratio_contract_blocker(test["hedge_ratio"])
+            if hedge_ratio_blocker:
+                result_rows.append(
+                    {
+                        **base,
+                        "replay_status": "BLOCKED_ECONOMIC_CONTRACT",
+                        "replay_blocker": hedge_ratio_blocker,
+                        **_fit_fields(fit),
+                    }
+                )
+                continue
             mode_result = build_local_mode_signal(test, settings, exact_mode=exact_mode)
             if mode_result.mode_replay_status != "READY_FOR_RESEARCH_REPLAY":
                 result_rows.append(
@@ -595,16 +656,17 @@ def run_current_wizard_hyperliquid_canonical_replay(
                 test,
                 mode_result.signal,
                 costs,
-                interval=_text(experiment.timeframe).lower().replace("daily", "1d").replace(
-                    "hourly", "1h"
-                ),
+                interval=_text(experiment.timeframe)
+                .lower()
+                .replace("daily", "1d")
+                .replace("hourly", "1h"),
             )
         except Exception as exc:
             result_rows.append(
                 {
                     **base,
                     "replay_status": "BLOCKED_REPLAY_ERROR",
-                    "replay_blocker": f"{type(exc).__name__}:{exc}",
+                    "replay_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -659,9 +721,7 @@ def run_current_wizard_hyperliquid_canonical_replay(
                 )
 
     results = pd.DataFrame(result_rows)
-    if len(results) != len(experiments) or results["experiment_id"].nunique() != len(
-        experiments
-    ):
+    if len(results) != len(experiments) or results["experiment_id"].nunique() != len(experiments):
         raise ValueError("Current canonical replay failed complete experiment accounting")
     results["research_rank_eligible"] = False
     results["research_rank_blocker"] = "replay_not_complete"
@@ -700,8 +760,8 @@ def run_current_wizard_hyperliquid_canonical_replay(
         (pair_status, "pair_status", "snapshot_pair_status"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     status_counts = results["replay_status"].value_counts().to_dict()
     summary: dict[str, object] = {
@@ -714,36 +774,32 @@ def run_current_wizard_hyperliquid_canonical_replay(
         "experiments_accounted": int(len(results)),
         "unique_experiment_ids": int(results["experiment_id"].nunique()),
         "pair_groups_accounted": int(pair_status["pair_group_key"].nunique()),
-        "replay_status_counts": {
-            str(key): int(value) for key, value in status_counts.items()
-        },
+        "replay_status_counts": {str(key): int(value) for key, value in status_counts.items()},
         "replay_status_count_total": int(sum(status_counts.values())),
-        "research_replays_complete": int(
-            status_counts.get("RESEARCH_REPLAY_COMPLETE", 0)
-        ),
+        "research_replays_complete": int(status_counts.get("RESEARCH_REPLAY_COMPLETE", 0)),
         "deferred_point_in_time_history": int(
             status_counts.get("DEFERRED_POINT_IN_TIME_HISTORY", 0)
         ),
-        "blocked_point_in_time_history": int(
-            status_counts.get("BLOCKED_POINT_IN_TIME_HISTORY", 0)
-        ),
+        "blocked_point_in_time_history": int(status_counts.get("BLOCKED_POINT_IN_TIME_HISTORY", 0)),
         "blocked_local_fit": int(status_counts.get("BLOCKED_LOCAL_FIT", 0)),
         "blocked_replay_error": int(status_counts.get("BLOCKED_REPLAY_ERROR", 0)),
-        "not_applicable_vendor_mode": int(
-            status_counts.get("NOT_APPLICABLE_VENDOR_MODE", 0)
-        ),
-        "mapping_blocked_experiments": int(
-            status_counts.get("BLOCKED_HYPERLIQUID_MAPPING", 0)
-        ),
+        "blocked_economic_contract": int(status_counts.get("BLOCKED_ECONOMIC_CONTRACT", 0)),
+        "not_applicable_vendor_mode": int(status_counts.get("NOT_APPLICABLE_VENDOR_MODE", 0)),
+        "mapping_blocked_experiments": int(status_counts.get("BLOCKED_HYPERLIQUID_MAPPING", 0)),
         "trade_ledger_rows": int(len(trades)),
-        "research_rank_eligible_replays": int(
-            results["research_rank_eligible"].astype(bool).sum()
-        ),
+        "research_rank_eligible_replays": int(results["research_rank_eligible"].astype(bool).sum()),
         "minimum_research_rank_trades": MINIMUM_RESEARCH_RANK_TRADES,
         "canonical_replay_leverage": 1.0,
         "train_only_parameter_fit": True,
         "test_only_performance_measurement": True,
         "settings_version": LOCAL_SETTINGS_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
+        "source_handoff_economic_contract_version": source_contract_version,
+        "input_contract_status": input_contract_status,
+        "historical_math_reevaluation": legacy_contract_math_audit,
+        "source_handoff_manifest_sha256": _file_hash(handoff_manifest_path),
+        "source_history_manifest_sha256": _file_hash(history_manifest_path),
+        "math_implementation_hashes": math_implementation_hashes,
         "cost_evidence_status": "PROVISIONAL_CONSERVATIVE_DEFAULTS",
         "cost_model": cost_payload,
         "replay_policy": policy_payload,
@@ -758,10 +814,10 @@ def run_current_wizard_hyperliquid_canonical_replay(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _replay_summary(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -781,11 +837,13 @@ def _fit_orientation_context(
         blockers.append(f"test_rows<{policy.minimum_test_rows}")
     train = history.iloc[: max(split, 0)].copy()
     test = history.iloc[max(split, 0) :].copy()
-    engle = fit_engle_granger(train["price_y"], train["price_x"])
+    engle = fit_engle_granger(train["price_x"], train["price_y"])
     if engle.validity_status == "valid":
         hedge_ratio = float(engle.values["hedge_ratio"])
-        static_spread = np.log(train["price_y"]) - hedge_ratio * np.log(
-            train["price_x"]
+        static_spread = y_on_x_log_spread(
+            train["price_x"],
+            train["price_y"],
+            hedge_ratio,
         )
         ou = fit_ou(static_spread)
     else:
@@ -817,11 +875,15 @@ def _local_settings_for_mode(
     if static_family or mode == "Copula":
         if fit["engle"].validity_status != "valid":
             blockers.append(f"engle_granger_invalid:{fit['engle'].validity_reason}")
+        elif not math.isfinite(float(fit["hedge_ratio"])) or float(fit["hedge_ratio"]) <= 0.0:
+            blockers.append("unsupported_nonpositive_y_on_x_hedge_ratio")
     if mode.startswith("OU") and fit["ou"].validity_status != "valid":
         blockers.append(f"ou_fit_invalid:{fit['ou'].validity_reason}")
 
-    lower_position = "short_x_long_y" if static_family else "long_x_short_y"
-    upper_position = "long_x_short_y" if static_family else "short_x_long_y"
+    lower_action, upper_action = tail_actions(
+        mode,
+        copula_direction_view="u1_given_u2",
+    )
     ou_mu = 0.0
     ou_sigma = 1.0
     if fit["ou"].validity_status == "valid":
@@ -837,18 +899,19 @@ def _local_settings_for_mode(
         "capture_confirmed": True,
         "entry_long_operator": "<=",
         "entry_long_value": -abs(policy.entry_zscore),
-        "entry_long_position": lower_position,
+        "entry_long_position": lower_action.value,
         "entry_short_operator": ">=",
         "entry_short_value": abs(policy.entry_zscore),
-        "entry_short_position": upper_position,
+        "entry_short_position": upper_action.value,
         "exit_long_operator": ">=",
         "exit_long_value": policy.exit_zscore,
         "exit_short_operator": "<=",
         "exit_short_value": policy.exit_zscore,
         "hedge_ratio": fit["hedge_ratio"],
         "zscore_window": policy.zscore_window,
-        "dynamic_hedge_ratio_method": "rolling_ols_log_prices",
+        "dynamic_hedge_ratio_method": "history_captured_hedge_ratio",
         "dynamic_hedge_ratio_window": policy.dynamic_window,
+        "dynamic_hedge_ratio_source": ("causal_rolling_y_on_x_ols_seeded_with_training_history"),
         "ou_mu": ou_mu,
         "ou_sigma": ou_sigma,
         "ou_sigma_definition": "train_ar1_stationary_standard_deviation",
@@ -862,7 +925,13 @@ def _local_settings_for_mode(
         "copula_exit_upper": policy.copula_exit_upper,
         "settings_authority": "LOCAL_STANDARDIZED_MATH_V2_NOT_WIZARD_PARITY",
         "settings_version": LOCAL_SETTINGS_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
     }
+    if mode == "OU (Spread)":
+        settings["entry_long_value"] = -abs(policy.entry_zscore) * ou_sigma
+        settings["entry_short_value"] = abs(policy.entry_zscore) * ou_sigma
+        settings["exit_long_value"] = policy.exit_zscore * ou_sigma
+        settings["exit_short_value"] = policy.exit_zscore * ou_sigma
     return settings, tuple(dict.fromkeys(blockers))
 
 
@@ -871,15 +940,25 @@ def _exposure_hedge_ratio(
     *,
     exact_mode: str,
     settings: dict[str, object],
+    prior_history: pd.DataFrame | None = None,
 ) -> pd.Series:
     if not exact_mode.startswith("Dyn"):
         return pd.Series(float(settings["hedge_ratio"]), index=history.index)
     window = int(settings["dynamic_hedge_ratio_window"])
-    log_x = np.log(pd.to_numeric(history["price_x"], errors="coerce"))
-    log_y = np.log(pd.to_numeric(history["price_y"], errors="coerce"))
-    variance_y = log_y.rolling(window, min_periods=window).var(ddof=0)
-    covariance_yx = log_y.rolling(window, min_periods=window).cov(log_x, ddof=0)
-    return covariance_yx.div(variance_y.where(variance_y.abs() > 1e-12))
+    seed = prior_history.tail(window - 1) if prior_history is not None else history.iloc[0:0]
+    combined = pd.concat([seed, history])
+    log_x = np.log(pd.to_numeric(combined["price_x"], errors="coerce"))
+    log_y = np.log(pd.to_numeric(combined["price_y"], errors="coerce"))
+    return rolling_y_on_x_beta(log_x, log_y, window=window).reindex(history.index)
+
+
+def _hedge_ratio_contract_blocker(hedge_ratio: pd.Series) -> str:
+    values = pd.to_numeric(hedge_ratio, errors="coerce")
+    if values.isna().any() or not np.isfinite(values.to_numpy(dtype=float)).all():
+        return "point_in_time_hedge_ratio_missing_or_nonfinite"
+    if values.le(0.0).any():
+        return "point_in_time_hedge_ratio_nonpositive_opposing_legs_unsupported"
+    return ""
 
 
 def _load_history(path: Path) -> pd.DataFrame:
@@ -945,6 +1024,7 @@ def _replay_base_row(
     asset_b = _text(experiment.asset_b)
     return {
         "schema_version": REPLAY_SCHEMA_VERSION,
+        "economic_contract_version": ECONOMIC_CONTRACT_VERSION,
         "handoff_id": _text(experiment.handoff_id),
         "refresh_id": _text(experiment.refresh_id),
         "history_run_id": history_run_id,
@@ -1073,12 +1153,8 @@ def _build_replay_pair_status(
                 "timeframe": _text(pair.timeframe),
                 "history_status": _text(pair.history_status),
                 "planned_cells": len(cells),
-                "completed_replay_cells": int(
-                    statuses.get("RESEARCH_REPLAY_COMPLETE", 0)
-                ),
-                "deferred_cells": int(
-                    statuses.get("DEFERRED_POINT_IN_TIME_HISTORY", 0)
-                ),
+                "completed_replay_cells": int(statuses.get("RESEARCH_REPLAY_COMPLETE", 0)),
+                "deferred_cells": int(statuses.get("DEFERRED_POINT_IN_TIME_HISTORY", 0)),
                 "blocked_cells": int(
                     len(cells)
                     - statuses.get("RESEARCH_REPLAY_COMPLETE", 0)
@@ -1119,9 +1195,7 @@ def _history_validation(
     selected: tuple[str, ...],
     storage_preflight_passed: bool,
 ) -> pd.DataFrame:
-    selected_results = pair_results.loc[
-        pair_results["pair_group_key"].astype(str).isin(selected)
-    ]
+    selected_results = pair_results.loc[pair_results["pair_group_key"].astype(str).isin(selected)]
     unselected_ready = pair_results.loc[
         ~pair_results["pair_group_key"].astype(str).isin(selected)
         & pair_queue["history_request_status"].astype(str).eq("READY_TO_FETCH").to_numpy()
@@ -1151,13 +1225,15 @@ def _history_validation(
                     "post_cutoff_rows",
                 ],
                 errors="coerce",
-            ).fillna(1).eq(0).all(),
+            )
+            .fillna(1)
+            .eq(0)
+            .all(),
             "point-in-time pair histories are cutoff bounded",
         ),
         (
             "storage_failure_prevents_network_completion",
-            storage_preflight_passed
-            or not asset_results["history_status"].eq("COMPLETE").any(),
+            storage_preflight_passed or not asset_results["history_status"].eq("COMPLETE").any(),
             f"storage_preflight_passed={storage_preflight_passed}",
         ),
         (
@@ -1183,6 +1259,7 @@ def _replay_validation(*, experiments: pd.DataFrame, results: pd.DataFrame) -> p
         "DEFERRED_POINT_IN_TIME_HISTORY",
         "BLOCKED_POINT_IN_TIME_HISTORY",
         "BLOCKED_LOCAL_FIT",
+        "BLOCKED_ECONOMIC_CONTRACT",
         "BLOCKED_MODE_INPUTS",
         "BLOCKED_REPLAY_ERROR",
     }
@@ -1200,9 +1277,7 @@ def _replay_validation(*, experiments: pd.DataFrame, results: pd.DataFrame) -> p
         ),
         (
             "canonical_replay_is_one_x",
-            pd.to_numeric(results["canonical_replay_leverage"], errors="coerce")
-            .eq(1.0)
-            .all(),
+            pd.to_numeric(results["canonical_replay_leverage"], errors="coerce").eq(1.0).all(),
             "all cells use normalized 1x gross exposure",
         ),
         (
@@ -1282,7 +1357,7 @@ def _trim_pair_history_to_cutoff(path: Path, *, cutoff: datetime | None) -> None
     payload["period"] = len(kept)
     payload["point_in_time_cutoff_at"] = cutoff.isoformat()
     payload["post_cutoff_rows_removed"] = len(history) - len(kept)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _candle_metadata(path: Path | None, *, cutoff: datetime | None) -> dict[str, object]:
@@ -1329,13 +1404,16 @@ def _timestamp_metadata(
 def _validate_replay_policy(policy: CurrentReplayPolicy) -> None:
     if not 0.0 < policy.train_fraction < 1.0:
         raise ValueError("train_fraction must be between zero and one")
-    if min(
-        policy.minimum_train_rows,
-        policy.minimum_test_rows,
-        policy.zscore_window,
-        policy.dynamic_window,
-        policy.copula_window,
-    ) <= 1:
+    if (
+        min(
+            policy.minimum_train_rows,
+            policy.minimum_test_rows,
+            policy.zscore_window,
+            policy.dynamic_window,
+            policy.copula_window,
+        )
+        <= 1
+    ):
         raise ValueError("replay row and window policies must exceed one")
 
 
@@ -1369,7 +1447,11 @@ def _replay_summary(summary: dict[str, object]) -> str:
             f"- Research replays complete: {summary['research_replays_complete']}",
             f"- Deferred cells: {summary['deferred_point_in_time_history']}",
             f"- Replay errors: {summary['blocked_replay_error']}",
+            f"- Economic-contract blockers: {summary['blocked_economic_contract']}",
             f"- Rank-eligible research cells: {summary['research_rank_eligible_replays']}",
+            f"- Settings version: `{summary['settings_version']}`",
+            f"- Economic contract: `{summary['economic_contract_version']}`",
+            f"- Hash-bound math files: {len(summary['math_implementation_hashes'])}",
             "- Parameters: fitted on the training slice only",
             "- Performance: measured on the held-out test slice only",
             "- Exposure: normalized 1x; leverage scenarios are separate",
@@ -1394,6 +1476,17 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _file_hash(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
+
+
+def _math_implementation_hashes() -> dict[str, str]:
+    repository_root = Path(__file__).resolve().parents[3]
+    hashes: dict[str, str] = {}
+    for relative_path in MATH_IMPLEMENTATION_PATHS:
+        path = repository_root / relative_path
+        if not path.is_file():
+            raise FileNotFoundError(f"Canonical replay implementation file missing: {path}")
+        hashes[relative_path] = _file_hash(path)
+    return hashes
 
 
 def _canonical_json(value: object) -> str:

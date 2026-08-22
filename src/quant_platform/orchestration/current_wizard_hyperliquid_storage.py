@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 import os
 import re
@@ -57,7 +61,7 @@ def build_current_wizard_hyperliquid_storage_reclamation_plan(
 
     manifests: dict[Path, dict[str, Any]] = {}
     for path in sorted(active.glob("*_manifest.json")):
-        if path.name in STORAGE_BOOKKEEPING_MANIFEST_NAMES:
+        if path.name.startswith(".") or path.name in STORAGE_BOOKKEEPING_MANIFEST_NAMES:
             continue
         payload = _read_json(path)
         if _references_snapshot_root(payload):
@@ -195,8 +199,8 @@ def build_current_wizard_hyperliquid_storage_reclamation_plan(
         else shutil.disk_usage(root).free
     )
     paths = _paths(active)
-    plan.to_csv(paths["plan"], index=False)
-    validation.to_csv(paths["validation"], index=False)
+    atomic_write_csv(plan, paths["plan"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
     summary: dict[str, object] = {
         **material,
         "reclamation_id": reclamation_id,
@@ -222,10 +226,8 @@ def build_current_wizard_hyperliquid_storage_reclamation_plan(
         "live_trading_authorized": False,
         "artifacts": {name: _relative(path, root) for name, path in paths.items()},
     }
-    paths["manifest"].write_text(
-        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_text(paths["manifest"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

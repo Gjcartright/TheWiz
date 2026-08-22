@@ -20,6 +20,10 @@ from quant_platform.hyperliquid_testnet import (
     _pair_open_orders,
     _pair_position_sizes,
 )
+from quant_platform.orchestration.corrective_hyperliquid_network import (
+    run_authorized_hyperliquid_info_call,
+)
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -724,7 +728,26 @@ def _post_info(
     config: HyperliquidTestnetConfig,
     payload: dict[str, object],
 ) -> Any:
-    response = session.post(f"{config.base_url.rstrip('/')}/info", json=payload, timeout=20)
+    target = f"{config.base_url.rstrip('/')}/info"
+    return run_authorized_hyperliquid_info_call(
+        target=target,
+        payload=payload,
+        operation_prefix="HYPERLIQUID_TESTNET",
+        transport=lambda: _raw_hyperliquid_lifecycle_info_call(
+            session=session,
+            target=target,
+            payload=payload,
+        ),
+    )
+
+
+def _raw_hyperliquid_lifecycle_info_call(
+    *,
+    session: requests.Session,
+    target: str,
+    payload: dict[str, object],
+) -> Any:
+    response = session.post(target, json=payload, timeout=20)
     response.raise_for_status()
     return response.json()
 
@@ -747,13 +770,13 @@ def _read_json(path: Path) -> dict[str, object]:
 def _atomic_json(payload: dict[str, object], path: Path) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _canonical_json(value: object) -> str:

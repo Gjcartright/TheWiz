@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import shutil
+from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -14,7 +14,6 @@ from quant_platform.orchestration.corrective_governance import (
     content_identity,
     semantic_hypothesis_id,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,7 +56,7 @@ def _root(tmp_path: Path) -> Path:
 def test_governance_materializes_policy_tamper_holdout_and_ledger(tmp_path):
     root = _root(tmp_path)
     result = build_corrective_governance(
-        root=root, now=datetime(2026, 8, 9, tzinfo=timezone.utc)
+        root=root, now=datetime(2026, 8, 9, tzinfo=UTC)
     )
 
     assert result.summary["status"] == "PASS"

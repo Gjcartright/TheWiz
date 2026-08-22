@@ -2,26 +2,36 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-from datetime import datetime, timezone
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
+from collections.abc import Callable
+from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import pandas as pd
 
-from quant_platform.backtest import CostModel, FundingPolicy, backtest_two_leg_spread
+from quant_platform.backtest import (
+    CostModel,
+    FundingPolicy,
+    backtest_two_leg_spread,
+    max_drawdown,
+)
+from quant_platform.economic_contract import normalized_two_leg_weights
 from quant_platform.performance_math import MATH_VERSION, calculate_annualized_sharpe
 from quant_platform.statistics.math_v2 import (
     estimate_hurst_dfa,
+    fit_ecm,
     fit_engle_granger,
     fit_gaussian_copula,
     fit_ou,
     rolling_zscore_variants,
 )
 from quant_platform.trade_ledger import build_trade_ledger
-
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -36,8 +46,8 @@ def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
     marker_path = output_dir / "math_v2_acceptance.json"
 
     reconciliation, statistical = _run_checks()
-    reconciliation.to_csv(reconciliation_path, index=False)
-    statistical.to_csv(statistical_path, index=False)
+    atomic_write_csv(reconciliation, reconciliation_path, index=False)
+    atomic_write_csv(statistical, statistical_path, index=False)
     all_checks = pd.concat([reconciliation, statistical], ignore_index=True)
     passed = bool(not all_checks.empty and all_checks["status"].eq("PASS").all())
     marker = {
@@ -46,8 +56,8 @@ def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
         "acceptance_scope": "core_math_library",
         "all_checks_passed": passed,
         "passed_checks": int(all_checks["status"].eq("PASS").sum()),
-        "total_checks": int(len(all_checks)),
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_checks": len(all_checks),
+        "generated_at": datetime.now(UTC).isoformat(),
         "generated_by": "quant_platform.math_v2_acceptance",
         "reconciliation_report": str(reconciliation_path.relative_to(root)),
         "statistical_validity_report": str(statistical_path.relative_to(root)),
@@ -69,7 +79,7 @@ def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
             else "one or more core Math V2 checks failed"
         ),
     }
-    marker_path.write_text(json.dumps(marker, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(marker_path, json.dumps(marker, indent=2, sort_keys=True), encoding="utf-8")
     return {
         **marker,
         "marker": marker_path,
@@ -82,18 +92,25 @@ def _run_checks() -> tuple[pd.DataFrame, pd.DataFrame]:
     reconciliation_checks: list[tuple[str, Callable[[], tuple[bool, object, object]]]] = [
         ("daily_sharpe_uses_365", _daily_sharpe_check),
         ("hourly_sharpe_uses_8760", _hourly_sharpe_check),
+        ("sharpe_uses_sample_standard_deviation", _sample_sharpe_check),
+        ("zero_variance_sharpe_is_blocked", _zero_variance_sharpe_check),
+        ("declared_interval_must_match_timestamps", _interval_mismatch_check),
         ("unknown_interval_blocks_sharpe", _unknown_interval_check),
+        ("drawdown_includes_initial_capital", _initial_capital_drawdown_check),
         ("two_round_trips_equal_two_closed_trades", _two_round_trip_check),
         ("open_trade_excluded_from_closed_metrics", _open_trade_check),
         ("reversal_closes_then_opens", _reversal_check),
         ("trade_factors_reconcile_to_equity", _ledger_reconciliation_check),
         ("beta_is_diagnostic_only", _beta_diagnostic_check),
         ("funding_policies_are_distinct", _funding_policy_check),
+        ("spread_convergence_has_correct_position_direction", _spread_direction_check),
+        ("invalid_hedge_ratio_is_rejected", _invalid_hedge_ratio_check),
     ]
     statistical_checks: list[tuple[str, Callable[[], tuple[bool, object, object]]]] = [
         ("zscore_retains_ddof0_and_ddof1", _zscore_variant_check),
         ("zscore_is_causal_with_respect_to_future_rows", _zscore_causality_check),
-        ("engle_granger_detects_known_cointegration", _cointegration_check),
+        ("engle_granger_recovers_y_on_x_contract", _cointegration_check),
+        ("ecm_signs_match_y_on_x_error_term", _ecm_direction_check),
         ("ou_fit_recovers_valid_phi_and_half_life", _ou_check),
         ("invalid_ou_phi_is_not_abs_or_clipped", _invalid_ou_check),
         ("hurst_dfa_declares_estimator_and_sample_gate", _hurst_check),
@@ -102,14 +119,20 @@ def _run_checks() -> tuple[pd.DataFrame, pd.DataFrame]:
     return _check_frame(reconciliation_checks), _check_frame(statistical_checks)
 
 
-def _check_frame(checks: list[tuple[str, Callable[[], tuple[bool, object, object]]]]) -> pd.DataFrame:
+def _check_frame(
+    checks: list[tuple[str, Callable[[], tuple[bool, object, object]]]],
+) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     for name, check in checks:
         try:
             passed, observed, required = check()
             error = ""
-        except Exception as exc:  # pragma: no cover - surfaced in the artifact
-            passed, observed, required = False, f"{type(exc).__name__}:{exc}", "check completes without error"
+        except Exception as exc:  # noqa: BLE001  # pragma: no cover - surfaced in artifact
+            passed, observed, required = (
+                False,
+                f"{type(exc).__name__}:{exc}",
+                "check completes without error",
+            )
             error = str(exc)
         rows.append(
             {
@@ -139,11 +162,43 @@ def _unknown_interval_check() -> tuple[bool, object, object]:
     return result.status == "blocked" and np.isnan(result.value), result.status, "blocked with NaN"
 
 
+def _sample_sharpe_check() -> tuple[bool, object, object]:
+    values = pd.Series([0.01, -0.005, 0.007, 0.002])
+    result = calculate_annualized_sharpe(values, interval="1d")
+    required = float(np.sqrt(365.0) * values.mean() / values.std(ddof=1))
+    return abs(result.value - required) < 1e-12, result.value, required
+
+
+def _zero_variance_sharpe_check() -> tuple[bool, object, object]:
+    result = calculate_annualized_sharpe(pd.Series([0.01, 0.01, 0.01]), interval="1d")
+    passed = result.status == "blocked" and np.isnan(result.value)
+    return passed, f"{result.status}:{result.reason}", "blocked:zero_or_nonfinite_return_variance"
+
+
+def _interval_mismatch_check() -> tuple[bool, object, object]:
+    timestamps = pd.date_range("2026-01-01", periods=8, freq="1h", tz="UTC")
+    result = calculate_annualized_sharpe(
+        pd.Series([0.01, -0.01, 0.02, -0.01, 0.01, 0.0, 0.01, -0.01]),
+        interval="1d",
+        timestamps=timestamps,
+    )
+    passed = result.status == "blocked" and "mismatch" in result.reason
+    return passed, f"{result.status}:{result.reason}", "blocked:1d!=1h"
+
+
+def _initial_capital_drawdown_check() -> tuple[bool, object, object]:
+    observed = max_drawdown(pd.Series([0.90, 0.80]))
+    return abs(observed - 0.20) < 1e-12, observed, 0.20
+
+
 def _trade_fixture() -> tuple[pd.Series, pd.Series, dict[str, pd.Series]]:
     target = pd.Series([0.0, 1.0, 1.0, 0.0, 0.0, -1.0, -1.0, 0.0])
     gross = pd.Series([0.0, 0.0, 0.01, 0.02, 0.0, 0.0, 0.015, 0.01])
     zero = pd.Series(0.0, index=target.index)
-    costs = {name: zero.copy() for name in ("fees", "slippage", "funding", "execution_risk", "partial_fill")}
+    costs = {
+        name: zero.copy()
+        for name in ("fees", "slippage", "funding", "execution_risk", "partial_fill")
+    }
     return target, gross, costs
 
 
@@ -158,7 +213,11 @@ def _open_trade_check() -> tuple[bool, object, object]:
     gross = pd.Series([0.0, 0.0, 0.01])
     ledger = build_trade_ledger(target, gross, {})
     observed = f"closed={len(ledger.closed_trades)};open={len(ledger.open_trades)}"
-    return len(ledger.closed_trades) == 0 and len(ledger.open_trades) == 1, observed, "closed=0;open=1"
+    return (
+        len(ledger.closed_trades) == 0 and len(ledger.open_trades) == 1,
+        observed,
+        "closed=0;open=1",
+    )
 
 
 def _reversal_check() -> tuple[bool, object, object]:
@@ -166,7 +225,11 @@ def _reversal_check() -> tuple[bool, object, object]:
     gross = pd.Series([0.0, 0.0, 0.01, 0.005, 0.01, 0.01])
     ledger = build_trade_ledger(target, gross, {})
     reasons = ledger.closed_trades["exit_reason"].tolist()
-    return reasons == ["signal_reversal", "signal_exit"], ";".join(reasons), "signal_reversal;signal_exit"
+    return (
+        reasons == ["signal_reversal", "signal_exit"],
+        ";".join(reasons),
+        "signal_reversal;signal_exit",
+    )
 
 
 def _ledger_reconciliation_check() -> tuple[bool, object, object]:
@@ -226,7 +289,43 @@ def _funding_policy_check() -> tuple[bool, object, object]:
         ),
     )
     observed = f"signed={signed.total_funding:.12g};conservative={conservative.total_funding:.12g}"
-    return signed.total_funding != conservative.total_funding and conservative.total_funding > 0.0, observed, "distinct; conservative>0"
+    return (
+        signed.total_funding != conservative.total_funding and conservative.total_funding > 0.0,
+        observed,
+        "distinct; conservative>0",
+    )
+
+
+def _spread_direction_check() -> tuple[bool, object, object]:
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.date_range("2026-01-01", periods=3, freq="1D", tz="UTC"),
+            "price_x": [100.0, 100.0, 110.0],
+            "price_y": [100.0, 100.0, 90.0],
+            "hedge_ratio": [1.0, 1.0, 1.0],
+        }
+    )
+    result = backtest_two_leg_spread(
+        frame,
+        pd.Series([-1.0, -1.0, 0.0]),
+        CostModel(
+            taker_fee_bps=0.0,
+            slippage_bps=0.0,
+            execution_risk_bps=0.0,
+            funding_bps_per_day=0.0,
+            partial_fill_probability=0.0,
+        ),
+        interval="1d",
+    )
+    return result.gross_return > 0.0, result.gross_return, ">0 for long X / short Y convergence"
+
+
+def _invalid_hedge_ratio_check() -> tuple[bool, object, object]:
+    try:
+        normalized_two_leg_weights(pd.Series([1.0]), 0.0)
+    except ValueError as exc:
+        return "positive" in str(exc), str(exc), "finite and positive hedge ratio required"
+    return False, "accepted zero hedge ratio", "ValueError"
 
 
 def _zscore_variant_check() -> tuple[bool, object, object]:
@@ -245,13 +344,15 @@ def _zscore_causality_check() -> tuple[bool, object, object]:
     return equal, equal, True
 
 
-def _synthetic_cointegrated(seed: int = 7, rows: int = 600) -> tuple[pd.Series, pd.Series, pd.Series]:
+def _synthetic_cointegrated(
+    seed: int = 7, rows: int = 600
+) -> tuple[pd.Series, pd.Series, pd.Series]:
     rng = np.random.default_rng(seed)
-    log_y = 4.0 + np.cumsum(rng.normal(0.0, 0.01, rows))
+    log_x = 4.0 + np.cumsum(rng.normal(0.0, 0.01, rows))
     residual = np.zeros(rows)
     for index in range(1, rows):
         residual[index] = 0.82 * residual[index - 1] + rng.normal(0.0, 0.008)
-    log_x = 0.4 + 1.15 * log_y + residual
+    log_y = 0.4 + 1.15 * log_x + residual
     return pd.Series(np.exp(log_x)), pd.Series(np.exp(log_y)), pd.Series(residual)
 
 
@@ -259,7 +360,44 @@ def _cointegration_check() -> tuple[bool, object, object]:
     price_x, price_y, _ = _synthetic_cointegrated()
     result = fit_engle_granger(price_x, price_y)
     pvalue = result.values.get("cointegration_pvalue", 1.0)
-    return result.validity_status == "valid" and pvalue < 0.05, pvalue, "<0.05"
+    alpha = float(result.values.get("alpha", float("nan")))
+    beta = float(result.values.get("hedge_ratio", float("nan")))
+    residual = result.values.get("residual", pd.Series(dtype=float))
+    identity = np.log(price_y) - alpha - beta * np.log(price_x)
+    residual_error = (
+        float((residual - identity).abs().max())
+        if isinstance(residual, pd.Series) and not residual.empty
+        else float("inf")
+    )
+    passed = (
+        result.validity_status == "valid"
+        and pvalue < 0.05
+        and abs(alpha - 0.4) < 0.15
+        and abs(beta - 1.15) < 0.04
+        and residual_error < 1e-12
+        and result.values.get("hedge_ratio_orientation") == "beta_y_on_x"
+    )
+    observed = f"alpha={alpha};beta={beta};p={pvalue};residual_error={residual_error}"
+    return passed, observed, "alpha~=0.4;beta~=1.15;p<0.05;Y-on-X residual identity"
+
+
+def _ecm_direction_check() -> tuple[bool, object, object]:
+    rng = np.random.default_rng(101)
+    rows = 1500
+    common = 4.0 + np.cumsum(rng.normal(0.0, 0.006, rows))
+    error = np.zeros(rows)
+    for index in range(1, rows):
+        error[index] = 0.65 * error[index - 1] + rng.normal(0.0, 0.004)
+    log_x = common - 0.5 * error
+    log_y = 0.2 + common + 0.5 * error
+    price_x = pd.Series(np.exp(log_x))
+    price_y = pd.Series(np.exp(log_y))
+    dependency = fit_engle_granger(price_x, price_y)
+    result = fit_ecm(price_x, price_y, dependency)
+    gamma_x = float(result.values.get("gamma_x", float("nan")))
+    gamma_y = float(result.values.get("gamma_y", float("nan")))
+    passed = result.validity_status == "valid" and gamma_x > 0.0 and gamma_y < 0.0
+    return passed, f"gamma_x={gamma_x};gamma_y={gamma_y}", "gamma_x>0;gamma_y<0"
 
 
 def _ou_check() -> tuple[bool, object, object]:
@@ -280,8 +418,15 @@ def _invalid_ou_check() -> tuple[bool, object, object]:
     # explosive process to prove the invalid branch is never abs-valued or clipped.
     explosive = pd.Series([1.01**index for index in range(200)], dtype=float)
     explosive_result = fit_ou(explosive)
-    passed = explosive_result.validity_status == "invalid" and explosive_result.values.get("phi", 0.0) >= 1.0
-    return passed, f"random_walk_phi={phi};explosive={asdict(explosive_result)}", "explosive phi retained >=1 and invalid"
+    passed = (
+        explosive_result.validity_status == "invalid"
+        and explosive_result.values.get("phi", 0.0) >= 1.0
+    )
+    return (
+        passed,
+        f"random_walk_phi={phi};explosive={asdict(explosive_result)}",
+        "explosive phi retained >=1 and invalid",
+    )
 
 
 def _hurst_check() -> tuple[bool, object, object]:
@@ -289,7 +434,11 @@ def _hurst_check() -> tuple[bool, object, object]:
     rng = np.random.default_rng(17)
     white_noise = estimate_hurst_dfa(pd.Series(rng.normal(size=1024)))
     hurst = white_noise.values.get("hurst", float("nan"))
-    passed = short.validity_status == "invalid" and white_noise.validity_status == "valid" and 0.3 < hurst < 0.7
+    passed = (
+        short.validity_status == "invalid"
+        and white_noise.validity_status == "valid"
+        and 0.3 < hurst < 0.7
+    )
     return passed, f"short={short.validity_reason};white_noise_h={hurst}", "short invalid;0.3<H<0.7"
 
 
@@ -300,6 +449,12 @@ def _copula_check() -> tuple[bool, object, object]:
     result = fit_gaussian_copula(pd.Series(samples[:, 0]), pd.Series(samples[:, 1]))
     rho = result.values.get("rho", float("nan"))
     conditional = result.values.get("u1_given_u2", pd.Series(dtype=float))
-    bounded = isinstance(conditional, pd.Series) and bool(conditional.dropna().between(0.0, 1.0).all())
+    bounded = isinstance(conditional, pd.Series) and bool(
+        conditional.dropna().between(0.0, 1.0).all()
+    )
     passed = result.validity_status == "valid" and 0.55 < rho < 0.75 and bounded
-    return passed, f"rho={rho};bounded={bounded};method={result.method_id}", "0.55<rho<0.75;conditional CDF bounded"
+    return (
+        passed,
+        f"rho={rho};bounded={bounded};method={result.method_id}",
+        "0.55<rho<0.75;conditional CDF bounded",
+    )

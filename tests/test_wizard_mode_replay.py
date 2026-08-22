@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pandas.testing as pdt
 
 from quant_platform.wizard_mode_replay import build_local_mode_signal, mode_requirements
 
@@ -25,10 +26,10 @@ def _settings(**overrides: object) -> dict[str, object]:
         "capture_confirmed": True,
         "entry_long_operator": "<=",
         "entry_long_value": -1.0,
-        "entry_long_position": "long_x_short_y",
+        "entry_long_position": "short_x_long_y",
         "entry_short_operator": ">=",
         "entry_short_value": 1.0,
-        "entry_short_position": "short_x_long_y",
+        "entry_short_position": "long_x_short_y",
         "exit_long_operator": ">=",
         "exit_long_value": 0.0,
         "exit_short_operator": "<=",
@@ -49,6 +50,14 @@ def _settings(**overrides: object) -> dict[str, object]:
     }
     settings.update(overrides)
     return settings
+
+
+def _copula_settings(**overrides: object) -> dict[str, object]:
+    return _settings(
+        entry_long_position="long_x_short_y",
+        entry_short_position="short_x_long_y",
+        **overrides,
+    )
 
 
 def test_static_spread_and_static_zscorer_are_distinct_local_metrics():
@@ -78,6 +87,33 @@ def test_dynamic_mode_requires_a_supported_explicit_hedge_method():
     assert not result.acceptance_eligible
 
 
+def test_dynamic_spread_uses_same_y_on_x_orientation_as_static_spread():
+    history = _history()
+    result = build_local_mode_signal(
+        history,
+        _settings(dynamic_hedge_ratio_method="history_captured_hedge_ratio"),
+        exact_mode="Dyn (ZScoreR)",
+    )
+    expected_spread = np.log(history["price_y"]) - history["hedge_ratio"] * np.log(
+        history["price_x"]
+    )
+    expected = expected_spread.sub(expected_spread.rolling(3).mean()).div(
+        expected_spread.rolling(3).std(ddof=1)
+    )
+
+    pdt.assert_series_equal(result.metric, expected, check_names=False)
+    assert any("y-on-x orientation" in note for note in result.computation_notes)
+
+
+def test_static_zscorer_uses_sample_standard_deviation():
+    history = _history()
+    result = build_local_mode_signal(history, _settings(), exact_mode="Static (ZScoreR)")
+    spread = np.log(history["price_y"]) - 1.9 * np.log(history["price_x"])
+    expected = spread.sub(spread.rolling(3).mean()).div(spread.rolling(3).std(ddof=1))
+
+    pdt.assert_series_equal(result.metric, expected, check_names=False)
+
+
 def test_ou_mode_refuses_to_invent_missing_parameters():
     result = build_local_mode_signal(
         _history(), _settings(ou_mu="", ou_sigma=""), exact_mode="OU (Spread)"
@@ -86,6 +122,16 @@ def test_ou_mode_refuses_to_invent_missing_parameters():
     assert result.mode_replay_status == "BLOCKED_MODE_INPUTS"
     assert {"ou_mu", "ou_sigma"}.issubset(set(result.missing_inputs))
     assert not result.acceptance_eligible
+
+
+def test_ou_spread_metric_and_thresholds_use_the_same_log_spread_unit():
+    history = _history()
+    settings = _settings(ou_mu=-3.0, ou_sigma=0.1)
+    result = build_local_mode_signal(history, settings, exact_mode="OU (Spread)")
+    spread = np.log(history["price_y"]) - 1.9 * np.log(history["price_x"])
+
+    pdt.assert_series_equal(result.metric, spread + 3.0)
+    assert result.metric_name == "ou_centered_spread"
 
 
 def test_copula_mode_uses_captured_direction_or_causal_rolling_fallback():
@@ -101,7 +147,7 @@ def test_copula_mode_uses_captured_direction_or_causal_rolling_fallback():
     )
     fallback = build_local_mode_signal(
         history,
-        _settings(
+        _copula_settings(
             entry_long_operator="",
             entry_long_value="",
             entry_short_operator="",
@@ -113,7 +159,7 @@ def test_copula_mode_uses_captured_direction_or_causal_rolling_fallback():
         ),
         exact_mode="Copula",
     )
-    ready = build_local_mode_signal(_history(), _settings(), exact_mode="Copula")
+    ready = build_local_mode_signal(_history(), _copula_settings(), exact_mode="Copula")
 
     assert fallback.mode_replay_status == "READY_FOR_RESEARCH_REPLAY"
     assert fallback.metric.notna().sum() >= 60
@@ -148,3 +194,36 @@ def test_crypto_wizards_operator_enums_are_accepted_without_relabeling():
 
     assert result.mode_replay_status == "READY_FOR_RESEARCH_REPLAY"
     assert not any(value.startswith("invalid_") for value in result.missing_inputs)
+
+
+def test_mode_replay_blocks_tail_positions_that_violate_the_economic_contract():
+    result = build_local_mode_signal(
+        _history(),
+        _settings(
+            entry_long_position="long_x_short_y",
+            entry_short_position="short_x_long_y",
+        ),
+        exact_mode="Dyn (Spread)",
+    )
+
+    assert result.mode_replay_status == "BLOCKED_MODE_INPUTS"
+    assert "lower_tail_position_contract_mismatch" in result.missing_inputs
+    assert "upper_tail_position_contract_mismatch" in result.missing_inputs
+
+
+def test_direction_contract_follows_operator_when_vendor_entry_fields_are_swapped():
+    result = build_local_mode_signal(
+        _history(),
+        _settings(
+            entry_long_operator=">=",
+            entry_long_value=1.0,
+            entry_long_position="long_x_short_y",
+            entry_short_operator="<=",
+            entry_short_value=-1.0,
+            entry_short_position="short_x_long_y",
+        ),
+        exact_mode="Static (Spread)",
+    )
+
+    assert result.mode_replay_status == "READY_FOR_RESEARCH_REPLAY"
+    assert not any("position_contract_mismatch" in value for value in result.missing_inputs)

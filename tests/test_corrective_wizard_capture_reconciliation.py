@@ -72,7 +72,13 @@ def test_immutable_reconciliation_publication_never_leaves_partial_target(
 ) -> None:
     target = tmp_path / "immutable" / "reconciliation.json"
 
-    def fail_publish(_source: Path, _destination: Path) -> None:
+    def fail_publish(
+        _source: Path,
+        _destination: Path,
+        *,
+        follow_symlinks: bool,
+    ) -> None:
+        assert follow_symlinks is False
         raise OSError("simulated publication interruption")
 
     monkeypatch.setattr(corrective_wizard_capture_reconciliation.os, "link", fail_publish)
@@ -188,6 +194,7 @@ def test_immutable_reconciliation_validator_rejects_pending_and_tampering(tmp_pa
     )
     evidence = _scheduler_evidence(complete.summary)
     immutable = tmp_path / evidence["capture_reconciliation_immutable_path"]
+    immutable.chmod(0o600)
     immutable.write_text('{"tampered":true}\n', encoding="utf-8")
 
     tampered = validate_capture_reconciliation_evidence(root=tmp_path, evidence=evidence)
@@ -383,6 +390,7 @@ def test_completion_mutation_revokes_previously_passing_reconciliation(tmp_path)
     )
     completion = json.loads(completion_path.read_text(encoding="utf-8"))
     completion["pair"] = "TAMPERED-PAIR"
+    completion_path.chmod(0o600)
     completion_path.write_text(
         json.dumps(completion, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -470,6 +478,7 @@ def test_reconciliation_blocks_tampered_ou_v4_precall_intent(tmp_path):
     intent_path = _call_intent_path(root=tmp_path, timestamp=NOW, call_id=call["call_id"])
     intent = json.loads(intent_path.read_text(encoding="utf-8"))
     intent["pair"] = "TAMPERED-PAIR"
+    intent_path.chmod(0o600)
     intent_path.write_text(json.dumps(intent, sort_keys=True) + "\n", encoding="utf-8")
 
     result = reconcile_corrective_wizard_capture_manifest(
@@ -617,6 +626,7 @@ def test_capture_manifest_binding_validator_rejects_tampering(tmp_path):
     )
     assert valid["status"] == "PASS"
 
+    manifest_path.chmod(0o600)
     manifest_path.write_text('{"tampered":true}\n', encoding="utf-8")
     tampered = validate_capture_manifest_binding(
         root=tmp_path,

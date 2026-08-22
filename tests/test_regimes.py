@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from quant_platform.regimes import (
     RegimeConfig,
@@ -25,6 +26,16 @@ def test_classify_regimes_outputs_required_columns_and_labels():
     )
     assert set(classified["regime"]).issubset({"bull", "bear", "range", "crisis"})
     assert "crisis" in set(classified["regime"])
+
+
+def test_regime_drawdown_includes_first_bar_loss_from_initial_capital():
+    classified = classify_regimes(
+        pd.DataFrame({"market_return": [-0.10, -0.05]}),
+        RegimeConfig(lookback=2),
+    )
+
+    assert classified["regime_drawdown"].iloc[0] == pytest.approx(0.10)
+    assert classified["regime_drawdown"].iloc[1] == pytest.approx(0.145)
 
 
 def test_regime_distribution_and_dataset_report(tmp_path):
@@ -76,4 +87,3 @@ def test_regime_pair_strategy_report_groups_per_pair_regime_strategy():
     assert report["runs"].iloc[0] == 2
     assert report["eligible_runs"].iloc[0] == 1
     assert report["total_trades"].iloc[0] == 200
-

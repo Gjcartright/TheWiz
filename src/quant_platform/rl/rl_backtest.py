@@ -3,14 +3,17 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import os
-import shutil
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import ROOT, CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    atomic_write_csv,
+    atomic_write_text,
+)
 from quant_platform.rl.features import (
     attach_copula_dashboard_features,
     build_rl_feature_frame,
@@ -217,16 +220,16 @@ def run_rl_research(
             frame[key] = value
         frame["testnet_order_authority"] = False
         frame["live_trading_authorized"] = False
-    training.to_csv(paths["training_report"], index=False)
-    evaluation.to_csv(paths["evaluation_report"], index=False)
-    per_trade_log.to_csv(paths["execution_backtest"], index=False)
-    acceptance.to_csv(paths["acceptance_report"], index=False)
+    atomic_write_csv(training, paths["training_report"], index=False)
+    atomic_write_csv(evaluation, paths["evaluation_report"], index=False)
+    atomic_write_csv(per_trade_log, paths["execution_backtest"], index=False)
+    atomic_write_csv(acceptance, paths["acceptance_report"], index=False)
     blocked.to_csv(paths["blocked_actions"], index=False)
-    leakage_audit.to_csv(paths["leakage_audit"], index=False)
-    split_audit.to_csv(paths["split_audit"], index=False)
-    copula_join_audit.to_csv(paths["copula_dashboard_join_audit"], index=False)
-    training.to_csv(paths["dashboard_research_status"], index=False)
-    acceptance.to_csv(paths["dashboard_acceptance"], index=False)
+    atomic_write_csv(leakage_audit, paths["leakage_audit"], index=False)
+    atomic_write_csv(split_audit, paths["split_audit"], index=False)
+    atomic_write_csv(copula_join_audit, paths["copula_dashboard_join_audit"], index=False)
+    atomic_write_csv(training, paths["dashboard_research_status"], index=False)
+    atomic_write_csv(acceptance, paths["dashboard_acceptance"], index=False)
     blocked.to_csv(paths["dashboard_blocked_actions"], index=False)
     feature_schema = _read_json(paths["feature_schema"])
     feature_schema.update(
@@ -248,9 +251,7 @@ def run_rl_research(
             "live_trading_authorized": False,
         }
     )
-    paths["feature_schema"].write_text(
-        json.dumps(feature_schema, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    atomic_write_text(paths["feature_schema"], json.dumps(feature_schema, indent=2, sort_keys=True), encoding="utf-8")
     lineage_report = {
         "schema_version": "thewiz.rl_research_lineage.v1",
         **dataset_lineage,
@@ -278,11 +279,9 @@ def run_rl_research(
         "testnet_order_authority": False,
         "live_trading_authorized": False,
     }
-    paths["lineage_report_json"].write_text(
-        json.dumps(lineage_report, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["training_report_json"].write_text(json.dumps(training.iloc[0].to_dict(), indent=2, sort_keys=True), encoding="utf-8")
-    paths["acceptance_report_json"].write_text(json.dumps(acceptance.iloc[0].to_dict(), indent=2, sort_keys=True, default=str), encoding="utf-8")
+    atomic_write_text(paths["lineage_report_json"], json.dumps(lineage_report, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["training_report_json"], json.dumps(training.iloc[0].to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["acceptance_report_json"], json.dumps(acceptance.iloc[0].to_dict(), indent=2, sort_keys=True, default=str), encoding="utf-8")
     return CommandResult(
         paths=paths,
         summary={
@@ -575,13 +574,9 @@ def _snapshot_rl_research_outputs(
         if not source.is_file():
             continue
         destination = snapshot_dir / f"{name}{source.suffix}"
-        try:
-            os.link(source, destination)
-        except OSError:
-            shutil.copyfile(source, destination)
+        atomic_copy_file(source, destination, immutable=True)
         preserved.append(name)
-    receipt.write_text(
-        json.dumps(
+    atomic_write_text(receipt, json.dumps(
             {
                 "schema_version": "thewiz.rl_research_lineage.v1",
                 "status": "SUPERSEDED_PRESERVED",
@@ -592,7 +587,5 @@ def _snapshot_rl_research_outputs(
             },
             indent=2,
             sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return receipt

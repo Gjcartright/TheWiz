@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 
 import pandas as pd
@@ -25,7 +27,7 @@ TRADE_TIMING_TEMPLATE_COLUMNS = [
 def write_trade_timing_template(output_path: str | Path) -> Path:
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(columns=TRADE_TIMING_TEMPLATE_COLUMNS).to_csv(output, index=False)
+    atomic_write_csv(pd.DataFrame(columns=TRADE_TIMING_TEMPLATE_COLUMNS), output, index=False)
     return output
 
 

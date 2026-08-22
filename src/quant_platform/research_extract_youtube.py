@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from pathlib import Path
 import re
 
@@ -35,12 +37,10 @@ def extract_youtube_research(root: Path = ROOT) -> CommandResult:
     paths = youtube_extraction_paths(root)
     for path in paths.values():
         path.parent.mkdir(parents=True, exist_ok=True)
-    normalized.to_csv(paths["youtube_research_rows"], index=False)
-    normalized[normalized["row_type"].isin(["risk_prior", "mode_preference", "regime_condition", "pair_filter", "anti_pattern", "execution_warning"])].to_csv(
-        paths["youtube_research_rules"], index=False
-    )
-    normalized[normalized["row_type"] == "feature_idea"].to_csv(paths["youtube_research_features"], index=False)
-    normalized[normalized["row_type"] == "strategy_hint"].to_csv(paths["youtube_strategy_hints"], index=False)
+    atomic_write_csv(normalized, paths["youtube_research_rows"], index=False)
+    atomic_write_csv(normalized[normalized["row_type"].isin(["risk_prior", "mode_preference", "regime_condition", "pair_filter", "anti_pattern", "execution_warning"])], paths["youtube_research_rules"], index=False)
+    atomic_write_csv(normalized[normalized["row_type"] == "feature_idea"], paths["youtube_research_features"], index=False)
+    atomic_write_csv(normalized[normalized["row_type"] == "strategy_hint"], paths["youtube_strategy_hints"], index=False)
     if not youtube.empty:
         mark_research_sources_processed("youtube", root=root)
     return CommandResult(paths=paths, summary={"rows": int(len(normalized)), "sources": int(len(youtube))})

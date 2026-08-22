@@ -13,6 +13,12 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    promote_staged_directory,
+    promote_staged_file,
+)
 from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
     _archive_destination_preflight,
     _file_hash,
@@ -161,12 +167,10 @@ def stage_current_wizard_hyperliquid_archive_copy(
         "artifacts": {name: str(path.relative_to(root)) for name, path in paths.items()},
     }
     _atomic_json_write(destination_receipt, summary, copy_id)
-    receipt.to_csv(paths["receipt"], index=False)
-    validation.to_csv(paths["validation"], index=False)
-    paths["manifest"].write_text(
-        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
-    )
-    paths["summary_md"].write_text(_summary_markdown(summary), encoding="utf-8")
+    atomic_write_csv(receipt, paths["receipt"], index=False)
+    atomic_write_csv(validation, paths["validation"], index=False)
+    atomic_write_text(paths["manifest"], json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(paths["summary_md"], _summary_markdown(summary), encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -230,7 +234,7 @@ def _copy_candidate(
             or _file_hash(partial / "manifest.json") != expected_manifest
         ):
             raise ValueError(f"archive_destination_hash_mismatch:{relative}")
-        os.replace(partial, target)
+        promote_staged_directory(partial, target)
         copy_status = "COPIED_VERIFIED"
         bytes_copied = source_size
 
@@ -406,7 +410,7 @@ def _atomic_json_write(path: Path, payload: dict[str, object], copy_id: str) -> 
     if temporary.exists():
         raise FileExistsError(f"archive_receipt_temporary_exists:{temporary}")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    os.replace(temporary, path)
+    promote_staged_file(temporary, path)
 
 
 def _paths(active: Path) -> dict[str, Path]:

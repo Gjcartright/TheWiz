@@ -7,6 +7,10 @@ authorize a paper or live route.
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -79,9 +83,9 @@ def build_dynamic_rollout_gate(
     output = directory / "strategy_cell_rollout.csv"
     output.parent.mkdir(parents=True, exist_ok=True)
     frame = pd.DataFrame(rows)
-    frame.to_csv(output, index=False)
+    atomic_write_csv(frame, output, index=False)
     markdown = output.with_suffix(".md")
-    markdown.write_text(_markdown(frame), encoding="utf-8")
+    atomic_write_text(markdown, _markdown(frame), encoding="utf-8")
     return {
         "csv": output,
         "markdown": markdown,

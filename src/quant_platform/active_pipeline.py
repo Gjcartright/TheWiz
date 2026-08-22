@@ -5,10 +5,9 @@ import json
 import os
 import re
 import shutil
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Iterable
 from uuid import uuid4
 
 import numpy as np
@@ -33,6 +32,15 @@ from quant_platform.ml_filter import (
     model_selection_leaderboard,
     train_trade_filter_walkforward,
 )
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    atomic_write_csv,
+    atomic_write_parquet,
+    atomic_write_text,
+    promote_staged_directory,
+    promote_staged_file,
+    write_immutable_bytes,
+)
 from quant_platform.pair_detail_ingestion import (
     add_derived_beta_from_prices,
     datasets_from_pair_detail_snapshots,
@@ -42,13 +50,13 @@ from quant_platform.pair_detail_ingestion import (
 )
 from quant_platform.pair_market_utils import pair_markets_from_pair
 from quant_platform.regimes import RegimeConfig, classify_regimes
+from quant_platform.runtime_types import ROOT, CommandResult
 from quant_platform.wizard_symbols import (
     normalize_wizard_exchange,
     normalize_wizard_symbol,
     wizard_exchange_lane,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
 ACTIVE = ROOT / "reports" / "active"
 DASHBOARD = ROOT / "reports" / "dashboard"
 ML_REPORTS = ROOT / "reports" / "ml"
@@ -215,6 +223,10 @@ CANONICAL_COMMANDS = [
     "PYTHONPATH=src python -m quant_platform.cli build-stage4-handoff-readiness",
     "PYTHONPATH=src python -m quant_platform.cli build-corrective-agent-governance",
     "PYTHONPATH=src python -m quant_platform.cli run-corrective-l2-capture",
+    (
+        "PYTHONPATH=src python -m quant_platform.cli "
+        "build-current-wizard-hyperliquid-evidence-command-center"
+    ),
     "python scripts/build_corrective_checkpoint.py",
     "python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-research-pack",
@@ -303,12 +315,6 @@ CANONICAL_COMMANDS = [
     "PYTHONPATH=src python -m quant_platform.cli refresh-apify-sources",
     "PYTHONPATH=src python -m quant_platform.cli archive-from-index --dry-run",
 ]
-
-
-@dataclass(frozen=True)
-class CommandResult:
-    paths: dict[str, Path]
-    summary: dict[str, object]
 
 
 def build_artifact_index(root: Path = ROOT) -> CommandResult:
@@ -459,6 +465,7 @@ def current_state(root: Path = ROOT) -> CommandResult:
         _hyperliquid_research_bundle_state_row(root),
         _hyperliquid_wizard_hypothesis_state_row(root),
         _hyperliquid_wizard_mode_proof_state_row(root),
+        _wizard_ou_v6_terminal_state_row(root),
         _hyperliquid_slippage_calibration_state_row(root),
         venue_route_state,
         _strategy_acceptance_state_row(root),
@@ -3524,7 +3531,7 @@ def _stage_trade_dataset_candidate(
             raise SystemExit(f"dataset build identity collision: {dataset_id}")
         shutil.rmtree(temporary)
     else:
-        temporary.rename(final_dir)
+        promote_staged_directory(temporary, final_dir)
     pointer = {
         **receipt,
         "candidate_receipt_path": str(
@@ -3805,23 +3812,11 @@ def _rooted_path(root: Path, value: object) -> Path:
 
 
 def _link_or_copy(source: Path, destination: Path) -> None:
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.exists():
-        return
-    try:
-        os.link(source, destination)
-    except OSError:
-        shutil.copyfile(source, destination)
+    write_immutable_bytes(destination, source.read_bytes())
 
 
 def _link_or_copy_atomic(source: Path, destination: Path) -> None:
-    def writer(temporary: Path) -> None:
-        try:
-            os.link(source, temporary)
-        except OSError:
-            shutil.copyfile(source, temporary)
-
-    _atomic_replace_path(destination, writer)
+    atomic_copy_file(source, destination)
 
 
 def _select_hyperliquid_training_datasets(
@@ -4459,6 +4454,10 @@ def build_command_dashboard(root: Path = ROOT, *, refresh_profile: str = "deep")
         "binance_spot_pair_readiness": DASHBOARD / "binance_spot_pair_readiness.csv",
         "hyperliquid_wizard_hypothesis": DASHBOARD / "hyperliquid_wizard_hypothesis_dashboard.csv",
         "hyperliquid_wizard_mode_proofs": DASHBOARD / "hyperliquid_wizard_vendor_mode_proofs_dashboard.csv",
+        "wizard_ou_v6_terminal_outcome": DASHBOARD / "wizard_ou_v6_terminal_outcome.csv",
+        "wizard_ou_v6_failure_attribution": DASHBOARD
+        / "wizard_ou_v6_failure_attribution.csv",
+        "wizard_ou_v6_orientation_policy": DASHBOARD / "wizard_ou_v6_orientation_policy.csv",
         "hyperliquid_run_candidates": DASHBOARD / "hyperliquid_run_candidates.csv",
         "hyperliquid_authority": DASHBOARD / "hyperliquid_authority_state.csv",
         "hyperliquid_walkforward": DASHBOARD / "hyperliquid_walkforward_mode_summary.csv",
@@ -4729,6 +4728,18 @@ def build_command_dashboard(root: Path = ROOT, *, refresh_profile: str = "deep")
     _write_csv(_read_csv(root / "reports" / "active" / "binance_spot_pair_readiness.csv"), paths["binance_spot_pair_readiness"])
     _write_csv(_read_csv(root / "reports" / "active" / "hyperliquid_wizard_hypothesis_queue.csv"), paths["hyperliquid_wizard_hypothesis"])
     _write_csv(_read_csv(root / "reports" / "active" / "hyperliquid_wizard_vendor_mode_proofs.csv"), paths["hyperliquid_wizard_mode_proofs"])
+    _write_csv(
+        _read_csv(root / "reports" / "active" / "wizard_ou_v6_terminal_outcome.csv"),
+        paths["wizard_ou_v6_terminal_outcome"],
+    )
+    _write_csv(
+        _read_csv(root / "reports" / "active" / "wizard_ou_v6_failure_attribution.csv"),
+        paths["wizard_ou_v6_failure_attribution"],
+    )
+    _write_csv(
+        _read_csv(root / "reports" / "active" / "wizard_ou_v6_orientation_policy.csv"),
+        paths["wizard_ou_v6_orientation_policy"],
+    )
     _write_csv(_read_csv(root / "reports" / "active" / "hyperliquid_run_candidates.csv"), paths["hyperliquid_run_candidates"])
     _write_csv(_read_csv(root / "reports" / "active" / "hyperliquid_authority_state.csv"), paths["hyperliquid_authority"])
     teacher_council_dir = root / "reports" / "orchestration" / "teacher_council"
@@ -7058,7 +7069,8 @@ def _return_summary(name: str, returns: pd.Series, total_rows: int, subset: pd.D
     gains = returns[returns > 0].sum()
     losses = abs(returns[returns < 0].sum())
     profit_factor = float(gains / losses) if losses else float("inf") if gains > 0 else 0.0
-    sharpe = float(returns.mean() / returns.std(ddof=0) * np.sqrt(len(returns))) if len(returns) > 1 and returns.std(ddof=0) else 0.0
+    sample_std = float(returns.std(ddof=1)) if len(returns) > 1 else 0.0
+    sharpe = float(returns.mean() / sample_std * np.sqrt(len(returns))) if sample_std else 0.0
     drawdown = _max_drawdown(returns)
     return {
         "variant": name,
@@ -7068,7 +7080,7 @@ def _return_summary(name: str, returns: pd.Series, total_rows: int, subset: pd.D
         "sharpe": sharpe,
         "max_drawdown": drawdown,
         "expectancy": float(returns.mean()) if len(returns) else 0.0,
-        "total_return": float(returns.sum()) if len(returns) else 0.0,
+        "total_return": float((1.0 + returns).clip(lower=0.0).prod() - 1.0) if len(returns) else 0.0,
         "cost_drag": float(subset.get("trade_cost_drag", pd.Series(dtype=float)).astype(float).sum()) if not subset.empty else 0.0,
         "regime": "mixed",
         "pair": "mixed",
@@ -7515,15 +7527,31 @@ def _refresh_dashboard_dependencies(root: Path = ROOT, *, refresh_profile: str =
         strategy_acceptance_checklist_report,
     )
 
-    strategy_acceptance_checklist_report(reports / "strategy_acceptance_checklist.csv")
+    strategy_acceptance_checklist_report(
+        reports / "strategy_acceptance_checklist.csv",
+        root=root,
+    )
     record("strategy_acceptance", "rebuilt", "acceptance_blockers_recomputed", reports / "strategy_acceptance_checklist.csv")
-    readiness = priority_readiness_report(reports / "priority_readiness.csv")
+    readiness = priority_readiness_report(
+        reports / "priority_readiness.csv",
+        root=root,
+    )
     record("priority_readiness", "rebuilt", "priority_gates_recomputed", reports / "priority_readiness.csv")
-    paper_venue_preflight_report(output_path=reports / "paper_venue_preflight.csv")
+    paper_venue_preflight_report(
+        output_path=reports / "paper_venue_preflight.csv",
+        root=root,
+    )
     record("paper_venue_preflight", "rebuilt", "submission_gate_recomputed", reports / "paper_venue_preflight.csv")
-    paper_execution_preflight_report(reports / "paper_execution_preflight.csv")
+    paper_execution_preflight_report(
+        reports / "paper_execution_preflight.csv",
+        root=root,
+    )
     record("paper_execution_preflight", "rebuilt", "paper_gate_recomputed", reports / "paper_execution_preflight.csv")
-    priority_gap_test_report(readiness, reports / "priority_gap_test.csv")
+    priority_gap_test_report(
+        readiness,
+        reports / "priority_gap_test.csv",
+        root=root,
+    )
     record("priority_gap_test", "rebuilt", "open_gaps_recomputed", reports / "priority_gap_test.csv")
     frame = pd.DataFrame(rows, columns=DASHBOARD_REFRESH_COLUMNS)
     _write_csv(frame, active / "dashboard_refresh_status.csv")
@@ -8421,12 +8449,12 @@ def _configured_env_key_present(root: Path, key: str) -> bool:
 
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> Path:
-    _atomic_replace_path(path, lambda temporary: frame.to_csv(temporary, index=False))
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _write_text(path: Path, text: str) -> Path:
-    _atomic_replace_path(path, lambda temporary: temporary.write_text(text, encoding="utf-8"))
+    atomic_write_text(path, text, encoding="utf-8")
     return path
 
 
@@ -8436,44 +8464,10 @@ def _write_json(path: Path, payload: dict[str, object]) -> Path:
 
 def _write_parquet_if_available(frame: pd.DataFrame, path: Path) -> str:
     try:
-        _atomic_replace_path(
-            path,
-            lambda temporary: frame.to_parquet(temporary, index=False),
-        )
+        atomic_write_parquet(frame, path, index=False)
         return "written"
     except Exception as exc:
         return f"not_written:{type(exc).__name__}"
-
-
-def _atomic_replace_path(path: Path, writer: Callable[[Path], object]) -> None:
-    """Replace a canonical artifact only after its temporary copy is durable."""
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
-    mode = (path.stat().st_mode & 0o777) if path.exists() else 0o644
-    try:
-        writer(temporary)
-        with temporary.open("rb") as handle:
-            os.fsync(handle.fileno())
-        os.chmod(temporary, mode)
-        os.replace(temporary, path)
-        _fsync_directory(path.parent)
-    except BaseException:
-        temporary.unlink(missing_ok=True)
-        raise
-
-
-def _fsync_directory(path: Path) -> None:
-    try:
-        descriptor = os.open(path, os.O_RDONLY)
-    except OSError:
-        return
-    try:
-        os.fsync(descriptor)
-    except OSError:
-        pass
-    finally:
-        os.close(descriptor)
 
 
 def _now() -> str:
@@ -8488,7 +8482,7 @@ def _max_drawdown(returns: pd.Series) -> float:
     if returns.empty:
         return 0.0
     equity = (1.0 + returns.fillna(0.0)).cumprod()
-    peak = equity.cummax()
+    peak = equity.cummax().clip(lower=1.0)
     drawdown = (peak - equity) / peak.replace(0, np.nan)
     return float(drawdown.max(skipna=True) or 0.0)
 
@@ -8794,6 +8788,51 @@ def _hyperliquid_wizard_mode_proof_state_row(root: Path) -> dict[str, object]:
             if ready
             else "refresh a complete Wizard capture and run the bounded no-credit preflight"
         ),
+    }
+
+
+def _wizard_ou_v6_terminal_state_row(root: Path) -> dict[str, object]:
+    path = root / "reports" / "active" / "wizard_ou_v6_terminal_closure.json"
+    payload = _read_json(path)
+    if not payload:
+        return _state_row(
+            "wizard_ou_v6_terminal_outcome",
+            False,
+            "OU-v6 terminal closure missing",
+            path,
+            "run close-wizard-ou-v6-terminal",
+        )
+    closed = (
+        payload.get("status") == "CLOSED_TERMINAL_FAILURE"
+        and payload.get("evidence_locked") is True
+        and payload.get("general_ou_v6_activation") is False
+        and payload.get("v7_registration_authorized") is False
+    )
+    evidence_blockers = payload.get("blockers")
+    blocker = (
+        "ou_v6_terminal_holdout_failed"
+        if closed
+        else ";".join(str(item) for item in evidence_blockers or [])
+        or "ou_v6_terminal_closure_invalid"
+    )
+    return {
+        "area": "wizard_ou_v6_terminal_outcome",
+        "ready": False,
+        "status": "terminal_failure_closed" if closed else "blocked_evidence_invalid",
+        "blocker": blocker,
+        "detail": (
+            f"passed_cells={payload.get('passed_cells', 0)}/8;"
+            f"evidence_locked={str(payload.get('evidence_locked') is True).lower()};"
+            "activation=false;v7_registration=false"
+        ),
+        "pair": "",
+        "candidate_id": "",
+        "setup_identity": "",
+        "setup_role": "wizard_ou_comparator_research",
+        "setup_status": "terminal_failure_closed" if closed else "blocked_evidence_invalid",
+        "setup_blocker": blocker,
+        "evidence_path": path,
+        "next_action": payload.get("next_action", "keep_ou_v6_blocked"),
     }
 
 

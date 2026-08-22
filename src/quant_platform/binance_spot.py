@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -44,8 +48,7 @@ def fetch_binance_spot_candles(
     output_base = Path(output_dir or ROOT / "data" / "raw" / "binance_spot_candles")
     output_base.mkdir(parents=True, exist_ok=True)
     output = output_base / f"{clean_symbol}_{interval}_candles.json"
-    output.write_text(
-        json.dumps(
+    atomic_write_text(output, json.dumps(
             {
                 "source": "binance_spot",
                 "base_url": used_base_url,
@@ -55,9 +58,7 @@ def fetch_binance_spot_candles(
             },
             indent=2,
             sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return output
 
 
@@ -327,7 +328,7 @@ def _rewrite_pair_history_as_binance(path: Path) -> None:
         "This is research evidence only; do not promote until Binance-specific fees, slippage, and borrow or shortability "
         "assumptions are merged and tested."
     )
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _binance_lane_markdown(frame: pd.DataFrame, pair_frame: pd.DataFrame) -> str:
@@ -436,13 +437,13 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _write_text(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")
     return path
 
 

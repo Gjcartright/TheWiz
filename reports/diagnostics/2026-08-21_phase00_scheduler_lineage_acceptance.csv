@@ -1,0 +1,23 @@
+control_id,control_area,acceptance_test,required_result,release_severity,status
+P00-SL-001,publication,Every registered final store sink requires a current scoped PublicationLease,No sink can publish without validation immediately before atomic replace,P0,NOT_RUN
+P00-SL-002,publication,Invoke every registered publisher while maintenance is active,Every invocation blocks and leaves active pointers unchanged,P0,NOT_RUN
+P00-SL-003,publication,Replay forged expired wrong-root wrong-scope and stale-generation leases,Every invalid lease blocks with a specific reason,P0,NOT_RUN
+P00-SL-004,publication,Kill a proof launcher while its child is running,The child cannot publish without its own current lease,P0,NOT_RUN
+P00-SL-005,publication,Exercise nested same-process publication,Nested operations are reentrant and do not bypass or deadlock,P0,NOT_RUN
+P00-SL-006,lineage,Register all 74 pointer candidates,Every candidate has explicit type producer schema role validator and migration state,P0,NOT_RUN
+P00-SL-007,lineage,Resolve typed recursive path fields,IDs hashes timestamps and receipt tokens are never parsed as paths,P0,NOT_RUN
+P00-SL-008,lineage,Validate active immutable targets,Every target is under an approved root and matches schema content ID and SHA-256,P0,NOT_RUN
+P00-SL-009,lineage,Validate blocked null-target decisions,Blocked decisions require immutable blockers and grant zero promotion and order authority,P0,NOT_RUN
+P00-SL-010,lineage,Repair three integrity defects and one missing path,Original payload hashes are preserved and repairs supersede rather than silently rehash,P0,NOT_RUN
+P00-SL-011,semantics,Run every artifact through its domain validator,Structural validity cannot override economic research or execution blockers,P0,NOT_RUN
+P00-SL-012,provenance,Invoke scheduler-shaped process without launchd provenance,Invocation fails closed rather than downgrading to manual or test,P0,NOT_RUN
+P00-SL-013,capabilities,Run NO_EXTERNAL_NO_ORDER cold proof,Zero network keychain credit and order-adapter calls occur,P0,NOT_RUN
+P00-SL-014,execution,Invoke every order boundary without a one-time execution permit,Every submission is denied before adapter or credential access,P0,NOT_RUN
+P00-SL-015,terminal_state,Exercise pass blocked deferred incomplete lock-busy and crash outcomes,Every run emits one immutable terminal receipt and only PASS returns zero,P0,NOT_RUN
+P00-SL-016,external_spend,Force local comparator lineage storage and reservation failures,Each failure occurs before any Wizard request or credit consumption,P0,NOT_RUN
+P00-SL-017,atomicity,Crash at each immutable-write and pointer-rotation boundary,Readers observe only the complete prior or complete next generation,P0,NOT_RUN
+P00-SL-018,checkpoint,Capture two unchanged quiesced checkpoints,Manifests are byte-identical and contain no unresolved mutable authority,P0,NOT_RUN
+P00-SL-019,verification,Run focused and full suites from exact accepted tree,All tests pass with warnings classified and immutable receipt written,P0,NOT_RUN
+P00-SL-020,reload,Reload only public L2 and observe two complete intervals,No external private call order authority drift or unclassified terminal state occurs,P0,NOT_RUN
+P00-SL-021,reload,Consider daily or Wizard-proof reload,A separate dated exact-credit permit and explicit operator approval are present,P0,NOT_RUN
+P00-SL-022,logs,Exercise size rotation retention redaction and freshness checks,Every scheduler remains inside policy and readiness blocks violations,P1,NOT_RUN

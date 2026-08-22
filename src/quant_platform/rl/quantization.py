@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 import json
 from pathlib import Path
 
@@ -40,9 +44,9 @@ def export_rl_policy(root: Path = ROOT) -> CommandResult:
     export_path = models / "export_report.json"
     parity_json = models / "parity_report.json"
     parity_csv = reports / "rl_quantization_parity.csv"
-    export_path.write_text(json.dumps(export_report, indent=2, sort_keys=True), encoding="utf-8")
-    parity_json.write_text(json.dumps(parity.iloc[0].to_dict(), indent=2, sort_keys=True), encoding="utf-8")
-    parity.to_csv(parity_csv, index=False)
+    atomic_write_text(export_path, json.dumps(export_report, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(parity_json, json.dumps(parity.iloc[0].to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_csv(parity, parity_csv, index=False)
     return CommandResult(
         paths={"export_report": export_path, "parity_report": parity_json, "parity_csv": parity_csv},
         summary=export_report,

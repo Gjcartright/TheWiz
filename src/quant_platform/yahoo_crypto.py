@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -53,8 +57,7 @@ def fetch_yahoo_crypto_candles(
     output_base = Path(output_dir or ROOT / "data" / "raw" / "yahoo_crypto_candles")
     output_base.mkdir(parents=True, exist_ok=True)
     output = output_base / f"{clean_symbol}_{interval}_candles.json"
-    output.write_text(
-        json.dumps(
+    atomic_write_text(output, json.dumps(
             {
                 "source": "yahoo_crypto",
                 "base_url": base_url,
@@ -64,9 +67,7 @@ def fetch_yahoo_crypto_candles(
             },
             indent=2,
             sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return output
 
 
@@ -345,7 +346,7 @@ def backfill_yahoo_crypto_funding(
         funding_y_ready = "funding_y_bps" in frame.columns and frame["funding_y_bps"].notna().any()
         if funding_x_ready and funding_y_ready:
             payload["history"] = frame.where(pd.notna(frame), None).to_dict("records")
-            path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+            atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
             rows.append(
                 {
                     "pair": pair,
@@ -455,7 +456,7 @@ def _rewrite_pair_history_as_yahoo(path: Path) -> None:
         "Derived from Yahoo Finance public crypto history. This is research evidence only; "
         "do not treat it as execution-truth or venue-specific slippage, fee, funding, or borrow evidence."
     )
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _to_yahoo_symbol(value: object) -> str:
@@ -510,13 +511,13 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 def _write_csv(frame: pd.DataFrame, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(path, index=False)
+    atomic_write_csv(frame, path, index=False)
     return path
 
 
 def _write_text(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text, encoding="utf-8")
     return path
 
 

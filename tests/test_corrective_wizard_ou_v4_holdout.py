@@ -53,7 +53,13 @@ def test_immutable_wizard_response_publication_never_leaves_partial_target(
 ) -> None:
     target = tmp_path / "responses" / "cell.json"
 
-    def fail_publish(_source: Path, _destination: Path) -> None:
+    def fail_publish(
+        _source: Path,
+        _destination: Path,
+        *,
+        follow_symlinks: bool,
+    ) -> None:
+        assert follow_symlinks is False
         raise OSError("simulated publication interruption")
 
     monkeypatch.setattr(corrective_wizard_ou_holdout.os, "link", fail_publish)

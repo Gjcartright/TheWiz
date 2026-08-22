@@ -37,6 +37,11 @@ def _read_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _read_csv_rows(path: Path) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
 def _prepare_root(tmp_path: Path) -> Path:
     root = tmp_path / "repo"
     active = root / "reports" / "active"
@@ -471,7 +476,7 @@ def test_stage4_handoff_blocks_tampered_source_family(tmp_path: Path) -> None:
 def test_stage4_handoff_blocks_active_candidate_without_strict_cost(tmp_path: Path) -> None:
     root = _prepare_root(tmp_path)
     gate_rows = root / "reports" / "active" / "registered_research_rerun_gate.csv"
-    rows = list(csv.DictReader(gate_rows.open(encoding="utf-8", newline="")))
+    rows = _read_csv_rows(gate_rows)
     rows[0]["strict_cost_ready_after_registration"] = "False"
     _write_csv(gate_rows, rows)
 
@@ -558,7 +563,7 @@ def test_stage4_handoff_blocks_active_pending_semantic_overlap(tmp_path: Path) -
         "current_hypothesis_batch.csv",
     ):
         path = active / name
-        rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+        rows = _read_csv_rows(path)
         rows[0]["semantic_hypothesis_id"] = "hypothesis-active"
         _write_csv(path, rows)
 
@@ -573,7 +578,7 @@ def test_stage4_handoff_blocks_active_pending_semantic_overlap(tmp_path: Path) -
 def test_stage4_handoff_blocks_pending_batch_omission(tmp_path: Path) -> None:
     root = _prepare_root(tmp_path)
     path = root / "reports" / "active" / "current_hypothesis_batch.csv"
-    rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+    rows = _read_csv_rows(path)
     rows.append(
         {
             **rows[0],
@@ -597,7 +602,7 @@ def test_stage4_handoff_blocks_unrepresented_batch_experiment_variant(
 ) -> None:
     root = _prepare_root(tmp_path)
     path = root / "reports" / "active" / "current_hypothesis_batch.csv"
-    rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+    rows = _read_csv_rows(path)
     rows.append({**rows[0], "experiment_id": "experiment-pending-1-alternative"})
     _write_csv(path, rows)
 
@@ -611,7 +616,7 @@ def test_stage4_handoff_blocks_unrepresented_batch_experiment_variant(
 def test_stage4_handoff_blocks_pending_representative_drift(tmp_path: Path) -> None:
     root = _prepare_root(tmp_path)
     path = root / "reports" / "active" / "registered_rerun_family_preflight.csv"
-    rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+    rows = _read_csv_rows(path)
     rows[0]["experiment_id"] = "experiment-not-in-batch"
     _write_csv(path, rows)
 
@@ -721,7 +726,7 @@ def test_stage4_handoff_validator_blocks_stale_pending_orientation(
     root = _prepare_root(tmp_path)
     _run(root)
     path = root / "reports" / "active" / "current_hypothesis_batch.csv"
-    rows = list(csv.DictReader(path.open(encoding="utf-8", newline="")))
+    rows = _read_csv_rows(path)
     rows[0]["orientation"] = "reverse"
     _write_csv(path, rows)
 

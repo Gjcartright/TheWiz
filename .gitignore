@@ -8,7 +8,11 @@ __pycache__/
 .ruff_cache/
 .runtime_tmp/
 .runtime_agents/
+.runtime_logs/
+.runtime_locks/
 .DS_Store
+._*
+pytest-of-*/
 
 data/
 work/
@@ -45,3 +49,10 @@ reports/pre_mortem/
 reports/post_mortem/
 reports/red_team/
 reports/supreme_team/
+
+# Keep the reviewed V2 corrective plan checkpointable without tracking generated runs.
+!reports/supreme_team/
+reports/supreme_team/*
+!reports/supreme_team/2026-08-20_v2_corrective_roadmap.md
+!reports/supreme_team/2026-08-20_v2_corrective_work_items.csv
+!reports/supreme_team/2026-08-20_v2_definition_of_done.csv

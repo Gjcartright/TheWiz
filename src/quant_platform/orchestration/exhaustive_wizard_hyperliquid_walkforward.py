@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-import shutil
 
 import numpy as np
 import pandas as pd
@@ -20,6 +19,17 @@ from quant_platform.backtest import (
     backtest_two_leg_spread_with_ledger,
     max_drawdown,
 )
+from quant_platform.economic_contract import y_on_x_beta, y_on_x_log_spread
+from quant_platform.orchestration.canonical_wizard_hyperliquid_contract import (
+    FALSE_DISCOVERY_RATE,
+    MINIMUM_SHARPE_PROBABILITY,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
     _load_history,
     _mode_settings,
@@ -30,8 +40,14 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_observed_cost_re
     _longest_observed_funding_segment,
 )
 from quant_platform.performance_math import calculate_annualized_sharpe
+from quant_platform.statistical_validation import (
+    benjamini_hochberg,
+    circular_block_bootstrap_mean,
+    expected_maximum_sharpe,
+    probabilistic_sharpe_ratio,
+    sharpe_probability_from_moments,
+)
 from quant_platform.wizard_mode_replay import build_local_mode_signal
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_walkforward.v1"
@@ -45,8 +61,8 @@ MIN_PROFIT_FACTOR = 1.10
 MAX_DRAWDOWN = 0.50
 MIN_POSITIVE_FOLDS = 3
 MAX_POSITIVE_FOLD_CONCENTRATION = 0.80
-FALSE_DISCOVERY_RATE = 0.10
 MAX_HEDGE_RATIO_CV = 0.35
+MIN_SHARPE_PROBABILITY = MINIMUM_SHARPE_PROBABILITY
 RESEARCH_ONLY_REASON = (
     "walk_forward_is_research_only;local_formula_approximation;"
     "current_l2_depth_is_point_in_time_not_historical_execution_evidence;"
@@ -174,9 +190,11 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
     snapshot_input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        suffix = source.suffix or ".dat"
-        target = snapshot_input_dir / f"{name}{suffix}"
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(
+            source,
+            snapshot_input_dir,
+            artifact_name=name,
+        )
         snapshot_inputs[name] = target
 
     paths = {
@@ -220,7 +238,11 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
             evidence_paths=snapshot_inputs.values(),
             root=root,
         )
-        if _text(observed_row.replay_status) != "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE":
+        completed_observed_statuses = {
+            "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+            "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+        }
+        if _text(observed_row.replay_status) not in completed_observed_statuses:
             status_rows.append(
                 {
                     **base,
@@ -275,7 +297,7 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
                 {
                     **base,
                     "walkforward_status": "BLOCKED_WALK_FORWARD_INPUTS",
-                    "walkforward_blocker": f"{type(exc).__name__}:{exc}",
+                    "walkforward_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
@@ -347,7 +369,7 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
                     exact_mode=exact_mode,
                 )
             except Exception as exc:
-                candidate_blocker = f"fold_{fold['fold_number']}:{type(exc).__name__}:{exc}"
+                candidate_blocker = f"fold_{fold['fold_number']}:{safe_exception_code(exc)}"
                 break
 
             fold_metrics = {
@@ -403,11 +425,21 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
         )
         gate_blockers = _walkforward_gate_blockers(aggregate)
         passed = not gate_blockers
+        short_history = _text(
+            getattr(observed_row, "history_validation_lane", "")
+        ) == "SHORT_HISTORY_RESEARCH_ONLY"
         candidate_row = {
             **base,
             **aggregate,
             "primary_candidate": _truthy(
                 getattr(observed_row, "research_rank_eligible", False)
+            ) and not short_history,
+            "history_validation_lane": _text(
+                getattr(observed_row, "history_validation_lane", "")
+            ),
+            "walkforward_rank_eligible": not short_history,
+            "walkforward_rank_blocker": (
+                "short_history_research_only" if short_history else ""
             ),
             "walkforward_status": (
                 "PASS_RESEARCH_WALK_FORWARD" if passed else "FAIL_RESEARCH_WALK_FORWARD"
@@ -415,6 +447,7 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
             "walkforward_blocker": ";".join(gate_blockers),
             "acceptance_status": "BLOCKED",
             "acceptance_reason": (
+                f"{'short_history_research_only;' if short_history else ''}"
                 f"{RESEARCH_ONLY_REASON};{_text(pair_cost.cost_blocker)}"
             ),
             "acceptance_eligible": False,
@@ -457,6 +490,13 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
         "aggregate_max_drawdown": "",
         "aggregate_total_return": "",
         "fold_return_raw_pvalue": "",
+        "fold_return_normal_proxy_status": "NOT_EVALUATED",
+        "block_bootstrap_return_pvalue": "",
+        "block_bootstrap_status": "NOT_EVALUATED",
+        "probabilistic_sharpe_probability": "",
+        "probabilistic_sharpe_status": "NOT_EVALUATED",
+        "deflated_sharpe_probability": "",
+        "deflated_sharpe_benchmark": "",
         "bh_qvalue": "",
         "parameter_stability_status": "NOT_EVALUATED",
         "deflated_sharpe_status": "NOT_EVALUATED",
@@ -475,10 +515,22 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
     statistical_columns = [
         "family_tests",
         "fold_return_raw_pvalue",
+        "fold_return_normal_proxy_status",
+        "block_bootstrap_return_pvalue",
+        "block_bootstrap_lower_95",
+        "block_bootstrap_upper_95",
+        "block_bootstrap_status",
+        "block_bootstrap_blocker",
+        "return_observations",
+        "probabilistic_sharpe_probability",
+        "probabilistic_sharpe_status",
+        "probabilistic_sharpe_blocker",
         "bh_qvalue",
         "false_discovery_rate",
         "hedge_ratio_cv",
         "parameter_stability_status",
+        "deflated_sharpe_probability",
+        "deflated_sharpe_benchmark",
         "deflated_sharpe_status",
         "statistical_selection_status",
         "statistical_selection_blocker",
@@ -521,8 +573,8 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
         (trades, paths["trades"], paths["snapshot_trades"]),
         (bars, paths["bars"], paths["snapshot_bars"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = _status_counts(status, "walkforward_status")
     summary: dict[str, object] = {
@@ -540,7 +592,19 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
         "experiment_status_counts": status_counts,
         "experiment_status_accounted": bool(sum(status_counts.values()) == len(status)),
         "completed_observed_replays": int(
-            observed["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE").sum()
+            observed["replay_status"]
+            .isin(
+                {
+                    "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+                    "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+                }
+            )
+            .sum()
+        ),
+        "short_history_walkforward_candidates": int(
+            candidates.get("history_validation_lane", pd.Series(dtype=str))
+            .eq("SHORT_HISTORY_RESEARCH_ONLY")
+            .sum()
         ),
         "walkforward_candidates_completed": int(len(candidates)),
         "primary_candidates_completed": int(
@@ -573,10 +637,10 @@ def run_exhaustive_wizard_hyperliquid_walkforward(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -625,16 +689,16 @@ def _fit_training_parameters(
         raise ValueError(f"finite_training_prices_{len(prices)}_below_{MIN_TRAIN_ROWS}")
     log_x = np.log(prices["price_x"])
     log_y = np.log(prices["price_y"])
-    variance_x = float(log_x.var(ddof=0))
-    if not math.isfinite(variance_x) or variance_x <= 1e-12:
-        raise ValueError("training_log_x_variance_too_small")
-    beta = float(log_x.cov(log_y, ddof=0) / variance_x)
+    try:
+        beta = y_on_x_beta(log_x, log_y)
+    except ValueError as exc:
+        raise ValueError("training_log_x_variance_too_small") from exc
     if not math.isfinite(beta) or abs(beta) <= 1e-8:
         raise ValueError("training_hedge_ratio_invalid")
     settings["hedge_ratio"] = beta
     diagnostics["fitted_hedge_ratio"] = beta
     if exact_mode.startswith("OU"):
-        spread = log_y - beta * log_x
+        spread = y_on_x_log_spread(prices["price_x"], prices["price_y"], beta)
         mu = float(spread.mean())
         sigma = float(spread.std(ddof=0))
         if not math.isfinite(mu) or not math.isfinite(sigma) or sigma <= 1e-12:
@@ -719,9 +783,7 @@ def _causal_feature_frame(
         ),
         errors="coerce",
     )
-    spread = np.log(price_y.where(price_y > 0.0)) - hedge_ratio * np.log(
-        price_x.where(price_x > 0.0)
-    )
+    spread = y_on_x_log_spread(price_x, price_y, hedge_ratio)
     returns_x = price_x.pct_change(fill_method=None)
     returns_y = price_y.pct_change(fill_method=None)
     pair_return = returns_y - hedge_ratio * returns_x
@@ -859,6 +921,12 @@ def _aggregate_candidate(
     )
     equity = (1.0 + net_returns).cumprod()
     sharpe = calculate_annualized_sharpe(net_returns, interval=interval)
+    periods_per_year = float(sharpe.periods_per_year or float("nan"))
+    probabilistic = probabilistic_sharpe_ratio(
+        net_returns,
+        periods_per_year=periods_per_year,
+    )
+    bootstrap = circular_block_bootstrap_mean(net_returns)
     fold_returns = [float(_number(row.get("total_return")) or 0.0) for row in fold_rows]
     fitted_hedges = pd.to_numeric(
         pd.Series([row.get("fitted_hedge_ratio") for row in fold_rows]),
@@ -878,7 +946,21 @@ def _aggregate_candidate(
         "folds_complete": len(fold_rows),
         "positive_folds": sum(value > 0.0 for value in fold_returns),
         "positive_fold_profit_concentration": concentration,
-        "fold_return_raw_pvalue": _one_sided_mean_pvalue(pd.Series(fold_returns)),
+        "fold_return_raw_pvalue": float("nan"),
+        "fold_return_normal_proxy_status": "RETIRED_DEPENDENCE_UNAWARE_PROXY",
+        "block_bootstrap_return_pvalue": bootstrap.pvalue,
+        "block_bootstrap_lower_95": bootstrap.lower_confidence_bound,
+        "block_bootstrap_upper_95": bootstrap.upper_confidence_bound,
+        "block_bootstrap_status": bootstrap.status,
+        "block_bootstrap_blocker": bootstrap.blocker,
+        "return_observations": probabilistic.observations,
+        "periods_per_year": periods_per_year,
+        "aggregate_period_sharpe": probabilistic.period_sharpe,
+        "aggregate_return_skewness": probabilistic.skewness,
+        "aggregate_return_pearson_kurtosis": probabilistic.pearson_kurtosis,
+        "probabilistic_sharpe_probability": probabilistic.probability,
+        "probabilistic_sharpe_status": probabilistic.status,
+        "probabilistic_sharpe_blocker": probabilistic.blocker,
         "hedge_ratio_cv": hedge_ratio_cv,
         "aggregate_trades": int(len(closed_returns)),
         "aggregate_profit_factor": profit_factor,
@@ -943,8 +1025,8 @@ def _add_statistical_selection_controls(candidates: pd.DataFrame) -> pd.DataFram
         return candidates.copy()
     controlled = candidates.copy()
     controlled["family_tests"] = len(controlled)
-    controlled["bh_qvalue"] = _benjamini_hochberg(
-        pd.to_numeric(controlled["fold_return_raw_pvalue"], errors="coerce")
+    controlled["bh_qvalue"] = benjamini_hochberg(
+        pd.to_numeric(controlled["block_bootstrap_return_pvalue"], errors="coerce")
     )
     controlled["false_discovery_rate"] = FALSE_DISCOVERY_RATE
     controlled["parameter_stability_status"] = np.where(
@@ -952,10 +1034,30 @@ def _add_statistical_selection_controls(candidates: pd.DataFrame) -> pd.DataFram
         "PASS",
         "BLOCKED",
     )
+    expected_best = expected_maximum_sharpe(
+        pd.to_numeric(controlled["aggregate_sharpe"], errors="coerce"),
+        independent_trials=len(controlled),
+    )
+    controlled["deflated_sharpe_benchmark"] = expected_best
+    controlled["deflated_sharpe_probability"] = [
+        sharpe_probability_from_moments(
+            observed_period_sharpe=float(_number(row.aggregate_period_sharpe) or float("nan")),
+            benchmark_annualized_sharpe=expected_best,
+            periods_per_year=float(_number(row.periods_per_year) or float("nan")),
+            observations=int(_number(row.return_observations) or 0),
+            skewness=float(_number(row.aggregate_return_skewness) or float("nan")),
+            pearson_kurtosis=float(
+                _number(row.aggregate_return_pearson_kurtosis) or float("nan")
+            ),
+        )
+        for row in controlled.itertuples()
+    ]
     controlled["deflated_sharpe_status"] = np.where(
-        pd.to_numeric(controlled["folds_complete"], errors="coerce").ge(5),
-        "PASS_FOLD_COUNT_PREREQUISITE",
-        "BLOCKED_FEWER_THAN_5_FOLDS",
+        pd.to_numeric(controlled["deflated_sharpe_probability"], errors="coerce").ge(
+            MIN_SHARPE_PROBABILITY
+        ),
+        "PASS",
+        "BLOCKED",
     )
     statuses: list[str] = []
     blockers: list[str] = []
@@ -963,11 +1065,16 @@ def _add_statistical_selection_controls(candidates: pd.DataFrame) -> pd.DataFram
         row_blockers: list[str] = []
         qvalue = _number(row.bh_qvalue)
         if qvalue is None or not math.isfinite(qvalue) or qvalue > FALSE_DISCOVERY_RATE:
-            row_blockers.append("false_discovery_gate_failed")
+            row_blockers.append("block_bootstrap_false_discovery_gate_failed")
+        if _text(row.block_bootstrap_status) != "VALID":
+            row_blockers.append("dependent_return_inference_unavailable")
+        psr = _number(row.probabilistic_sharpe_probability)
+        if psr is None or psr < MIN_SHARPE_PROBABILITY:
+            row_blockers.append("probabilistic_sharpe_gate_failed")
         if _text(row.parameter_stability_status) != "PASS":
             row_blockers.append("hedge_ratio_instability")
-        if _text(row.deflated_sharpe_status) != "PASS_FOLD_COUNT_PREREQUISITE":
-            row_blockers.append("deflated_sharpe_fold_count_prerequisite_failed")
+        if _text(row.deflated_sharpe_status) != "PASS":
+            row_blockers.append("deflated_sharpe_gate_failed")
         if _text(row.walkforward_status) != "PASS_RESEARCH_WALK_FORWARD":
             row_blockers.append("research_walk_forward_gate_failed")
         statuses.append("PASS" if not row_blockers else "BLOCKED")
@@ -978,30 +1085,13 @@ def _add_statistical_selection_controls(candidates: pd.DataFrame) -> pd.DataFram
 
 
 def _benjamini_hochberg(pvalues: pd.Series) -> pd.Series:
-    values = pd.to_numeric(pvalues, errors="coerce")
-    result = pd.Series(float("nan"), index=values.index, dtype="float64")
-    valid = values.dropna().clip(0.0, 1.0).sort_values()
-    if valid.empty:
-        return result
-    count = len(valid)
-    adjusted = valid * count / np.arange(1, count + 1)
-    adjusted = pd.Series(
-        np.minimum.accumulate(adjusted.iloc[::-1])[::-1],
-        index=valid.index,
-    ).clip(upper=1.0)
-    result.loc[adjusted.index] = adjusted
-    return result
+    return benjamini_hochberg(pvalues)
 
 
 def _one_sided_mean_pvalue(values: pd.Series) -> float:
-    clean = pd.to_numeric(values, errors="coerce").dropna()
-    if len(clean) < 3:
-        return float("nan")
-    standard_error = float(clean.std(ddof=1) / math.sqrt(len(clean)))
-    if not math.isfinite(standard_error) or standard_error <= 0.0:
-        return 0.0 if float(clean.mean()) > 0.0 else 1.0
-    zscore = float(clean.mean() / standard_error)
-    return float(0.5 * math.erfc(zscore / math.sqrt(2.0)))
+    """Compatibility wrapper for callers; uses dependence-aware bootstrap."""
+
+    return circular_block_bootstrap_mean(values).pvalue
 
 
 def _status_base(
@@ -1052,19 +1142,27 @@ def _rank_candidates(candidates: pd.DataFrame) -> pd.DataFrame:
     if candidates.empty:
         return candidates.copy()
     ranked = candidates.copy()
+    if "walkforward_rank_eligible" not in ranked.columns:
+        ranked["walkforward_rank_eligible"] = True
     ranked["_passed"] = ranked["walkforward_status"].eq("PASS_RESEARCH_WALK_FORWARD")
     ranked = ranked.sort_values(
         [
+            "walkforward_rank_eligible",
             "_passed",
             "aggregate_profit_factor",
             "aggregate_sharpe",
             "aggregate_max_drawdown",
             "aggregate_trades",
         ],
-        ascending=[False, False, False, True, False],
+        ascending=[False, False, False, False, True, False],
         na_position="last",
     ).drop(columns="_passed").reset_index(drop=True)
-    ranked.insert(0, "walkforward_rank", range(1, len(ranked) + 1))
+    eligible_count = int(ranked["walkforward_rank_eligible"].map(_truthy).sum())
+    ranked.insert(
+        0,
+        "walkforward_rank",
+        list(range(1, eligible_count + 1)) + [""] * (len(ranked) - eligible_count),
+    )
     return ranked
 
 
@@ -1095,6 +1193,8 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Experiments accounted: {summary['unique_experiment_ids']} / {summary['experiments']}",
             f"- Completed observed replays considered: {summary['completed_observed_replays']}",
             f"- Walk-forward candidates completed: {summary['walkforward_candidates_completed']}",
+            "- Short-history walk-forward candidates: "
+            f"{summary['short_history_walkforward_candidates']}",
             f"- Primary full-sample cohort completed: {summary['primary_candidates_completed']}",
             f"- Research walk-forward passes: {summary['walkforward_passes']}",
             f"- Multiple-testing selection passes: {summary['statistical_selection_passes']}",

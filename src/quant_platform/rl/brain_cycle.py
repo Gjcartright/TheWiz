@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from math import isfinite
 from datetime import datetime, timezone
 from pathlib import Path
@@ -113,9 +115,9 @@ def run_brain_cycle(
             "created_at": now_utc_iso(),
         },
     )
-    candidates.to_csv(paths["candidate_rollup"], index=False)
+    atomic_write_csv(candidates, paths["candidate_rollup"], index=False)
     writeable_rollup = _coerce_candidate_rollup(candidates)
-    writeable_rollup.to_csv(paths["candidate_rollup"], index=False)
+    atomic_write_csv(writeable_rollup, paths["candidate_rollup"], index=False)
     readiness_gate = "pass" if float(cycle_readiness["readiness_score"]) >= float(readiness_threshold) else "hold"
     _append_readiness_trend(
         root=root,
@@ -201,8 +203,8 @@ def build_brain_readiness_report(
     report_path.parent.mkdir(parents=True, exist_ok=True)
     score_payload["candidate_rows"] = int(len(frame))
     report_frame = pd.DataFrame([score_payload])
-    report_frame.to_csv(report_path, index=False)
-    report_frame.to_csv(latest_report_path, index=False)
+    atomic_write_csv(report_frame, report_path, index=False)
+    atomic_write_csv(report_frame, latest_report_path, index=False)
     write_cycle_summary(
         summary_path,
         {
@@ -442,7 +444,7 @@ def _append_readiness_trend(
             existing = pd.read_csv(trend_path)
         except Exception:
             existing = pd.DataFrame()
-    pd.concat([existing, pd.DataFrame([payload])], ignore_index=True).to_csv(trend_path, index=False)
+    atomic_write_csv(pd.concat([existing, pd.DataFrame([payload])], ignore_index=True), trend_path, index=False)
 
 
 def _ready_status_diversity(frame: pd.DataFrame) -> bool:

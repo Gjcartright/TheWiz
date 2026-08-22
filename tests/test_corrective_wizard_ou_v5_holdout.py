@@ -466,6 +466,7 @@ def test_v5_capture_writes_intents_and_evaluates_all_frozen_cells(
     original_response = raw_paths[0].read_bytes()
     injected = json.loads(raw_paths[0].read_text(encoding="utf-8"))
     injected["injected_without_vendor_completion"] = True
+    raw_paths[0].chmod(0o600)
     raw_paths[0].write_text(json.dumps(injected), encoding="utf-8")
     injected_binding = validate_ou_v5_evaluation_binding(root=tmp_path)
     assert injected_binding["status"] == "BLOCKED"

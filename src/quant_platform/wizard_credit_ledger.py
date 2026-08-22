@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import fcntl
 import json
-import os
 import re
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -12,15 +11,20 @@ from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    create_exclusive_text,
+    promote_staged_file,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "thewiz.wizard_credit_ledger.v1"
+RECONCILIATION_SCHEMA_VERSION = "thewiz.wizard_credit_reconciliation.v2"
 DISCOVERY_LANE = "exhaustive_discovery_sweep"
+DISCOVERY_REFRESH_LANE = "daily_discovery_refresh"
 PROOF_LANE = "exact_mode_and_copula_proofs"
-ALLOWED_LANES = frozenset({DISCOVERY_LANE, PROOF_LANE})
+ALLOWED_LANES = frozenset({DISCOVERY_LANE, DISCOVERY_REFRESH_LANE, PROOF_LANE})
 
 
 def validate_wizard_credit_lane_evidence(
@@ -63,6 +67,16 @@ def validate_wizard_credit_lane_evidence(
     expected_reconciliation_path = day_root / "reconciliations" / f"{lane}_{key_hash}.json"
     if _resolve_evidence_path(root, reconciliation_path) != expected_reconciliation_path.resolve():
         return {"status": "BLOCKED", "blocker": "reconciliation_path_mismatch"}
+    if reconciliation.get("schema_version") != RECONCILIATION_SCHEMA_VERSION:
+        return {
+            "status": "BLOCKED",
+            "blocker": "legacy_credit_reconciliation_not_vendor_delta_proven",
+        }
+    if reconciliation.get("vendor_delta_status") != "PASS_VENDOR_DELTA":
+        return {
+            "status": "BLOCKED",
+            "blocker": "credit_reconciliation_vendor_delta_not_proven",
+        }
     return {
         "status": "PASS",
         "blocker": "",
@@ -76,6 +90,11 @@ def validate_wizard_credit_lane_evidence(
         "attempted_credits": int(reconciliation["attempted_credits"]),
         "completed_credits": int(reconciliation["completed_credits"]),
         "external_requests": int(reconciliation["external_requests"]),
+        "observed_used_before": int(reconciliation["observed_used_before"]),
+        "observed_used_after": int(reconciliation["observed_used_after"]),
+        "observed_used_delta": int(reconciliation["observed_used_delta"]),
+        "vendor_delta_status": str(reconciliation["vendor_delta_status"]),
+        "activity_rows": list(reconciliation["activity_rows"]),
         "order_submission_included": False,
         "testnet_order_authority": False,
         "live_trading_authorized": False,
@@ -90,6 +109,7 @@ def reserve_wizard_credit_lane(
     now: datetime | None = None,
     daily_credit_limit: int = 1000,
     protected_reserve: int = 100,
+    max_external_requests: int | None = None,
 ) -> CommandResult:
     """Reserve one lane's maximum UTC-day spend without making a vendor call."""
 
@@ -99,6 +119,8 @@ def reserve_wizard_credit_lane(
         daily_credit_limit=daily_credit_limit,
         protected_reserve=protected_reserve,
     )
+    if max_external_requests is not None and max_external_requests <= 0:
+        raise ValueError("max_external_requests must be positive when provided")
     timestamp = _as_utc(now)
     day = timestamp.date().isoformat()
     day_root = _day_root(root, day)
@@ -147,6 +169,19 @@ def reserve_wizard_credit_lane(
                 and int(receipt["external_requests"]) == 0
                 for receipt in lane_reconciliations
             )
+            reservation_sha256 = sha256(_encoded_json(existing)).hexdigest()
+            zero_effect_authority_retry = _zero_effect_authority_retry_safe(
+                reservation_id=str(existing["reservation_id"]),
+                reservation_sha256=reservation_sha256,
+            )
+            binding = None
+            if reconciled_zero_attempt_retry or zero_effect_authority_retry:
+                binding = _register_current_external_effect_binding(
+                    reservation=existing,
+                    max_external_requests=max_external_requests,
+                    binding_nonce=f"{lane}:{timestamp.isoformat()}",
+                )
+            external_spend_authorized = binding is not None
             summary = _day_summary(
                 root=root,
                 day=day,
@@ -155,7 +190,11 @@ def reserve_wizard_credit_lane(
                 lane=lane,
                 blocker="",
                 reservation=existing,
-                external_spend_authorized=reconciled_zero_attempt_retry,
+                external_spend_authorized=external_spend_authorized,
+                effect_reservation_binding_id=(
+                    binding.binding_id if binding is not None else ""
+                ),
+                zero_effect_authority_retry=zero_effect_authority_retry,
             )
             summary["zero_attempt_reconciliation_retry"] = reconciled_zero_attempt_retry
             _atomic_json(summary, status_path)
@@ -196,6 +235,11 @@ def reserve_wizard_credit_lane(
             "wizardcredit_" + sha256(_canonical_json(body).encode("utf-8")).hexdigest()[:20]
         )
         receipt = _seal(body)
+        binding = _register_current_external_effect_binding(
+            reservation=receipt,
+            max_external_requests=max_external_requests,
+            binding_nonce=f"{lane}:{timestamp.isoformat()}",
+        )
         reservation_path.parent.mkdir(parents=True, exist_ok=True)
         _write_exclusive_json(receipt, reservation_path)
         state["reservations"][lane] = receipt
@@ -207,7 +251,10 @@ def reserve_wizard_credit_lane(
             lane=lane,
             blocker="",
             reservation=receipt,
-            external_spend_authorized=True,
+            external_spend_authorized=binding is not None,
+            effect_reservation_binding_id=(
+                binding.binding_id if binding is not None else ""
+            ),
         )
         _atomic_json(summary, status_path)
         return CommandResult(
@@ -226,6 +273,8 @@ def reconcile_wizard_credit_lane(
     completed_credits: int,
     external_requests: int,
     observed_used_before: int | None = None,
+    observed_used_after: int | None = None,
+    activity_rows: list[dict[str, Any]] | tuple[dict[str, Any], ...] | None = None,
     now: datetime | None = None,
 ) -> CommandResult:
     """Bind actual lane activity to a reservation in an immutable receipt."""
@@ -245,10 +294,30 @@ def reconcile_wizard_credit_lane(
             raise ValueError(f"{name} must be non-negative")
     if completed_credits > attempted_credits:
         raise ValueError("completed_credits cannot exceed attempted_credits")
-    if external_requests > attempted_credits:
-        raise ValueError("external_requests cannot exceed attempted_credits")
     if observed_used_before is not None and observed_used_before < 0:
         raise ValueError("observed_used_before must be non-negative when provided")
+    if observed_used_after is not None and observed_used_after < 0:
+        raise ValueError("observed_used_after must be non-negative when provided")
+    normalized_activity = _normalize_activity_rows(activity_rows or ())
+    if sum(row["external_requests"] for row in normalized_activity) != external_requests:
+        raise ValueError("activity external requests do not match reconciliation total")
+    if sum(row["attempted_credits"] for row in normalized_activity) != attempted_credits:
+        raise ValueError("activity attempted credits do not match reconciliation total")
+    if sum(row["completed_credits"] for row in normalized_activity) != completed_credits:
+        raise ValueError("activity completed credits do not match reconciliation total")
+    if attempted_credits > 0 and (
+        observed_used_before is None or observed_used_after is None
+    ):
+        raise ValueError("paid reconciliation requires vendor usage before and after")
+    if observed_used_before is None:
+        observed_used_before = 0
+    if observed_used_after is None:
+        observed_used_after = observed_used_before
+    observed_used_delta = observed_used_after - observed_used_before
+    if observed_used_delta < 0:
+        raise ValueError("vendor used credits decreased during reconciliation")
+    if observed_used_delta != attempted_credits:
+        raise ValueError("vendor credit delta does not equal attempted credits")
 
     timestamp = _as_utc(now)
     day = timestamp.date().isoformat()
@@ -289,6 +358,10 @@ def reconcile_wizard_credit_lane(
                     int(existing.get("completed_credits", -1)) == completed_credits,
                     int(existing.get("external_requests", -1)) == external_requests,
                     existing.get("observed_used_before") == observed_used_before,
+                    existing.get("observed_used_after") == observed_used_after,
+                    existing.get("observed_used_delta") == observed_used_delta,
+                    existing.get("activity_rows") == normalized_activity,
+                    existing.get("schema_version") == RECONCILIATION_SCHEMA_VERSION,
                 )
             )
             if not matches:
@@ -332,7 +405,7 @@ def reconcile_wizard_credit_lane(
             )
 
         body = {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": RECONCILIATION_SCHEMA_VERSION,
             "credit_date_utc": day,
             "reconciled_at_utc": timestamp.isoformat(),
             "lane": lane,
@@ -343,6 +416,10 @@ def reconcile_wizard_credit_lane(
             "completed_credits": completed_credits,
             "external_requests": external_requests,
             "observed_used_before": observed_used_before,
+            "observed_used_after": observed_used_after,
+            "observed_used_delta": observed_used_delta,
+            "vendor_delta_status": "PASS_VENDOR_DELTA",
+            "activity_rows": normalized_activity,
             "research_only": True,
             "candidate_promotion_authority": False,
             "order_submission_included": False,
@@ -491,8 +568,9 @@ def _reconciliation_semantics_valid(
         attempted = int(receipt.get("attempted_credits", -1))
         completed = int(receipt.get("completed_credits", -1))
         external_requests = int(receipt.get("external_requests", -1))
-        observed = receipt.get("observed_used_before")
-        if observed is not None and int(observed) < 0:
+        schema_version = str(receipt.get("schema_version", ""))
+        observed_before = receipt.get("observed_used_before")
+        if observed_before is not None and int(observed_before) < 0:
             return False
         reconciliation_key = str(receipt.get("reconciliation_key", ""))
         reconciliation_id = str(receipt.get("reconciliation_id", ""))
@@ -505,20 +583,91 @@ def _reconciliation_semantics_valid(
     except (TypeError, ValueError):
         return False
     return bool(
-        receipt.get("schema_version") == SCHEMA_VERSION
+        schema_version in {SCHEMA_VERSION, RECONCILIATION_SCHEMA_VERSION}
         and receipt.get("credit_date_utc") == day
         and lane in ALLOWED_LANES
         and re.fullmatch(r"[0-9a-f]{20}", key_hash)
         and key_hash == sha256(reconciliation_key.encode("utf-8")).hexdigest()[:20]
         and attempted >= 0
         and 0 <= completed <= attempted
-        and 0 <= external_requests <= attempted
+        and external_requests >= 0
         and reconciliation_id == expected_id
         and receipt.get("research_only") is True
         and receipt.get("candidate_promotion_authority") is False
         and receipt.get("order_submission_included") is False
         and receipt.get("testnet_order_authority") is False
         and receipt.get("live_trading_authorized") is False
+        and (
+            schema_version == SCHEMA_VERSION
+            or _v2_reconciliation_evidence_valid(
+                receipt,
+                attempted=attempted,
+                completed=completed,
+                external_requests=external_requests,
+            )
+        )
+    )
+
+
+def _normalize_activity_rows(
+    rows: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    names: set[str] = set()
+    for raw in rows:
+        if not isinstance(raw, dict):
+            raise TypeError("credit activity row must be an object")
+        lane = str(raw.get("lane", "")).strip()
+        if not lane or lane in names:
+            raise ValueError("credit activity lane must be non-empty and unique")
+        names.add(lane)
+        values: dict[str, int] = {}
+        for field in (
+            "external_requests",
+            "credit_cost",
+            "attempted_credits",
+            "completed_credits",
+        ):
+            value = raw.get(field)
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"credit activity {field} must be an integer")
+            values[field] = value
+        if values["external_requests"] < 0 or values["credit_cost"] <= 0:
+            raise ValueError("credit activity requests and cost are invalid")
+        if values["attempted_credits"] != (
+            values["external_requests"] * values["credit_cost"]
+        ):
+            raise ValueError("credit activity attempted credits do not match calls times cost")
+        if not 0 <= values["completed_credits"] <= values["attempted_credits"]:
+            raise ValueError("credit activity completed credits are invalid")
+        if values["completed_credits"] % values["credit_cost"]:
+            raise ValueError("credit activity completed credits are not whole calls")
+        normalized.append({"lane": lane, **values})
+    return sorted(normalized, key=lambda row: row["lane"])
+
+
+def _v2_reconciliation_evidence_valid(
+    receipt: dict[str, Any],
+    *,
+    attempted: int,
+    completed: int,
+    external_requests: int,
+) -> bool:
+    try:
+        before = int(receipt.get("observed_used_before", -1))
+        after = int(receipt.get("observed_used_after", -1))
+        delta = int(receipt.get("observed_used_delta", -1))
+        activity = _normalize_activity_rows(receipt.get("activity_rows", []))
+    except (TypeError, ValueError):
+        return False
+    return bool(
+        before >= 0
+        and after >= before
+        and delta == after - before == attempted
+        and sum(row["external_requests"] for row in activity) == external_requests
+        and sum(row["attempted_credits"] for row in activity) == attempted
+        and sum(row["completed_credits"] for row in activity) == completed
+        and receipt.get("vendor_delta_status") == "PASS_VENDOR_DELTA"
     )
 
 
@@ -555,6 +704,8 @@ def _day_summary(
     reservation: dict[str, Any] | None = None,
     reconciliation: dict[str, Any] | None = None,
     external_spend_authorized: bool = False,
+    effect_reservation_binding_id: str = "",
+    zero_effect_authority_retry: bool = False,
 ) -> dict[str, Any]:
     reservations = state["reservations"]
     reconciliations = state["reconciliations"]
@@ -600,6 +751,8 @@ def _day_summary(
         # replay vendor requests.
         "fresh_reservation": bool(status == "PASS" and external_spend_authorized),
         "external_spend_authorized": external_spend_authorized,
+        "effect_reservation_binding_id": effect_reservation_binding_id,
+        "zero_effect_authority_retry": zero_effect_authority_retry,
         "lane_external_authority_remaining_credits": (
             max(lane_reserved - lane_attempted, 0) if external_spend_authorized else 0
         ),
@@ -639,6 +792,8 @@ def _blocked_result(
         "live_trading_authorized": False,
         "fresh_reservation": False,
         "external_spend_authorized": False,
+        "effect_reservation_binding_id": "",
+        "zero_effect_authority_retry": False,
         "lane_external_authority_remaining_credits": 0,
         "evidence_root": _relative(_day_root(root, day), root),
     }
@@ -659,38 +814,71 @@ def _ledger_lock(root: Path) -> Iterator[None]:
 
 
 def _write_exclusive_json(payload: dict[str, Any], path: Path) -> None:
-    encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
-    try:
-        with temporary.open("x", encoding="utf-8") as handle:
-            handle.write(encoded)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.link(temporary, path)
-        _fsync_directory(path.parent)
-    finally:
-        temporary.unlink(missing_ok=True)
+    create_exclusive_text(
+        path,
+        _encoded_json(payload).decode("utf-8"),
+        encoding="utf-8",
+    )
 
 
-def _fsync_directory(path: Path) -> None:
-    try:
-        descriptor = os.open(path, os.O_RDONLY)
-    except OSError:
-        return
-    try:
-        os.fsync(descriptor)
-    except OSError:
-        pass
-    finally:
-        os.close(descriptor)
+def _encoded_json(payload: dict[str, Any]) -> bytes:
+    return (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def _register_current_external_effect_binding(
+    *,
+    reservation: dict[str, Any],
+    max_external_requests: int | None,
+    binding_nonce: str,
+):
+    from quant_platform.orchestration.corrective_external_effects import (
+        current_external_effect_issuer,
+    )
+
+    issuer = current_external_effect_issuer()
+    if issuer is None or max_external_requests is None:
+        return None
+    if max_external_requests > issuer.max_total_requests:
+        raise ValueError("external request ceiling exceeds supervisor authority")
+    planned_credits = int(reservation["planned_credits"])
+    if planned_credits > issuer.max_total_credits:
+        raise ValueError("credit reservation exceeds supervisor authority")
+    return issuer.authority.register_external_reservation(
+        run_id=issuer.run_id,
+        intended_slot_id=issuer.intended_slot_id,
+        provider_id=issuer.provider_id,
+        account_scope_id=issuer.account_scope_id,
+        reservation_id=str(reservation["reservation_id"]),
+        reservation_sha256=sha256(_encoded_json(reservation)).hexdigest(),
+        max_total_requests=max_external_requests,
+        max_total_credits=planned_credits,
+        binding_nonce=binding_nonce,
+    )
+
+
+def _zero_effect_authority_retry_safe(
+    *,
+    reservation_id: str,
+    reservation_sha256: str,
+) -> bool:
+    from quant_platform.orchestration.corrective_external_effects import (
+        current_external_effect_issuer,
+    )
+
+    issuer = current_external_effect_issuer()
+    if issuer is None:
+        return False
+    return issuer.authority.external_reservation_retry_safe(
+        reservation_id=reservation_id,
+        reservation_sha256=reservation_sha256,
+    )
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _day_root(root: Path, day: str) -> Path:

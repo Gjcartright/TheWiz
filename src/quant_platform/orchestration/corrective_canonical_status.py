@@ -15,6 +15,8 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.corrective_canonical_status.v1"
@@ -59,7 +61,7 @@ def rebind_checkpoint_stage4_evidence(
     except Exception as exc:  # noqa: BLE001 - rebinding must fail closed
         validation = {
             "status": "BLOCKED",
-            "blockers": [f"stage4_validator_failed:{type(exc).__name__}:{exc}"],
+            "blockers": [f"stage4_validator_failed:{safe_exception_code(exc)}"],
         }
     if validation.get("status") != "PASS":
         blockers.append("canonical_stage4_source_receipt_invalid")
@@ -576,7 +578,7 @@ def _atomic_text(path: Path, value: str) -> None:
             handle.write(value)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        promote_staged_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

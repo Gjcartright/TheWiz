@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
-import math
 from pathlib import Path
-import shutil
 
 import pandas as pd
 
@@ -17,6 +16,12 @@ from quant_platform.backtest import (
     CostModel,
     FundingPolicy,
     backtest_two_leg_spread_with_ledger,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
 )
 from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay import (
     MIN_RESEARCH_RANK_TRADES,
@@ -27,7 +32,6 @@ from quant_platform.orchestration.exhaustive_wizard_hyperliquid_canonical_replay
     _unique_mode_rows,
 )
 from quant_platform.wizard_mode_replay import build_local_mode_signal
-
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_observed_cost_replay.v1"
@@ -127,8 +131,7 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
     input_dir.mkdir(parents=True, exist_ok=True)
     snapshot_inputs: dict[str, Path] = {}
     for name, source in input_paths.items():
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     paths = {
@@ -191,6 +194,7 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
         if readiness_status not in {
             "READY_FOR_PROVISIONAL_COST_RESEARCH",
             "READY_FOR_COST_CALIBRATED_REPLAY",
+            "READY_FOR_SHORT_HISTORY_COST_RESEARCH",
         }:
             result_rows.append(
                 {
@@ -299,16 +303,23 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
                 {
                     **base,
                     "replay_status": "BLOCKED_REPLAY_ERROR",
-                    "replay_blocker": f"{type(exc).__name__}:{exc}",
+                    "replay_blocker": f"{safe_exception_code(exc)}",
                 }
             )
             continue
 
         metrics = asdict(result)
+        short_history = _text(_get(pair_cost, "history_lane")) == (
+            "SHORT_HISTORY_RESEARCH_ONLY"
+        )
         completed = {
             **base,
             **metrics,
-            "replay_status": "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+            "replay_status": (
+                "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE"
+                if short_history
+                else "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE"
+            ),
             "replay_blocker": "",
             "metric_name": mode_result.metric_name,
             "mode_fidelity_status": mode_result.mode_fidelity_status,
@@ -318,6 +329,7 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
             "observed_funding_rows": int(len(history)),
             "acceptance_status": "BLOCKED",
             "acceptance_reason": (
+                f"{'short_history_research_only;' if short_history else ''}"
                 f"{RESEARCH_ONLY_REASON};{_text(pair_cost.cost_blocker)};"
                 f"{mode_result.mode_fidelity_status}"
             ),
@@ -356,7 +368,11 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
     ).fillna("")
     results["research_rank_eligible"] = False
     results["research_rank_blocker"] = "replay_not_complete"
-    completed_mask = results["replay_status"].eq("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE")
+    completed_statuses = {
+        "OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+        "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE",
+    }
+    completed_mask = results["replay_status"].isin(completed_statuses)
     rank_blockers = results.loc[completed_mask].apply(_observed_rank_blocker, axis=1)
     results.loc[completed_mask, "research_rank_blocker"] = rank_blockers
     results.loc[completed_mask, "research_rank_eligible"] = rank_blockers.eq("")
@@ -401,8 +417,8 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
         (trades, paths["trades"], paths["snapshot_trades"]),
         (comparison, paths["comparison"], paths["snapshot_comparison"]),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
 
     status_counts = _status_counts(results, "replay_status")
     summary: dict[str, object] = {
@@ -420,6 +436,17 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
         "experiment_status_accounted": bool(sum(status_counts.values()) == len(results)),
         "observed_cost_replays_complete": int(
             status_counts.get("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE", 0)
+            + status_counts.get(
+                "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE", 0
+            )
+        ),
+        "full_history_observed_cost_replays_complete": int(
+            status_counts.get("OBSERVED_COST_RESEARCH_REPLAY_COMPLETE", 0)
+        ),
+        "short_history_observed_cost_replays_complete": int(
+            status_counts.get(
+                "SHORT_HISTORY_OBSERVED_COST_RESEARCH_REPLAY_COMPLETE", 0
+            )
         ),
         "research_rank_eligible_replays": int(results["research_rank_eligible"].map(_truthy).sum()),
         "minimum_research_rank_trades": MIN_RESEARCH_RANK_TRADES,
@@ -439,10 +466,10 @@ def run_exhaustive_wizard_hyperliquid_observed_cost_replay(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -504,6 +531,11 @@ def _base_row(
         "partial_fill_probability": CostModel().partial_fill_probability,
         "cost_evidence_status": _text(_get(pair_cost, "cost_evidence_status")),
         "cost_evidence_blocker": _text(_get(pair_cost, "cost_blocker")),
+        "history_validation_lane": _text(_get(pair_cost, "history_lane")),
+        "history_acceptance_ready": _truthy(
+            _get(pair_cost, "acceptance_history_ready")
+        ),
+        "history_research_ready": _truthy(_get(pair_cost, "research_history_ready")),
         "replay_status": "",
         "replay_blocker": "",
         "metric_name": "",
@@ -675,6 +707,10 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Observed-cost replay: `{summary['observed_cost_replay_id']}`",
             f"- Experiments accounted: {summary['unique_experiment_ids']} / {summary['experiments']}",
             f"- Research replays complete: {summary['observed_cost_replays_complete']}",
+            "- Full-history observed-cost replays: "
+            f"{summary['full_history_observed_cost_replays_complete']}",
+            "- Short-history observed-cost replays: "
+            f"{summary['short_history_observed_cost_replays_complete']}",
             f"- Research-rank eligible: {summary['research_rank_eligible_replays']}",
             "- Minimum ranked evidence span: "
             f"{summary['minimum_research_rank_bars']['1d']} daily bars / "

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -182,10 +186,10 @@ def write_langgraph_workflow_manifest(
 
     lanes = pd.DataFrame(AGENT_LANES)
     edges = pd.DataFrame(WORKFLOW_EDGES)
-    lanes.to_csv(lane_path, index=False)
-    edges.to_csv(edge_path, index=False)
-    state_path.write_text(json.dumps(_json_safe_state(final_state or {}), indent=2, sort_keys=True), encoding="utf-8")
-    md_path.write_text(_workflow_markdown(lanes, edges, final_state or {}), encoding="utf-8")
+    atomic_write_csv(lanes, lane_path, index=False)
+    atomic_write_csv(edges, edge_path, index=False)
+    atomic_write_text(state_path, json.dumps(_json_safe_state(final_state or {}), indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(md_path, _workflow_markdown(lanes, edges, final_state or {}), encoding="utf-8")
     return {
         "langgraph_agent_lanes": lane_path,
         "langgraph_agent_edges": edge_path,

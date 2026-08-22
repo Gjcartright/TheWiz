@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.economic_contract import CANONICAL_WIZARD_MODES
+from quant_platform.orchestration.corrective_runtime import atomic_write_text, promote_staged_file
 from quant_platform.wizard_symbols import (
     normalize_wizard_exchange,
     normalize_wizard_symbol,
@@ -21,15 +23,7 @@ from quant_platform.wizard_symbols import (
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "thewiz.wizard_exact_mode_parity.v1"
 MODE_EVIDENCE_SCHEMA_VERSION = "thewiz.wizard_mode_evidence_completion.v1"
-PAIR_PAGE_EXACT_MODES = (
-    "Copula",
-    "Dyn (Spread)",
-    "Dyn (ZScoreR)",
-    "OU (Spread)",
-    "OU (ZScoreR)",
-    "Static (Spread)",
-    "Static (ZScoreR)",
-)
+PAIR_PAGE_EXACT_MODES = CANONICAL_WIZARD_MODES
 EXACT_MODES = PAIR_PAGE_EXACT_MODES
 ORIENTATIONS = ("original", "reverse")
 WIZARD_PRESCANNED_CONTRACT_URL = "https://api.cryptowizards.net/docsv1beta/prescanned-get.mdx/"
@@ -1160,9 +1154,7 @@ def build_wizard_parity_capture_status(*, root: Path = ROOT) -> dict[str, Any]:
         "vendor_formula_parity_proven": False,
         "live_trading_authorized": False,
     }
-    (raw_dir / "capture_manifest.json").write_text(
-        json.dumps(capture_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    atomic_write_text(raw_dir / "capture_manifest.json", json.dumps(capture_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {
         "frame": frame,
         "status": status_path,
@@ -1468,10 +1460,7 @@ def build_wizard_golden_fixtures(*, root: Path = ROOT) -> dict[str, Any]:
                 )
                 name = f"{_slug(mode)}__{orientation}.json"
                 path = fixture_dir / name
-                path.write_text(
-                    json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
-                    encoding="utf-8",
-                )
+                atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
                 fixture_path = _relative(path, root)
                 source_hash = _file_hash(path)
                 evidence_path = _text(row.get("evidence_path"))
@@ -1505,9 +1494,7 @@ def build_wizard_golden_fixtures(*, root: Path = ROOT) -> dict[str, Any]:
         "live_trading_authorized": False,
     }
     manifest_path = fixture_dir / "manifest.json"
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    atomic_write_text(manifest_path, json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     audit = pd.DataFrame(audit_rows)
     audit_path = root / "reports" / "active" / "wizard_golden_fixture_audit.csv"
     _atomic_csv(audit, audit_path)
@@ -1900,15 +1887,12 @@ def build_wizard_mode_authority(*, root: Path = ROOT) -> dict[str, Any]:
     )
     docs = root / "docs" / "wizard_hyperliquid_mode_fidelity.md"
     docs.parent.mkdir(parents=True, exist_ok=True)
-    docs.write_text(
-        _fidelity_markdown(
+    atomic_write_text(docs, _fidelity_markdown(
             authority,
             fixtures["summary"],
             overlay_accounted=overlay_accounted,
             overlay_expected=len(ORIENTATIONS),
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "authority": path,
         "parity": parity_path,
@@ -2154,14 +2138,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _canonical_json_bytes(payload: dict[str, Any]) -> bytes:
@@ -2178,7 +2162,7 @@ def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> st
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(expected)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
     return expected_hash
 
 

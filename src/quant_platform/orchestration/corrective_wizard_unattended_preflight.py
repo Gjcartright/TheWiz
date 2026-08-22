@@ -18,6 +18,8 @@ from quant_platform.orchestration.corrective_canonical_status import (
 )
 from quant_platform.orchestration.corrective_daily_scheduler import _acquire_lock
 from quant_platform.orchestration.corrective_program import complete_corrective_plan
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import promote_staged_file
 from quant_platform.orchestration.corrective_wizard_api_credit_receipt import (
     capture_wizard_api_credit_receipt,
 )
@@ -56,6 +58,7 @@ def build_wizard_unattended_external_preflight(
     lock_acquirer: Callable[..., None] = _acquire_lock,
     daily_credit_limit: int = DAILY_CREDIT_LIMIT,
     protected_reserve: int = PROTECTED_CREDIT_RESERVE,
+    api_key: str | None = None,
 ) -> CommandResult:
     """Bind reset, canonical, and live credit evidence before unattended spend."""
 
@@ -91,7 +94,7 @@ def build_wizard_unattended_external_preflight(
             reset = dict(reset_result.summary)
             reset_binding = reset_readiness_validator(root=root)
         except Exception as exc:  # noqa: BLE001 - preflight must fail closed
-            blockers.append(f"unattended_reset_readiness_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"unattended_reset_readiness_failed:{safe_exception_code(exc)}")
     reset_ready = bool(
         reset.get("status") == "PASS_RESET_AUTOMATION_READY"
         and reset.get("capture_window_status") == "DUE_AFTER_RESET"
@@ -110,7 +113,7 @@ def build_wizard_unattended_external_preflight(
             checkpoint_result = checkpoint_refresher(root=root, now=checked_at)
             checkpoint = dict(checkpoint_result.summary)
         except Exception as exc:  # noqa: BLE001 - preflight must fail closed
-            blockers.append(f"unattended_checkpoint_refresh_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"unattended_checkpoint_refresh_failed:{safe_exception_code(exc)}")
     checkpoint_ready = bool(
         checkpoint.get("implementation_status") == "COMPLETE"
         and checkpoint.get("generated_at_utc") == checked_at.isoformat()
@@ -151,7 +154,7 @@ def build_wizard_unattended_external_preflight(
                 canonical = dict(canonical_result.summary)
         except Exception as exc:  # noqa: BLE001 - preflight must fail closed
             blockers.append(
-                f"unattended_locked_canonical_refresh_failed:{type(exc).__name__}:{exc}"
+                f"unattended_locked_canonical_refresh_failed:{safe_exception_code(exc)}"
             )
         finally:
             for lock_path in reversed(acquired_locks):
@@ -169,16 +172,21 @@ def build_wizard_unattended_external_preflight(
     credit: dict[str, Any] = {}
     if manifest_ready and reset_ready and checkpoint_ready and canonical_ready:
         try:
+            credit_kwargs: dict[str, Any] = {
+                "root": root,
+                "now": checked_at,
+                "daily_limit": daily_credit_limit,
+                "protected_reserve": protected_reserve,
+                "required_credits": planned_credits,
+            }
+            if api_key is not None:
+                credit_kwargs["api_key"] = api_key
             credit_result = credit_receipt_capturer(
-                root=root,
-                now=checked_at,
-                daily_limit=daily_credit_limit,
-                protected_reserve=protected_reserve,
-                required_credits=planned_credits,
+                **credit_kwargs,
             )
             credit = dict(credit_result.summary)
         except Exception as exc:  # noqa: BLE001 - preflight must fail closed
-            blockers.append(f"unattended_credit_preflight_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"unattended_credit_preflight_failed:{safe_exception_code(exc)}")
     credit_ready = bool(
         credit.get("status") == "PASS_AUTHENTICATED_CREDIT_PREFLIGHT"
         and credit.get("checked_at_utc") == checked_at.isoformat()
@@ -358,7 +366,7 @@ def _atomic_text(path: Path, value: str) -> None:
             handle.write(value)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        promote_staged_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

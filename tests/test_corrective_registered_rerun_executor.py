@@ -294,6 +294,24 @@ def _setup(
         attempted_credits=4,
         completed_credits=4,
         external_requests=3,
+        observed_used_before=100,
+        observed_used_after=104,
+        activity_rows=[
+            {
+                "lane": "exact_mode_history",
+                "external_requests": 2,
+                "credit_cost": 1,
+                "attempted_credits": 2,
+                "completed_credits": 2,
+            },
+            {
+                "lane": "copula_behavior",
+                "external_requests": 1,
+                "credit_cost": 2,
+                "attempted_credits": 2,
+                "completed_credits": 2,
+            },
+        ],
         now=NOW,
     )
     capture_evidence = write_valid_capture_reconciliation_evidence(root)
@@ -1056,7 +1074,7 @@ def test_registered_rerun_rejects_partial_accounting_and_authority(tmp_path):
 
     other = tmp_path / "other"
     _, _, other_gate = _setup(other)
-    with pytest.raises(ValueError, match="unexpectedly acquired authority"):
+    with pytest.raises(ValueError, match="unexpected_research_authority"):
         run_registered_research_rerun(
             root=other,
             now=NOW,

@@ -11,6 +11,10 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_text,
+    promote_staged_file,
+)
 from quant_platform.wizard_dynamic_comparator_activation import (
     build_dynamic_v2_review_packet,
     build_reviewed_dynamic_v2_activation,
@@ -458,14 +462,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(f"{path.suffix}.tmp")
     frame.to_csv(temp, index=False)
-    temp.replace(path)
+    promote_staged_file(temp, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(f"{path.suffix}.tmp")
     temp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temp.replace(path)
+    promote_staged_file(temp, path)
 
 
 def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> None:
@@ -475,7 +479,7 @@ def _write_or_validate_immutable_json(payload: dict[str, Any], path: Path) -> No
             raise ValueError(f"immutable dynamic holdout result changed: {path}")
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(encoded, encoding="utf-8")
+    atomic_write_text(path, encoded, encoding="utf-8")
 
 
 def _relative(path: Path, root: Path) -> str:

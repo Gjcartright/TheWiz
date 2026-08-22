@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -284,22 +288,19 @@ def write_student_training_readiness(
 
     dataset = _read_csv(dataset_path)
     audit = audit_student_training_dataset(dataset, policy=policy) if not dataset.empty else _missing_dataset_audit(dataset_path)
-    audit.to_csv(audit_path, index=False)
-    pd.DataFrame(
+    atomic_write_csv(audit, audit_path, index=False)
+    atomic_write_csv(pd.DataFrame(
         [{"column": column, "required": True, "purpose": _column_purpose(column)} for column in STUDENT_TRAINING_COLUMNS]
-    ).to_csv(schema_path, index=False)
+    ), schema_path, index=False)
     blocked = audit.loc[audit["status"] == "BLOCKED"]
     supervised_blocked = blocked.loc[blocked["scope"].isin(["all_learning", "supervised_student"])]
     bandit_blocked = blocked.loc[blocked["scope"].isin(["all_learning", "contextual_bandit"])]
-    markdown_path.write_text(
-        _readiness_markdown(
+    atomic_write_text(markdown_path, _readiness_markdown(
             audit,
             dataset_path=dataset_path,
             supervised_status="BLOCKED" if not supervised_blocked.empty else "READY_FOR_SHADOW_TRAINING",
             bandit_status="BLOCKED" if not bandit_blocked.empty else "READY_FOR_SHADOW_EVALUATION",
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "audit": audit_path,
         "schema": schema_path,

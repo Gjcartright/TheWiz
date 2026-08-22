@@ -2,34 +2,43 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextvars import copy_context
+from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
-import shutil
 from typing import Any, Callable, Iterable
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult
 from quant_platform.hyperliquid import (
     fetch_hyperliquid_funding_history,
     normalize_hyperliquid_funding_history,
 )
-
+from quant_platform.orchestration.canonical_wizard_hyperliquid_contract import (
+    MAXIMUM_FEE_EVIDENCE_AGE_DAYS,
+    MINIMUM_FUNDING_COVERAGE,
+    MINIMUM_PROVISIONAL_FUNDED_ROWS,
+    MINIMUM_PROVISIONAL_L2_SAMPLES,
+    MINIMUM_STRICT_L2_SAMPLES,
+    PROVISIONAL_L2_WINDOW_HOURS,
+    REFERENCE_LEG_NOTIONAL_USD,
+    STRICT_L2_WINDOW_HOURS,
+)
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_copy_file,
+    atomic_write_csv,
+    atomic_write_text,
+    immutable_snapshot_copy,
+)
+from quant_platform.runtime_types import CommandResult
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "current_wizard_hyperliquid_cost_evidence.v1"
-STRICT_L2_WINDOW_HOURS = 2.0
-PROVISIONAL_L2_WINDOW_HOURS = 24.0
-MINIMUM_STRICT_L2_SAMPLES = 12
-MINIMUM_PROVISIONAL_L2_SAMPLES = 3
-MINIMUM_FUNDING_COVERAGE = 0.95
-MINIMUM_PROVISIONAL_FUNDED_ROWS = 250
-MAXIMUM_FEE_EVIDENCE_AGE_DAYS = 30
-LEG_NOTIONAL_USD = 1_000.0
+LEG_NOTIONAL_USD = REFERENCE_LEG_NOTIONAL_USD
 
 
 def materialize_current_wizard_hyperliquid_cost_evidence(
@@ -128,8 +137,7 @@ def materialize_current_wizard_hyperliquid_cost_evidence(
         "fee_profile": fee_profile_path,
         **cache_ledgers,
     }.items():
-        target = input_dir / source.name
-        shutil.copy2(source, target)
+        target = immutable_snapshot_copy(source, input_dir, artifact_name=name)
         snapshot_inputs[name] = target
 
     selected_ready = pairs.loc[
@@ -148,6 +156,7 @@ def materialize_current_wizard_hyperliquid_cost_evidence(
     ) as executor:
         future_assets = {
             executor.submit(
+                copy_context().run,
                 _materialize_funding_asset,
                 asset=asset,
                 request=request,
@@ -225,8 +234,8 @@ def materialize_current_wizard_hyperliquid_cost_evidence(
         (experiment_frame, "experiments", "snapshot_experiments"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
     pair_counts = pair_frame["cost_evidence_status"].value_counts().to_dict()
     experiment_counts = experiment_frame["cost_replay_status"].value_counts().to_dict()
     summary: dict[str, object] = {
@@ -270,10 +279,10 @@ def materialize_current_wizard_hyperliquid_cost_evidence(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -359,7 +368,7 @@ def _materialize_funding_asset(
     source_sha256 = ""
     if cache_record is not None:
         cached_path = Path(cache_record["source_path"])
-        shutil.copy2(cached_path, funding_path)
+        atomic_copy_file(cached_path, funding_path, immutable=True)
         funding_source = "reused_point_in_time_cache"
         source_path = _relative(cached_path, root)
         source_sha256 = _text(cache_record.get("source_sha256"))
@@ -372,12 +381,12 @@ def _materialize_funding_asset(
                 end_time=cutoff,
             )
             if fetched.resolve() != funding_path.resolve():
-                shutil.copy2(fetched, funding_path)
+                atomic_copy_file(fetched, funding_path, immutable=True)
             funding_source = "hyperliquid_public_api"
             source_path = _relative(fetched, root)
             source_sha256 = _file_hash(fetched)
         except Exception as exc:
-            blocker = f"funding_fetch_failed:{type(exc).__name__}:{exc}"
+            blocker = f"funding_fetch_failed:{safe_exception_code(exc)}"
     elif not funding_path.exists():
         blocker = "funding_fetch_disabled_and_snapshot_missing"
     frame, metadata = _load_bounded_funding(
@@ -516,9 +525,9 @@ def _pair_cost_row(
             payload["funding_alignment"] = f"same_realized_utc_{frequency}_bucket_no_future_fill"
             payload["cost_evidence_id"] = cost_evidence_id
             enriched_path = enriched_dir / f"{_safe_filename(pair_key)}_funding.json"
-            enriched_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+            atomic_write_text(enriched_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         except Exception as exc:
-            blockers.append(f"funding_alignment_failed:{type(exc).__name__}:{exc}")
+            blockers.append(f"funding_alignment_failed:{safe_exception_code(exc)}")
     if coverage_x < MINIMUM_FUNDING_COVERAGE:
         blockers.append("insufficient_funding_coverage_asset_x")
     if coverage_y < MINIMUM_FUNDING_COVERAGE:

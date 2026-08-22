@@ -7,10 +7,9 @@ workers.
 
 from __future__ import annotations
 
+import json
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-import json
-import os
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from threading import RLock
@@ -27,7 +26,10 @@ from quant_platform.orchestration.contracts import (
     TaskStatus,
     VetoRecord,
 )
-
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_append_text,
+    promote_staged_file,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -238,8 +240,7 @@ class DynamicAgentLedger:
         self._atomic_write(self.tasks_path, json.dumps(tasks, indent=2, sort_keys=True) + "\n")
 
     def _append_jsonl(self, path: Path, payload: dict[str, object]) -> None:
-        with path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(payload, sort_keys=True) + "\n")
+        atomic_append_text(path, json.dumps(payload, sort_keys=True) + "\n")
 
     def _read_jsonl(self, path: Path) -> Iterator[dict[str, object]]:
         if not path.exists():
@@ -265,7 +266,7 @@ class DynamicAgentLedger:
         with NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
             handle.write(text)
             temporary_path = Path(handle.name)
-        os.replace(temporary_path, path)
+        promote_staged_file(temporary_path, path)
 
     @contextmanager
     def _locked(self) -> Iterator[None]:

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import math
-from pathlib import Path
 import time
+from datetime import datetime, timezone
+from hashlib import sha256
+from pathlib import Path
 from typing import Callable
 
 import pandas as pd
@@ -17,7 +17,8 @@ from quant_platform.hyperliquid import (
     fetch_hyperliquid_funding_history,
     normalize_hyperliquid_funding_history,
 )
-
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_funding_evidence.v1"
@@ -99,8 +100,8 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
         "checkpoint_asset_results": checkpoint_dir / "asset_results.csv",
         "checkpoint_pair_coverage": checkpoint_dir / "pair_coverage.csv",
     }
-    queue.to_csv(paths["queue"], index=False)
-    queue.to_csv(paths["snapshot_queue"], index=False)
+    atomic_write_csv(queue, paths["queue"], index=False)
+    atomic_write_csv(queue, paths["snapshot_queue"], index=False)
 
     fetched_assets = 0
     asset_rows: list[dict[str, object]] = []
@@ -126,7 +127,7 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
                     output_path = Path(returned)
                     break
                 except Exception as exc:  # Keep the asset and allow a later resume.
-                    last_error = f"{type(exc).__name__}:{exc}"
+                    last_error = f"{safe_exception_code(exc)}"
                     if attempt < max_attempts:
                         sleep(float(2 ** (attempt - 1)))
             metadata = _funding_file_metadata(output_path, asset=asset, cutoff=cutoff)
@@ -203,9 +204,9 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
             paths["checkpoint_pair_coverage"],
         ),
     ):
-        frame.to_csv(active_path, index=False)
-        frame.to_csv(snapshot_path, index=False)
-        frame.to_csv(checkpoint_path, index=False)
+        atomic_write_csv(frame, active_path, index=False)
+        atomic_write_csv(frame, snapshot_path, index=False)
+        atomic_write_csv(frame, checkpoint_path, index=False)
 
     pair_status_counts = {
         _text(status) or "MISSING_STATUS": int(count)
@@ -213,6 +214,7 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
     }
     known_pair_statuses = {
         "READY_FOR_COST_REPLAY",
+        "READY_FOR_SHORT_HISTORY_COST_RESEARCH",
         "PARTIAL_FUNDING_COVERAGE",
         "PENDING_ASSET_FUNDING",
         "BLOCKED_PAIR_HISTORY",
@@ -238,6 +240,11 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
         "pair_work_items": int(len(pair_coverage)),
         "pairs_ready_for_cost_replay": int(
             pair_coverage["funding_status"].eq("READY_FOR_COST_REPLAY").sum()
+        ),
+        "pairs_ready_for_short_history_cost_research": int(
+            pair_coverage["funding_status"]
+            .eq("READY_FOR_SHORT_HISTORY_COST_RESEARCH")
+            .sum()
         ),
         "pairs_partial_funding_coverage": int(
             pair_coverage["funding_status"].eq("PARTIAL_FUNDING_COVERAGE").sum()
@@ -273,10 +280,10 @@ def materialize_exhaustive_hyperliquid_funding_evidence(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -288,7 +295,9 @@ def _build_funding_queue(
     history_run_id: str,
     evidence_path: str,
 ) -> pd.DataFrame:
-    complete = assets.loc[assets["history_status"].eq("COMPLETE")].copy()
+    complete = assets.loc[
+        assets["history_status"].isin({"COMPLETE", "COMPLETE_RESEARCH_ONLY"})
+    ].copy()
     rows: list[dict[str, object]] = []
     for asset, group in complete.groupby("asset", sort=True):
         cutoffs = [
@@ -421,6 +430,14 @@ def _materialize_pair_funding(
         "hyperliquid_interval": _text(pair.hyperliquid_interval),
         "asset_x": asset_x,
         "asset_y": asset_y,
+        "history_status": _text(getattr(pair, "history_status", "")),
+        "history_lane": _text(getattr(pair, "history_lane", "")),
+        "acceptance_history_ready": _truthy(
+            getattr(pair, "acceptance_history_ready", False)
+        ),
+        "research_history_ready": _truthy(
+            getattr(pair, "research_history_ready", False)
+        ),
         "history_rows": int(getattr(pair, "history_rows", 0) or 0),
         "funding_x_aligned_rows": 0,
         "funding_y_aligned_rows": 0,
@@ -432,12 +449,20 @@ def _materialize_pair_funding(
         "funding_status": "",
         "funding_blocker": "",
         "funding_acceptance_ready": False,
+        "funding_research_ready": False,
         "enriched_history_path": "",
         "enriched_history_sha256": "",
         "evidence_path": _text(getattr(pair, "evidence_path", "")),
         "live_trading_authorized": False,
     }
-    if _text(pair.history_status) != "READY_FOR_CANONICAL_REPLAY":
+    allowed_history_statuses = {
+        "READY_FOR_CANONICAL_REPLAY",
+        "READY_FOR_SHORT_HISTORY_RESEARCH_REPLAY",
+    }
+    if (
+        _text(pair.history_status) not in allowed_history_statuses
+        or not _truthy(getattr(pair, "research_history_ready", False))
+    ):
         return {
             **base,
             "funding_status": "BLOCKED_PAIR_HISTORY",
@@ -500,21 +525,24 @@ def _materialize_pair_funding(
         payload["funding_rate_semantics"] = "realized_bps_per_aligned_candle"
         payload["funding_evidence_id"] = funding_evidence_id
         output_path = pair_dir / f"{_safe_filename(_text(pair.pair_group_id))}_funding.json"
-        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(output_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     except Exception as exc:
         return {
             **base,
             "funding_status": "BLOCKED_FUNDING_ALIGNMENT",
-            "funding_blocker": f"{type(exc).__name__}:{exc}",
+            "funding_blocker": f"{safe_exception_code(exc)}",
         }
     ready = bool(
         coverage_x >= MINIMUM_PAIR_FUNDING_COVERAGE and coverage_y >= MINIMUM_PAIR_FUNDING_COVERAGE
     )
+    short_history = _text(getattr(pair, "history_lane", "")) == "SHORT_HISTORY_RESEARCH_ONLY"
     blockers = []
     if coverage_x < MINIMUM_PAIR_FUNDING_COVERAGE:
         blockers.append("insufficient_funding_coverage_asset_x")
     if coverage_y < MINIMUM_PAIR_FUNDING_COVERAGE:
         blockers.append("insufficient_funding_coverage_asset_y")
+    if short_history:
+        blockers.append("short_history_research_only")
     evidence = [
         _text(getattr(pair, "evidence_path", "")),
         _text(x_result.funding_path),
@@ -531,9 +559,16 @@ def _materialize_pair_funding(
         "funding_x_coverage": coverage_x,
         "funding_y_coverage": coverage_y,
         "funding_both_coverage": coverage_both,
-        "funding_status": "READY_FOR_COST_REPLAY" if ready else "PARTIAL_FUNDING_COVERAGE",
+        "funding_status": (
+            "READY_FOR_SHORT_HISTORY_COST_RESEARCH"
+            if ready and short_history
+            else "READY_FOR_COST_REPLAY"
+            if ready
+            else "PARTIAL_FUNDING_COVERAGE"
+        ),
         "funding_blocker": ";".join(blockers),
-        "funding_acceptance_ready": ready,
+        "funding_acceptance_ready": bool(ready and not short_history),
+        "funding_research_ready": ready,
         "enriched_history_path": _relative(output_path, root),
         "enriched_history_sha256": _file_hash(output_path),
         "evidence_path": ";".join(value for value in evidence if value),
@@ -611,6 +646,8 @@ def _summary_markdown(summary: dict[str, object]) -> str:
             f"- Asset funding pending: {summary['asset_funding_pending']}",
             f"- Asset funding retryable: {summary['asset_funding_retryable']}",
             f"- Pairs ready for cost replay: {summary['pairs_ready_for_cost_replay']} / {summary['pair_work_items']}",
+            "- Pairs ready for short-history cost research: "
+            f"{summary['pairs_ready_for_short_history_cost_research']}",
             f"- Pairs with partial funding coverage: {summary['pairs_partial_funding_coverage']}",
             f"- Pairs pending asset funding: {summary['pairs_pending_asset_funding']}",
             f"- Pairs blocked by pair history: {summary['pairs_blocked_pair_history']}",
@@ -667,6 +704,12 @@ def _text(value: object) -> str:
     except (TypeError, ValueError):
         pass
     return str(value).strip()
+
+
+def _truthy(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return _text(value).lower() in {"1", "true", "yes", "y"}
 
 
 def _as_utc(value: datetime) -> datetime:

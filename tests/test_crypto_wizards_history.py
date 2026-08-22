@@ -1,23 +1,75 @@
 import json
+from contextlib import contextmanager
+from hashlib import sha256
+from pathlib import Path
 
 import pytest
 import requests
 
 from quant_platform.api_extraction import CryptoWizardsFetchError
+from quant_platform.crypto_wizards_catalog import BASE_URL, ENDPOINTS
 from quant_platform.crypto_wizards_history import (
-    CryptoWizardsCustomSeriesBacktestRequest,
     CryptoWizardsCustomSeriesAnalyticsRequest,
+    CryptoWizardsCustomSeriesBacktestRequest,
     CryptoWizardsCustomSeriesCopulaRequest,
     CryptoWizardsHistoryRequest,
     crawl_prescanned_backtest_histories,
     crawl_prescanned_zscores_histories,
-    fetch_custom_series_backtest,
     fetch_custom_series_analytics,
+    fetch_custom_series_backtest,
     fetch_custom_series_copula,
     official_min5_request_rows,
     payload_from_backtest_history,
     payload_from_zscores_history,
 )
+from quant_platform.orchestration.corrective_effect_guard import phase00_effect_guard
+from quant_platform.orchestration.corrective_external_effects import (
+    RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    external_effect_authority_session,
+    read_authorized_credential,
+)
+from quant_platform.orchestration.effect_authority import EffectAuthority
+
+HASH = "a" * 64
+
+
+@contextmanager
+def _wizard_effects(root: Path, *, secret: str = "test-key"):
+    authority = EffectAuthority(
+        root=root,
+        secret=b"w" * 32,
+        issuer_id="wizard-history-test",
+        profile=RESEARCH_EXTERNAL_EFFECT_PROFILE,
+    )
+    targets = frozenset(
+        f"{BASE_URL}{endpoint.path}"
+        for endpoint in ENDPOINTS
+        if endpoint.method in {"GET", "POST"} and endpoint.path.startswith("/")
+    )
+    with (
+        external_effect_authority_session(
+            authority=authority,
+            run_id="wizard-history-run",
+            intended_slot_id="wizard-history-slot",
+            source_fingerprint_sha256=HASH,
+            runtime_fingerprint_sha256=HASH,
+            configuration_fingerprint_sha256=HASH,
+            provider_id="crypto_wizards",
+            account_scope_id="wizard-history-test-account",
+            reservation_id="wizard-history-reservation",
+            reservation_sha256=sha256(b"wizard-history-reservation").hexdigest(),
+            allowed_targets=targets,
+            allowed_credential_keys=frozenset({"CRYPTO_WIZARDS_API_KEY"}),
+            max_total_requests=20,
+            max_total_credits=100,
+        ),
+        phase00_effect_guard(),
+    ):
+        read_authorized_credential(
+            "CRYPTO_WIZARDS_API_KEY",
+            reader=lambda _key: secret,
+        )
+        yield authority
 
 
 def test_custom_series_backtest_request_preserves_captured_mode_and_cost_settings():
@@ -61,7 +113,7 @@ def test_get_backtest_defaults_match_verified_dashboard_costs_and_omit_stop():
     assert "stop_loss_rate" not in params
 
 
-def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch):
+def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch, tmp_path):
     seen = {}
 
     class FakeResponse:
@@ -91,15 +143,25 @@ def test_fetch_custom_series_backtest_posts_typed_payload(monkeypatch):
         commission_rate=0.0005,
     )
 
-    response = fetch_custom_series_backtest(request, api_key="test-key")
+    with _wizard_effects(tmp_path) as authority:
+        response = fetch_custom_series_backtest(request, api_key="test-key")
 
     assert response["data"]["sharpe_ratio"] == 1.8
     assert seen["url"].endswith("/v1beta/backtest")
     assert seen["json"]["params"]["strategy"] == "Spread"
     assert seen["headers"]["X-api-key"] == "test-key"
+    accounting = authority.run_accounting(
+        run_id="wizard-history-run",
+        intended_slot_id="wizard-history-slot",
+    )
+    assert accounting["external_calls"] == 1
+    assert accounting["external_credits_consumed"] == 2
+    assert accounting["accounting_complete"] is True
 
 
-def test_fetch_custom_series_copula_posts_only_matching_close_series(monkeypatch):
+def test_fetch_custom_series_copula_posts_only_matching_close_series(
+    monkeypatch, tmp_path
+):
     seen = {}
 
     class FakeResponse:
@@ -123,7 +185,8 @@ def test_fetch_custom_series_copula_posts_only_matching_close_series(monkeypatch
         series_2_closes=tuple(50.0 + index for index in range(50)),
     )
 
-    response = fetch_custom_series_copula(request, api_key="test-key")
+    with _wizard_effects(tmp_path):
+        response = fetch_custom_series_copula(request, api_key="test-key")
 
     assert response["copula_name"] == "clayton"
     assert seen["url"].endswith("/v1beta/copula")
@@ -141,7 +204,7 @@ def test_fetch_custom_series_copula_posts_only_matching_close_series(monkeypatch
     ],
 )
 def test_fetch_custom_series_analytics_uses_typed_endpoint_payload(
-    monkeypatch, endpoint, expected_extra
+    monkeypatch, tmp_path, endpoint, expected_extra
 ):
     seen = {}
 
@@ -162,7 +225,8 @@ def test_fetch_custom_series_analytics_uses_typed_endpoint_payload(
         series_2_closes=tuple(50.0 + index for index in range(50)),
     )
 
-    response = fetch_custom_series_analytics(endpoint, request, api_key="test-key")
+    with _wizard_effects(tmp_path):
+        response = fetch_custom_series_analytics(endpoint, request, api_key="test-key")
 
     assert response["endpoint"] == endpoint
     assert seen["url"].endswith(f"/v1beta/{endpoint}")
@@ -173,7 +237,7 @@ def test_fetch_custom_series_analytics_uses_typed_endpoint_payload(
     }
 
 
-def test_post_error_preserves_bounded_vendor_diagnostic(monkeypatch):
+def test_post_error_preserves_bounded_vendor_diagnostic(monkeypatch, tmp_path):
     class FakeResponse:
         status_code = 400
         text = '{"detail":"spread_type must be Ou"}'
@@ -187,7 +251,25 @@ def test_post_error_preserves_bounded_vendor_diagnostic(monkeypatch):
         series_2_closes=tuple(50.0 + index for index in range(50)),
     )
 
-    with pytest.raises(CryptoWizardsFetchError, match="spread_type must be Ou"):
+    with (
+        _wizard_effects(tmp_path),
+        pytest.raises(CryptoWizardsFetchError, match="spread_type must be Ou"),
+    ):
+        fetch_custom_series_copula(request, api_key="test-key")
+
+
+def test_official_wizard_request_without_effect_authority_is_blocked(monkeypatch):
+    monkeypatch.setattr(
+        requests,
+        "post",
+        lambda *args, **kwargs: pytest.fail("wire call must remain blocked"),
+    )
+    request = CryptoWizardsCustomSeriesCopulaRequest(
+        series_1_closes=tuple(100.0 + index for index in range(50)),
+        series_2_closes=tuple(50.0 + index for index in range(50)),
+    )
+
+    with pytest.raises(CryptoWizardsFetchError, match="reserved effect authority"):
         fetch_custom_series_copula(request, api_key="test-key")
 
 
@@ -306,7 +388,12 @@ def test_crawl_prescanned_zscores_histories_writes_pair_payloads(monkeypatch, tm
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    paths = crawl_prescanned_zscores_histories(api_key="secret", output_dir=tmp_path, max_pairs=1)
+    with _wizard_effects(tmp_path, secret="secret"):
+        paths = crawl_prescanned_zscores_histories(
+            api_key="secret",
+            output_dir=tmp_path,
+            max_pairs=1,
+        )
 
     assert len(paths) == 1
     payload = json.loads(paths[0].read_text(encoding="utf-8"))
@@ -403,7 +490,12 @@ def test_crawl_prescanned_backtest_histories_writes_pair_payloads(monkeypatch, t
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    paths = crawl_prescanned_backtest_histories(api_key="secret", output_dir=tmp_path, max_pairs=1)
+    with _wizard_effects(tmp_path, secret="secret"):
+        paths = crawl_prescanned_backtest_histories(
+            api_key="secret",
+            output_dir=tmp_path,
+            max_pairs=1,
+        )
 
     assert len(paths) == 1
     payload = json.loads(paths[0].read_text(encoding="utf-8"))

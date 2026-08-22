@@ -36,6 +36,7 @@ from quant_platform.orchestration.corrective_registered_rerun import (
     validate_registered_rerun_contract_identity,
 )
 from quant_platform.orchestration.corrective_release_gates import build_corrective_release_gates
+from quant_platform.orchestration.corrective_runtime import atomic_write_text, promote_staged_file
 from quant_platform.orchestration.corrective_scheduler_runtime_readiness import (
     build_corrective_scheduler_runtime_readiness,
 )
@@ -1988,12 +1989,9 @@ def _write_seven_stage_checkpoint(
     csv_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.csv"
     md_path = root / "reports" / "active" / "seven_stage_goal_checkpoint.md"
     _atomic_csv(frame, csv_path)
-    md_path.write_text(
-        "# Seven-Stage Goal Checkpoint\n\n"
+    atomic_write_text(md_path, "# Seven-Stage Goal Checkpoint\n\n"
         + frame.to_markdown(index=False)
-        + "\n\nNo Testnet or live orders are authorized by this checkpoint.\n",
-        encoding="utf-8",
-    )
+        + "\n\nNo Testnet or live orders are authorized by this checkpoint.\n", encoding="utf-8")
     return csv_path, md_path
 
 
@@ -2975,14 +2973,14 @@ def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

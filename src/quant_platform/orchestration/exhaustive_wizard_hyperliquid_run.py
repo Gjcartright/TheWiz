@@ -8,39 +8,36 @@ legs. Later replay and testnet stages consume this immutable work definition.
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_bytes
+
+import json
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Iterable
 
 import pandas as pd
 
-from quant_platform.active_pipeline import CommandResult
 from quant_platform.crypto_wizards_dashboard_capture import (
     EXPECTED_CRYPTO_VENUES,
     EXPECTED_TIMEFRAMES,
 )
+from quant_platform.economic_contract import CANONICAL_WIZARD_MODES
+from quant_platform.runtime_types import CommandResult
 from quant_platform.wizard_symbols import normalize_wizard_exchange, normalize_wizard_symbol
 
-
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_run.v1"
-MAPPING_REFRESH_SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_mapping_refresh.v1"
+SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_run.v4"
+MAPPING_REFRESH_SCHEMA_VERSION = "exhaustive_wizard_hyperliquid_mapping_refresh.v2"
 DISCOVERY_POLICY = "exhaustive_no_prefilter"
 ORIENTATION_POLICY = "both_orientations_for_all_modes"
-EXACT_MODES = (
-    "Static (Spread)",
-    "Static (ZScoreR)",
-    "Dyn (Spread)",
-    "Dyn (ZScoreR)",
-    "OU (Spread)",
-    "OU (ZScoreR)",
-    "OU (Optimal)",
-    "Copula",
-)
+EXACT_MODES = CANONICAL_WIZARD_MODES
 ORIENTATIONS = ("original", "reverse")
 PAIR_DETAIL_REQUIRED_FIELDS = (
     "pair_detail_url_or_id",
@@ -207,8 +204,8 @@ def build_exhaustive_wizard_hyperliquid_run(
         "coverage_validation": validation,
     }
     for key, frame in output_frames.items():
-        frame.to_csv(paths[key], index=False)
-        frame.to_csv(snapshot_paths[key], index=False)
+        atomic_write_csv(frame, paths[key], index=False)
+        atomic_write_csv(frame, snapshot_paths[key], index=False)
     _copy_snapshot_input(source_path, snapshot_paths["source"])
     _copy_snapshot_input(sweep_manifest_path, snapshot_paths["sweep_manifest"])
     _copy_snapshot_input(inventory_path, snapshot_paths["hyperliquid_inventory"])
@@ -283,10 +280,10 @@ def build_exhaustive_wizard_hyperliquid_run(
     }
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    snapshot_paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    snapshot_paths["summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(snapshot_paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(snapshot_paths["summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -364,10 +361,10 @@ def build_exhaustive_wizard_hyperliquid_mapping_refresh(
         baseline_evidence_path=_relative(baseline_inventory_path, root),
         current_evidence_path=_relative(paths["snapshot_inventory"], root),
     )
-    mapping.to_csv(paths["mapping"], index=False)
-    mapping.to_csv(paths["snapshot_mapping"], index=False)
-    inventory_drift.to_csv(paths["inventory_drift"], index=False)
-    inventory_drift.to_csv(paths["snapshot_inventory_drift"], index=False)
+    atomic_write_csv(mapping, paths["mapping"], index=False)
+    atomic_write_csv(mapping, paths["snapshot_mapping"], index=False)
+    atomic_write_csv(inventory_drift, paths["inventory_drift"], index=False)
+    atomic_write_csv(inventory_drift, paths["snapshot_inventory_drift"], index=False)
     _copy_snapshot_input(inventory_path, paths["snapshot_inventory"])
 
     changed_inventory = int(inventory_drift["drift_status"].ne("UNCHANGED").sum())
@@ -395,10 +392,10 @@ def build_exhaustive_wizard_hyperliquid_mapping_refresh(
     }
     summary_text = _mapping_refresh_markdown(summary)
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
-    paths["manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["snapshot_manifest"].write_text(manifest_text, encoding="utf-8")
-    paths["summary_md"].write_text(summary_text, encoding="utf-8")
-    paths["snapshot_summary_md"].write_text(summary_text, encoding="utf-8")
+    atomic_write_text(paths["manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_manifest"], manifest_text, encoding="utf-8")
+    atomic_write_text(paths["summary_md"], summary_text, encoding="utf-8")
+    atomic_write_text(paths["snapshot_summary_md"], summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 
@@ -516,6 +513,8 @@ def _pair_market_state(
     markets_x = market_index.get(asset_x.upper(), [])
     markets_y = market_index.get(asset_y.upper(), [])
     blockers = list(inventory_blockers)
+    if asset_x.upper() == asset_y.upper():
+        blockers.append("identical_canonical_assets")
     if not markets_x:
         blockers.append(f"missing_hyperliquid_testnet_perp:{asset_x}")
     elif len(markets_x) > 1:
@@ -731,6 +730,8 @@ def _build_source_ledger(source: pd.DataFrame, *, run_id: str) -> pd.DataFrame:
             normalization_blockers.append("wizard_symbol_1_unresolved")
         if not asset_y:
             normalization_blockers.append("wizard_symbol_2_unresolved")
+        if asset_x and asset_y and asset_x.upper() == asset_y.upper():
+            normalization_blockers.append("identical_canonical_assets")
         canonical_pair = f"{asset_x}-USD-{asset_y}-USD" if asset_x and asset_y else ""
         pair_group_key = _pair_group_key(exchange, interval, asset_x, asset_y)
         row = {
@@ -808,6 +809,16 @@ def _build_pair_ledger(
         markets_x = market_index.get(asset_x.upper(), [])
         markets_y = market_index.get(asset_y.upper(), [])
         blockers = list(inventory_blockers)
+        blockers.extend(
+            sorted(
+                {
+                    blocker
+                    for value in group["normalization_blocker"].tolist()
+                    for blocker in _text(value).split(";")
+                    if blocker
+                }
+            )
+        )
         if not markets_x:
             blockers.append(f"missing_hyperliquid_testnet_perp:{asset_x}")
         elif len(markets_x) > 1:
@@ -1096,7 +1107,12 @@ def _build_pair_detail_capture_queue(
         )
         capture_timestamps = _nonempty_unique_values(
             source_group,
-            ("captured_at", "capture_timestamp", "source_timestamp"),
+            (
+                "sweep_captured_at",
+                "captured_at",
+                "capture_timestamp",
+                "source_timestamp",
+            ),
         )
         raw_asset_x = _nonempty_unique_values(
             source_group,
@@ -1345,8 +1361,6 @@ def _pair_group_key(exchange: str, interval: str, asset_x: str, asset_y: str) ->
 def _orientation_reason(exact_mode: str) -> str:
     if exact_mode == "Copula":
         return "conditional_copula_probabilities_are_directional"
-    if exact_mode == "OU (Optimal)":
-        return "point_in_time_ou_parameter_selection_can_be_directional"
     return "hedge_ratio_regression_and_signal_definition_can_be_directional"
 
 
@@ -1439,9 +1453,9 @@ def _file_hash(path: Path) -> str:
 
 def _copy_snapshot_input(source: Path, destination: Path) -> None:
     if source.exists() and source.is_file():
-        destination.write_bytes(source.read_bytes())
+        atomic_write_bytes(destination, source.read_bytes())
     else:
-        destination.write_text("", encoding="utf-8")
+        atomic_write_text(destination, "", encoding="utf-8")
 
 
 def _first(row: pd.Series, *columns: str) -> object:

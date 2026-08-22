@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -121,7 +125,7 @@ def _write_registry(frame: pd.DataFrame, root: Path = ROOT) -> Path:
     path = research_registry_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
     normalized = frame.reindex(columns=RESEARCH_SOURCE_COLUMNS, fill_value="")
-    normalized.to_csv(path, index=False)
+    atomic_write_csv(normalized, path, index=False)
     return path
 
 
@@ -199,7 +203,7 @@ def ingest_research_source(
         "processed_at": "",
         "notes": str(notes or "").strip(),
     }
-    manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(manifest_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     result = build_research_source_registry(root=root)
     return CommandResult(
         paths={**result.paths, "research_source_manifest": manifest_path},
@@ -254,8 +258,8 @@ def research_source_audit(root: Path = ROOT) -> CommandResult:
     audit = pd.DataFrame(audit_rows, columns=["metric", "value", "detail"])
     csv_path, md_path = _audit_paths(root)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
-    audit.to_csv(csv_path, index=False)
-    md_path.write_text(_audit_markdown(audit), encoding="utf-8")
+    atomic_write_csv(audit, csv_path, index=False)
+    atomic_write_text(md_path, _audit_markdown(audit), encoding="utf-8")
     return CommandResult(paths={"research_source_audit": csv_path, "research_source_audit_md": md_path}, summary={"rows": int(len(audit))})
 
 

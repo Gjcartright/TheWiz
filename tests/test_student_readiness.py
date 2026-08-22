@@ -31,7 +31,7 @@ def _dataset() -> pd.DataFrame:
                 "feature_timestamp": NOW - timedelta(hours=2),
                 "label_timestamp": NOW,
                 "point_in_time_status": "confirmed",
-                "math_version": "math-v2",
+                "math_version": "math-v2.1-y-on-x",
                 "source_system": "hyperliquid_local_replay",
                 "label_source": "backtest_label",
                 "uses_wizard_as_label": False,

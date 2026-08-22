@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from dataclasses import asdict, dataclass
 from math import isfinite, isinf
 from pathlib import Path
@@ -8,11 +10,16 @@ from typing import Iterable
 import pandas as pd
 
 from quant_platform.ablations import write_ablation_report
-from quant_platform.backtest import BacktestResult, CostModel, backtest_pair, backtest_two_leg_spread
+from quant_platform.backtest import (
+    BacktestResult,
+    CostModel,
+    backtest_pair,
+    backtest_two_leg_spread,
+)
 from quant_platform.feature_engine import FeatureEngine
-from quant_platform.zscore_utils import coalesce_zscore
 from quant_platform.regimes import regime_pair_strategy_report
 from quant_platform.strategies import STRATEGIES, STRATEGY_REQUIRED_COLUMNS, StrategySpec
+from quant_platform.zscore_utils import coalesce_zscore
 
 
 @dataclass(frozen=True)
@@ -88,7 +95,11 @@ class AcceptanceGate:
             two_leg_scope = deployable_scope[deployable_scope["backtest_mode"] == "two_leg"]
             two_leg_pairs = int(two_leg_scope["pair"].nunique()) if not two_leg_scope.empty else 0
             complete_two_leg_scope = _complete_two_leg_execution_input_scope(two_leg_scope)
-            two_leg_execution_input_pairs = int(complete_two_leg_scope["pair"].nunique()) if not complete_two_leg_scope.empty else 0
+            two_leg_execution_input_pairs = (
+                int(complete_two_leg_scope["pair"].nunique())
+                if not complete_two_leg_scope.empty
+                else 0
+            )
             two_leg_passing_scope = complete_two_leg_scope[complete_two_leg_scope["eligible"]]
             two_leg_passing_pairs = 0
             for _, pair_rows in two_leg_passing_scope.groupby("pair"):
@@ -96,29 +107,52 @@ class AcceptanceGate:
                     two_leg_passing_pairs += 1
             if two_leg_pairs < self.min_pairs:
                 failures.append(f"two_leg_pairs<{self.min_pairs}")
-            if self.require_two_leg_execution_inputs and two_leg_execution_input_pairs < self.min_pairs:
+            if (
+                self.require_two_leg_execution_inputs
+                and two_leg_execution_input_pairs < self.min_pairs
+            ):
                 failures.append(f"two_leg_execution_input_pairs<{self.min_pairs}")
                 missing_inputs = _pairs_missing_two_leg_execution_inputs(two_leg_scope)
                 if missing_inputs:
                     failures.append(f"two_leg_missing_inputs:{','.join(missing_inputs)}")
-            missing_two_leg_cost_pairs = _pairs_missing_cost_buckets(two_leg_scope, self.required_cost_buckets)
+            missing_two_leg_cost_pairs = _pairs_missing_cost_buckets(
+                two_leg_scope, self.required_cost_buckets
+            )
             if missing_two_leg_cost_pairs:
-                failures.append(f"two_leg_missing_cost_buckets:{','.join(missing_two_leg_cost_pairs)}")
+                failures.append(
+                    f"two_leg_missing_cost_buckets:{','.join(missing_two_leg_cost_pairs)}"
+                )
         else:
             two_leg_scope = deployable_scope[deployable_scope["backtest_mode"] == "two_leg"]
             two_leg_pairs = int(two_leg_scope["pair"].nunique()) if not two_leg_scope.empty else 0
             two_leg_passing_scope = two_leg_scope[two_leg_scope["eligible"]]
-            two_leg_passing_pairs = int(two_leg_passing_scope["pair"].nunique()) if not two_leg_passing_scope.empty else 0
-            two_leg_execution_input_pairs = int(_complete_two_leg_execution_input_scope(two_leg_scope)["pair"].nunique()) if not two_leg_scope.empty else 0
+            two_leg_passing_pairs = (
+                int(two_leg_passing_scope["pair"].nunique())
+                if not two_leg_passing_scope.empty
+                else 0
+            )
+            two_leg_execution_input_pairs = (
+                int(_complete_two_leg_execution_input_scope(two_leg_scope)["pair"].nunique())
+                if not two_leg_scope.empty
+                else 0
+            )
 
-        missing_cost_buckets = sorted(set(self.required_cost_buckets).difference(set(deployable_scope["cost_bucket"])))
+        missing_cost_buckets = sorted(
+            set(self.required_cost_buckets).difference(set(deployable_scope["cost_bucket"]))
+        )
         if missing_cost_buckets:
             failures.append(f"missing_cost_buckets:{','.join(missing_cost_buckets)}")
 
         production_eligible = not failures
-        median_profit_factor = float(deployable_scope["profit_factor"].median()) if not deployable_scope.empty else 0.0
-        median_sharpe = float(deployable_scope["sharpe"].median()) if not deployable_scope.empty else 0.0
-        worst_drawdown = float(deployable_scope["max_drawdown"].max()) if not deployable_scope.empty else 0.0
+        median_profit_factor = (
+            float(deployable_scope["profit_factor"].median()) if not deployable_scope.empty else 0.0
+        )
+        median_sharpe = (
+            float(deployable_scope["sharpe"].median()) if not deployable_scope.empty else 0.0
+        )
+        worst_drawdown = (
+            float(deployable_scope["max_drawdown"].max()) if not deployable_scope.empty else 0.0
+        )
         total_trades = int(deployable_scope["trades"].sum()) if not deployable_scope.empty else 0
 
         preferred_failures: list[str] = []
@@ -137,7 +171,9 @@ class AcceptanceGate:
             "production_eligible": production_eligible,
             "preferred_eligible": not preferred_failures,
             "acceptance_reason": "passed" if production_eligible else ";".join(failures),
-            "preferred_reason": "passed" if not preferred_failures else ";".join(preferred_failures),
+            "preferred_reason": "passed"
+            if not preferred_failures
+            else ";".join(preferred_failures),
             "evaluated_runs": int(len(evaluated)),
             "passing_runs": int(evaluated["eligible"].sum()) if not evaluated.empty else 0,
             "pairs_tested": pairs_tested,
@@ -191,10 +227,14 @@ class ElasticResearchGate:
             if not required_costs.issubset(pair_costs):
                 continue
             trades = int(pd.to_numeric(pair_frame["trades"], errors="coerce").fillna(0).sum())
-            median_profit_factor = float(pd.to_numeric(pair_frame["profit_factor"], errors="coerce").median())
+            median_profit_factor = float(
+                pd.to_numeric(pair_frame["profit_factor"], errors="coerce").median()
+            )
             median_sharpe = float(pd.to_numeric(pair_frame["sharpe"], errors="coerce").median())
             worst_drawdown = float(pd.to_numeric(pair_frame["max_drawdown"], errors="coerce").max())
-            median_expectancy = float(pd.to_numeric(pair_frame["expectancy"], errors="coerce").median())
+            median_expectancy = float(
+                pd.to_numeric(pair_frame["expectancy"], errors="coerce").median()
+            )
             cost_bucket_count = int(pair_frame["cost_bucket"].nunique())
             pair_score = _elastic_pair_score(
                 trades=trades,
@@ -244,16 +284,24 @@ class ElasticResearchGate:
         pairs_tested = int(pair_frame["pair"].nunique()) if not pair_frame.empty else 0
         passing_pairs = int(pair_frame["pair_pass"].sum()) if not pair_frame.empty else 0
         research_score = float(pair_frame["pair_score"].mean()) if not pair_frame.empty else 0.0
-        stability_score = float(min(pairs_tested / max(self.min_pairs + 1, 2), 1.0) * 100.0) if pairs_tested else 0.0
+        stability_score = (
+            float(min(pairs_tested / max(self.min_pairs + 1, 2), 1.0) * 100.0)
+            if pairs_tested
+            else 0.0
+        )
         breadth_score = (
-            float(min(pair_frame["cost_bucket_count"].min() / max(len(self.required_cost_buckets), 1), 1.0) * 100.0)
+            float(
+                min(
+                    pair_frame["cost_bucket_count"].min() / max(len(self.required_cost_buckets), 1),
+                    1.0,
+                )
+                * 100.0
+            )
             if not pair_frame.empty
             else 0.0
         )
         conviction_score = float(
-            0.65 * research_score
-            + 0.20 * stability_score
-            + 0.15 * breadth_score
+            0.65 * research_score + 0.20 * stability_score + 0.15 * breadth_score
         )
         if passing_pairs >= max(2, self.min_pairs) and conviction_score >= 72:
             tier = "research_candidate"
@@ -275,7 +323,9 @@ class ElasticResearchGate:
         strengths = _research_strengths(pair_frame)
         concerns = _research_concerns(pair_frame, self)
         top_pairs = (
-            pair_frame.sort_values(["pair_score", "trades"], ascending=[False, False])["pair"].head(3).tolist()
+            pair_frame.sort_values(["pair_score", "trades"], ascending=[False, False])["pair"]
+            .head(3)
+            .tolist()
             if not pair_frame.empty
             else []
         )
@@ -292,7 +342,8 @@ class ElasticResearchGate:
         )
 
         return {
-            "research_eligible": tier in {"research_candidate", "research_watch", "research_explore"},
+            "research_eligible": tier
+            in {"research_candidate", "research_watch", "research_explore"},
             "research_tier": tier,
             "research_reason": "passed" if not reasons else ";".join(reasons),
             "research_pairs_tested": pairs_tested,
@@ -325,7 +376,11 @@ def _elastic_pair_score(
     trade_term = min(max(trades, 0) / max(strong_trades_target, 1), 1.0)
     pf_term = min(max(profit_factor / max(min_profit_factor, 1.0e-6), 0.0), 2.0) / 2.0
     sharpe_term = min(max(sharpe / max(min_sharpe, 1.0e-6), 0.0), 2.0) / 2.0
-    drawdown_term = 0.0 if drawdown_ceiling <= 0 else min(max(1.0 - (max_drawdown / drawdown_ceiling), 0.0), 1.0)
+    drawdown_term = (
+        0.0
+        if drawdown_ceiling <= 0
+        else min(max(1.0 - (max_drawdown / drawdown_ceiling), 0.0), 1.0)
+    )
     expectancy_term = 1.0 if (expectancy > 0 or not require_positive_expectancy) else 0.0
     return 100.0 * (
         0.22 * trade_term
@@ -350,7 +405,11 @@ def _classify_research_setup(
 ) -> str:
     if trades < max(10, strong_trades_target // 3):
         return "thin_sample"
-    if profit_factor >= (min_profit_factor + 0.25) and sharpe >= (min_sharpe + 0.2) and max_drawdown <= drawdown_ceiling * 0.5:
+    if (
+        profit_factor >= (min_profit_factor + 0.25)
+        and sharpe >= (min_sharpe + 0.2)
+        and max_drawdown <= drawdown_ceiling * 0.5
+    ):
         return "high_quality"
     if expectancy > 0 and max_drawdown > drawdown_ceiling * 0.75:
         return "high_risk_positive"
@@ -421,7 +480,9 @@ class ExperimentConfig:
         CostBucket("base", CostModel()),
         CostBucket(
             "stress",
-            CostModel(taker_fee_bps=7.5, slippage_bps=8.0, execution_risk_bps=4.0, funding_bps_per_day=3.0),
+            CostModel(
+                taker_fee_bps=7.5, slippage_bps=8.0, execution_risk_bps=4.0, funding_bps_per_day=3.0
+            ),
         ),
     )
     gate: AcceptanceGate = AcceptanceGate()
@@ -474,7 +535,9 @@ TWO_LEG_EXECUTION_INPUT_FLAGS = (
     "has_funding_y",
 )
 
-TWO_LEG_EXECUTION_INPUT_FIELDS = tuple(column.replace("has_", "") for column in TWO_LEG_EXECUTION_INPUT_FLAGS)
+TWO_LEG_EXECUTION_INPUT_FIELDS = tuple(
+    column.replace("has_", "") for column in TWO_LEG_EXECUTION_INPUT_FLAGS
+)
 
 
 def _required_columns(strategy: StrategySpec) -> set[str]:
@@ -484,7 +547,9 @@ def _required_columns(strategy: StrategySpec) -> set[str]:
 def _effective_required_columns(frame: pd.DataFrame, strategy: StrategySpec) -> set[str]:
     required = set(_required_columns(strategy))
     columns = set(frame.columns)
-    if ("zscore" in required) and ("zscore_reconstructed" in columns or "rolling_zscore" in columns):
+    if ("zscore" in required) and (
+        "zscore_reconstructed" in columns or "rolling_zscore" in columns
+    ):
         required.discard("zscore")
     return required
 
@@ -511,7 +576,9 @@ def _input_coverage_flags(frame: pd.DataFrame) -> dict[str, bool]:
     }
 
 
-def _pairs_missing_cost_buckets(scope: pd.DataFrame, required_cost_buckets: tuple[str, ...]) -> list[str]:
+def _pairs_missing_cost_buckets(
+    scope: pd.DataFrame, required_cost_buckets: tuple[str, ...]
+) -> list[str]:
     missing: list[str] = []
     if scope.empty or "pair" not in scope.columns or "cost_bucket" not in scope.columns:
         return missing
@@ -553,7 +620,9 @@ def _pairs_missing_two_leg_execution_inputs(scope: pd.DataFrame) -> list[str]:
     return missing
 
 
-def _regime_slices(frame: pd.DataFrame, config: ExperimentConfig) -> Iterable[tuple[str, pd.DataFrame]]:
+def _regime_slices(
+    frame: pd.DataFrame, config: ExperimentConfig
+) -> Iterable[tuple[str, pd.DataFrame]]:
     if config.include_overall_regime:
         yield "ALL", frame
     if config.regime_column not in frame.columns:
@@ -590,7 +659,9 @@ class ExperimentHarness:
         for strategy in self.strategies:
             for regime, regime_frame in _regime_slices(frame, self.config):
                 for bucket in self.config.cost_buckets:
-                    results.append(self._run_one(dataset.pair, regime_frame, regime, strategy, bucket))
+                    results.append(
+                        self._run_one(dataset.pair, regime_frame, regime, strategy, bucket)
+                    )
         return results
 
     def _run_one(
@@ -614,18 +685,40 @@ class ExperimentHarness:
             **input_flags,
         }
         if observations < self.config.min_rows:
-            return ExperimentResult(**base, status="skipped", eligible=False, reason=f"rows<{self.config.min_rows}")
+            return ExperimentResult(
+                **base, status="skipped", eligible=False, reason=f"rows<{self.config.min_rows}"
+            )
         frame = _coalesce_signal_zscore(frame)
         if strategy.signal_function is None:
-            return ExperimentResult(**base, status="skipped", eligible=False, reason="no_signal_function")
+            return ExperimentResult(
+                **base, status="skipped", eligible=False, reason="no_signal_function"
+            )
         missing = _missing_columns(frame, strategy)
         if missing:
-            return ExperimentResult(**base, status="skipped", eligible=False, reason=f"missing_columns:{','.join(missing)}")
+            return ExperimentResult(
+                **base,
+                status="skipped",
+                eligible=False,
+                reason=f"missing_columns:{','.join(missing)}",
+            )
 
         signal = strategy.signal_function(frame)
-        backtest_mode = "two_leg" if {"price_x", "price_y"}.issubset(frame.columns) else "spread"
-        result = backtest_two_leg_spread(frame, signal, bucket.cost_model) if backtest_mode == "two_leg" else backtest_pair(
-            frame, signal, bucket.cost_model
+        two_leg_inputs = {"price_x", "price_y", "hedge_ratio"}
+        if two_leg_inputs.issubset(frame.columns):
+            backtest_mode = "two_leg"
+        elif "spread" in frame.columns:
+            backtest_mode = "spread"
+        else:
+            return ExperimentResult(
+                **base,
+                status="skipped",
+                eligible=False,
+                reason="missing_backtest_inputs:spread_or_complete_two_leg_contract",
+            )
+        result = (
+            backtest_two_leg_spread(frame, signal, bucket.cost_model)
+            if backtest_mode == "two_leg"
+            else backtest_pair(frame, signal, bucket.cost_model)
         )
         eligible, reason = self.config.gate.evaluate(result)
         return ExperimentResult(
@@ -683,15 +776,17 @@ class ExperimentHarness:
             "regime_pair_strategy": output / "regime_pair_strategy_report.csv",
             "coverage": output / "strategy_coverage.csv",
         }
-        results.to_csv(paths["all_results"], index=False)
+        atomic_write_csv(results, paths["all_results"], index=False)
         evaluated = results[results["status"] == "evaluated"].copy()
         if evaluated.empty:
-            pd.DataFrame().to_csv(paths["strategy_summary"], index=False)
-            pd.DataFrame().to_csv(paths["regime_summary"], index=False)
+            atomic_write_csv(pd.DataFrame(), paths["strategy_summary"], index=False)
+            atomic_write_csv(pd.DataFrame(), paths["regime_summary"], index=False)
         else:
             _ensure_cost_columns(evaluated)
-            evaluated["cost_drag"] = evaluated["gross_return"].fillna(0.0) - evaluated["total_return"].fillna(0.0)
-            evaluated.groupby(["strategy_id", "strategy_name", "family"], as_index=False).agg(
+            evaluated["cost_drag"] = evaluated["gross_return"].fillna(0.0) - evaluated[
+                "total_return"
+            ].fillna(0.0)
+            atomic_write_csv(evaluated.groupby(["strategy_id", "strategy_name", "family"], as_index=False).agg(
                 runs=("status", "count"),
                 eligible_runs=("eligible", "sum"),
                 median_profit_factor=("profit_factor", "median"),
@@ -709,10 +804,10 @@ class ExperimentHarness:
                 total_trades=("trades", "sum"),
                 two_leg_runs=("backtest_mode", lambda values: int((values == "two_leg").sum())),
                 spread_runs=("backtest_mode", lambda values: int((values == "spread").sum())),
-            ).sort_values(["eligible_runs", "median_profit_factor"], ascending=[False, False]).to_csv(
-                paths["strategy_summary"], index=False
-            )
-            evaluated.groupby(["regime", "strategy_name"], as_index=False).agg(
+            ).sort_values(
+                ["eligible_runs", "median_profit_factor"], ascending=[False, False]
+            ), paths["strategy_summary"], index=False)
+            atomic_write_csv(evaluated.groupby(["regime", "strategy_name"], as_index=False).agg(
                 runs=("status", "count"),
                 eligible_runs=("eligible", "sum"),
                 median_profit_factor=("profit_factor", "median"),
@@ -730,13 +825,13 @@ class ExperimentHarness:
                 total_trades=("trades", "sum"),
                 two_leg_runs=("backtest_mode", lambda values: int((values == "two_leg").sum())),
                 spread_runs=("backtest_mode", lambda values: int((values == "spread").sum())),
-            ).sort_values(["regime", "eligible_runs", "median_profit_factor"], ascending=[True, False, False]).to_csv(
-                paths["regime_summary"], index=False
-            )
-        regime_pair_strategy_report(results).to_csv(paths["regime_pair_strategy"], index=False)
-        results.groupby(["strategy_id", "strategy_name", "status", "reason"], as_index=False).agg(
+            ).sort_values(
+                ["regime", "eligible_runs", "median_profit_factor"], ascending=[True, False, False]
+            ), paths["regime_summary"], index=False)
+        atomic_write_csv(regime_pair_strategy_report(results), paths["regime_pair_strategy"], index=False)
+        atomic_write_csv(results.groupby(["strategy_id", "strategy_name", "status", "reason"], as_index=False).agg(
             rows=("status", "count")
-        ).to_csv(paths["coverage"], index=False)
+        ), paths["coverage"], index=False)
         write_ablation_report(results, paths["ablation"])
         write_strategy_acceptance_report(results, paths["acceptance"], self.config.gate)
         return paths
@@ -757,7 +852,9 @@ def _ensure_cost_columns(frame: pd.DataFrame) -> None:
             frame[column] = 0.0
 
 
-def strategy_acceptance_report(results: pd.DataFrame, gate: AcceptanceGate | None = None) -> pd.DataFrame:
+def strategy_acceptance_report(
+    results: pd.DataFrame, gate: AcceptanceGate | None = None
+) -> pd.DataFrame:
     gate = gate or AcceptanceGate()
     research_gate = ElasticResearchGate()
     columns = [
@@ -801,7 +898,9 @@ def strategy_acceptance_report(results: pd.DataFrame, gate: AcceptanceGate | Non
         return pd.DataFrame(columns=columns)
 
     rows: list[dict[str, object]] = []
-    for (strategy_id, strategy_name, family), group in results.groupby(["strategy_id", "strategy_name", "family"], sort=True):
+    for (strategy_id, strategy_name, family), group in results.groupby(
+        ["strategy_id", "strategy_name", "family"], sort=True
+    ):
         decision = gate.evaluate_strategy(group)
         research_decision = research_gate.evaluate_strategy(group)
         rows.append(
@@ -826,5 +925,5 @@ def write_strategy_acceptance_report(
 ) -> Path:
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    strategy_acceptance_report(results, gate).to_csv(output, index=False)
+    atomic_write_csv(strategy_acceptance_report(results, gate), output, index=False)
     return output

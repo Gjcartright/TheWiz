@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
+
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -324,8 +328,8 @@ def build_current_wizard_hyperliquid_concentration(
         (contributor_frame, "contributors", "snapshot_contributors"),
         (validation, "validation", "snapshot_validation"),
     ):
-        frame.to_csv(paths[active_key], index=False)
-        frame.to_csv(paths[snapshot_key], index=False)
+        atomic_write_csv(frame, paths[active_key], index=False)
+        atomic_write_csv(frame, paths[snapshot_key], index=False)
 
     status_counts = _status_counts(status_frame, "concentration_status")
     summary: dict[str, object] = {
@@ -370,9 +374,9 @@ def build_current_wizard_hyperliquid_concentration(
     manifest_text = json.dumps(summary, indent=2, sort_keys=True)
     summary_text = _summary_markdown(summary, cohort_frame, dimension_frame)
     for path in (paths["manifest"], paths["snapshot_manifest"]):
-        path.write_text(manifest_text, encoding="utf-8")
+        atomic_write_text(path, manifest_text, encoding="utf-8")
     for path in (paths["summary_md"], paths["snapshot_summary_md"]):
-        path.write_text(summary_text, encoding="utf-8")
+        atomic_write_text(path, summary_text, encoding="utf-8")
     return CommandResult(paths=paths, summary=summary)
 
 

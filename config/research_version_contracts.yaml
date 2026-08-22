@@ -1,0 +1,28 @@
+schema_version: versioned_learning_comparison.v1
+comparison_runtime: shared_current_engine_feature_gated
+paper_ingestion_boundary: "2026-08-16T04:55:46.716996+00:00"
+minimum_prospective_shadow_outcomes: 100
+minimum_incremental_balanced_accuracy: 0.02
+versions:
+  V1:
+    parent_version: ""
+    version_role: champion
+    historical_code_ref: 56a19218414173d687d57f4eaf0e2abd321b15df
+    historical_boundary: before_research_paper_ingestion
+    paper_features_allowed: false
+    paper_teacher_weight: 0.0
+    shadow_only: true
+    promotion_authority: false
+    execution_authority: false
+    notes: Pre-paper code reference. Existing execution remains governed by its separate deterministic gates.
+  V1.1:
+    parent_version: V1
+    version_role: challenger
+    historical_code_ref: WORKTREE
+    historical_boundary: paper_augmented_research_layer
+    paper_features_allowed: true
+    paper_teacher_weight: 0.0
+    shadow_only: true
+    promotion_authority: false
+    execution_authority: false
+    notes: Paper features are research challengers and receive zero teacher weight until prospective gates pass.

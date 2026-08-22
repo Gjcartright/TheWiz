@@ -53,7 +53,7 @@ def test_failure_attribution_collapses_modes_and_forbids_holdout_reuse(
     assert result.summary["v4_holdout_reuse_allowed"] is False
     assert len(detail) == 4
     assert detail["duplicate_mode_cells"].eq(2).all()
-    assert detail["holdout_reuse_allowed"].eq(False).all()  # noqa: E712
+    assert detail["holdout_reuse_allowed"].eq(False).all()
     assert result.summary["candidate_promotion_authority"] is False
     assert result.summary["testnet_order_authority"] is False
     assert result.summary["live_trading_authorized"] is False

@@ -45,6 +45,7 @@ def test_exhaustive_run_keeps_low_score_duplicates_and_unavailable_pairs(tmp_pat
             "sweep_rank": 1,
             "sweep_exchange": "Dydx",
             "sweep_interval": "Daily",
+            "sweep_captured_at": "2026-08-07T12:30:00+00:00",
             "sweep_complete": True,
             "symbol_1": "BTC-USD",
             "symbol_2": "ETH-USD",
@@ -105,6 +106,13 @@ def test_exhaustive_run_keeps_low_score_duplicates_and_unavailable_pairs(tmp_pat
     assert len(detail_queue) == len(pairs)
     assert detail_queue["pair_group_id"].nunique() == len(pairs)
     assert detail_queue["capture_status"].eq("NOT_CAPTURED").all()
+    assert (
+        detail_queue.loc[
+            detail_queue["pair"].eq("BTC-USD-ETH-USD"),
+            "scanner_capture_timestamps",
+        ].item()
+        == "2026-08-07T12:30:00+00:00"
+    )
     assert detail_queue["modes_to_capture"].str.contains("Copula").all()
     assert (
         detail_queue["capture_order_policy"]
@@ -175,6 +183,38 @@ def test_exhaustive_authority_requires_complete_page_evidence(tmp_path):
     assert result.summary["all_dashboard_pages_proven"] is True
     assert result.summary["authority"] == "EXHAUSTIVE_RESEARCH_DEFINITION_READY"
     assert result.summary["planned_experiments"] == len(EXACT_MODES) * len(ORIENTATIONS)
+
+
+def test_exhaustive_run_blocks_cross_quote_rows_that_collapse_to_one_perp(tmp_path):
+    active = _write_inventory(tmp_path, ["ALGO"])
+    pd.DataFrame(
+        [
+            {
+                "sweep_id": "sweep-cross-quote",
+                "request_id": "request-cross-quote",
+                "sweep_exchange": "Coinbase",
+                "sweep_interval": "Daily",
+                "sweep_complete": True,
+                "symbol_1": "ALGO-USD",
+                "symbol_2": "ALGO-EUR",
+            }
+        ]
+    ).to_csv(active / "wizard_sweep_candidates.csv", index=False)
+
+    result = build_exhaustive_wizard_hyperliquid_run(root=tmp_path)
+
+    source = pd.read_csv(result.paths["source_row_ledger"])
+    pairs = pd.read_csv(result.paths["pair_ledger"])
+    assert source["normalization_blocker"].eq("identical_canonical_assets").all()
+    assert not pairs["hyperliquid_pair_ready"].astype(bool).any()
+    assert pairs["hyperliquid_mapping_blocker"].str.contains("identical_canonical_assets").all()
+    assert result.summary["hyperliquid_ready_pair_groups"] == 0
+
+    refresh = build_exhaustive_wizard_hyperliquid_mapping_refresh(root=tmp_path)
+    mapping = pd.read_csv(refresh.paths["mapping"])
+    assert not mapping["current_pair_ready"].astype(bool).any()
+    assert mapping["current_mapping_blocker"].str.contains("identical_canonical_assets").all()
+    assert refresh.summary["current_ready_pair_groups"] == 0
 
 
 def test_mapping_refresh_preserves_frozen_run_and_reports_stable_inventory(tmp_path):

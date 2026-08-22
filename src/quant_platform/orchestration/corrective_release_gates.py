@@ -21,8 +21,18 @@ from quant_platform.orchestration.corrective_data_evidence import (
     PAIR_COST_BUNDLE_POINTER_SCHEMA_VERSION,
     validate_pair_cost_bundle_artifacts,
 )
+from quant_platform.orchestration.corrective_redaction import (
+    safe_exception_code,
+    safe_validation_exception_code,
+)
 from quant_platform.orchestration.corrective_registered_rerun import (
     resolve_registered_source_family,
+)
+from quant_platform.orchestration.corrective_runtime import (
+    atomic_write_bytes,
+    atomic_write_text,
+    promote_staged_directory,
+    promote_staged_file,
 )
 from quant_platform.orchestration.corrective_testnet_cohort_readiness import (
     build_testnet_prospective_cohort_readiness,
@@ -224,7 +234,8 @@ def build_testnet_candidate_queue(
             )
         except (OSError, TypeError, ValueError) as exc:
             stage4_identity_blocker = (
-                f"stage4_survivor_identity_lineage_invalid:{type(exc).__name__}:{exc}"
+                "stage4_survivor_identity_lineage_invalid:"
+                f"{safe_validation_exception_code(exc)}"
             )
     cadence_pass = bool(not cadence_validation_blocker and _daily_cadence_pass(cadence))
     model_take_rate = _finite(model.get("median_take_rate"))
@@ -597,7 +608,7 @@ def build_no_order_preflight(*, root: Path = ROOT, now: datetime | None = None) 
     except Exception as exc:  # noqa: BLE001 - preflight must fail closed as data
         protocol = {}
         protocol_validation_blocker = (
-            f"testnet_protocol_revalidation_failed:{type(exc).__name__}:{exc}"
+            f"testnet_protocol_revalidation_failed:{safe_exception_code(exc)}"
         )
     preflight_row = existing.iloc[-1].to_dict() if not existing.empty else {}
     preflight_time = pd.to_datetime(preflight_row.get("checked_at_utc"), utc=True, errors="coerce")
@@ -984,7 +995,7 @@ def archive_validated_testnet_lifecycle(
         archived_artifacts: list[dict[str, str]] = []
         for name, source in source_paths.items():
             destination = temporary / f"{name}{source.suffix}"
-            destination.write_bytes(source.read_bytes())
+            atomic_write_bytes(destination, source.read_bytes())
             archived_artifacts.append(
                 {
                     "name": name,
@@ -995,7 +1006,7 @@ def archive_validated_testnet_lifecycle(
             )
         gate_path = Path(mature_gate["gate"])
         gate_destination = temporary / "lifecycle_gate.csv"
-        gate_destination.write_bytes(gate_path.read_bytes())
+        atomic_write_bytes(gate_destination, gate_path.read_bytes())
         archived_artifacts.append(
             {
                 "name": "lifecycle_gate",
@@ -1017,7 +1028,7 @@ def archive_validated_testnet_lifecycle(
             "live_trading_authorized": False,
         }
         _atomic_json(manifest, temporary / "archive_manifest.json")
-        temporary.rename(archive_path)
+        promote_staged_directory(temporary, archive_path)
 
     archived_receipt = _read_json(archive_path / "receipt.json")
     archived_approval = _read_json(archive_path / "approval.json")
@@ -1550,7 +1561,7 @@ def build_testnet_supreme_team_checkpoint(
     markdown = directory / "testnet_evidence_checkpoint.md"
     _atomic_json(checkpoint, path)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    markdown.write_text(_checkpoint_markdown(checkpoint), encoding="utf-8")
+    atomic_write_text(markdown, _checkpoint_markdown(checkpoint), encoding="utf-8")
     return {"path": path, "markdown": markdown, "checkpoint": checkpoint}
 
 
@@ -2679,7 +2690,12 @@ def _seal_testnet_sample_policy(*, root: Path) -> tuple[dict[str, Any], Path | N
     try:
         _write_immutable_json(receipt, path)
     except ValueError as exc:
-        return {}, None, [f"testnet_sample_policy_immutable_conflict:{exc}"]
+        return {}, None, [
+            (
+                "testnet_sample_policy_immutable_conflict:"
+                f"{safe_validation_exception_code(exc)}"
+            )
+        ]
     return receipt, path, []
 
 
@@ -2876,7 +2892,16 @@ def _validated_registered_learning(
             raise ValueError("registered_learning_model_authority_missing")
         return validated, _read_json(model_path), stage4, receipt_path, ""
     except (KeyError, OSError, TypeError, ValueError) as exc:
-        return {}, {}, {}, None, f"registered_learning_validation_failed:{exc}"
+        return (
+            {},
+            {},
+            {},
+            None,
+            (
+                "registered_learning_validation_failed:"
+                f"{safe_validation_exception_code(exc)}"
+            ),
+        )
 
 
 def _candidate_identity_core(receipt: dict[str, Any]) -> dict[str, Any]:
@@ -3368,14 +3393,14 @@ def _atomic_json(payload: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _atomic_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     frame.to_csv(temporary, index=False)
-    temporary.replace(path)
+    promote_staged_file(temporary, path)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

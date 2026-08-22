@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import plistlib
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -10,7 +11,7 @@ import pandas as pd
 import pytest
 
 from quant_platform.active_pipeline import CommandResult
-from quant_platform.orchestration import corrective_l2_scheduler
+from quant_platform.orchestration import corrective_l2_scheduler, effect_authority
 from quant_platform.orchestration.corrective_l2_scheduler import (
     _inventory_refresh_blocker,
     _launch_agent_plist,
@@ -21,9 +22,87 @@ from quant_platform.orchestration.corrective_l2_scheduler import (
     validate_l2_capture_receipt,
     validate_post_window_readiness_receipt,
 )
+from quant_platform.orchestration.corrective_runtime import (
+    SCHEDULER_BOOTSTRAP_MODULE,
+    launch_agent_runtime_environment,
+    scheduler_contract,
+)
+from quant_platform.orchestration.corrective_scheduler_supervisor import (
+    supervise_scheduler_run,
+)
 from tests.pair_cost_bundle_support import publish_valid_pair_cost_bundle
 
 NOW = datetime(2026, 8, 9, 12, 0, tzinfo=UTC)
+
+
+def _prepare_supervisor_root(root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    package = root / "src" / "quant_platform"
+    package.mkdir(parents=True)
+    (package / "fixture.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (root / "pyproject.toml").write_text(
+        "[project]\nname='l2-lattice-fixture'\n",
+        encoding="utf-8",
+    )
+    (root / "uv.lock").write_text("version = 1\n", encoding="utf-8")
+    contract = scheduler_contract("hyperliquid_l2")
+    for name, value in launch_agent_runtime_environment(
+        root,
+        contract=contract,
+    ).items():
+        monkeypatch.setenv(name, value)
+
+
+def _run_isolated_supervisor(**kwargs):
+    test_authority = effect_authority._CURRENT_PUBLICATION_AUTHORITY.set(None)
+    try:
+        return supervise_scheduler_run(**kwargs)
+    finally:
+        effect_authority._CURRENT_PUBLICATION_AUTHORITY.reset(test_authority)
+
+
+def _complete_capture_summary() -> dict[str, object]:
+    return {
+        "receipt_id": "l2receipt_fixture",
+        "capture_blockers": [],
+        "eligible_pairs": 1,
+        "collector_summary": {"pairs": 1},
+        "strict_pair_cost_eligible": 1,
+        "strict_pair_cost_ready": 1,
+        "strict_pair_cost_acceptance_status": "PASS",
+        "registered_contract_candidates": 1,
+        "order_submission_included": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+
+
+def _complete_post_window_summary() -> dict[str, object]:
+    return {
+        "status": "PASS_LOCAL_READINESS_REFRESH",
+        "source_l2_receipt_id": "l2receipt_fixture",
+        "eligible_pairs": 1,
+        "ready_pairs": 1,
+        "collecting_pairs": 0,
+        "registered_contract_candidates": 1,
+        "refresh_executed": True,
+        "registered_gate_refresh_executed": True,
+        "stage4_handoff_refresh_executed": True,
+        "registered_gate_status": "PASS_REGISTERED_RERUN_ACCOUNTED",
+        "stage4_handoff_status": "PASS_STAGE4_HANDOFF_READY",
+        "stage4_handoff_validation_status": "PASS",
+        "blockers": [],
+        "promotion_authority": False,
+        "testnet_order_authority": False,
+        "live_trading_authorized": False,
+    }
+
+
+def _complete_post_window_validation() -> dict[str, object]:
+    return {
+        "status": "PASS",
+        "blockers": [],
+        "source_l2_receipt_id": "l2receipt_fixture",
+    }
 
 
 def test_source_fingerprint_uses_change_token_for_large_append_only_ledger(
@@ -228,6 +307,9 @@ def _capture_ready_registered_pair(tmp_path, monkeypatch) -> CommandResult:
     )
     receipt_relative = active_status.pop("receipt_path")
     active_status.pop("receipt_id")
+    active_status = corrective_l2_scheduler._build_l2_acceptance_summary(
+        active_status
+    )
     active_status["receipt_id"] = "l2receipt_" + sha256(
         json.dumps(active_status, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()[:20]
@@ -273,7 +355,15 @@ def test_capture_is_public_read_only_and_writes_receipt(tmp_path, monkeypatch):
 
     result = run_corrective_l2_capture(root=tmp_path, now=NOW, collector=collector)
 
-    assert result.summary["status"] == "PASS"
+    assert result.summary["status"] == "BLOCKED"
+    assert result.summary["capture_status"] == "PASS"
+    assert result.summary["l2_collection_state"] == "COLLECTED"
+    assert result.summary["l2_validation_state"] == "PENDING"
+    assert result.summary["l2_acceptance_state"] == "BLOCKED"
+    assert result.summary["l2_authorization_state"] == "PENDING"
+    assert result.summary["l2_acceptance_lattice_complete"] is False
+    assert result.summary["l2_terminal_slot_credit_eligible"] is False
+    assert "l2_strict_cost_acceptance_not_pass" in result.summary["blockers"]
     assert result.summary["eligible_pairs"] == 1
     assert result.summary["evidence_evaluated_at_utc"] == NOW.isoformat()
     assert result.summary["order_submission_included"] is False
@@ -298,6 +388,140 @@ def test_capture_is_public_read_only_and_writes_receipt(tmp_path, monkeypatch):
     assert result.paths["pair_cost_models"].exists()
     assert result.paths["pair_cost_stress"].exists()
     assert not (tmp_path / "reports" / "active" / ".corrective_l2_capture.lock").exists()
+
+
+def test_complete_supervised_l2_result_contains_full_monotone_lattice() -> None:
+    result = corrective_l2_scheduler._build_supervised_l2_result(
+        capture=CommandResult(paths={}, summary=_complete_capture_summary()),
+        readiness=CommandResult(
+            paths={},
+            summary=_complete_post_window_summary(),
+        ),
+        readiness_validation=_complete_post_window_validation(),
+    )
+    summary = result["summary"]
+
+    assert summary["status"] == "PASS"
+    assert summary["l2_acceptance_lattice"] == [
+        "COLLECTED",
+        "VALIDATED",
+        "ACCEPTED",
+        "AUTHORIZED",
+    ]
+    assert summary["l2_collection_state"] == "COLLECTED"
+    assert summary["l2_validation_state"] == "VALIDATED"
+    assert summary["l2_acceptance_state"] == "ACCEPTED"
+    assert summary["l2_authorization_state"] == "AUTHORIZED"
+    assert summary["l2_highest_state"] == "AUTHORIZED"
+    assert summary["l2_acceptance_lattice_complete"] is True
+    assert summary["l2_terminal_slot_credit_eligible"] is True
+    assert summary["post_window_readiness_validation"]["status"] == "PASS"
+    assert "post_window_readiness_validation" not in result
+    assert summary["testnet_order_authority"] is False
+    assert summary["live_trading_authorized"] is False
+
+
+def test_l2_lattice_cannot_validate_before_collection() -> None:
+    capture = _complete_capture_summary()
+    capture["capture_blockers"] = ["collector_failed"]
+
+    summary = corrective_l2_scheduler._build_l2_acceptance_summary(
+        capture,
+        post_window_summary=_complete_post_window_summary(),
+        post_window_validation=_complete_post_window_validation(),
+    )
+
+    assert summary["status"] == "BLOCKED"
+    assert summary["l2_collection_state"] == "BLOCKED"
+    assert summary["l2_validation_state"] == "BLOCKED"
+    assert summary["l2_acceptance_state"] == "BLOCKED"
+    assert summary["l2_authorization_state"] == "BLOCKED"
+    assert summary["l2_highest_state"] == "BLOCKED"
+    assert summary["l2_terminal_slot_credit_eligible"] is False
+
+
+def test_complete_l2_lattice_is_credited_by_scheduler_supervisor(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _prepare_supervisor_root(tmp_path, monkeypatch)
+
+    result = _run_isolated_supervisor(
+        root=tmp_path,
+        contract_key="hyperliquid_l2",
+        publication_scope="public_l2",
+        callback=lambda: corrective_l2_scheduler._build_supervised_l2_result(
+            capture=CommandResult(paths={}, summary=_complete_capture_summary()),
+            readiness=CommandResult(
+                paths={},
+                summary=_complete_post_window_summary(),
+            ),
+            readiness_validation=_complete_post_window_validation(),
+        ),
+        now=NOW,
+    )
+
+    assert result.exit_code == 0
+    assert result.result_summary["status"] == "PASS"
+    assert result.terminal_receipt["terminal_status"] == "PASS"
+    assert result.terminal_receipt["intended_slot_credit"] is True
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_blocker"),
+    [
+        ("strict_cost", "l2_strict_cost_acceptance_not_pass"),
+        (
+            "post_window_cohort",
+            "l2_post_window:post_window_source_cohort_changed_during_refresh",
+        ),
+        (
+            "post_window_validation",
+            "l2_post_window_validation:post_window_source_cohort_changed",
+        ),
+    ],
+)
+def test_incomplete_l2_lattice_denies_terminal_slot_credit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+    expected_blocker: str,
+) -> None:
+    _prepare_supervisor_root(tmp_path, monkeypatch)
+    capture = _complete_capture_summary()
+    readiness = _complete_post_window_summary()
+    validation = _complete_post_window_validation()
+    if failure == "strict_cost":
+        capture["strict_pair_cost_ready"] = 0
+        capture["strict_pair_cost_acceptance_status"] = "BLOCKED"
+    elif failure == "post_window_cohort":
+        readiness["status"] = "BLOCKED_SOURCE_DRIFT"
+        readiness["blockers"] = [
+            "post_window_source_cohort_changed_during_refresh"
+        ]
+    else:
+        validation["status"] = "BLOCKED"
+        validation["blockers"] = ["post_window_source_cohort_changed"]
+
+    result = _run_isolated_supervisor(
+        root=tmp_path,
+        contract_key="hyperliquid_l2",
+        publication_scope="public_l2",
+        callback=lambda: corrective_l2_scheduler._build_supervised_l2_result(
+            capture=CommandResult(paths={}, summary=capture),
+            readiness=CommandResult(paths={}, summary=readiness),
+            readiness_validation=validation,
+        ),
+        now=NOW,
+    )
+
+    assert result.exit_code == 2
+    assert result.result_summary["status"] == "BLOCKED"
+    assert expected_blocker in result.result_summary["blockers"]
+    assert result.result_summary["l2_acceptance_lattice_complete"] is False
+    assert result.result_summary["l2_terminal_slot_credit_eligible"] is False
+    assert result.terminal_receipt["terminal_status"] == "BLOCKED"
+    assert result.terminal_receipt["intended_slot_credit"] is False
 
 
 def test_incomplete_pair_cost_result_writes_blocked_receipt_instead_of_crashing(
@@ -383,7 +607,8 @@ def test_fresh_mapping_is_not_refreshed_by_l2_cycle(tmp_path):
         ),
     )
 
-    assert result.summary["status"] == "PASS"
+    assert result.summary["status"] == "BLOCKED"
+    assert result.summary["capture_status"] == "PASS"
     assert result.summary["mapping_maintenance_configured"] is True
     assert result.summary["mapping_refresh_due"] is False
     assert result.summary["mapping_refresh_status"] == "NOT_DUE"
@@ -437,7 +662,8 @@ def test_due_mapping_refreshes_inventory_then_mapping_inside_lock(tmp_path):
     )
 
     assert calls == ["inventory", "mapping"]
-    assert result.summary["status"] == "PASS"
+    assert result.summary["status"] == "BLOCKED"
+    assert result.summary["capture_status"] == "PASS"
     assert result.summary["mapping_refresh_status"] == "PASS"
     assert result.summary["mapping_inventory_refreshed"] is True
     assert result.summary["mapping_refresh_id"] == "hlmap_test"
@@ -464,9 +690,10 @@ def test_mapping_refresh_failure_before_hard_sla_is_warning(tmp_path):
         ),
     )
 
-    assert result.summary["status"] == "PASS"
+    assert result.summary["status"] == "BLOCKED"
+    assert result.summary["capture_status"] == "PASS"
     assert result.summary["mapping_refresh_status"] == "BLOCKED_WARNING"
-    assert result.summary["blockers"] == []
+    assert result.summary["capture_blockers"] == []
     assert any(
         warning.startswith("exhaustive_mapping_refresh_warning:RuntimeError")
         for warning in result.summary["operational_warnings"]
@@ -582,7 +809,8 @@ def test_capture_materializes_missing_candidate_funding_before_cost_status(tmp_p
         funding_materializer=funding_materializer,
     )
 
-    assert result.summary["status"] == "PASS"
+    assert result.summary["status"] == "BLOCKED"
+    assert result.summary["capture_status"] == "PASS"
     assert result.summary["funding_refresh_status"] == "PASS"
     assert result.summary["funding_refresh_missing_assets_before"] == ["WIF"]
     assert calls[0]["pair_group_keys"] == ["binance|daily|ETH|WIF"]
@@ -757,7 +985,7 @@ def test_supplemental_funding_receipt_is_immutable_and_point_in_time(tmp_path):
 
 
 def test_launch_agent_uses_five_minute_read_only_cadence(tmp_path):
-    python = tmp_path / ".venv312" / "bin" / "python"
+    python = tmp_path / ".venv" / "bin" / "python3"
     python.parent.mkdir(parents=True)
     python.write_text("")
     logs = tmp_path / "reports" / "active" / "schedule_logs"
@@ -770,17 +998,28 @@ def test_launch_agent_uses_five_minute_read_only_cadence(tmp_path):
         interval_seconds=corrective_l2_scheduler.DEFAULT_INTERVAL_SECONDS,
     )
 
+    payload = plistlib.loads(plist.encode("utf-8"))
+    contract = scheduler_contract("hyperliquid_l2")
     assert corrective_l2_scheduler.DEFAULT_INTERVAL_SECONDS == 300
-    assert "<key>StartInterval</key><integer>300</integer>" in plist
-    assert "corrective_l2_scheduler" in plist
-    assert "--capture" in plist
+    assert payload["StartInterval"] == 300
+    assert payload["ProgramArguments"] == [
+        str(python),
+        "-m",
+        SCHEDULER_BOOTSTRAP_MODULE,
+        str(tmp_path.resolve()),
+        contract.key,
+    ]
+    assert contract.module.endswith("corrective_l2_scheduler")
+    assert contract.action == "--capture"
     assert "--execute" not in plist
     assert "order" not in plist.lower()
     assert "ProcessType" not in plist
     assert "LowPriorityIO" not in plist
-    assert f"<key>TMPDIR</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
-    assert f"<key>TEMP</key><string>{tmp_path}/.runtime_tmp</string>" in plist
+    environment = payload["EnvironmentVariables"]
+    assert environment["TMPDIR"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TEMP"] == f"{tmp_path}/.runtime_tmp"
+    assert environment["TZ"] == "America/New_York"
 
 
 def test_l2_receipt_binds_candidate_bundle_pointer_and_model(tmp_path, monkeypatch):
@@ -906,7 +1145,7 @@ def test_ready_post_window_refresh_runs_local_gate_and_handoff_under_locks(
         return CommandResult(
             paths={},
             summary={
-                "status": "BLOCKED_VENDOR_PARITY",
+                "status": "PASS_REGISTERED_RERUN_ACCOUNTED",
                 "promotion_authority": False,
                 "testnet_order_authority": False,
                 "live_trading_authorized": False,
@@ -949,12 +1188,96 @@ def test_ready_post_window_refresh_runs_local_gate_and_handoff_under_locks(
     for name in corrective_l2_scheduler.POST_WINDOW_LOCK_NAMES:
         assert not (tmp_path / "reports" / "active" / name).exists()
 
+    refresh.paths["immutable_receipt"].chmod(0o600)
     refresh.paths["immutable_receipt"].write_text("{}\n", encoding="utf-8")
     validation = validate_post_window_readiness_receipt(
         root=tmp_path, receipt=refresh.summary
     )
     assert validation["status"] == "BLOCKED"
     assert "l2_readiness_refresh_immutable_receipt_mismatch" in validation["blockers"]
+
+
+@pytest.mark.parametrize(
+    ("blocked_stage", "expected_blocker", "expected_calls"),
+    [
+        (
+            "gate",
+            "post_window_registered_gate_status:BLOCKED_VENDOR_PARITY",
+            ["gate"],
+        ),
+        (
+            "handoff",
+            "post_window_stage4_handoff_status:BLOCKED_STAGE4_HANDOFF",
+            ["gate", "handoff"],
+        ),
+    ],
+)
+def test_nonpassing_post_window_stage_blocks_supervised_l2_completion(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    blocked_stage: str,
+    expected_blocker: str,
+    expected_calls: list[str],
+) -> None:
+    capture = _capture_ready_registered_pair(tmp_path, monkeypatch)
+    calls: list[str] = []
+
+    def gate_builder(**_) -> CommandResult:
+        calls.append("gate")
+        status = (
+            "BLOCKED_VENDOR_PARITY"
+            if blocked_stage == "gate"
+            else "PASS_REGISTERED_RERUN_ACCOUNTED"
+        )
+        return CommandResult(
+            paths={},
+            summary={
+                "status": status,
+                "promotion_authority": False,
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            },
+        )
+
+    def handoff_builder(**_) -> CommandResult:
+        calls.append("handoff")
+        return CommandResult(
+            paths={},
+            summary={
+                "status": "BLOCKED_STAGE4_HANDOFF",
+                "receipt_id": "stage4handoff_blocked_fixture",
+                "candidate_promotion_authority": False,
+                "testnet_order_authority": False,
+                "live_trading_authorized": False,
+            },
+        )
+
+    refresh = run_post_window_readiness_refresh(
+        root=tmp_path,
+        now=NOW,
+        expected_l2_receipt_id=capture.summary["receipt_id"],
+        gate_builder=gate_builder,
+        handoff_builder=handoff_builder,
+        handoff_validator=lambda **_: {"status": "PASS", "blockers": []},
+    )
+    validation = validate_post_window_readiness_receipt(
+        root=tmp_path,
+        receipt=refresh.summary,
+    )
+    supervised = corrective_l2_scheduler._build_supervised_l2_result(
+        capture=capture,
+        readiness=refresh,
+        readiness_validation=validation,
+    )
+
+    assert calls == expected_calls
+    assert refresh.summary["status"] == "BLOCKED_LOCAL_READINESS_REFRESH"
+    assert expected_blocker in refresh.summary["blockers"]
+    assert validation["status"] == "PASS"
+    assert supervised["summary"]["status"] == "BLOCKED"
+    assert supervised["summary"]["l2_authorization_state"] == "BLOCKED"
+    assert supervised["summary"]["l2_terminal_slot_credit_eligible"] is False
+    assert supervised["summary"]["post_window_readiness_validation"] == validation
 
 
 def test_post_window_refresh_blocks_candidate_cohort_tampering(tmp_path, monkeypatch):

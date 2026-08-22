@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Any
 
@@ -12,20 +12,21 @@ import pandas as pd
 from pydantic import ValidationError
 
 from quant_platform.orchestration.contracts import CandidateIdentity
+from quant_platform.orchestration.corrective_redaction import safe_exception_code
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 from quant_platform.orchestration.teacher_contracts import (
+    EXACT_MODES,
+    MATH_V2,
+    REQUIRED_CRITICS,
     CouncilContext,
     CriticAssessment,
     CriticType,
     CriticVerdict,
     EvidenceAuthority,
-    EXACT_MODES,
-    MATH_V2,
-    REQUIRED_CRITICS,
     TeacherAction,
     TeacherProposal,
     normalize_exact_mode,
 )
-
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -164,10 +165,9 @@ def build_teacher_evidence_adapters(*, root: Path = ROOT) -> dict[str, object]:
     _write_jsonl(proposal_path, proposals)
     _write_jsonl(critic_path, assessments)
     readiness_frame = pd.DataFrame(readiness)
-    readiness_frame.to_csv(readiness_path, index=False)
+    atomic_write_csv(readiness_frame, readiness_path, index=False)
     status = "READY_FOR_COUNCIL" if readiness_frame["status"].eq("PASS").all() else "BLOCKED"
-    markdown_path.write_text(
-        "\n".join(
+    atomic_write_text(markdown_path, "\n".join(
             [
                 "# Teacher Evidence Adapters",
                 "",
@@ -179,9 +179,7 @@ def build_teacher_evidence_adapters(*, root: Path = ROOT) -> dict[str, object]:
                 readiness_frame.to_markdown(index=False),
                 "",
             ]
-        ),
-        encoding="utf-8",
-    )
+        ), encoding="utf-8")
     return {
         "status": status,
         "proposal_count": len(proposals),
@@ -235,7 +233,7 @@ def _complete_context_events(
             context_proposals = [_proposal(row, context) for _, row in teacher_rows.iterrows()]
             context_assessments = [_assessment(row, context) for _, row in critic_rows.iterrows()]
         except (ValueError, ValidationError) as exc:
-            errors.append(f"{key}:{str(exc).replace(chr(10), ' | ')}")
+            errors.append(f"{key}:{safe_exception_code(exc)}")
             continue
         proposals.extend(context_proposals)
         assessments.extend(context_assessments)
@@ -261,7 +259,7 @@ def _proposal(row: pd.Series, context: CouncilContext) -> TeacherProposal:
     if str(row["venue"]).strip().lower() != "hyperliquid":
         raise ValueError("teacher acceptance venue must be hyperliquid")
     if str(row["math_version"]).strip() != MATH_V2:
-        raise ValueError("teacher math_version must be math-v2")
+        raise ValueError(f"teacher math_version must be {MATH_V2}")
     if str(row["point_in_time_status"]).strip().lower() != "confirmed":
         raise ValueError("teacher input must be point-in-time confirmed")
     fidelity = str(row["mode_fidelity_status"]).strip().lower()
@@ -357,16 +355,13 @@ def _math_marker_passes(path: Path) -> bool:
 
 
 def _write_schema(path: Path, columns: tuple[str, ...]) -> None:
-    pd.DataFrame(
+    atomic_write_csv(pd.DataFrame(
         [{"column": column, "required": True, "authority": "local_point_in_time"} for column in columns]
-    ).to_csv(path, index=False)
+    ), path, index=False)
 
 
 def _write_jsonl(path: Path, records: list[Any]) -> None:
-    path.write_text(
-        "".join(json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n" for record in records),
-        encoding="utf-8",
-    )
+    atomic_write_text(path, "".join(json.dumps(record.model_dump(mode="json"), sort_keys=True) + "\n" for record in records), encoding="utf-8")
 
 
 def _check(
