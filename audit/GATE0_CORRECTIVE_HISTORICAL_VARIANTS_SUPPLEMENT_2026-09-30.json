@@ -1,0 +1,1013 @@
+{
+  "baseline_commit": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "counts": {
+    "blank_working_vs_runtime_rows": 10,
+    "distinct_path_variant_hashes": 25,
+    "forensic_b_rows": 22,
+    "four_root_reconciliation_rows": 13,
+    "rows": 23,
+    "source_candidate_rows": 1
+  },
+  "decision": "Preserve exact historical variants as evidence; no whole-file port. Keep active/runtime decisions from the primary report, including the cherry-picked browser-auth guard and v23 supervisor absence-proof repair. Review any strict_bool callsite as a separate, tested type-contract change.",
+  "files": [
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "6cbad4256dc9ad39355607d00a0eabff812862d8dd59ec96fe57a4f3de4d1a79",
+      "frozen_historical_variant_sha256_members": [
+        "466b0c40452b4dfaaed93b9c84416bb472b3e60f07649033d1bef2ebd1c981f9"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_agent_governance.py",
+      "potential_narrow_followup": "Evaluate exact persisted accepted typing separately.",
+      "queue_line": 256,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b replaces guarded staged promotion with Path.replace; its strict_bool accepted flag is not a reason to drop active publication semantics.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "d9671bff7c1eff0f09b48977be410907a7a5b9e9273a060611c4c5e0c50f8802",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_agent_governance.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 10
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 13,
+            "variant_added_lines": 10
+          },
+          "sha256": "466b0c40452b4dfaaed93b9c84416bb472b3e60f07649033d1bef2ebd1c981f9",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "0fb0350d262290289a787dc2bf708f71e2d45d70c6e12288a9ddc8ab10a8f22a",
+      "frozen_historical_variant_sha256_members": [
+        "37a838592d51d0edbd1d97a7723eeb68949a55e5af0905d00d5387167d344a0a"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+      "potential_narrow_followup": "",
+      "queue_line": 258,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b lacks active supervisor terminal lineage, governed evidence lock, safe exception coding, and durable blocked post-run handoff; it uses older local timeout/lock helpers.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "66ac37befdcab8c988d4d712c50f8fd0c7adc28bd44970fcef481eaaf845706c",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_publish_blocked_post_run_handoff",
+            "_result_counter",
+            "_validate_daily_scheduler_lineage",
+            "finalize_scheduled_research_checkpoint"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_daily_scheduler.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 368,
+            "variant_added_lines": 141
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 1783,
+            "variant_added_lines": 175
+          },
+          "sha256": "37a838592d51d0edbd1d97a7723eeb68949a55e5af0905d00d5387167d344a0a",
+          "variant_only_top_level_symbols": [
+            "_lock_owner_alive",
+            "_timeout_runner"
+          ]
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "6950fe07d5019d546c80eed65145d268dd3af3cd9c924e425f2a952752686461",
+      "frozen_historical_variant_sha256_members": [
+        "819289989802d402dfe339300a3c3963f16ee7225c08ba57704cbaba6ecb516a",
+        "e7a2e60b63a544878ee974ca706645287207696a7d7c0c9d88d7144634e57dc6"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_data_evidence.py",
+      "potential_narrow_followup": "",
+      "queue_line": 259,
+      "queue_status_at_review": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+      "rationale": "Both forensic variants omit active bounded strict-L2 maximum-gap and latest-age checks. Forensic_b also uses direct fixture writes and raw exception text; retain active post-freeze safety checks.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "1af658bd376d50f44f1440d0f991f2f02001a47715823a44bb48075e89bf928f",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/corrective_data_evidence.py",
+            "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_data_evidence.py",
+            "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/corrective_data_evidence.py"
+          ],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 82,
+            "variant_added_lines": 8
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 508,
+            "variant_added_lines": 54
+          },
+          "sha256": "819289989802d402dfe339300a3c3963f16ee7225c08ba57704cbaba6ecb516a",
+          "variant_only_top_level_symbols": []
+        },
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_data_evidence.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 83,
+            "variant_added_lines": 10
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 509,
+            "variant_added_lines": 56
+          },
+          "sha256": "e7a2e60b63a544878ee974ca706645287207696a7d7c0c9d88d7144634e57dc6",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "908cc04f53356f7337c2f899b8be7a8e86cd1a93b166be3228170907f9fcf53b",
+      "frozen_historical_variant_sha256_members": [
+        "9d4f0f710c16d00b92cb08343395913ebcd62d0afd753122da320f2dda0ace52"
+      ],
+      "historical_variant_decision": "reject_unsafe_historical_variant_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_governance.py",
+      "potential_narrow_followup": "",
+      "queue_line": 270,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b grants promotion_authority when policy source hashes match, while active fixes it to False; it also replaces governed staged promotion with Path.replace.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "6d292adf03c72518df10b0f319617babe71f25f37ed0f0358f19b2ac2281ecf3",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_governance.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 16,
+            "variant_added_lines": 15
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 14,
+            "variant_added_lines": 14
+          },
+          "sha256": "9d4f0f710c16d00b92cb08343395913ebcd62d0afd753122da320f2dda0ace52",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "5e0ecbf71cd32293231b58d2fd6c60b456d820befe15919be982016731de4e86",
+      "frozen_historical_variant_sha256_members": [
+        "a0ffceb0166e280df0bb7ed82a150d3e95d68d071a06da1b0f36f2992826515d",
+        "a588842b5371d1fa6a0efd909b1cc7b441991fa446244a4f03ef23bdfe454b44"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+      "potential_narrow_followup": "",
+      "queue_line": 274,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Both forensic variants omit active monotone zero-trade-authority L2 acceptance lattice and supervised terminal route; forensic_b additionally emits raw exception text.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "5982ba3555ace1a887a6ffdf145ca64bcda54161ff34171899c47e71d9ccc5fa",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_build_l2_acceptance_summary",
+            "_build_supervised_l2_result",
+            "_normalized_blockers"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_l2_scheduler.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 438,
+            "variant_added_lines": 333
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 949,
+            "variant_added_lines": 358
+          },
+          "sha256": "a0ffceb0166e280df0bb7ed82a150d3e95d68d071a06da1b0f36f2992826515d",
+          "variant_only_top_level_symbols": []
+        },
+        {
+          "active_only_top_level_symbols": [
+            "_build_l2_acceptance_summary",
+            "_build_supervised_l2_result",
+            "_normalized_blockers"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/corrective_l2_scheduler.py",
+            "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_l2_scheduler.py",
+            "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/corrective_l2_scheduler.py"
+          ],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 436,
+            "variant_added_lines": 330
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 947,
+            "variant_added_lines": 355
+          },
+          "sha256": "a588842b5371d1fa6a0efd909b1cc7b441991fa446244a4f03ef23bdfe454b44",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "72334851b6a3077139f23405760629d5c2558847c0033042a4b123bc19d5165f",
+      "frozen_historical_variant_sha256_members": [
+        "7655329cd767d1e938d21219059d42ed7408742f9d84145650f246584a987480"
+      ],
+      "historical_variant_decision": "reject_unsafe_historical_variant_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+      "potential_narrow_followup": "",
+      "queue_line": 276,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b omits active one-use order authority and effect-dispatch claims in a live canary path; retain active order boundary.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "7fb8f2780f236c657f53f91fb2b1854fab9e42d3000c06e7958b08eeee732c6c",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_authorized_hyperliquid_mainnet_info_client",
+            "_canary_authorization",
+            "_canary_leverage_effect_spec",
+            "_canary_order_effect_spec",
+            "_claim_canary_authorization",
+            "_consume_initial_canary_authority",
+            "_raise_if_entry_approval_changed",
+            "_raw_hyperliquid_mainnet_info_client",
+            "_recovery_order_side",
+            "_validate_canary_authorizations"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary_execution.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 508,
+            "variant_added_lines": 39
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 509,
+            "variant_added_lines": 39
+          },
+          "sha256": "7655329cd767d1e938d21219059d42ed7408742f9d84145650f246584a987480",
+          "variant_only_top_level_symbols": [
+            "_default_info_client"
+          ]
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "83557e34e13e0486aec24b7f90f47f3f6ae7d0f73e6dbd2e1ce294daaa75f105",
+      "frozen_historical_variant_sha256_members": [
+        "a59a448d3dcaf5bc3c1a5aac87ec7c4351febb519b9b9271857554ffee0e3b1a"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_program.py",
+      "potential_narrow_followup": "Evaluate strict persisted gate-value parsing separately from historical writer changes.",
+      "queue_line": 285,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b changes many gate bool conversions but drops active atomic/staged publication and exact current program checks. Revisit any parsing change by callsite with tests.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "9bf6f8f3f6c216f5d930cfe34d765ac97fa0077ba3ff9d1a8c33c786b0785046",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_program.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 83,
+            "variant_added_lines": 90
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 482,
+            "variant_added_lines": 127
+          },
+          "sha256": "a59a448d3dcaf5bc3c1a5aac87ec7c4351febb519b9b9271857554ffee0e3b1a",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35",
+      "frozen_historical_variant_sha256_members": [
+        "e8faa9e8abce28a1ce22ce553c76067f6423fa012dae008dd50db5412757aa0e"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_registered_learning.py",
+      "potential_narrow_followup": "Evaluate stage5 gate booleans as a focused strict-type change with regression tests.",
+      "queue_line": 288,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b emits raw exception messages and uses Path.replace instead of active redaction and staged promotion; strict_bool gate parsing is a separate possible focused review.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_registered_learning.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 15,
+            "variant_added_lines": 11
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 15,
+            "variant_added_lines": 11
+          },
+          "sha256": "e8faa9e8abce28a1ce22ce553c76067f6423fa012dae008dd50db5412757aa0e",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "429197618a9c5f646f8c19d1f837eedff2907e89f02aa6396dc1d850e2852219",
+      "frozen_historical_variant_sha256_members": [
+        "63461d7fa93d182bf5cd5c338fb92e943ac112df1e58163fa90404f853020231"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_release_gates.py",
+      "potential_narrow_followup": "Evaluate persisted decision bool typing separately.",
+      "queue_line": 290,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b uses direct writes/directory rename and raw exception text instead of active atomic promotion/redaction across release evidence; no wholesale port.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "7f0fa2ddc85b458e45070d8c58dfb261cf8233d10a929ccdd72da724e980c669",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_release_gates.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 46,
+            "variant_added_lines": 22
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 632,
+            "variant_added_lines": 52
+          },
+          "sha256": "63461d7fa93d182bf5cd5c338fb92e943ac112df1e58163fa90404f853020231",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "cbef6e90ea37170d6933b87c7f469aa1d9f7306ef7afc05934dd1cd6f597aedd",
+      "frozen_historical_variant_sha256_members": [
+        "d3c2dc0d068f8a26ad08bb1eb955a971729130a7c5ebec437ff153e8e3111e6f"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_scheduler_lock.py",
+      "potential_narrow_followup": "",
+      "queue_line": 293,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Four historical roots hold an older lock variant missing active governed evidence and scheduler-terminal publication authority machinery.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "3ea56f7571c6b605b2ce1eacf29dd0164a768fb1063c0ef4673afdaa1c936ef5",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "GovernedEvidenceLockBusy",
+            "GovernedEvidenceMaintenanceActive",
+            "PublicationLease",
+            "PublicationLeaseError",
+            "_acquire_flock",
+            "_boot_identity",
+            "_governed_evidence_lock",
+            "_open_existing_regular_file",
+            "_open_or_create_directory",
+            "_open_secure_lock_file",
+            "_phase00_maintenance_controller_lock",
+            "_process_start_identity",
+            "_quarantine_scheduler_lock",
+            "_require_publication_authority",
+            "_scheduler_lock_owner_matches",
+            "_target_allowed_for_scope",
+            "current_publication_lease",
+            "current_scheduler_process_identity",
+            "governed_evidence_read_lock",
+            "governed_evidence_write_lock",
+            "governed_root_for_path",
+            "publication_lease_for_path",
+            "read_phase00_maintenance_state",
+            "scheduler_process_owner_matches",
+            "scheduler_terminal_write_lock",
+            "validate_current_publication_lease"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/corrective_scheduler_lock.py",
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_scheduler_lock.py",
+            "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_scheduler_lock.py",
+            "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/corrective_scheduler_lock.py"
+          ],
+          "copy_roots": [
+            "forensic_a",
+            "forensic_b",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 861,
+            "variant_added_lines": 14
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 4181,
+            "variant_added_lines": 14
+          },
+          "sha256": "d3c2dc0d068f8a26ad08bb1eb955a971729130a7c5ebec437ff153e8e3111e6f",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "077bd2e2ff1ce9f4cfc5acfe883d5f80e3fc098a4801bff3f6d894a99c92a65b",
+      "frozen_historical_variant_sha256_members": [
+        "b3eac1412bbad0cb2d9f74549eeda71eb335e13e2904cbe602c4f58e8ed1fac7"
+      ],
+      "historical_variant_decision": "reject_unsafe_historical_variant_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_scheduler_supervisor.py",
+      "potential_narrow_followup": "",
+      "queue_line": 295,
+      "queue_status_at_review": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+      "rationale": "Source-candidate variant rechecks collection startup/admission against a fresh wall clock rather than the admitted started instant; this can cross the slot boundary. Existing active v23 abandoned-run absence-proof guard remains authoritative.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "625201d4c8b69d54b1c2e83351792bb21fb5dd757be5e57f879ef80cb866fa58",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+          ],
+          "copy_roots": [
+            "source_candidate"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 92,
+            "variant_added_lines": 356
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 5,
+            "variant_added_lines": 2
+          },
+          "sha256": "b3eac1412bbad0cb2d9f74549eeda71eb335e13e2904cbe602c4f58e8ed1fac7",
+          "variant_only_top_level_symbols": [
+            "_supervise_scheduler_run",
+            "_validate_collection_dispatch_summary",
+            "supervise_collection_scheduler_run"
+          ]
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "13f1ab46b266d3bd7a1faff74e251712a06414f974ec5e7771fdad2fc32c760b",
+      "frozen_historical_variant_sha256_members": [
+        "400ed29936fee0724c31aa44bd43557ed90fb3a6985e41a2792c47282b89f91b"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+      "potential_narrow_followup": "",
+      "queue_line": 297,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b drops active executor type rejection and staged promotion in the Testnet action path; strict_bool result parsing does not justify source replacement.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "a658141366e164ae0fda2b5dec09a1e537b52eee53624b08f4dfd428fd773c6a",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_authorized_hyperliquid_testnet_info_client",
+            "_raw_hyperliquid_testnet_info_client",
+            "_require_gate00g_testnet_pair_executor"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_testnet_pair_execution.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 63,
+            "variant_added_lines": 17
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 89,
+            "variant_added_lines": 18
+          },
+          "sha256": "400ed29936fee0724c31aa44bd43557ed90fb3a6985e41a2792c47282b89f91b",
+          "variant_only_top_level_symbols": [
+            "_default_info_client"
+          ]
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa",
+      "frozen_historical_variant_sha256_members": [
+        "0f75e57f5f6e00278d64bb6f10f51811f4c71c855c67ec24cf79ab6f7de40a71"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+      "potential_narrow_followup": "",
+      "queue_line": 300,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b hardcodes .venv312/bin/python and uses Path.replace; active derives the scheduler interpreter and uses guarded promotion.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 5,
+            "variant_added_lines": 5
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 5,
+            "variant_added_lines": 5
+          },
+          "sha256": "0f75e57f5f6e00278d64bb6f10f51811f4c71c855c67ec24cf79ab6f7de40a71",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a",
+      "frozen_historical_variant_sha256_members": [
+        "6395b2f5204e7d471a4dfb0aef584c49b7c1723fd6c63cf59324c29cb5ed3031"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py",
+      "potential_narrow_followup": "Evaluate log_used typing in a focused test.",
+      "queue_line": 302,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b writes its evidence directly and uses Path.replace instead of active atomic/staged helpers; strict_bool log flag needs isolated evaluation.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 8,
+            "variant_added_lines": 5
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 8,
+            "variant_added_lines": 5
+          },
+          "sha256": "6395b2f5204e7d471a4dfb0aef584c49b7c1723fd6c63cf59324c29cb5ed3031",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4",
+      "frozen_historical_variant_sha256_members": [
+        "1492cb24e049db15447d66db1a89739a22ccb9af304b15fb070b3398c1a4b7c8"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_ou_holdout.py",
+      "potential_narrow_followup": "Evaluate log_used typing in a focused test.",
+      "queue_line": 303,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b reads the Wizard API key even when execute is false, emits raw exception messages, and uses direct writes; retain active dry-run credential and redaction boundaries.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_holdout.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 19,
+            "variant_added_lines": 29
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 19,
+            "variant_added_lines": 29
+          },
+          "sha256": "1492cb24e049db15447d66db1a89739a22ccb9af304b15fb070b3398c1a4b7c8",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face",
+      "frozen_historical_variant_sha256_members": [
+        "8b9e64b2720b31dbaab1a2bcbf80ef5f9bda64aad75aa5cb0255c82270b52ffc"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py",
+      "potential_narrow_followup": "Evaluate selector bool typing in a focused test.",
+      "queue_line": 304,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b reads the Wizard API key during non-execution and emits raw vendor/intent exception text; retain active guarded path.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "sha256": "8b9e64b2720b31dbaab1a2bcbf80ef5f9bda64aad75aa5cb0255c82270b52ffc",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c",
+      "frozen_historical_variant_sha256_members": [
+        "f7e197fd4daa889635ea71822e50287e899a61eb50223ea08802a0dc04e77799"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py",
+      "potential_narrow_followup": "Evaluate selector bool typing in a focused test.",
+      "queue_line": 305,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b reads the Wizard API key during non-execution and emits raw vendor/intent exception text; retain active guarded path.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "sha256": "f7e197fd4daa889635ea71822e50287e899a61eb50223ea08802a0dc04e77799",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2",
+      "frozen_historical_variant_sha256_members": [
+        "8026c5a0b77a9fd6e67426d027f7ab7745665cae675795d39cc2bc1d736d4662"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+      "potential_narrow_followup": "Evaluate selector bool typing in a focused test.",
+      "queue_line": 306,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b reads the Wizard API key during non-execution and emits raw vendor/intent exception text; retain active guarded path.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 9,
+            "variant_added_lines": 7
+          },
+          "sha256": "8026c5a0b77a9fd6e67426d027f7ab7745665cae675795d39cc2bc1d736d4662",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "ea6949799671fc28a9ab19a43e66605b54a3642a90fa852c99f911e06934bdf7",
+      "frozen_historical_variant_sha256_members": [
+        "6b2db77d8b2db77ed28c26b23510f36364ab1bd612ccf3c873bf0cc73d1c507d"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py",
+      "potential_narrow_followup": "",
+      "queue_line": 308,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Four historical roots use Path.replace where active uses promote_staged_file; retain active atomic publication.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "21f1377a0bb35862a2c691a00f4f30a5b0676af3ed4b8c9a9a7da17f9bc67269",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py",
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py",
+            "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py",
+            "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py"
+          ],
+          "copy_roots": [
+            "forensic_a",
+            "forensic_b",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 2,
+            "variant_added_lines": 1
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 477,
+            "variant_added_lines": 20
+          },
+          "sha256": "6b2db77d8b2db77ed28c26b23510f36364ab1bd612ccf3c873bf0cc73d1c507d",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f",
+      "frozen_historical_variant_sha256_members": [
+        "a2c27e44a6ec14307ed1d0d386455ff09c42bf63e2814f805183ee32b23a1288"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_parity.py",
+      "potential_narrow_followup": "Evaluate persisted successor/registration bool typing separately.",
+      "queue_line": 309,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b duplicates canonical mode names and uses direct writes/Path.replace; retain active economic contract and atomic/staged publication.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_parity.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 14,
+            "variant_added_lines": 31
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 14,
+            "variant_added_lines": 31
+          },
+          "sha256": "a2c27e44a6ec14307ed1d0d386455ff09c42bf63e2814f805183ee32b23a1288",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "e9dfbf182f4561b42bf3725ef6316cf7ec09f87f8d1cb5afdd4985299ff8406a",
+      "frozen_historical_variant_sha256_members": [
+        "6cca2c433996773f9c4034abc68d9b6d32d8e440edf04781a9bef25eb44857bb"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+      "potential_narrow_followup": "",
+      "queue_line": 310,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b lacks active supervised issuer/reservation and safe exception handling around the heavy Wizard scheduler; no return to its direct lock/credential route.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "be2bdd808ad8d427dcb4681327244de76ccd14d76f70b32c896f8140389f1ce1",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_authorized_unattended_preflight",
+            "_launcher_supervisor_result",
+            "_run_heavy_scheduler_in_process"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_proof_launcher.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 184,
+            "variant_added_lines": 67
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 187,
+            "variant_added_lines": 67
+          },
+          "sha256": "6cca2c433996773f9c4034abc68d9b6d32d8e440edf04781a9bef25eb44857bb",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": false,
+      "active_sha256_at_ff07b8b": "8caf2e49f662c40f38252506e1b039898cf5cf8807e71d3994b71bf01dba10eb",
+      "frozen_historical_variant_sha256_members": [
+        "3f78c0c156baa883b2f29edac0e4100c108eed757dd46848c9442245fadb0e51"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": true,
+      "path": "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+      "potential_narrow_followup": "",
+      "queue_line": 311,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b lacks active provider issuer/reservation and authorized credential session, and records raw exception text; retain active effect boundary.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "b9719636635a1289af3ac6ceae7d89423fa903bbd527208f0a3aff9fdce260e0",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [
+            "_deferred_credential_reader",
+            "_external_request_ceiling",
+            "_file_declares_key",
+            "_insecure_secret_files",
+            "_run_external_lane",
+            "_validate_external_reservation"
+          ],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 618,
+            "variant_added_lines": 192
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 657,
+            "variant_added_lines": 192
+          },
+          "sha256": "3f78c0c156baa883b2f29edac0e4100c108eed757dd46848c9442245fadb0e51",
+          "variant_only_top_level_symbols": [
+            "_load_and_validate_environment"
+          ]
+        }
+      ]
+    },
+    {
+      "active_equal_runtime": true,
+      "active_sha256_at_ff07b8b": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa",
+      "frozen_historical_variant_sha256_members": [
+        "3b7c71b3f1a4da5377137dd855dbdcc46d622024635024098d4e71acff45a234"
+      ],
+      "historical_variant_decision": "retain_active_preserve_historical_no_port",
+      "in_four_root_reconciliation": false,
+      "path": "src/quant_platform/orchestration/corrective_wizard_reset_readiness.py",
+      "potential_narrow_followup": "Evaluate persisted credential configured/secure typing separately.",
+      "queue_line": 312,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Forensic_b hardcodes .venv312/bin/python and uses Path.replace; retain active scheduler_python_path and guarded promotion.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_HISTORICAL_VARIANT_NO_PORT",
+      "runtime_sha256": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa",
+      "variants": [
+        {
+          "active_only_top_level_symbols": [],
+          "copy_paths": [
+            "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_reset_readiness.py"
+          ],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "diff_vs_active": {
+            "base_removed_lines": 7,
+            "variant_added_lines": 9
+          },
+          "diff_vs_runtime": {
+            "base_removed_lines": 7,
+            "variant_added_lines": 9
+          },
+          "sha256": "3b7c71b3f1a4da5377137dd855dbdcc46d622024635024098d4e71acff45a234",
+          "variant_only_top_level_symbols": []
+        }
+      ]
+    }
+  ],
+  "method": "Read-only SHA256 custody and AST/diff comparison; no candidate imports, provider calls, or tests.",
+  "primary_report": "audit/GATE0_CORRECTIVE_COHORT_REVIEW_2026-09-30.json",
+  "queue_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "queue_sha256": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+  "review_date": "2026-09-30",
+  "root_manifest": "audit/SECOND_PASS_EXTENDED_MANIFEST_SUMMARY_2026-09-29.json",
+  "root_manifest_sha256": "26200909a55a3783b8e39f4d7b03a996722909f168df1841f542677445492d08",
+  "schema_version": "thewiz.gate0.corrective_historical_variants_supplement.v1",
+  "selection": "Pending corrective_* rows with nonempty historical_variant_sha256 and at least one variant hash distinct from both active ff07b8b and LocalRuntime. All distinct members read from the queue-listed roots."
+}
