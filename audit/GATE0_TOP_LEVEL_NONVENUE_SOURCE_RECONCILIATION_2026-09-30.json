@@ -1,0 +1,3520 @@
+{
+  "candidate_test_evidence": {
+    "feature_engine": {
+      "commits": [
+        "577c657a968a73261d14e47ce6eaa888e2b3de68",
+        "1b1bcf74bbad9175855d723fae514d30d7180db5"
+      ],
+      "dependency_order": "cherry-pick 577c657 before 1b1bcf7",
+      "focused_suite": "tests/test_feature_engine.py tests/test_family_matrix.py tests/test_experiments.py",
+      "probe": "missing canonical risk: tail 34.096->0, backtest 55->0; supplied 99 score claim no longer causes strategy 18 entry",
+      "result": "24 passed after both commits"
+    },
+    "research_paper_reproduction": {
+      "commit": "76ea7a9ad9a8322cb6946f317da4ce137c68ab42",
+      "focused_suite": "tests/test_research_paper_reproduction.py",
+      "probe": "synthetic true Y-on-X beta 1.7: active median 0.589745, candidate median 1.692288",
+      "result": "5 passed with existing governed offline Python"
+    },
+    "zscore_utils": {
+      "commit": "c91fac0ff4d35afa51ebdc366be280d0447b4d66",
+      "focused_suite": "tests/test_zscore_utils.py tests/test_experiments.py tests/test_trade_timing.py tests/test_fixture_ingestion.py",
+      "probe": "valid all-zero reconstructed prefix selected provider [3,-3] in active and changed after future row; candidate remains [0,0] for both prefixes",
+      "result": "30 passed under existing governed offline Python"
+    }
+  },
+  "canonical_base_head": "12695b48cfe6301240eb95d04c757792670ba03e",
+  "created_at_utc": "2026-09-30T20:48:14.745832+00:00",
+  "current_head_freeze_delta_evidence": {
+    "src/quant_platform/active_pipeline.py": {
+      "current_head_sha256": "82ebbeb59f7abff0f603b5cdcaff3e96de819d61a77c4c41b3bb723424a51709",
+      "four_root_working_sha256": "2a1abd88823ab5080b26a83eaf906036a1635ed266fff5a2c56936debb3f1685",
+      "last_change_commit": "b7a57237320f482b0bd528964b98905debf839e0"
+    }
+  },
+  "method": [
+    "Exact hashes across current HEAD, four-root freeze, LocalRuntime, Mac savepoint and all scoped extended-manifest copies",
+    "Static AST import/syntax and direct-test crosswalk",
+    "Manual semantic drift inspection",
+    "Three independent offline-tested candidate branches; no provider calls or Expansion/queue edits"
+  ],
+  "paths": [
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/experiments.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/ablations.py",
+          "actual_sha256": "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456",
+          "exact_match": true,
+          "manifest_sha256": "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/ablations.py",
+          "actual_sha256": "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089",
+          "exact_match": true,
+          "manifest_sha256": "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/ablations.py",
+          "actual_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+          "exact_match": true,
+          "manifest_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_ablations.py",
+          "sha256": "b4e7c1272a48266204bbe939d44f3cd6898ef24f80a0a33d3fb069659d13c17c",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_ablations.py",
+          "sha256": "b4e7c1272a48266204bbe939d44f3cd6898ef24f80a0a33d3fb069659d13c17c",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+        "runtime_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+        "working_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089"
+      ],
+      "queue_line_at_base": 114,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/ablations.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/binance_spot.py",
+        "src/quant_platform/youtube_caption_insights.py",
+        "src/quant_platform/v2_run.py",
+        "src/quant_platform/wizard_pair_detail_ui_bundle.py",
+        "src/quant_platform/execution.py",
+        "src/quant_platform/wizard_mode_comparison.py",
+        "src/quant_platform/wizard_ou_v4_comparator_activation.py",
+        "src/quant_platform/research_knowledge_store.py",
+        "src/quant_platform/wizard_ou_v5_comparator_activation.py",
+        "src/quant_platform/wizard_dynamic_comparator_activation.py",
+        "src/quant_platform/yahoo_crypto.py",
+        "src/quant_platform/udemy_math_reconciliation.py",
+        "src/quant_platform/wizard_hyperliquid_bridge.py",
+        "src/quant_platform/research_papers.py",
+        "src/quant_platform/research_extract_ccxt.py",
+        "src/quant_platform/research_paper_reviews.py",
+        "src/quant_platform/research_paper_reproduction.py",
+        "src/quant_platform/wizard_research_journal.py",
+        "src/quant_platform/research_ingestion.py",
+        "src/quant_platform/wizard_local_verification.py",
+        "src/quant_platform/research_extract_udemy.py",
+        "src/quant_platform/wizard_credit_ledger.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/wizard_ou_comparator_activation.py",
+        "src/quant_platform/youtube_channel_research.py",
+        "src/quant_platform/wizard_hyperliquid_mode_proof.py",
+        "src/quant_platform/wizard_credit_budget.py",
+        "src/quant_platform/research_paper_math_audit.py",
+        "src/quant_platform/youtube_brain.py",
+        "src/quant_platform/youtube_hypothesis_validation.py",
+        "src/quant_platform/udemy_transcript_vault.py",
+        "src/quant_platform/three_brain_system.py",
+        "src/quant_platform/wizard_evidence.py",
+        "src/quant_platform/research_extract_youtube.py",
+        "src/quant_platform/wizard_ou_v6_comparator_activation.py",
+        "src/quant_platform/orchestration/specialist_scoreboard.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+        "src/quant_platform/orchestration/corrective_agent_governance.py",
+        "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+        "src/quant_platform/orchestration/corrective_canonical_status.py",
+        "src/quant_platform/orchestration/corrective_runtime.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+        "src/quant_platform/orchestration/orchestrator_assistant.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+        "src/quant_platform/orchestration/current_wizard_ou_optimal_overlay.py",
+        "src/quant_platform/orchestration/corrective_scheduler_runtime_readiness.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_closure.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+        "src/quant_platform/orchestration/corrective_statistical_remediation.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+        "src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+        "src/quant_platform/orchestration/corrective_wizard_surface_inventory.py",
+        "src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+        "src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py",
+        "src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+        "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+        "src/quant_platform/orchestration/corrective_phase00_control.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+        "src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+        "src/quant_platform/orchestration/corrective_wizard_parity.py",
+        "src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+        "src/quant_platform/orchestration/corrective_wizard_reset_readiness.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+        "src/quant_platform/orchestration/orchestrator.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+        "src/quant_platform/orchestration/corrective_registered_learning.py",
+        "src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/corrective_artifact_retention.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py",
+        "src/quant_platform/orchestration/corrective_phase00_descendants.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_holdout.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+        "src/quant_platform/orchestration/langgraph_workflow.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+        "src/quant_platform/orchestration/nodes.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+        "src/quant_platform/orchestration/corrective_wizard_browser_auth.py",
+        "src/quant_platform/orchestration/corrective_governance.py",
+        "src/quant_platform/orchestration/corrective_phase00_closure.py",
+        "src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+        "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun.py",
+        "src/quant_platform/orchestration/corrective_program.py",
+        "src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+        "src/quant_platform/orchestration/reporting.py",
+        "src/quant_platform/orchestration/mini_agents.py",
+        "src/quant_platform/rl/brain_cycle.py",
+        "src/quant_platform/rl/rl_idea_engine.py",
+        "src/quant_platform/rl/quantization.py",
+        "src/quant_platform/rl/train_ppo.py",
+        "src/quant_platform/rl/base_rl_lane.py",
+        "src/quant_platform/rl/rl_backtest.py",
+        "src/quant_platform/rl/evaluate_policy.py",
+        "src/quant_platform/rl/rl_learning_agent.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/active_pipeline.py",
+          "actual_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "exact_match": true,
+          "manifest_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/active_pipeline.py",
+          "actual_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "exact_match": true,
+          "manifest_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/active_pipeline.py",
+          "actual_sha256": "babd75b3c7e079e121bbbeabb8d5c1cfde89dc7273b6cbbf17609b704b2ac874",
+          "exact_match": true,
+          "manifest_sha256": "babd75b3c7e079e121bbbeabb8d5c1cfde89dc7273b6cbbf17609b704b2ac874",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/active_pipeline.py",
+          "actual_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+          "exact_match": true,
+          "manifest_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/active_pipeline.py",
+          "actual_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "exact_match": true,
+          "manifest_sha256": "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": false,
+      "current_head_sha256": "82ebbeb59f7abff0f603b5cdcaff3e96de819d61a77c4c41b3bb723424a51709",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_phase00_closure.py",
+          "sha256": "5db82ce4ca93288b1c348bd43f7f57b248eff7200abf1f8c0f249c09130d1d28",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "badef89088549fbaf34cd921eb2dccc9a11c1b758fe052539dcd673411fc637d",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_program.py",
+          "sha256": "61328d29cfd7f04018b32dcd685c83b73d51a9b7d0c8b1a9115590b4b3e4c0db",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3a2a164b7e0385f87bfe314b26ff53f4f015fd7aa91726bae8172da55195107",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_wizard_credit_ledger.py",
+          "sha256": "ea8d7d16b5e83fe29578d04893d2b3798463b9737388d16d319bd9e58dd1dc54",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_three_brain_system.py",
+          "sha256": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "2c7ebe3e048d63fc8becd05baa129d146b5e8fa100f36d416be3db1ca3882c49",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_wizard_proof_scheduler.py",
+          "sha256": "d7174ba3d0770eacdd04dd377bc99dae4a9c9becfe21cf743b883daa835d96bf",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_registered_rerun_executor.py",
+          "sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_statistical_remediation.py",
+          "sha256": "8ef0339897ca35df49594816b620755b2c577c2a6b8e0737c70060799d7637bc",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_registered_learning.py",
+          "sha256": "e6671e76caf16775a2047733ed3312dcc8c31a4b6223446b848d3dc82c81bc53",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "8260cc4b20e429b1a1165857b0cdfb88af7d4388f84e5d68936bbc53d4557cc0",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_wizard_ou_v6_holdout.py",
+          "sha256": "7e6a111f326e99fbc20eb1db2fed58ee67470e7183f8828073a25fff19fcc83e",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_active_pipeline.py",
+          "sha256": "af95e0dbdd419e57bd272df807bdee373cb1073fcb4f08bc148bce135671f93a",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_rl_brain_contract.py",
+          "sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_base_rl_lane.py",
+          "sha256": "1cfdea13947d5c7b6d758e41e74f2a69b93771e706d55575b4b1dfb0cd625a45",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_ou_v5_holdout.py",
+          "sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_unattended_preflight.py",
+          "sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "40ff6bf8b4c40be21b4a13e01a294eb2152ab152726f46336671c953ffe608cd",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_orchestration_rl.py",
+          "sha256": "b2c19e2450bf57c686b62ca9b75eca8fba26ee0fbb5b74d810da43691f6d94f6",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_dynamic_supreme_review.py",
+          "sha256": "851c0de0e9a5f5c878a74ccf2dd7e38b8854ae59986e52435f6d6903d3ea620a",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "078bc40af3ce0a9f7889131bd4a1942f0caec97c9409bf087379effd6f5823c2",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_daily_scheduler.py",
+          "sha256": "0093447a1705059b1ce420904f6c75815a75aec210f10c4b55d66e623dd4479b",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_apify_sources.py",
+          "sha256": "3812994627b533ff53ebc2abf63dd13085cac1da9323c508c608b02790eff3df",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_cli.py",
+          "sha256": "9f0b80e555a896dfbfac2983417eaabe17333828eab908ae26560dbf25948eb3",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "daeea9687126e0197646ef20d59a3584642f1ed43fd31b987bb66b5f63e092d3",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_l2_scheduler.py",
+          "sha256": "ed906d7bd62348371208266e26248c67af146cd6d2ad386f0ea65e6b787a1699",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_math_reconciliation.py",
+          "sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_phase00_closure.py",
+          "sha256": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "badef89088549fbaf34cd921eb2dccc9a11c1b758fe052539dcd673411fc637d",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_program.py",
+          "sha256": "badef89088549fbaf34cd921eb2dccc9a11c1b758fe052539dcd673411fc637d",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3a2a164b7e0385f87bfe314b26ff53f4f015fd7aa91726bae8172da55195107",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_wizard_credit_ledger.py",
+          "sha256": "d3a2a164b7e0385f87bfe314b26ff53f4f015fd7aa91726bae8172da55195107",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_three_brain_system.py",
+          "sha256": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "abc5b17179e4b91805c18baf74b0278e62656ce61ad0f70a6f61590be295660d",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_collection_system_check_stage.py",
+          "sha256": "abc5b17179e4b91805c18baf74b0278e62656ce61ad0f70a6f61590be295660d",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "2c7ebe3e048d63fc8becd05baa129d146b5e8fa100f36d416be3db1ca3882c49",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_wizard_proof_scheduler.py",
+          "sha256": "2c7ebe3e048d63fc8becd05baa129d146b5e8fa100f36d416be3db1ca3882c49",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_registered_rerun_executor.py",
+          "sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_statistical_remediation.py",
+          "sha256": "8ef0339897ca35df49594816b620755b2c577c2a6b8e0737c70060799d7637bc",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_registered_learning.py",
+          "sha256": "cb82137857303347d89bfdf0b40caeecea57019b576de13968551d8d422220a6",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "8260cc4b20e429b1a1165857b0cdfb88af7d4388f84e5d68936bbc53d4557cc0",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_wizard_ou_v6_holdout.py",
+          "sha256": "8260cc4b20e429b1a1165857b0cdfb88af7d4388f84e5d68936bbc53d4557cc0",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_active_pipeline.py",
+          "sha256": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_rl_brain_contract.py",
+          "sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_base_rl_lane.py",
+          "sha256": "1cfdea13947d5c7b6d758e41e74f2a69b93771e706d55575b4b1dfb0cd625a45",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_ou_v5_holdout.py",
+          "sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "8608733fcc058faa7b2f254ab919d6cd9feb4027c3d14a317b007b1a62c86b60",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_collection_stage_evidence.py",
+          "sha256": "8608733fcc058faa7b2f254ab919d6cd9feb4027c3d14a317b007b1a62c86b60",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_unattended_preflight.py",
+          "sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "40ff6bf8b4c40be21b4a13e01a294eb2152ab152726f46336671c953ffe608cd",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_orchestration_rl.py",
+          "sha256": "40ff6bf8b4c40be21b4a13e01a294eb2152ab152726f46336671c953ffe608cd",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_corrective_wizard_dynamic_supreme_review.py",
+          "sha256": "851c0de0e9a5f5c878a74ccf2dd7e38b8854ae59986e52435f6d6903d3ea620a",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "078bc40af3ce0a9f7889131bd4a1942f0caec97c9409bf087379effd6f5823c2",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_daily_scheduler.py",
+          "sha256": "078bc40af3ce0a9f7889131bd4a1942f0caec97c9409bf087379effd6f5823c2",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_apify_sources.py",
+          "sha256": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "9efabaa4610ee495970fa31186f55235e700d7315f3a6936b97e5355f62cf797",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_system_check_phase00_env.py",
+          "sha256": "9efabaa4610ee495970fa31186f55235e700d7315f3a6936b97e5355f62cf797",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_cli.py",
+          "sha256": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "daeea9687126e0197646ef20d59a3584642f1ed43fd31b987bb66b5f63e092d3",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_l2_scheduler.py",
+          "sha256": "daeea9687126e0197646ef20d59a3584642f1ed43fd31b987bb66b5f63e092d3",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_math_reconciliation.py",
+          "sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+        "runtime_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+        "working_sha256": "2a1abd88823ab5080b26a83eaf906036a1635ed266fff5a2c56936debb3f1685",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "5dc95e086dc4a531b604b0fecf4d621c80d760fd096956285c552e77175516c4",
+        "babd75b3c7e079e121bbbeabb8d5c1cfde89dc7273b6cbbf17609b704b2ac874"
+      ],
+      "queue_line_at_base": 115,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/active_pipeline.py",
+      "risk_math_semantics": "Large dashboard/system-check/recovery drift; current HEAD also changed after four-root freeze; review alongside CLI and stage fixtures.",
+      "runtime_sha256": "ef84d959b794014badeb8a4d8099f972248eabef71c6e89f2e63e232a93d6348",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/apify_sources.py",
+          "actual_sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "exact_match": true,
+          "manifest_sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/apify_sources.py",
+          "actual_sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "exact_match": true,
+          "manifest_sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/apify_sources.py",
+          "actual_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+          "exact_match": true,
+          "manifest_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "b24b3ee6b060940ab13ca7c240898a044291538168423ee3e465892b5e7ca4eb",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_apify_sources.py",
+          "sha256": "3812994627b533ff53ebc2abf63dd13085cac1da9323c508c608b02790eff3df",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_apify_sources.py",
+          "sha256": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "8f1f354136993d09dc6e5a2234f6259b5da05036dfe9df409007050d035a9085",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_exact_http_transport_authority.py",
+          "sha256": "8f1f354136993d09dc6e5a2234f6259b5da05036dfe9df409007050d035a9085",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259"
+      ],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+        "runtime_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+        "working_sha256": "b24b3ee6b060940ab13ca7c240898a044291538168423ee3e465892b5e7ca4eb",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 116,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/apify_sources.py",
+      "risk_math_semantics": "Runtime introduces exact HTTP request and path validation for governed Apify credits; provider effects require coupled authority review.",
+      "runtime_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+        "src/quant_platform/orchestration/nodes.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/cli.py",
+          "actual_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "exact_match": true,
+          "manifest_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/cli.py",
+          "actual_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "exact_match": true,
+          "manifest_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/cli.py",
+          "actual_sha256": "2d879404da6297d101529dbfe9f4aa1d5585ad4462d8b84387610f59e6cfb852",
+          "exact_match": true,
+          "manifest_sha256": "2d879404da6297d101529dbfe9f4aa1d5585ad4462d8b84387610f59e6cfb852",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/cli.py",
+          "actual_sha256": "6cd07d5ff430bfc559d509614406b97df38b156dcd1cb7fd93dcb00dc59ff3f8",
+          "exact_match": true,
+          "manifest_sha256": "6cd07d5ff430bfc559d509614406b97df38b156dcd1cb7fd93dcb00dc59ff3f8",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/cli.py",
+          "actual_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "exact_match": true,
+          "manifest_sha256": "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "3a02690323ac110b1707da6e6fcd9b643705a66e13c80f15e2039e1846b65e9d",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_phase00_closure.py",
+          "sha256": "5db82ce4ca93288b1c348bd43f7f57b248eff7200abf1f8c0f249c09130d1d28",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_trade_timing.py",
+          "sha256": "2780ea05cfb67c72a3287cac14706d9d0f1157a8ac3e3c3ed380f87e3a8d273d",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "queue_status": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+          "relative_path": "tests/test_phase00_scheduler_supervisor.py",
+          "sha256": "f511fac4081770ce3d8f241a61a9112f5b4f21318d2f68d347aa374f58a00c8d",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_strategy_family_sweep.py",
+          "sha256": "9adf700dd40084baa6de0c463065271604a6c560b8a5c96c5f02d3cf65388db2",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_cli.py",
+          "sha256": "9f0b80e555a896dfbfac2983417eaabe17333828eab908ae26560dbf25948eb3",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "sha256": "2e62201280336c042d8eb1e46901a428d19dcb3e1bce323c222902d43202e0ed",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_corrective_phase00_closure.py",
+          "sha256": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_trade_timing.py",
+          "sha256": "2780ea05cfb67c72a3287cac14706d9d0f1157a8ac3e3c3ed380f87e3a8d273d",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "queue_status": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+          "relative_path": "tests/test_phase00_scheduler_supervisor.py",
+          "sha256": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_strategy_family_sweep.py",
+          "sha256": "9adf700dd40084baa6de0c463065271604a6c560b8a5c96c5f02d3cf65388db2",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "be554f221def28de8e7a2efb1d1de41636ffae0202e7fc02b52abd631cb12c76",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_dydx_public_mainnet.py",
+          "sha256": "be554f221def28de8e7a2efb1d1de41636ffae0202e7fc02b52abd631cb12c76",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "317e39b3ead2bf92e3e16d8db1b3ce0e038393f17ff3f6635d7f2d9eebea2c6e",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_native_stage34_rehearsal.py",
+          "sha256": "317e39b3ead2bf92e3e16d8db1b3ce0e038393f17ff3f6635d7f2d9eebea2c6e",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "ccbee9b1f9d02710e0a43561d568f2496123aa9abc6a6d871ffd95750e10b184",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_workload_and_capture_v2.py",
+          "sha256": "ccbee9b1f9d02710e0a43561d568f2496123aa9abc6a6d871ffd95750e10b184",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_cli.py",
+          "sha256": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "sha256": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "False",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "6cd07d5ff430bfc559d509614406b97df38b156dcd1cb7fd93dcb00dc59ff3f8",
+        "runtime_sha256": "3569bc8e33e92ad6377453f86a2b89914d7cca5b27dcea7cfcfd783a7abd5bc6",
+        "working_sha256": "3a02690323ac110b1707da6e6fcd9b643705a66e13c80f15e2039e1846b65e9d",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "3569bc8e33e92ad6377453f86a2b89914d7cca5b27dcea7cfcfd783a7abd5bc6",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "2d879404da6297d101529dbfe9f4aa1d5585ad4462d8b84387610f59e6cfb852",
+        "d36964b2257ee39cfce4f4eeb3eb5cfa8b7c7c26a3a8511314968ca45ec54bb6"
+      ],
+      "queue_line_at_base": 119,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/cli.py",
+      "risk_math_semantics": "Large command router drift adds venue/Phase00 authority paths; no standalone transplant.",
+      "runtime_sha256": "3569bc8e33e92ad6377453f86a2b89914d7cca5b27dcea7cfcfd783a7abd5bc6",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/desk_review.py",
+          "actual_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+          "exact_match": true,
+          "manifest_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+        "runtime_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 151,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_review.py",
+      "risk_math_semantics": "Runtime-only retired OU review; no current consumer or adopted gate.",
+      "runtime_sha256": "1bd67211c99bb0f6628fe00486409c501dd443de63ff3c4f6eaa6d16252de7e5",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/entry_exit_contracts.py",
+          "actual_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+          "exact_match": true,
+          "manifest_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+          "root_label": "forensic_b"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "a3415f070f8dc6f5e055772e6659c9f56775bc4ea650d4fd31b93e9534171032",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_entry_exit_contracts.py",
+          "sha256": "a3415f070f8dc6f5e055772e6659c9f56775bc4ea650d4fd31b93e9534171032",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+        "runtime_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 159,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/entry_exit_contracts.py",
+      "risk_math_semantics": "Runtime-only entry/exit coverage report; no current consumer or adopted output contract.",
+      "runtime_sha256": "a83bbeba145fddeba0864c33f3f5ccc0dbfac4816f701de44873a494c6ffe978",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/env.py",
+          "actual_sha256": "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13",
+          "exact_match": true,
+          "manifest_sha256": "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/env.py",
+          "actual_sha256": "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0",
+          "exact_match": true,
+          "manifest_sha256": "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/env.py",
+          "actual_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+          "exact_match": true,
+          "manifest_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_phase00_effect_guard.py",
+          "sha256": "740025242a0a732140a9be16c0f9a81e208b372f85411168721acf1f07c3f614",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_env.py",
+          "sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_phase00_effect_guard.py",
+          "sha256": "740025242a0a732140a9be16c0f9a81e208b372f85411168721acf1f07c3f614",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_env.py",
+          "sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+        "runtime_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+        "working_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0"
+      ],
+      "queue_line_at_base": 160,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/env.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/evidence_registry.py",
+          "actual_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "exact_match": true,
+          "manifest_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/evidence_registry.py",
+          "actual_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "exact_match": true,
+          "manifest_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/evidence_registry.py",
+          "actual_sha256": "226f765e53523124815bffd02c9c5593e5e924908e56708e3865d4e97525a7e0",
+          "exact_match": true,
+          "manifest_sha256": "226f765e53523124815bffd02c9c5593e5e924908e56708e3865d4e97525a7e0",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/evidence_registry.py",
+          "actual_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+          "exact_match": true,
+          "manifest_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/evidence_registry.py",
+          "actual_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "exact_match": true,
+          "manifest_sha256": "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_evidence_registry.py",
+          "sha256": "c86124e6243fc3c1d0f638fe2d55ecddd97a5229e4c512c02de752dfdd53cd84",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_evidence_registry.py",
+          "sha256": "c86124e6243fc3c1d0f638fe2d55ecddd97a5229e4c512c02de752dfdd53cd84",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+        "runtime_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+        "working_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "226f765e53523124815bffd02c9c5593e5e924908e56708e3865d4e97525a7e0",
+        "37e83bc266f738cd22f158b7bc8d3b66d7fbad580ec72924c8dc67a51793b2f0"
+      ],
+      "queue_line_at_base": 161,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/evidence_registry.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/binance_testnet.py",
+        "src/quant_platform/dydx_immediate_submission_adapter.py",
+        "src/quant_platform/dydx_record_only_adapter.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/dydx_sdk_order_adapter.py",
+        "src/quant_platform/hyperliquid_testnet.py",
+        "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+        "src/quant_platform/rl/base_rl_lane.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/execution.py",
+          "actual_sha256": "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c",
+          "exact_match": true,
+          "manifest_sha256": "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/execution.py",
+          "actual_sha256": "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a",
+          "exact_match": true,
+          "manifest_sha256": "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/execution.py",
+          "actual_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+          "exact_match": true,
+          "manifest_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "076431ef62cdd19415637cf00d9e5aaba37b771b31940f4d5bee671d93fc2171",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_hyperliquid_testnet_lifecycle_evidence.py",
+          "sha256": "157f9d7e23e07f689cd330908abf35575930f6d5f8a6597e85a09a7e3032ac44",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_gate00g_order_authority.py",
+          "sha256": "ed55b13d356b4f7e1306349bde85acf0b685e197bdc7232806b650230cf3f5b2",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "queue_status": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+          "relative_path": "tests/test_phase00_scheduler_supervisor.py",
+          "sha256": "f511fac4081770ce3d8f241a61a9112f5b4f21318d2f68d347aa374f58a00c8d",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_hyperliquid_testnet.py",
+          "sha256": "5d8457b67ddf1b1d7eaaae2157f17125856c901b75fa56eec0db71c2fa2daba7",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d0bb4fe00090ce10c4f3b8f74e35ac2914a548d15db953f8d6dc53c28f4f678a",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_execution.py",
+          "sha256": "9471785c124f8b48ab66fd43c994c5c947acdb9264efce438f4c1f63c0fd145f",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "1c0d58827f51f086adfcd0e2e780863bf67e89a0f6a11098a47030caea523d78",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_binance_testnet.py",
+          "sha256": "e75b6eaefb206562b862999c380e79378aab82ff2f3c7daca51387137189964f",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_hyperliquid_testnet_lifecycle_evidence.py",
+          "sha256": "157f9d7e23e07f689cd330908abf35575930f6d5f8a6597e85a09a7e3032ac44",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_gate00g_order_authority.py",
+          "sha256": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "queue_status": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+          "relative_path": "tests/test_phase00_scheduler_supervisor.py",
+          "sha256": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_hyperliquid_testnet.py",
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d0bb4fe00090ce10c4f3b8f74e35ac2914a548d15db953f8d6dc53c28f4f678a",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_execution.py",
+          "sha256": "d0bb4fe00090ce10c4f3b8f74e35ac2914a548d15db953f8d6dc53c28f4f678a",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "a38b50a7f269056061c00337c8ee859132fbff8e4603c1823eb8737471d953a6",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_collection_inventory_paths.py",
+          "sha256": "a38b50a7f269056061c00337c8ee859132fbff8e4603c1823eb8737471d953a6",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "1dba0fe43d5a6e6db6ae8be6e3996ac8e7b164c7c6e80ce8f93a62fce67007fe",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_collection_daily_entry.py",
+          "sha256": "1dba0fe43d5a6e6db6ae8be6e3996ac8e7b164c7c6e80ce8f93a62fce67007fe",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "1c0d58827f51f086adfcd0e2e780863bf67e89a0f6a11098a47030caea523d78",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_binance_testnet.py",
+          "sha256": "1c0d58827f51f086adfcd0e2e780863bf67e89a0f6a11098a47030caea523d78",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c"
+      ],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+        "runtime_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+        "working_sha256": "076431ef62cdd19415637cf00d9e5aaba37b771b31940f4d5bee671d93fc2171",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a"
+      ],
+      "queue_line_at_base": 162,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/execution.py",
+      "risk_math_semantics": "Runtime adds canonical adapter identity/source validation around order placement; live-order path requires adapter/effect package review.",
+      "runtime_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/family_matrix.py",
+          "actual_sha256": "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce",
+          "exact_match": true,
+          "manifest_sha256": "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/family_matrix.py",
+          "actual_sha256": "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a",
+          "exact_match": true,
+          "manifest_sha256": "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/family_matrix.py",
+          "actual_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+          "exact_match": true,
+          "manifest_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_family_matrix.py",
+          "sha256": "a0812dcfe998ed78aede63b63119fbe0bf61cbb5f7ac8c0f3e399fb9cb578bc1",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_family_matrix.py",
+          "sha256": "a0812dcfe998ed78aede63b63119fbe0bf61cbb5f7ac8c0f3e399fb9cb578bc1",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+        "runtime_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+        "working_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a"
+      ],
+      "queue_line_at_base": 164,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/family_matrix.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/family_matrix.py",
+        "src/quant_platform/experiments.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/feature_engine.py",
+          "actual_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+          "exact_match": true,
+          "manifest_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/feature_engine.py",
+          "actual_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+          "exact_match": true,
+          "manifest_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/feature_engine.py",
+          "actual_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+          "exact_match": true,
+          "manifest_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [
+        "577c657a968a73261d14e47ce6eaa888e2b3de68",
+        "1b1bcf74bbad9175855d723fae514d30d7180db5"
+      ],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_feature_engine.py",
+          "sha256": "49347383d5974ac6950cb823a75f65180cf69c4b05185472f358f2e12da8d7ce",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_feature_engine.py",
+          "sha256": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+        "runtime_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+        "working_sha256": "9ae34d2cb9b8aea8d37eb61f564e98f441c712c39f173b5d2c4c5d0a7c78050f",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+      "proposed_queue_status": "TESTED_NARROW_FIX_CANDIDATE",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 165,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/feature_engine.py",
+      "risk_math_semantics": "Active risk/backtest defaults and supplied-score preservation could launder proxy evidence; two separately tested narrow commits fail closed and recompute scores.",
+      "runtime_sha256": "8c080965868d1c3dc222ba5bbce790e6adacb25bf3252fb65c91dcaf614ff62d",
+      "source_port_recommendation": "TESTED_SEPARATE_CANDIDATE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "MATCHED_DIRECT_TEST_IN_CANDIDATE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/forensic_project_audit.py",
+          "actual_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+          "exact_match": true,
+          "manifest_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+          "root_label": "forensic_b"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "94d8e5826123c08bee1d2525420e250c99e01f207fdde69b3db03070dfea1712",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_forensic_project_audit.py",
+          "sha256": "94d8e5826123c08bee1d2525420e250c99e01f207fdde69b3db03070dfea1712",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+        "runtime_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 166,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/forensic_project_audit.py",
+      "risk_math_semantics": "Runtime-only project audit implementation; wrapper and direct tests remain pending.",
+      "runtime_sha256": "c7c8e0991316953107a5358bc6a7ef2f0fe4e1bdbc66195725abbda6e27aae47",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/v2_math_diagnostic.py",
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/formula_registry.py",
+          "actual_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "exact_match": true,
+          "manifest_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/formula_registry.py",
+          "actual_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "exact_match": true,
+          "manifest_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/formula_registry.py",
+          "actual_sha256": "2d12a49646164f7512c6c53f679bfa1d450a2318f502c5bf7bdade4697bb7bbf",
+          "exact_match": true,
+          "manifest_sha256": "2d12a49646164f7512c6c53f679bfa1d450a2318f502c5bf7bdade4697bb7bbf",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/formula_registry.py",
+          "actual_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+          "exact_match": true,
+          "manifest_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/formula_registry.py",
+          "actual_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "exact_match": true,
+          "manifest_sha256": "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "20b03bf025a175c348c736b705d45445672ce37d57b2b9aad803e7f764432dca",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_formula_registry.py",
+          "sha256": "6b5bbb3f7fc2e603a6239d6224fad879b13262f9b3a5e8490225c51e24d35751",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_formula_registry.py",
+          "sha256": "6b5bbb3f7fc2e603a6239d6224fad879b13262f9b3a5e8490225c51e24d35751",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+        "runtime_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+        "working_sha256": "20b03bf025a175c348c736b705d45445672ce37d57b2b9aad803e7f764432dca",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "2d12a49646164f7512c6c53f679bfa1d450a2318f502c5bf7bdade4697bb7bbf",
+        "7c6300f5278e840f41aa598fe7a74cc8a1398db4d0370d5ed6219b137adc170b"
+      ],
+      "queue_line_at_base": 167,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/formula_registry.py",
+      "risk_math_semantics": "Runtime adds causal log, z-score, two-leg ledger and threshold formula descriptions; bind documented claims to math tests before port.",
+      "runtime_sha256": "95cf022ae89aff0fc96f8a2cacb45a3aed722be96f3eaf9348a13823e8f8384d",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/dydx_candles.py",
+        "src/quant_platform/yahoo_crypto.py",
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/funding.py",
+          "actual_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+          "exact_match": true,
+          "manifest_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/funding.py",
+          "actual_sha256": "5aa15220df746f3b0ccdf0e425a0b4f433b67f5e27ec36ed2cbdbdb91b36b510",
+          "exact_match": true,
+          "manifest_sha256": "5aa15220df746f3b0ccdf0e425a0b4f433b67f5e27ec36ed2cbdbdb91b36b510",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/funding.py",
+          "actual_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+          "exact_match": true,
+          "manifest_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_funding.py",
+          "sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_funding.py",
+          "sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+        "runtime_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+        "working_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "5aa15220df746f3b0ccdf0e425a0b4f433b67f5e27ec36ed2cbdbdb91b36b510"
+      ],
+      "queue_line_at_base": 168,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/funding.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/institutional_portfolio.py",
+          "actual_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+          "exact_match": true,
+          "manifest_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "ece0adddb0dff12de83232c0b2daa46d9edefdae9dad74eaed37a0c0defc4b6e",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_institutional_portfolio_risk.py",
+          "sha256": "ece0adddb0dff12de83232c0b2daa46d9edefdae9dad74eaed37a0c0defc4b6e",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+        "runtime_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 171,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/institutional_portfolio.py",
+      "risk_math_semantics": "Runtime-only portfolio optimizer; capital/risk policy binding for planned live route remains unadopted.",
+      "runtime_sha256": "c50f52b557727a600c435dc01cfa4c2f78925064e06e9153966772f605fa727c",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/institutional_risk.py",
+          "actual_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+          "exact_match": true,
+          "manifest_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "ece0adddb0dff12de83232c0b2daa46d9edefdae9dad74eaed37a0c0defc4b6e",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_institutional_portfolio_risk.py",
+          "sha256": "ece0adddb0dff12de83232c0b2daa46d9edefdae9dad74eaed37a0c0defc4b6e",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+        "runtime_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 172,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/institutional_risk.py",
+      "risk_math_semantics": "Runtime-only independent pretrade verdict; no current execution integration.",
+      "runtime_sha256": "9699bbcd3b2cd8a07442a82102dbe360a42eff10b3eb83f4bedcd3e1b6e5cbc4",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/meta_learning.py",
+          "actual_sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "exact_match": true,
+          "manifest_sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/meta_learning.py",
+          "actual_sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "exact_match": true,
+          "manifest_sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/meta_learning.py",
+          "actual_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+          "exact_match": true,
+          "manifest_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_meta_learning.py",
+          "sha256": "182beacc6539f98063db05c6613b777fb14eebe4b46021c5034810c22658acc9",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_meta_learning.py",
+          "sha256": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec"
+      ],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+        "runtime_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+        "working_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 201,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/meta_learning.py",
+      "risk_math_semantics": "Runtime separates reported, structural and verified outcomes; active source can overstate modeling readiness from claims. Review CLI/gate evidence together.",
+      "runtime_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/wizard_pair_detail_ui_bundle.py",
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/wizard_evidence.py",
+        "src/quant_platform/trade_timing.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/pair_detail_ingestion.py",
+          "actual_sha256": "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65",
+          "exact_match": true,
+          "manifest_sha256": "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/pair_detail_ingestion.py",
+          "actual_sha256": "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1",
+          "exact_match": true,
+          "manifest_sha256": "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/pair_detail_ingestion.py",
+          "actual_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+          "exact_match": true,
+          "manifest_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_pair_detail_ingestion.py",
+          "sha256": "3a82e865a6babf46ba9effd6fd32627208ea3585dbaa4882fb3e68b0aa625d59",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_yahoo_crypto.py",
+          "sha256": "33f5fe85d161f2bcb970b5aaccfc2aa025cd5355156dd6a7f08f4fa5a5ebba05",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_binance_spot.py",
+          "sha256": "532a8eb9dce202eee1686a5b2010cf67bbe2489f544d3902569433a63cafa78b",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_pair_detail_ingestion.py",
+          "sha256": "3a82e865a6babf46ba9effd6fd32627208ea3585dbaa4882fb3e68b0aa625d59",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_yahoo_crypto.py",
+          "sha256": "33f5fe85d161f2bcb970b5aaccfc2aa025cd5355156dd6a7f08f4fa5a5ebba05",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_binance_spot.py",
+          "sha256": "532a8eb9dce202eee1686a5b2010cf67bbe2489f544d3902569433a63cafa78b",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+        "runtime_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+        "working_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1"
+      ],
+      "queue_line_at_base": 414,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/point_in_time_data.py",
+          "actual_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+          "exact_match": true,
+          "manifest_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "91682e24291b99d9e4ad5671b8c6c122ba43d54ae16e16ae594af786b1ce4ccb",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_point_in_time_data.py",
+          "sha256": "91682e24291b99d9e4ad5671b8c6c122ba43d54ae16e16ae594af786b1ce4ccb",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+        "runtime_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 416,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/point_in_time_data.py",
+      "risk_math_semantics": "Runtime-only point-in-time certification; no adopted manifest/current consumer.",
+      "runtime_sha256": "adc61b1dd773736cdf228efd8fce7c4869207f86f98255dec9625696ad6a109e",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/experiments.py",
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/regimes.py",
+          "actual_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "exact_match": true,
+          "manifest_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/regimes.py",
+          "actual_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "exact_match": true,
+          "manifest_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/regimes.py",
+          "actual_sha256": "e242118b88d253b210ec8f07ec63653001af6fa31336c175889d803523dc1654",
+          "exact_match": true,
+          "manifest_sha256": "e242118b88d253b210ec8f07ec63653001af6fa31336c175889d803523dc1654",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/regimes.py",
+          "actual_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+          "exact_match": true,
+          "manifest_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/regimes.py",
+          "actual_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "exact_match": true,
+          "manifest_sha256": "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_regimes.py",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_experiment_regime_clock.py",
+          "sha256": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_regimes.py",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+        "runtime_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+        "working_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "e242118b88d253b210ec8f07ec63653001af6fa31336c175889d803523dc1654",
+        "f0e6f59f7b1347964e5591f15f7c9b321b7c80ed22f2c20a97fe81109691092c"
+      ],
+      "queue_line_at_base": 418,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/regimes.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_assertions.py",
+          "actual_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+          "exact_match": true,
+          "manifest_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "116fba82b42a7b6071579bb70c370e7c4e1b6d20282d9cc83c47eba2a5a20043",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_research_assertion_contracts.py",
+          "sha256": "116fba82b42a7b6071579bb70c370e7c4e1b6d20282d9cc83c47eba2a5a20043",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+        "runtime_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 419,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_assertions.py",
+      "risk_math_semantics": "Runtime-only content/record assertion layer; trial/custody chain needs joint review.",
+      "runtime_sha256": "1c98b712029114fe1e740d0d76cf9222b1da1e455e35230ef8556a04ea290d58",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_extract_udemy.py",
+          "actual_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "exact_match": true,
+          "manifest_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/research_extract_udemy.py",
+          "actual_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "exact_match": true,
+          "manifest_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_extract_udemy.py",
+          "actual_sha256": "ae5c659bd7b09f75c8101254c35dd4896beba5561a8f3fc845cea38112f40bc9",
+          "exact_match": true,
+          "manifest_sha256": "ae5c659bd7b09f75c8101254c35dd4896beba5561a8f3fc845cea38112f40bc9",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_extract_udemy.py",
+          "actual_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+          "exact_match": true,
+          "manifest_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/research_extract_udemy.py",
+          "actual_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "exact_match": true,
+          "manifest_sha256": "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+        "runtime_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+        "working_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "9bb0650d7b09d6633883d89dea9ba27a81ee773bd599db17a88dfbd6f361193e",
+        "ae5c659bd7b09f75c8101254c35dd4896beba5561a8f3fc845cea38112f40bc9"
+      ],
+      "queue_line_at_base": 420,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_extract_udemy.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/research_papers.py",
+        "src/quant_platform/research_extract_ccxt.py",
+        "src/quant_platform/research_extract_udemy.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/research_extract_youtube.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_ingestion.py",
+          "actual_sha256": "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08",
+          "exact_match": true,
+          "manifest_sha256": "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_ingestion.py",
+          "actual_sha256": "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a",
+          "exact_match": true,
+          "manifest_sha256": "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_ingestion.py",
+          "actual_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+          "exact_match": true,
+          "manifest_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_ingestion.py",
+          "sha256": "b7775733acdc2d62d5c3157e1ea82c742c7b98d2a5b84b1d7e33b6c129571358",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_youtube_brain.py",
+          "sha256": "eec5e2e28400246f877e629a90945eb772812a8a28588d6c535541af57150e04",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_ingestion.py",
+          "sha256": "b7775733acdc2d62d5c3157e1ea82c742c7b98d2a5b84b1d7e33b6c129571358",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_youtube_brain.py",
+          "sha256": "eec5e2e28400246f877e629a90945eb772812a8a28588d6c535541af57150e04",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+        "runtime_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+        "working_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a"
+      ],
+      "queue_line_at_base": 421,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_ingestion.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/research_extract_udemy.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/youtube_brain.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_knowledge_store.py",
+          "actual_sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "exact_match": true,
+          "manifest_sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_knowledge_store.py",
+          "actual_sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "exact_match": true,
+          "manifest_sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_knowledge_store.py",
+          "actual_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+          "exact_match": true,
+          "manifest_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "754087b1b5f18f21873fbbb2d062b1570bbdd76cd854e7d5356e6fd22aee9db5",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_ingestion.py",
+          "sha256": "b7775733acdc2d62d5c3157e1ea82c742c7b98d2a5b84b1d7e33b6c129571358",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_ingestion.py",
+          "sha256": "b7775733acdc2d62d5c3157e1ea82c742c7b98d2a5b84b1d7e33b6c129571358",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_udemy_research.py",
+          "sha256": "cfd9418e056b683ea312aed70d5db1389cacfbb45bbe54cda242eac685270078",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9"
+      ],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+        "runtime_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+        "working_sha256": "754087b1b5f18f21873fbbb2d062b1570bbdd76cd854e7d5356e6fd22aee9db5",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 422,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_knowledge_store.py",
+      "risk_math_semantics": "Runtime adds RAG query/answer entrypoints; deferred research_rag package is absent from current HEAD.",
+      "runtime_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_paper_math_audit.py",
+          "actual_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "exact_match": true,
+          "manifest_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/research_paper_math_audit.py",
+          "actual_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "exact_match": true,
+          "manifest_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_paper_math_audit.py",
+          "actual_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "exact_match": true,
+          "manifest_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_paper_math_audit.py",
+          "actual_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+          "exact_match": true,
+          "manifest_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/research_paper_math_audit.py",
+          "actual_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "exact_match": true,
+          "manifest_sha256": "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reviews.py",
+          "sha256": "a89805a0fd199f586e4d5431f91de6c2ae3a81a3445d48fe3e2b848bdd1f7ab6",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reviews.py",
+          "sha256": "a89805a0fd199f586e4d5431f91de6c2ae3a81a3445d48fe3e2b848bdd1f7ab6",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+        "runtime_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+        "working_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "c4623c713afa59b999f760324ce2093f6a7a0e14a02a45e5c89f39a65ac7302c"
+      ],
+      "queue_line_at_base": 423,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_paper_math_audit.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_paper_reproduction.py",
+          "actual_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "exact_match": true,
+          "manifest_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/research_paper_reproduction.py",
+          "actual_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "exact_match": true,
+          "manifest_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_paper_reproduction.py",
+          "actual_sha256": "8fbed4920cdf4715d507b9ae44479eb61a51438f74936ebc4f8c76621a96dd0a",
+          "exact_match": true,
+          "manifest_sha256": "8fbed4920cdf4715d507b9ae44479eb61a51438f74936ebc4f8c76621a96dd0a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_paper_reproduction.py",
+          "actual_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+          "exact_match": true,
+          "manifest_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/research_paper_reproduction.py",
+          "actual_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "exact_match": true,
+          "manifest_sha256": "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [
+        "76ea7a9ad9a8322cb6946f317da4ce137c68ab42"
+      ],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "067d095e3a6f69f805a9b2e4ad0d4b7930d61d3f0b7decfa12fe3a2d087d357a",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "1adc864f9b4488447fdd3aadc1ab02032a46c3621e5364c84289f033488e408c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reproduction.py",
+          "sha256": "778b7ca3e81ec8bc026e7aa2f3a481b33da8ba862943def4a300036b6c1c690c",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "1adc864f9b4488447fdd3aadc1ab02032a46c3621e5364c84289f033488e408c",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reproduction.py",
+          "sha256": "1adc864f9b4488447fdd3aadc1ab02032a46c3621e5364c84289f033488e408c",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "c58fe03d3102b51e55138274ac885918dff7ed70630d32b0b7fd82f488be8f0b",
+          "queue_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "relative_path": "tests/test_math_desk_m3_core.py",
+          "sha256": "c58fe03d3102b51e55138274ac885918dff7ed70630d32b0b7fd82f488be8f0b",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+        "runtime_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+        "working_sha256": "067d095e3a6f69f805a9b2e4ad0d4b7930d61d3f0b7decfa12fe3a2d087d357a",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+      "proposed_queue_status": "TESTED_NARROW_FIX_CANDIDATE",
+      "queue_historical_variant_sha256": [
+        "8fbed4920cdf4715d507b9ae44479eb61a51438f74936ebc4f8c76621a96dd0a",
+        "dfbaf466f946a4898d395808a78cb9bceb3fd4938c6f3b0d3cdb8baa1dbbc393"
+      ],
+      "queue_line_at_base": 424,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_paper_reproduction.py",
+      "risk_math_semantics": "Active pair frame reversed canonical Y-on-X regression and return; isolated tested fix restores one-bar-lagged orientation.",
+      "runtime_sha256": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+      "source_port_recommendation": "TESTED_SEPARATE_CANDIDATE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "MATCHED_DIRECT_TEST_IN_CANDIDATE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_paper_reviews.py",
+          "actual_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "exact_match": true,
+          "manifest_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/research_paper_reviews.py",
+          "actual_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "exact_match": true,
+          "manifest_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_paper_reviews.py",
+          "actual_sha256": "80ecbc6e0e2cec078fe788969d7a85e42565902343c22a8d21d30909025a4637",
+          "exact_match": true,
+          "manifest_sha256": "80ecbc6e0e2cec078fe788969d7a85e42565902343c22a8d21d30909025a4637",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_paper_reviews.py",
+          "actual_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+          "exact_match": true,
+          "manifest_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/research_paper_reviews.py",
+          "actual_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "exact_match": true,
+          "manifest_sha256": "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reviews.py",
+          "sha256": "a89805a0fd199f586e4d5431f91de6c2ae3a81a3445d48fe3e2b848bdd1f7ab6",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_research_paper_reviews.py",
+          "sha256": "a89805a0fd199f586e4d5431f91de6c2ae3a81a3445d48fe3e2b848bdd1f7ab6",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+        "runtime_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+        "working_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "80ecbc6e0e2cec078fe788969d7a85e42565902343c22a8d21d30909025a4637",
+        "b066811fa9c32b5275ee289d68e272d6d84a3a99ed3343aa39ecb9d146ef6a93"
+      ],
+      "queue_line_at_base": 425,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_paper_reviews.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_papers.py",
+          "actual_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "exact_match": true,
+          "manifest_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/research_papers.py",
+          "actual_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "exact_match": true,
+          "manifest_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_papers.py",
+          "actual_sha256": "f7a5bcb55a577f563c84503f052f1a92551905f39aa6352346ba09a775394141",
+          "exact_match": true,
+          "manifest_sha256": "f7a5bcb55a577f563c84503f052f1a92551905f39aa6352346ba09a775394141",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_papers.py",
+          "actual_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+          "exact_match": true,
+          "manifest_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/research_papers.py",
+          "actual_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "exact_match": true,
+          "manifest_sha256": "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_research_papers.py",
+          "sha256": "b2a6366b2bee81c4499d5be6607faa828ae3c48055b6018f65172b4a68f166b4",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_research_papers.py",
+          "sha256": "b2a6366b2bee81c4499d5be6607faa828ae3c48055b6018f65172b4a68f166b4",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+        "runtime_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+        "working_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "9af582cc464b0fb1d0a262301dc25fd069e574393a55e5df7d49d904ed6f379f",
+        "f7a5bcb55a577f563c84503f052f1a92551905f39aa6352346ba09a775394141"
+      ],
+      "queue_line_at_base": 426,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_papers.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_trial_registry.py",
+          "actual_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+          "exact_match": true,
+          "manifest_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "496857e69754cb84e3088f337c71819bf3ff013a312d6fc104c9aa4ea20c938a",
+          "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_decide_color_team_trials.py",
+          "sha256": "496857e69754cb84e3088f337c71819bf3ff013a312d6fc104c9aa4ea20c938a",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "3da64a5ec9783ce311fe9acecb67b90723761b8b66bac0f775125c831470627b",
+          "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_decide_deep_challenge.py",
+          "sha256": "3da64a5ec9783ce311fe9acecb67b90723761b8b66bac0f775125c831470627b",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "9baf7ebf1173fee2e3446e65090057347a7c3c0a6f9079883ed3c11758b06663",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_research_trial_registry.py",
+          "sha256": "9baf7ebf1173fee2e3446e65090057347a7c3c0a6f9079883ed3c11758b06663",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+        "runtime_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 434,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_trial_registry.py",
+      "risk_math_semantics": "Runtime-only trial/result identity and SQLite registry; no current lifecycle binding.",
+      "runtime_sha256": "7202dde342f23e9818886b3237f8baf811bc92cbdbde49ddedb67358a078dee2",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/active_pipeline.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/three_brain_system.py",
+          "actual_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "exact_match": true,
+          "manifest_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/three_brain_system.py",
+          "actual_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "exact_match": true,
+          "manifest_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/three_brain_system.py",
+          "actual_sha256": "0f2c9ebe06ad5e871bdda7d0d91bc951dfbadd12d173d0bed260fc4c29510672",
+          "exact_match": true,
+          "manifest_sha256": "0f2c9ebe06ad5e871bdda7d0d91bc951dfbadd12d173d0bed260fc4c29510672",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/three_brain_system.py",
+          "actual_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+          "exact_match": true,
+          "manifest_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/three_brain_system.py",
+          "actual_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "exact_match": true,
+          "manifest_sha256": "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "52e84d769918a230f46472a62db4b63e4ff5833b6c691c43420f6537c071bcfc",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_three_brain_system.py",
+          "sha256": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_active_pipeline.py",
+          "sha256": "af95e0dbdd419e57bd272df807bdee373cb1073fcb4f08bc148bce135671f93a",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_three_brain_system.py",
+          "sha256": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_active_pipeline.py",
+          "sha256": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+        "runtime_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+        "working_sha256": "52e84d769918a230f46472a62db4b63e4ff5833b6c691c43420f6537c071bcfc",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "0169408a8cb0c2a64c779a2ddb9f5067217c3a0e17f58722b165f642716dc210",
+        "0f2c9ebe06ad5e871bdda7d0d91bc951dfbadd12d173d0bed260fc4c29510672"
+      ],
+      "queue_line_at_base": 455,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/three_brain_system.py",
+      "risk_math_semantics": "Runtime declassifies retrospective Native/Wizard proxy partitions that active source treats as forward-walk/OOS; broad coupled evidence review required.",
+      "runtime_sha256": "6fd803fa4d6e2d53a574ce68c453cdebcda48bc074ba6c0ef66e09b3172def77",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/udemy_math_reconciliation.py",
+          "actual_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "exact_match": true,
+          "manifest_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/udemy_math_reconciliation.py",
+          "actual_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "exact_match": true,
+          "manifest_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/udemy_math_reconciliation.py",
+          "actual_sha256": "2bb8734a9b2dccf533e7b4314c2888170277e7e35fc9acf993f69b6222919b13",
+          "exact_match": true,
+          "manifest_sha256": "2bb8734a9b2dccf533e7b4314c2888170277e7e35fc9acf993f69b6222919b13",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/udemy_math_reconciliation.py",
+          "actual_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+          "exact_match": true,
+          "manifest_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/udemy_math_reconciliation.py",
+          "actual_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "exact_match": true,
+          "manifest_sha256": "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_math_reconciliation.py",
+          "sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_math_reconciliation.py",
+          "sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+        "runtime_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+        "working_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "2bb8734a9b2dccf533e7b4314c2888170277e7e35fc9acf993f69b6222919b13",
+        "c2244496c8154dc1ccd53291cdfb5ba38858377dfe07538660af3b17fa57a1ba"
+      ],
+      "queue_line_at_base": 467,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/udemy_math_reconciliation.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/research_extract_udemy.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/udemy_transcript_vault.py",
+          "actual_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "exact_match": true,
+          "manifest_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/udemy_transcript_vault.py",
+          "actual_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "exact_match": true,
+          "manifest_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "root_label": "forensic_a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/udemy_transcript_vault.py",
+          "actual_sha256": "c837120cc0f104c576b1bbae0582541a89da817bec9eb148281c108b2310111a",
+          "exact_match": true,
+          "manifest_sha256": "c837120cc0f104c576b1bbae0582541a89da817bec9eb148281c108b2310111a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/udemy_transcript_vault.py",
+          "actual_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+          "exact_match": true,
+          "manifest_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+          "root_label": "source_candidate"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/udemy_transcript_vault.py",
+          "actual_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "exact_match": true,
+          "manifest_sha256": "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+          "root_label": "workspace_outer"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_transcript_vault.py",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_udemy_transcript_vault.py",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+        "runtime_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+        "working_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "3763996d3d057017a7dff83e484437e92f9c946b8ee598b93a6c04a20affcf5f",
+        "c837120cc0f104c576b1bbae0582541a89da817bec9eb148281c108b2310111a"
+      ],
+      "queue_line_at_base": 468,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/udemy_transcript_vault.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/v2_run.py",
+          "actual_sha256": "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b",
+          "exact_match": true,
+          "manifest_sha256": "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/v2_run.py",
+          "actual_sha256": "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54",
+          "exact_match": true,
+          "manifest_sha256": "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/v2_run.py",
+          "actual_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+          "exact_match": true,
+          "manifest_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_v2_run.py",
+          "sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": null,
+          "queue_status": null,
+          "relative_path": "tests/test_v2_run.py",
+          "sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+        "runtime_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+        "working_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54"
+      ],
+      "queue_line_at_base": 469,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/v2_run.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [],
+      "active_runtime_relation": "active_absent",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/video_review_sidecars.py",
+          "actual_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+          "exact_match": true,
+          "manifest_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": null,
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "091601c665f14d6d14374adea43d4f975c85eef720b2bdaba67e48e6ef98f30f",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_video_review_sidecars.py",
+          "sha256": "091601c665f14d6d14374adea43d4f975c85eef720b2bdaba67e48e6ef98f30f",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+        "runtime_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+        "working_sha256": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "mac_savepoint_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+      "proposed_queue_status": "DEFER_COUPLED_REVIEW_NO_PORT",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 470,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/video_review_sidecars.py",
+      "risk_math_semantics": "Runtime-only historical video sidecar publisher; companion scripts are pending.",
+      "runtime_sha256": "038d4b396fd8d8955324eca70b17a0692159fea5983e50b4bf07a8c7eebb477d",
+      "source_port_recommendation": "DEFER_NO_PORT_GATE0",
+      "static_syntax": {
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/nodes.py"
+      ],
+      "active_runtime_relation": "active_equals_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/youtube_brain.py",
+          "actual_sha256": "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9",
+          "exact_match": true,
+          "manifest_sha256": "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/youtube_brain.py",
+          "actual_sha256": "0501afad9d86cc33c318c2ca84083477c15609efd9b4f5641c8e4c946fa1d4a1",
+          "exact_match": true,
+          "manifest_sha256": "0501afad9d86cc33c318c2ca84083477c15609efd9b4f5641c8e4c946fa1d4a1",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/youtube_brain.py",
+          "actual_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+          "exact_match": true,
+          "manifest_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_youtube_brain.py",
+          "sha256": "eec5e2e28400246f877e629a90945eb772812a8a28588d6c535541af57150e04",
+          "source": "active"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_youtube_brain.py",
+          "sha256": "eec5e2e28400246f877e629a90945eb772812a8a28588d6c535541af57150e04",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [
+        "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9"
+      ],
+      "four_root_freeze": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+        "runtime_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+        "working_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+        "working_vs_runtime": "SAME"
+      },
+      "mac_savepoint_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+      "proposed_queue_status": "RETAIN_ACTIVE_EXACT_NO_PORT",
+      "queue_historical_variant_sha256": [
+        "0501afad9d86cc33c318c2ca84083477c15609efd9b4f5641c8e4c946fa1d4a1"
+      ],
+      "queue_line_at_base": 484,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/youtube_brain.py",
+      "risk_math_semantics": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "runtime_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+      "source_port_recommendation": "NO_PORT_RETAIN_ACTIVE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "NO_TEST_PORT_WITHOUT_SOURCE"
+    },
+    {
+      "active_direct_import_consumers": [
+        "src/quant_platform/dydx_candles.py",
+        "src/quant_platform/strategies.py",
+        "src/quant_platform/experiments.py",
+        "src/quant_platform/fixture_ingestion.py",
+        "src/quant_platform/trade_timing.py"
+      ],
+      "active_runtime_relation": "active_differs_runtime",
+      "all_extended_manifest_variants": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/zscore_utils.py",
+          "actual_sha256": "5389a17a06da83ed63620adf77b098f9d28e2080479f212cffadb506b14d443a",
+          "exact_match": true,
+          "manifest_sha256": "5389a17a06da83ed63620adf77b098f9d28e2080479f212cffadb506b14d443a",
+          "root_label": "visual_recovery"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/zscore_utils.py",
+          "actual_sha256": "e0dcffdc7ad0f8b1acbeaaa6cdcc00f4858bb182aabdc0a2058898ccff629b8a",
+          "exact_match": true,
+          "manifest_sha256": "e0dcffdc7ad0f8b1acbeaaa6cdcc00f4858bb182aabdc0a2058898ccff629b8a",
+          "root_label": "forensic_b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/zscore_utils.py",
+          "actual_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+          "exact_match": true,
+          "manifest_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+          "root_label": "source_candidate"
+        }
+      ],
+      "candidate_fix_commits": [
+        "c91fac0ff4d35afa51ebdc366be280d0447b4d66"
+      ],
+      "current_head_matches_four_root_working": true,
+      "current_head_sha256": "5389a17a06da83ed63620adf77b098f9d28e2080479f212cffadb506b14d443a",
+      "direct_tests": [
+        {
+          "queue_runtime_sha256_at_freeze": "ad70b72a05b74ee5fd418a908bbf16a809ba5a8e4147197dd4e17212fc326df3",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_zscore_utils.py",
+          "sha256": "ad70b72a05b74ee5fd418a908bbf16a809ba5a8e4147197dd4e17212fc326df3",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "0d9389ca9f769dcf0609163bece7f5fede3c12ec3e0e63f87f9a0e029e75b318",
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "relative_path": "tests/test_timing_zscore_repairs.py",
+          "sha256": "0d9389ca9f769dcf0609163bece7f5fede3c12ec3e0e63f87f9a0e029e75b318",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "c58fe03d3102b51e55138274ac885918dff7ed70630d32b0b7fd82f488be8f0b",
+          "queue_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "relative_path": "tests/test_math_desk_m3_core.py",
+          "sha256": "c58fe03d3102b51e55138274ac885918dff7ed70630d32b0b7fd82f488be8f0b",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "e7ef9be795b1fc48e583eb7a74f317b6df68d26f70b1eb3ae4da3fd0f9b8a92d",
+          "queue_status": "REVIEWED_CURRENT_MATH_TEST_RETAIN",
+          "relative_path": "tests/test_statistics_math_v2.py",
+          "sha256": "e7ef9be795b1fc48e583eb7a74f317b6df68d26f70b1eb3ae4da3fd0f9b8a92d",
+          "source": "runtime"
+        },
+        {
+          "queue_runtime_sha256_at_freeze": "d763540c5a23e6e574805d21fd1b859146f2f7fa04d4e71b0eaba3f86c0e652a",
+          "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+          "relative_path": "tests/test_contract_boundaries.py",
+          "sha256": "d763540c5a23e6e574805d21fd1b859146f2f7fa04d4e71b0eaba3f86c0e652a",
+          "source": "runtime"
+        }
+      ],
+      "extra_visual_recovery_sha256_missing_from_queue_and_four_root": [],
+      "four_root_freeze": {
+        "decision": "REVIEW_REQUIRED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "False",
+        "recovery_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+        "runtime_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+        "working_sha256": "5389a17a06da83ed63620adf77b098f9d28e2080479f212cffadb506b14d443a",
+        "working_vs_runtime": "CHANGED"
+      },
+      "mac_savepoint_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+      "proposed_queue_status": "TESTED_NARROW_FIX_CANDIDATE",
+      "queue_historical_variant_sha256": [
+        "e0dcffdc7ad0f8b1acbeaaa6cdcc00f4858bb182aabdc0a2058898ccff629b8a"
+      ],
+      "queue_line_at_base": 485,
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/zscore_utils.py",
+      "risk_math_semantics": "Active value-dependent source choice skips valid zeros and can change historical prefix after future data; isolated tested fix binds source by schema.",
+      "runtime_sha256": "df614baae604efd056e3b3d6c12e249238e61daf9a5658bab708b22b7f2b72ab",
+      "source_port_recommendation": "TESTED_SEPARATE_CANDIDATE",
+      "static_syntax": {
+        "active": "parsed",
+        "runtime": "parsed"
+      },
+      "test_port_recommendation": "MATCHED_DIRECT_TEST_IN_CANDIDATE"
+    }
+  ],
+  "schema": "thewiz.gate0.top_level_nonvenue_source_reconciliation.v1",
+  "scope": "36 pending top-level src/quant_platform/*.py; venue/dashboard prefixes crypto_wizards_, wizard_, hyperliquid, dydx_, binance_ excluded.",
+  "source_metadata": {
+    "extended_manifest": {
+      "path": "/Volumes/Expansion/Crypto Wizard/audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv",
+      "sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918"
+    },
+    "four_root": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-pkg-PA0siy/repo/audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+      "sha256": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+    },
+    "queue": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-pkg-PA0siy/repo/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+      "sha256": "38c92c2363febe074fa43d6a57557e68d30f28f54ea9b0f5262eb4db4d6ebc90"
+    }
+  },
+  "summary": {
+    "active_absent": 9,
+    "active_differs_runtime": 11,
+    "active_equals_runtime": 16,
+    "count": 36,
+    "current_head_four_root_working_mismatches": [
+      "src/quant_platform/active_pipeline.py"
+    ],
+    "extended_variant_label_counts": {
+      "forensic_a": 13,
+      "forensic_b": 29,
+      "source_candidate": 34,
+      "visual_recovery": 27,
+      "workspace_outer": 13
+    },
+    "extra_visual_recovery_paths": 11,
+    "runtime_direct_test_hash_mismatches": [],
+    "unique_active_direct_test_paths": 52,
+    "unique_runtime_direct_test_paths": 76,
+    "variant_hash_mismatches": [],
+    "variant_rows": 116
+  }
+}
