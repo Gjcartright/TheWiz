@@ -1,0 +1,2706 @@
+{
+  "base_commit": "c906d5769044e83951a6e09ca06b09303e610fa3",
+  "cohort_paths": 45,
+  "expansion_queue_edited": false,
+  "external_effects_or_orders_executed": false,
+  "inputs_sha256": {
+    "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "31a65a6dc7633d802e0e4bba1a7c484300fdadeb1062802b8f8f1aa51c3782bd",
+    "audit/evidence_freeze_2026-09-29/missing_import_edges.csv": "b0639a70bc87a15c219ffddb858139e2f54f962116d5a6b3c3a7fb8909755f82",
+    "audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "original_811_decision_commit": "99df4d1f3b3f34a6c6c50c2d111a2344c05c6a61",
+  "queue_historical_variant_shas": 25,
+  "rows": [
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291",
+        "runtime_sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291",
+        "working_sha256": "a63d875e03570c6339850860534debdedc774ffb21eacde381c384b0f23261d8"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "The runtime initializer lazily exports institutional, operating-lane and personal-trader graph APIs absent from selected source. Selected imports remain coherent; adding exports before those modules would create unresolved API surfaces. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/__init__.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.institutional_fund_graph",
+        "quant_platform.orchestration.operating_lane",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "selected_active_at_base_sha256": "a63d875e03570c6339850860534debdedc774ffb21eacde381c384b0f23261d8",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "The runtime initializer lazily exports institutional, operating-lane and personal-trader graph APIs absent from selected source. Selected imports remain coherent; adding exports before those modules would create unresolved API surfaces.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/__init__.py",
+              "root": "local_runtime",
+              "sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/__init__.py",
+              "root": "recovery_project",
+              "sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/__init__.py",
+              "root": "source_candidate",
+              "sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "The runtime initializer lazily exports institutional, operating-lane and personal-trader graph APIs absent from selected source. Selected imports remain coherent; adding exports before those modules would create unresolved API surfaces.",
+          "sha256": "945f755dc65895b22dd3259a22fd9a84f2e9172c6beb31af1faf94aa09e68291",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "df391e828306809adb3f202a68a5be25a35df82bfd79e5eac9f711afbb7eb116",
+        "runtime_sha256": "df391e828306809adb3f202a68a5be25a35df82bfd79e5eac9f711afbb7eb116",
+        "working_sha256": "df391e828306809adb3f202a68a5be25a35df82bfd79e5eac9f711afbb7eb116"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "22d031a35c926e864c259a9fc00bf779fb098dcb805532b8a9c78c7a6eff8d24",
+        "a232430632f9b6b2ddad1210a619974a58a5e8550dacee370da8a2d57dd9df1d"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected canonical policy JSON, stage CSV and Markdown use atomic publication. Visual/outer copies directly write all three; forensic_b additionally adds an unqualified exact-mode regeneration queue and strict flag parsing but keeps direct writes. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "df391e828306809adb3f202a68a5be25a35df82bfd79e5eac9f711afbb7eb116",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "scripts/build_canonical_wizard_hyperliquid_contract.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+        "tests/test_canonical_wizard_hyperliquid_contract.py"
+      ],
+      "semantic_assessment": "Selected canonical policy JSON, stage CSV and Markdown use atomic publication. Visual/outer copies directly write all three; forensic_b additionally adds an unqualified exact-mode regeneration queue and strict flag parsing but keeps direct writes.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+              "root": "forensic_b",
+              "sha256": "22d031a35c926e864c259a9fc00bf779fb098dcb805532b8a9c78c7a6eff8d24"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected canonical policy JSON, stage CSV and Markdown use atomic publication. Visual/outer copies directly write all three; forensic_b additionally adds an unqualified exact-mode regeneration queue and strict flag parsing but keeps direct writes. forensic_b adds a regeneration queue and strict parsing but still directly publishes it.",
+          "sha256": "22d031a35c926e864c259a9fc00bf779fb098dcb805532b8a9c78c7a6eff8d24",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+              "root": "forensic_a",
+              "sha256": "a232430632f9b6b2ddad1210a619974a58a5e8550dacee370da8a2d57dd9df1d"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+              "root": "visual_recovery",
+              "sha256": "a232430632f9b6b2ddad1210a619974a58a5e8550dacee370da8a2d57dd9df1d"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+              "root": "workspace_outer",
+              "sha256": "a232430632f9b6b2ddad1210a619974a58a5e8550dacee370da8a2d57dd9df1d"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected canonical policy JSON, stage CSV and Markdown use atomic publication. Visual/outer copies directly write all three; forensic_b additionally adds an unqualified exact-mode regeneration queue and strict flag parsing but keeps direct writes.",
+          "sha256": "a232430632f9b6b2ddad1210a619974a58a5e8550dacee370da8a2d57dd9df1d",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038",
+        "runtime_sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only Stage 19 collection display prepares 21 exact outputs and imports the absent precollection campaign IO stack. No selected caller or collection owner/release path adopts this publisher. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_collection_display.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only Stage 19 collection display prepares 21 exact outputs and imports the absent precollection campaign IO stack. No selected caller or collection owner/release path adopts this publisher.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_collection_display.py",
+              "root": "local_runtime",
+              "sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_collection_display.py",
+              "root": "recovery_project",
+              "sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_collection_display.py",
+              "root": "source_candidate",
+              "sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only Stage 19 collection display prepares 21 exact outputs and imports the absent precollection campaign IO stack. No selected caller or collection owner/release path adopts this publisher.",
+          "sha256": "26e72c163f14577dbcd2b09ae57c91fd43adca17227677b0079acf800d066038",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8",
+        "runtime_sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.daily_snapshot_contracts_inputs",
+        "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only daily snapshot validator composes the two absent input/outcome contract modules and describes producer checks rather than independent scientific acceptance. It is not an adopted daily release gate. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/daily_snapshot_contracts.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.daily_snapshot_contracts_inputs",
+        "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only daily snapshot validator composes the two absent input/outcome contract modules and describes producer checks rather than independent scientific acceptance. It is not an adopted daily release gate.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/daily_snapshot_contracts.py",
+              "root": "local_runtime",
+              "sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/daily_snapshot_contracts.py",
+              "root": "recovery_project",
+              "sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/daily_snapshot_contracts.py",
+              "root": "source_candidate",
+              "sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only daily snapshot validator composes the two absent input/outcome contract modules and describes producer checks rather than independent scientific acceptance. It is not an adopted daily release gate.",
+          "sha256": "42ef60aa02bfefec67c356ab6182c7f752d93bd45b893519e1f74763d2bd04a8",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e",
+        "runtime_sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only input-stage snapshot specifications depend on the absent daily contract caller and producer paths; no selected source imports this module. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/daily_snapshot_contracts_inputs.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only input-stage snapshot specifications depend on the absent daily contract caller and producer paths; no selected source imports this module.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/daily_snapshot_contracts_inputs.py",
+              "root": "local_runtime",
+              "sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/daily_snapshot_contracts_inputs.py",
+              "root": "recovery_project",
+              "sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/daily_snapshot_contracts_inputs.py",
+              "root": "source_candidate",
+              "sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only input-stage snapshot specifications depend on the absent daily contract caller and producer paths; no selected source imports this module.",
+          "sha256": "d85220e8fa2373b6254c9395f89a71477fabd4620c7dd2ef2e4f36d70f0f7d7e",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f",
+        "runtime_sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only final-seven-stage output/chain checks depend on the absent daily contract caller and retained campaign artifacts; no selected release path consumes them. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only final-seven-stage output/chain checks depend on the absent daily contract caller and retained campaign artifacts; no selected release path consumes them.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+              "root": "local_runtime",
+              "sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+              "root": "recovery_project",
+              "sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+              "root": "source_candidate",
+              "sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only final-seven-stage output/chain checks depend on the absent daily contract caller and retained campaign artifacts; no selected release path consumes them.",
+          "sha256": "264c126b8a165c5a84f9afab0a7724c944bf61a2f18c65850b6a40608e32f69f",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b",
+        "runtime_sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.funding_request_allocation",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only request projection depends on absent funding allocation and precollection campaign IO. Its bounded history/funding plan does not authorize acquisition independently of the unselected collection stack. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/daily_workload_preflight.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.funding_request_allocation",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only request projection depends on absent funding allocation and precollection campaign IO. Its bounded history/funding plan does not authorize acquisition independently of the unselected collection stack.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/daily_workload_preflight.py",
+              "root": "local_runtime",
+              "sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/daily_workload_preflight.py",
+              "root": "recovery_project",
+              "sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/daily_workload_preflight.py",
+              "root": "source_candidate",
+              "sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only request projection depends on absent funding allocation and precollection campaign IO. Its bounded history/funding plan does not authorize acquisition independently of the unselected collection stack.",
+          "sha256": "24b4cc7090f27ddeb6282b7a45631b878d7340f7420fb0e229a420197f7a981b",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "31116acf9ab1350ab191db553d1cd230b98135a0e6eb4633b7f029897ec67096",
+        "runtime_sha256": "c6b7ecd8e0987a7d8e30cc0246859c1bdd16331f233007ca3db174f76fc32b0c",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only pure request accounting has no selected caller. The recovery copy caps per-provider credits at 2100, while the later LocalRuntime copy raises that threshold to 7000; no budget expansion is selected. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/discovery_accounting.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only pure request accounting has no selected caller. The recovery copy caps per-provider credits at 2100, while the later LocalRuntime copy raises that threshold to 7000; no budget expansion is selected.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/discovery_accounting.py",
+              "root": "recovery_project",
+              "sha256": "31116acf9ab1350ab191db553d1cd230b98135a0e6eb4633b7f029897ec67096"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/discovery_accounting.py",
+              "root": "source_candidate",
+              "sha256": "31116acf9ab1350ab191db553d1cd230b98135a0e6eb4633b7f029897ec67096"
+            }
+          ],
+          "four_root_roles": [
+            "recovery"
+          ],
+          "semantic_disposition": "Runtime-only pure request accounting has no selected caller. The recovery copy caps per-provider credits at 2100, while the later LocalRuntime copy raises that threshold to 7000; no budget expansion is selected.",
+          "sha256": "31116acf9ab1350ab191db553d1cd230b98135a0e6eb4633b7f029897ec67096",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/discovery_accounting.py",
+              "root": "local_runtime",
+              "sha256": "c6b7ecd8e0987a7d8e30cc0246859c1bdd16331f233007ca3db174f76fc32b0c"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only pure request accounting has no selected caller. The recovery copy caps per-provider credits at 2100, while the later LocalRuntime copy raises that threshold to 7000; no budget expansion is selected.",
+          "sha256": "c6b7ecd8e0987a7d8e30cc0246859c1bdd16331f233007ca3db174f76fc32b0c",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "10a9001274875a108089db0cb90d406d0cb3c3058cc6615df1ac1fcb9798df8f",
+        "runtime_sha256": "10a9001274875a108089db0cb90d406d0cb3c3058cc6615df1ac1fcb9798df8f",
+        "working_sha256": "10a9001274875a108089db0cb90d406d0cb3c3058cc6615df1ac1fcb9798df8f"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_b",
+      "queue_historical_sha256_at_base": [
+        "f4f178e4649cf5aa1827a09ede6ba1905c70e889f84ce2e428815fe30d4635ea"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected hyperliquid_research_cycle stage interprets execution_allowed with bool(), so a string 'False' can mark the stage passed. The forensic_b strict_bool change is a narrow safety-positive candidate; preserve all other selected stage routing. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_SELECTIVE_PERSISTED_BOOL_PORT_REMAINDER_NO_PORT",
+      "recommended_queue_status_now": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/dynamic_stage_runner.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "10a9001274875a108089db0cb90d406d0cb3c3058cc6615df1ac1fcb9798df8f",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/orchestration/dynamic_cli.py",
+        "src/quant_platform/orchestration/nodes.py",
+        "tests/test_dynamic_stage_runner.py",
+        "tests/test_teacher_control_plane.py"
+      ],
+      "semantic_assessment": "Selected hyperliquid_research_cycle stage interprets execution_allowed with bool(), so a string 'False' can mark the stage passed. The forensic_b strict_bool change is a narrow safety-positive candidate; preserve all other selected stage routing.",
+      "source_decision": "NARROW_STRICT_BOOL_PORT_ONLY_AFTER_TESTED_CANDIDATE",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_stage_runner.py",
+              "root": "forensic_b",
+              "sha256": "f4f178e4649cf5aa1827a09ede6ba1905c70e889f84ce2e428815fe30d4635ea"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected hyperliquid_research_cycle stage interprets execution_allowed with bool(), so a string 'False' can mark the stage passed. The forensic_b strict_bool change is a narrow safety-positive candidate; preserve all other selected stage routing.",
+          "sha256": "f4f178e4649cf5aa1827a09ede6ba1905c70e889f84ce2e428815fe30d4635ea",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "audit/GATE0_EFFECT_V6_TRIO_REVIEW_2026-09-30.json",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+        "runtime_sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+        "working_sha256": "27075c73c226fac5035af96ae45c9005dcef8318e25c8e459281edf55f1cc584"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected v2 permit/journal is used by active effect callers. The runtime v6 candidate changes journal/key/seal paths, reservation signatures, root binding and directory publication contracts; existing callers are incompatible without a coordinated migration. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/effect_authority.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.collection_admission_barrier",
+        "quant_platform.orchestration.effect_root_binding"
+      ],
+      "selected_active_at_base_sha256": "27075c73c226fac5035af96ae45c9005dcef8318e25c8e459281edf55f1cc584",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "scripts/ops/run_langgraph_dry_run.py",
+        "src/quant_platform/apify_sources.py",
+        "src/quant_platform/binance_testnet.py",
+        "src/quant_platform/crypto_wizards_sweep.py",
+        "src/quant_platform/dydx_sdk_order_adapter.py",
+        "src/quant_platform/execution.py",
+        "src/quant_platform/hyperliquid_testnet.py",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+        "src/quant_platform/orchestration/corrective_external_effects.py",
+        "src/quant_platform/orchestration/corrective_hyperliquid_network.py",
+        "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+        "src/quant_platform/orchestration/corrective_live_parity_capture.py",
+        "src/quant_platform/orchestration/corrective_order_authority.py",
+        "src/quant_platform/orchestration/corrective_phase00_control.py",
+        "src/quant_platform/orchestration/corrective_runtime.py",
+        "src/quant_platform/orchestration/corrective_scheduler_lock.py",
+        "src/quant_platform/orchestration/corrective_scheduler_supervisor.py",
+        "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/orchestration/multi_asset_capture_job.py",
+        "tests/conftest.py",
+        "tests/test_apify_sources.py",
+        "tests/test_binance_testnet.py",
+        "tests/test_corrective_daily_scheduler.py",
+        "tests/test_corrective_live_canary_execution.py",
+        "tests/test_corrective_phase00_control.py",
+        "tests/test_corrective_scheduler_lock.py",
+        "tests/test_corrective_testnet_collateral_transfer.py",
+        "tests/test_corrective_wizard_copula_behavioral.py",
+        "tests/test_corrective_wizard_proof_launcher.py",
+        "tests/test_corrective_wizard_proof_scheduler.py",
+        "tests/test_crypto_wizards_history.py",
+        "tests/test_crypto_wizards_sweep.py",
+        "tests/test_current_wizard_hyperliquid_daily_runner.py",
+        "tests/test_current_wizard_hyperliquid_handoff.py",
+        "tests/test_execution.py",
+        "tests/test_gate00g_order_authority.py",
+        "tests/test_hyperliquid_preflight_authority.py",
+        "tests/test_hyperliquid_testnet.py",
+        "tests/test_math_acceptance_currentness.py",
+        "tests/test_multi_asset_capture_job.py",
+        "tests/test_phase00_effect_authority.py",
+        "tests/test_phase00_external_effects.py",
+        "tests/test_phase00_hyperliquid_network_authority.py",
+        "tests/test_phase00_scheduler_supervisor.py",
+        "tests/test_phase00_supreme_diagnostics.py",
+        "tests/test_wizard_control_plane.py",
+        "tests/test_wizard_credit_ledger.py"
+      ],
+      "semantic_assessment": "Selected v2 permit/journal is used by active effect callers. The runtime v6 candidate changes journal/key/seal paths, reservation signatures, root binding and directory publication contracts; existing callers are incompatible without a coordinated migration.",
+      "source_decision": "RETAIN_SELECTED_V2_NO_V6_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/effect_authority.py",
+              "root": "local_runtime",
+              "sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/effect_authority.py",
+              "root": "recovery_project",
+              "sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/effect_authority.py",
+              "root": "source_candidate",
+              "sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Selected v2 permit/journal is used by active effect callers. The runtime v6 candidate changes journal/key/seal paths, reservation signatures, root binding and directory publication contracts; existing callers are incompatible without a coordinated migration.",
+          "sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "1d0005cdd62078314347930ec127ae041c62632bdede2fd29e69b4dfa024546f",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.elapsed_capture_store",
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only daily BTC/ETH capture performs two direct unauthenticated Hyperliquid HTTP POSTs via urllib and writes retained evidence. It has no selected effect permit or active caller, so importing it would introduce an ungoverned network path. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/elapsed_capture_job.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.elapsed_capture_store",
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only daily BTC/ETH capture performs two direct unauthenticated Hyperliquid HTTP POSTs via urllib and writes retained evidence. It has no selected effect permit or active caller, so importing it would introduce an ungoverned network path.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/elapsed_capture_job.py",
+              "root": "local_runtime",
+              "sha256": "1d0005cdd62078314347930ec127ae041c62632bdede2fd29e69b4dfa024546f"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only daily BTC/ETH capture performs two direct unauthenticated Hyperliquid HTTP POSTs via urllib and writes retained evidence. It has no selected effect permit or active caller, so importing it would introduce an ungoverned network path.",
+          "sha256": "1d0005cdd62078314347930ec127ae041c62632bdede2fd29e69b4dfa024546f",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "0df5c69709e6ed3060c07d235f4f6ac0202695449f4280a80b5175a2e44accb3",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only append-only raw/receipt store is coupled to elapsed_causal_capture and elapsed_capture_job, neither selected. Its local chain alone grants no collection authority. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/elapsed_capture_store.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only append-only raw/receipt store is coupled to elapsed_causal_capture and elapsed_capture_job, neither selected. Its local chain alone grants no collection authority.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/elapsed_capture_store.py",
+              "root": "local_runtime",
+              "sha256": "0df5c69709e6ed3060c07d235f4f6ac0202695449f4280a80b5175a2e44accb3"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only append-only raw/receipt store is coupled to elapsed_causal_capture and elapsed_capture_job, neither selected. Its local chain alone grants no collection authority.",
+          "sha256": "0df5c69709e6ed3060c07d235f4f6ac0202695449f4280a80b5175a2e44accb3",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "b5408a2e88f24fc17785a5bd0f0315ef736f7784264bd81a50d23b12884fde9e",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only pure forward-time bar and receipt validator has no selected caller; it is a component of the unselected elapsed network capture lane. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/elapsed_causal_capture.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only pure forward-time bar and receipt validator has no selected caller; it is a component of the unselected elapsed network capture lane.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/elapsed_causal_capture.py",
+              "root": "local_runtime",
+              "sha256": "b5408a2e88f24fc17785a5bd0f0315ef736f7784264bd81a50d23b12884fde9e"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only pure forward-time bar and receipt validator has no selected caller; it is a component of the unselected elapsed network capture lane.",
+          "sha256": "b5408a2e88f24fc17785a5bd0f0315ef736f7784264bd81a50d23b12884fde9e",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a",
+        "runtime_sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a",
+        "working_sha256": "08e7db497504d27f80a0f6f0a83848021d98dea53e53640b48a761aebe2a5f1c"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "667a036421adbc780abe15aaf936a6c83bb6a169505ff7e88cea858b3b2be955",
+        "7b723159b94e189552ac87cdb80fd4acc58f8003698931ed81c122d41b031f6a"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected refresh uses atomic active/snapshot publication. Visual/outer copies write directly; forensic_b adds strict persisted-flag parsing but still writes directly. The runtime source_candidate adds a 21-output prepared Stage 3 and lease checks while importing absent daily workload/precollection modules; it needs the full collection stack. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.daily_workload_preflight",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "selected_active_at_base_sha256": "08e7db497504d27f80a0f6f0a83848021d98dea53e53640b48a761aebe2a5f1c",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/current_wizard_ou_optimal_overlay.py",
+        "tests/test_exhaustive_wizard_api_refresh.py"
+      ],
+      "semantic_assessment": "Selected refresh uses atomic active/snapshot publication. Visual/outer copies write directly; forensic_b adds strict persisted-flag parsing but still writes directly. The runtime source_candidate adds a 21-output prepared Stage 3 and lease checks while importing absent daily workload/precollection modules; it needs the full collection stack.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "forensic_a",
+              "sha256": "667a036421adbc780abe15aaf936a6c83bb6a169505ff7e88cea858b3b2be955"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "visual_recovery",
+              "sha256": "667a036421adbc780abe15aaf936a6c83bb6a169505ff7e88cea858b3b2be955"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "workspace_outer",
+              "sha256": "667a036421adbc780abe15aaf936a6c83bb6a169505ff7e88cea858b3b2be955"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected refresh uses atomic active/snapshot publication. Visual/outer copies write directly; forensic_b adds strict persisted-flag parsing but still writes directly. The runtime source_candidate adds a 21-output prepared Stage 3 and lease checks while importing absent daily workload/precollection modules; it needs the full collection stack.",
+          "sha256": "667a036421adbc780abe15aaf936a6c83bb6a169505ff7e88cea858b3b2be955",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "forensic_b",
+              "sha256": "7b723159b94e189552ac87cdb80fd4acc58f8003698931ed81c122d41b031f6a"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected refresh uses atomic active/snapshot publication. Visual/outer copies write directly; forensic_b adds strict persisted-flag parsing but still writes directly. The runtime source_candidate adds a 21-output prepared Stage 3 and lease checks while importing absent daily workload/precollection modules; it needs the full collection stack. forensic_b uses _truthy on persisted flags but retains direct active/snapshot writes.",
+          "sha256": "7b723159b94e189552ac87cdb80fd4acc58f8003698931ed81c122d41b031f6a",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "local_runtime",
+              "sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "recovery_project",
+              "sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+              "root": "source_candidate",
+              "sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Selected refresh uses atomic active/snapshot publication. Visual/outer copies write directly; forensic_b adds strict persisted-flag parsing but still writes directly. The runtime source_candidate adds a 21-output prepared Stage 3 and lease checks while importing absent daily workload/precollection modules; it needs the full collection stack.",
+          "sha256": "856fbfb1a1a616b43e169f9ae602d5aada2de00bb50fde5853f95f80a8e1994a",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "206dd4250504919b5249d965eeafa9b03ad832b7f53438092d87cde57527583c",
+        "runtime_sha256": "206dd4250504919b5249d965eeafa9b03ad832b7f53438092d87cde57527583c",
+        "working_sha256": "206dd4250504919b5249d965eeafa9b03ad832b7f53438092d87cde57527583c"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "41c2450b7fe1118501f5928d4bc56e0a9bf8cf9e328775d81e2463f698de9d3f",
+        "6d9c9e0ac76cafb9df083498c69d551003a3d11b61c3c88e05409a002b636b79"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected v2 canonical replay retains tail-action economics, safe exception codes and atomic reports. Older v1 copies directly publish; forensic_b parses research-rank flags more strictly but retains the old publication path. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "206dd4250504919b5249d965eeafa9b03ad832b7f53438092d87cde57527583c",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected v2 canonical replay retains tail-action economics, safe exception codes and atomic reports. Older v1 copies directly publish; forensic_b parses research-rank flags more strictly but retains the old publication path.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+              "root": "forensic_b",
+              "sha256": "41c2450b7fe1118501f5928d4bc56e0a9bf8cf9e328775d81e2463f698de9d3f"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected v2 canonical replay retains tail-action economics, safe exception codes and atomic reports. Older v1 copies directly publish; forensic_b parses research-rank flags more strictly but retains the old publication path. forensic_b uses _truthy on research-rank flags but retains v1/direct publication.",
+          "sha256": "41c2450b7fe1118501f5928d4bc56e0a9bf8cf9e328775d81e2463f698de9d3f",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+              "root": "forensic_a",
+              "sha256": "6d9c9e0ac76cafb9df083498c69d551003a3d11b61c3c88e05409a002b636b79"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+              "root": "visual_recovery",
+              "sha256": "6d9c9e0ac76cafb9df083498c69d551003a3d11b61c3c88e05409a002b636b79"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_canonical_replay.py",
+              "root": "workspace_outer",
+              "sha256": "6d9c9e0ac76cafb9df083498c69d551003a3d11b61c3c88e05409a002b636b79"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected v2 canonical replay retains tail-action economics, safe exception codes and atomic reports. Older v1 copies directly publish; forensic_b parses research-rank flags more strictly but retains the old publication path.",
+          "sha256": "6d9c9e0ac76cafb9df083498c69d551003a3d11b61c3c88e05409a002b636b79",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "a119e29df04d56bcc2a1b329181632da51d3b34e9838f6c25b8c6054aee7524a",
+        "runtime_sha256": "a119e29df04d56bcc2a1b329181632da51d3b34e9838f6c25b8c6054aee7524a",
+        "working_sha256": "a119e29df04d56bcc2a1b329181632da51d3b34e9838f6c25b8c6054aee7524a"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected cost bridge atomically publishes cost evidence/manifest and immutable snapshots. Older copy uses direct CSV/text writes and shutil.copy2, allowing partial or mutable snapshot evidence. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "a119e29df04d56bcc2a1b329181632da51d3b34e9838f6c25b8c6054aee7524a",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected cost bridge atomically publishes cost evidence/manifest and immutable snapshots. Older copy uses direct CSV/text writes and shutil.copy2, allowing partial or mutable snapshot evidence.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+              "root": "forensic_a",
+              "sha256": "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+              "root": "forensic_b",
+              "sha256": "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+              "root": "visual_recovery",
+              "sha256": "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_bridge.py",
+              "root": "workspace_outer",
+              "sha256": "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected cost bridge atomically publishes cost evidence/manifest and immutable snapshots. Older copy uses direct CSV/text writes and shutil.copy2, allowing partial or mutable snapshot evidence.",
+          "sha256": "c2590a3a87ee45652f4fcc496d93c540f00897ecacabf8fc37d2006132398022",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "3a3b1efc4f5d4ed580d950f2841c348faeac5e71dde99c845b2816e738f61aa1",
+        "runtime_sha256": "3a3b1efc4f5d4ed580d950f2841c348faeac5e71dde99c845b2816e738f61aa1",
+        "working_sha256": "3a3b1efc4f5d4ed580d950f2841c348faeac5e71dde99c845b2816e738f61aa1"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "4724c8c2a00e341966167140e49ad00b863f7dd3f2470bbc821ee061d4902643",
+        "6cbda81d9dd277749e5917009c2f1bfbee68450f949bd78c2c9c5777cd0a50e6"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected cost capture/redaction and atomic queue/checkpoint publication are absent from older copies. Forensic_b adds strict metadata flags and a paced funding interval, but retains direct writes and unsafe error handling. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "3a3b1efc4f5d4ed580d950f2841c348faeac5e71dde99c845b2816e738f61aa1",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected cost capture/redaction and atomic queue/checkpoint publication are absent from older copies. Forensic_b adds strict metadata flags and a paced funding interval, but retains direct writes and unsafe error handling.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+              "root": "forensic_a",
+              "sha256": "4724c8c2a00e341966167140e49ad00b863f7dd3f2470bbc821ee061d4902643"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+              "root": "visual_recovery",
+              "sha256": "4724c8c2a00e341966167140e49ad00b863f7dd3f2470bbc821ee061d4902643"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+              "root": "workspace_outer",
+              "sha256": "4724c8c2a00e341966167140e49ad00b863f7dd3f2470bbc821ee061d4902643"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected cost capture/redaction and atomic queue/checkpoint publication are absent from older copies. Forensic_b adds strict metadata flags and a paced funding interval, but retains direct writes and unsafe error handling.",
+          "sha256": "4724c8c2a00e341966167140e49ad00b863f7dd3f2470bbc821ee061d4902643",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py",
+              "root": "forensic_b",
+              "sha256": "6cbda81d9dd277749e5917009c2f1bfbee68450f949bd78c2c9c5777cd0a50e6"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected cost capture/redaction and atomic queue/checkpoint publication are absent from older copies. Forensic_b adds strict metadata flags and a paced funding interval, but retains direct writes and unsafe error handling. forensic_b strictly parses metadata and paces funding pages but retains direct writes.",
+          "sha256": "6cbda81d9dd277749e5917009c2f1bfbee68450f949bd78c2c9c5777cd0a50e6",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "f98c6e6feda78161242ebe367bd757accc69b56013facc8c834dc031c204cc50",
+        "runtime_sha256": "f98c6e6feda78161242ebe367bd757accc69b56013facc8c834dc031c204cc50",
+        "working_sha256": "f98c6e6feda78161242ebe367bd757accc69b56013facc8c834dc031c204cc50"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected leverage evidence uses atomic outputs and immutable snapshots; older copy directly writes CSV/Markdown and shutil.copy2 copies. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "f98c6e6feda78161242ebe367bd757accc69b56013facc8c834dc031c204cc50",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_leverage.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected leverage evidence uses atomic outputs and immutable snapshots; older copy directly writes CSV/Markdown and shutil.copy2 copies.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+              "root": "forensic_a",
+              "sha256": "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+              "root": "forensic_b",
+              "sha256": "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+              "root": "visual_recovery",
+              "sha256": "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_leverage.py",
+              "root": "workspace_outer",
+              "sha256": "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected leverage evidence uses atomic outputs and immutable snapshots; older copy directly writes CSV/Markdown and shutil.copy2 copies.",
+          "sha256": "96c17b635bd0ff082f72ca38755361daba63918d784318026c7d25ddb70a8c2f",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "b16c38c3011096fd410b94dbd14c0974ae8a10b40f74a1f5c9b898782dbaf6ce",
+        "runtime_sha256": "b16c38c3011096fd410b94dbd14c0974ae8a10b40f74a1f5c9b898782dbaf6ce",
+        "working_sha256": "b16c38c3011096fd410b94dbd14c0974ae8a10b40f74a1f5c9b898782dbaf6ce"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected observed-cost replay uses safe exception codes, atomic outputs and immutable snapshots; older copy directly writes and copies evidence and exposes raw exception text. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "b16c38c3011096fd410b94dbd14c0974ae8a10b40f74a1f5c9b898782dbaf6ce",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected observed-cost replay uses safe exception codes, atomic outputs and immutable snapshots; older copy directly writes and copies evidence and exposes raw exception text.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+              "root": "forensic_a",
+              "sha256": "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+              "root": "forensic_b",
+              "sha256": "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+              "root": "visual_recovery",
+              "sha256": "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_observed_cost_replay.py",
+              "root": "workspace_outer",
+              "sha256": "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected observed-cost replay uses safe exception codes, atomic outputs and immutable snapshots; older copy directly writes and copies evidence and exposes raw exception text.",
+          "sha256": "1478b3d664e060d4c46c228d51298c781a3fded38164ee93484708dce11c69d4",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "dfb5c1036f3fd85fa8a014956c5f383ac6155b28c6c069def16e24db0e40050d",
+        "runtime_sha256": "dfb5c1036f3fd85fa8a014956c5f383ac6155b28c6c069def16e24db0e40050d",
+        "working_sha256": "dfb5c1036f3fd85fa8a014956c5f383ac6155b28c6c069def16e24db0e40050d"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected regime reports use safe redaction, atomic publication and immutable snapshots; older copy directly writes/copies artifacts and embeds raw exception details. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "dfb5c1036f3fd85fa8a014956c5f383ac6155b28c6c069def16e24db0e40050d",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected regime reports use safe redaction, atomic publication and immutable snapshots; older copy directly writes/copies artifacts and embeds raw exception details.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+              "root": "forensic_a",
+              "sha256": "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+              "root": "forensic_b",
+              "sha256": "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+              "root": "visual_recovery",
+              "sha256": "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_regimes.py",
+              "root": "workspace_outer",
+              "sha256": "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected regime reports use safe redaction, atomic publication and immutable snapshots; older copy directly writes/copies artifacts and embeds raw exception details.",
+          "sha256": "806167c8096af3eab9e216216e88519afa9df1e81a83a33d8d1b1be364b743a1",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "45ac2ac271388071e26bc62ea131aa7f55bdeda1f38fa578d513322953620017",
+        "runtime_sha256": "45ac2ac271388071e26bc62ea131aa7f55bdeda1f38fa578d513322953620017",
+        "working_sha256": "45ac2ac271388071e26bc62ea131aa7f55bdeda1f38fa578d513322953620017"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "046801082cdc75f327ed053fc0d21a943c0352a5a6acf58b87d0ff8b9f374d9e",
+        "7271c8b8450a25e3e33ee15c6f5d456f736bf3d36186772e3919fbfe429a6d20"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected pair-history replay uses safe exception codes and atomic bytes/CSV/text publication. Older copies directly write reports and include raw errors; forensic_b only tightens mapping_ready flag parsing. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "45ac2ac271388071e26bc62ea131aa7f55bdeda1f38fa578d513322953620017",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected pair-history replay uses safe exception codes and atomic bytes/CSV/text publication. Older copies directly write reports and include raw errors; forensic_b only tightens mapping_ready flag parsing.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+              "root": "forensic_b",
+              "sha256": "046801082cdc75f327ed053fc0d21a943c0352a5a6acf58b87d0ff8b9f374d9e"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected pair-history replay uses safe exception codes and atomic bytes/CSV/text publication. Older copies directly write reports and include raw errors; forensic_b only tightens mapping_ready flag parsing. forensic_b uses _truthy for mapping_ready but retains direct writes.",
+          "sha256": "046801082cdc75f327ed053fc0d21a943c0352a5a6acf58b87d0ff8b9f374d9e",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+              "root": "forensic_a",
+              "sha256": "7271c8b8450a25e3e33ee15c6f5d456f736bf3d36186772e3919fbfe429a6d20"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+              "root": "visual_recovery",
+              "sha256": "7271c8b8450a25e3e33ee15c6f5d456f736bf3d36186772e3919fbfe429a6d20"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py",
+              "root": "workspace_outer",
+              "sha256": "7271c8b8450a25e3e33ee15c6f5d456f736bf3d36186772e3919fbfe429a6d20"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected pair-history replay uses safe exception codes and atomic bytes/CSV/text publication. Older copies directly write reports and include raw errors; forensic_b only tightens mapping_ready flag parsing.",
+          "sha256": "7271c8b8450a25e3e33ee15c6f5d456f736bf3d36186772e3919fbfe429a6d20",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "c182995189ea1095de0da50fd6734f4852cb6c69b7a83aba24e7f32baab32e1d",
+        "runtime_sha256": "c182995189ea1095de0da50fd6734f4852cb6c69b7a83aba24e7f32baab32e1d",
+        "working_sha256": "c182995189ea1095de0da50fd6734f4852cb6c69b7a83aba24e7f32baab32e1d"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected robustness replay retains Y-on-X log spread, safe redaction and atomic/immutable reports. Older copy drops those guards and uses direct writes/copies. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "c182995189ea1095de0da50fd6734f4852cb6c69b7a83aba24e7f32baab32e1d",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected robustness replay retains Y-on-X log spread, safe redaction and atomic/immutable reports. Older copy drops those guards and uses direct writes/copies.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+              "root": "forensic_a",
+              "sha256": "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+              "root": "forensic_b",
+              "sha256": "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+              "root": "visual_recovery",
+              "sha256": "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+              "root": "workspace_outer",
+              "sha256": "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected robustness replay retains Y-on-X log spread, safe redaction and atomic/immutable reports. Older copy drops those guards and uses direct writes/copies.",
+          "sha256": "d6f2079126a1e14ad5aa1849a641972fc1911551ea5fccfcafdd7bf9c69abd30",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "bb6c17c596b8cd42f11c6fa4d86aefde6e67722a7c3fed30d3165ef2d01a0faf",
+        "runtime_sha256": "bb6c17c596b8cd42f11c6fa4d86aefde6e67722a7c3fed30d3165ef2d01a0faf",
+        "working_sha256": "bb6c17c596b8cd42f11c6fa4d86aefde6e67722a7c3fed30d3165ef2d01a0faf"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "554e93991d402394b496a13146415bdd491cb0b07a5fb7aeeda38a11567c6eff",
+        "88d56b91b8aa8fe8428600a1b7907bae30330e02916dade5adee3b68082a8332"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected v4 frozen run uses canonical mode contract and atomic outputs. Older v3 copies directly publish source/experiment artifacts; forensic_b only tightens persisted mapping and authority flags. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_run.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "bb6c17c596b8cd42f11c6fa4d86aefde6e67722a7c3fed30d3165ef2d01a0faf",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_api_refresh.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py",
+        "tests/test_exhaustive_wizard_hyperliquid_run.py"
+      ],
+      "semantic_assessment": "Selected v4 frozen run uses canonical mode contract and atomic outputs. Older v3 copies directly publish source/experiment artifacts; forensic_b only tightens persisted mapping and authority flags.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_run.py",
+              "root": "forensic_b",
+              "sha256": "554e93991d402394b496a13146415bdd491cb0b07a5fb7aeeda38a11567c6eff"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected v4 frozen run uses canonical mode contract and atomic outputs. Older v3 copies directly publish source/experiment artifacts; forensic_b only tightens persisted mapping and authority flags. forensic_b uses _truthy for mapping/authority flags but retains v3/direct publication.",
+          "sha256": "554e93991d402394b496a13146415bdd491cb0b07a5fb7aeeda38a11567c6eff",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_run.py",
+              "root": "forensic_a",
+              "sha256": "88d56b91b8aa8fe8428600a1b7907bae30330e02916dade5adee3b68082a8332"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_run.py",
+              "root": "visual_recovery",
+              "sha256": "88d56b91b8aa8fe8428600a1b7907bae30330e02916dade5adee3b68082a8332"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_run.py",
+              "root": "workspace_outer",
+              "sha256": "88d56b91b8aa8fe8428600a1b7907bae30330e02916dade5adee3b68082a8332"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected v4 frozen run uses canonical mode contract and atomic outputs. Older v3 copies directly publish source/experiment artifacts; forensic_b only tightens persisted mapping and authority flags.",
+          "sha256": "88d56b91b8aa8fe8428600a1b7907bae30330e02916dade5adee3b68082a8332",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "aa061b1ef764796c16280b1dd2ad878e47ac0fe9efdc11d448d16f13669b6727",
+        "runtime_sha256": "aa061b1ef764796c16280b1dd2ad878e47ac0fe9efdc11d448d16f13669b6727",
+        "working_sha256": "aa061b1ef764796c16280b1dd2ad878e47ac0fe9efdc11d448d16f13669b6727"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "3abe0a2191045c6846f6d8d0c693612aa013b8956e3ff5714ecd34e71b7f5b4c",
+        "b1674cc62cb7cbe3a5d051cabb3203c5a3d3071300d0d8b7baa1696e3ee01187"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected walkforward uses Y-on-X economics, safe redaction and atomic/immutable reports. Forensic_b adds a research trial ledger and declared-family multiple-test count, a separate scientific idea, while retaining direct writes and older economics. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "aa061b1ef764796c16280b1dd2ad878e47ac0fe9efdc11d448d16f13669b6727",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/canonical_wizard_hyperliquid_contract.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "semantic_assessment": "Selected walkforward uses Y-on-X economics, safe redaction and atomic/immutable reports. Forensic_b adds a research trial ledger and declared-family multiple-test count, a separate scientific idea, while retaining direct writes and older economics.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+              "root": "forensic_b",
+              "sha256": "3abe0a2191045c6846f6d8d0c693612aa013b8956e3ff5714ecd34e71b7f5b4c"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected walkforward uses Y-on-X economics, safe redaction and atomic/immutable reports. Forensic_b adds a research trial ledger and declared-family multiple-test count, a separate scientific idea, while retaining direct writes and older economics. forensic_b adds a trial ledger and family-test count but retains direct publication and older math.",
+          "sha256": "3abe0a2191045c6846f6d8d0c693612aa013b8956e3ff5714ecd34e71b7f5b4c",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+              "root": "forensic_a",
+              "sha256": "b1674cc62cb7cbe3a5d051cabb3203c5a3d3071300d0d8b7baa1696e3ee01187"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+              "root": "visual_recovery",
+              "sha256": "b1674cc62cb7cbe3a5d051cabb3203c5a3d3071300d0d8b7baa1696e3ee01187"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_walkforward.py",
+              "root": "workspace_outer",
+              "sha256": "b1674cc62cb7cbe3a5d051cabb3203c5a3d3071300d0d8b7baa1696e3ee01187"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected walkforward uses Y-on-X economics, safe redaction and atomic/immutable reports. Forensic_b adds a research trial ledger and declared-family multiple-test count, a separate scientific idea, while retaining direct writes and older economics.",
+          "sha256": "b1674cc62cb7cbe3a5d051cabb3203c5a3d3071300d0d8b7baa1696e3ee01187",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e",
+        "runtime_sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only pure hash-bound funding page allocation has no selected caller; the daily workload owner and collection route are absent. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/funding_request_allocation.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only pure hash-bound funding page allocation has no selected caller; the daily workload owner and collection route are absent.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/funding_request_allocation.py",
+              "root": "local_runtime",
+              "sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/funding_request_allocation.py",
+              "root": "recovery_project",
+              "sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/funding_request_allocation.py",
+              "root": "source_candidate",
+              "sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only pure hash-bound funding page allocation has no selected caller; the daily workload owner and collection route are absent.",
+          "sha256": "376512103438320b7a4301aa12b643682e2787d743e733c6a86dea6e3f1f334e",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951",
+        "runtime_sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.corrective_gate1_cadence",
+        "quant_platform.orchestration.corrective_gate3_evidence",
+        "quant_platform.orchestration.corrective_history_disposition",
+        "quant_platform.orchestration.human_evidence_research",
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only 2182-line dashboard combines Gate 1-3 and research views, imports absent cadence/history/view modules, and writes status artifacts. No selected caller or qualified dashboard contract adopts it. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/human_evidence_dashboard.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.corrective_gate1_cadence",
+        "quant_platform.orchestration.corrective_gate3_evidence",
+        "quant_platform.orchestration.corrective_history_disposition",
+        "quant_platform.orchestration.human_evidence_research",
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only 2182-line dashboard combines Gate 1-3 and research views, imports absent cadence/history/view modules, and writes status artifacts. No selected caller or qualified dashboard contract adopts it.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/human_evidence_dashboard.py",
+              "root": "local_runtime",
+              "sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/human_evidence_dashboard.py",
+              "root": "recovery_project",
+              "sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/human_evidence_dashboard.py",
+              "root": "source_candidate",
+              "sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only 2182-line dashboard combines Gate 1-3 and research views, imports absent cadence/history/view modules, and writes status artifacts. No selected caller or qualified dashboard contract adopts it.",
+          "sha256": "7fba6fb262bc756f4742f09a2799078b25f20246f75b76e65db2d836218bd951",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120",
+        "runtime_sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only retained-evidence observation is explicitly nongating, with no selected consumer except the absent dashboard; do not treat its review cells as acceptance. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/human_evidence_research.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only retained-evidence observation is explicitly nongating, with no selected consumer except the absent dashboard; do not treat its review cells as acceptance.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/human_evidence_research.py",
+              "root": "local_runtime",
+              "sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/human_evidence_research.py",
+              "root": "recovery_project",
+              "sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/human_evidence_research.py",
+              "root": "source_candidate",
+              "sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only retained-evidence observation is explicitly nongating, with no selected consumer except the absent dashboard; do not treat its review cells as acceptance.",
+          "sha256": "431e3313236ea38720a248e0a2c506aa547fd79f4fc27880ef55bd3b05023120",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435",
+        "runtime_sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.desk_connections.presentation"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only pure HTML/presentation helpers have no selected consumer except the absent dashboard and grant no release status. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/human_evidence_view.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.desk_connections.presentation"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only pure HTML/presentation helpers have no selected consumer except the absent dashboard and grant no release status.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/human_evidence_view.py",
+              "root": "local_runtime",
+              "sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/human_evidence_view.py",
+              "root": "recovery_project",
+              "sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/human_evidence_view.py",
+              "root": "source_candidate",
+              "sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only pure HTML/presentation helpers have no selected consumer except the absent dashboard and grant no release status.",
+          "sha256": "94a61abdef3dd70c43bf6e2f535310dd7280c53f70fcbd341361cd0e89cd9435",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "095c2de0294c7ebf9734d2ea8f27b8cec08c40a4aa15ca60e209ec1297d25487",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only intake promotes retained L2 calibration into source-qualification input; the selected source has no adopted L2 calibration lifecycle or caller for this promotion. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_l2_calibration_intake.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only intake promotes retained L2 calibration into source-qualification input; the selected source has no adopted L2 calibration lifecycle or caller for this promotion.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/hyperliquid_l2_calibration_intake.py",
+              "root": "local_runtime",
+              "sha256": "095c2de0294c7ebf9734d2ea8f27b8cec08c40a4aa15ca60e209ec1297d25487"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only intake promotes retained L2 calibration into source-qualification input; the selected source has no adopted L2 calibration lifecycle or caller for this promotion.",
+          "sha256": "095c2de0294c7ebf9734d2ea8f27b8cec08c40a4aa15ca60e209ec1297d25487",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "d4192688debe2e1d85978daeba47d5e62c0fcacc6544ca5e84295d4b43c9f4d0",
+        "runtime_sha256": "d4192688debe2e1d85978daeba47d5e62c0fcacc6544ca5e84295d4b43c9f4d0",
+        "working_sha256": "d4192688debe2e1d85978daeba47d5e62c0fcacc6544ca5e84295d4b43c9f4d0"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "09c8d1c153a6f90504dde0e11d75ee50c76ffead4d4d3bb9151bd79ac4648a94",
+        "2611a3cf2574220985b685b7fb0bc02600a50edf5efbe499b3a2bc7347f35232"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected validation v3 uses current Y-on-X log spread, positive hedge-ratio gate and staged/atomic publication. Older v2 copies hardcode math-v2 and direct-write; forensic_b additionally reverses Engle-Granger orientation. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_research_validation.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "d4192688debe2e1d85978daeba47d5e62c0fcacc6544ca5e84295d4b43c9f4d0",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/hyperliquid_research_cycle.py",
+        "tests/test_teacher_evidence_materializer.py"
+      ],
+      "semantic_assessment": "Selected validation v3 uses current Y-on-X log spread, positive hedge-ratio gate and staged/atomic publication. Older v2 copies hardcode math-v2 and direct-write; forensic_b additionally reverses Engle-Granger orientation.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/hyperliquid_research_validation.py",
+              "root": "forensic_a",
+              "sha256": "09c8d1c153a6f90504dde0e11d75ee50c76ffead4d4d3bb9151bd79ac4648a94"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_research_validation.py",
+              "root": "visual_recovery",
+              "sha256": "09c8d1c153a6f90504dde0e11d75ee50c76ffead4d4d3bb9151bd79ac4648a94"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/hyperliquid_research_validation.py",
+              "root": "workspace_outer",
+              "sha256": "09c8d1c153a6f90504dde0e11d75ee50c76ffead4d4d3bb9151bd79ac4648a94"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected validation v3 uses current Y-on-X log spread, positive hedge-ratio gate and staged/atomic publication. Older v2 copies hardcode math-v2 and direct-write; forensic_b additionally reverses Engle-Granger orientation.",
+          "sha256": "09c8d1c153a6f90504dde0e11d75ee50c76ffead4d4d3bb9151bd79ac4648a94",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_research_validation.py",
+              "root": "forensic_b",
+              "sha256": "2611a3cf2574220985b685b7fb0bc02600a50edf5efbe499b3a2bc7347f35232"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected validation v3 uses current Y-on-X log spread, positive hedge-ratio gate and staged/atomic publication. Older v2 copies hardcode math-v2 and direct-write; forensic_b additionally reverses Engle-Granger orientation. forensic_b reverses the selected Y-on-X Engle-Granger orientation and retains v2/direct publication.",
+          "sha256": "2611a3cf2574220985b685b7fb0bc02600a50edf5efbe499b3a2bc7347f35232",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07",
+        "runtime_sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only institutional authority manifest and desk receipt contracts have no selected graph/caller. Their control evidence cannot be made operative by a standalone model import. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/institutional_contracts.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only institutional authority manifest and desk receipt contracts have no selected graph/caller. Their control evidence cannot be made operative by a standalone model import.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/institutional_contracts.py",
+              "root": "local_runtime",
+              "sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/institutional_contracts.py",
+              "root": "recovery_project",
+              "sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/institutional_contracts.py",
+              "root": "source_candidate",
+              "sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only institutional authority manifest and desk receipt contracts have no selected graph/caller. Their control evidence cannot be made operative by a standalone model import.",
+          "sha256": "08b98c33656399e4b0ece211f8d4e7f2fda158658b24c96b176e8e9a30a25f07",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633",
+        "runtime_sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.institutional_contracts"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only institutional LangGraph consumes the absent institutional contracts, evaluates desk submissions and writes reports. It is not connected to selected release or business authority. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/institutional_fund_graph.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.institutional_contracts"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only institutional LangGraph consumes the absent institutional contracts, evaluates desk submissions and writes reports. It is not connected to selected release or business authority.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/institutional_fund_graph.py",
+              "root": "local_runtime",
+              "sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/institutional_fund_graph.py",
+              "root": "recovery_project",
+              "sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/institutional_fund_graph.py",
+              "root": "source_candidate",
+              "sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only institutional LangGraph consumes the absent institutional contracts, evaluates desk submissions and writes reports. It is not connected to selected release or business authority.",
+          "sha256": "add50ecad0bf74457015e0856239b6f94e45b695a75c0969b9950b078f7d5633",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b",
+        "runtime_sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b",
+        "working_sha256": "782ead0502e4a8d4b607ac3d61097f6c0d219c891cf891bb8871cbe1a354d30f"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected graph report writes Markdown and JSON atomically. Identical visual/forensic copies directly write both artifacts, risking partial operator evidence. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/interactive_mixtape_graph.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "782ead0502e4a8d4b607ac3d61097f6c0d219c891cf891bb8871cbe1a354d30f",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "tests/test_interactive_mixtape_graph.py"
+      ],
+      "semantic_assessment": "Selected graph report writes Markdown and JSON atomically. Identical visual/forensic copies directly write both artifacts, risking partial operator evidence.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/interactive_mixtape_graph.py",
+              "root": "forensic_b",
+              "sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b"
+            },
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/interactive_mixtape_graph.py",
+              "root": "local_runtime",
+              "sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/interactive_mixtape_graph.py",
+              "root": "recovery_project",
+              "sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/interactive_mixtape_graph.py",
+              "root": "visual_recovery",
+              "sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Selected graph report writes Markdown and JSON atomically. Identical visual/forensic copies directly write both artifacts, risking partial operator evidence.",
+          "sha256": "4a9a6cecf335419ec49fd1de0ce15f168a21a4f7bd4f815a2cb4c10faeb9038b",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "7db4e864b50126356c0c67fb70712fcf8b2f8549a6a9a6b5855a1dc8cd47bb10",
+        "working_sha256": "e026a002855a7fb967dd17967cc693461c62d581107b9b8eda5e73193da55e83"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected multi-asset Hyperliquid collector binds each public info effect to authorization, publication lease and exclusive immutable output. Runtime copy calls urllib directly and omits those source/receipt guards. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/multi_asset_capture_job.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "94025e60e3c650fa4182ca3e87b1be4b8efe436db7b94b649a6fe1fb63badc19",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/orchestration/multi_asset_capture_verify.py",
+        "tests/test_multi_asset_capture_job.py"
+      ],
+      "semantic_assessment": "Selected multi-asset Hyperliquid collector binds each public info effect to authorization, publication lease and exclusive immutable output. Runtime copy calls urllib directly and omits those source/receipt guards.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/multi_asset_capture_job.py",
+              "root": "local_runtime",
+              "sha256": "7db4e864b50126356c0c67fb70712fcf8b2f8549a6a9a6b5855a1dc8cd47bb10"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Selected multi-asset Hyperliquid collector binds each public info effect to authorization, publication lease and exclusive immutable output. Runtime copy calls urllib directly and omits those source/receipt guards.",
+          "sha256": "7db4e864b50126356c0c67fb70712fcf8b2f8549a6a9a6b5855a1dc8cd47bb10",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": false,
+          "category": "four_root_hash_only",
+          "copies": [],
+          "four_root_roles": [
+            "working"
+          ],
+          "semantic_disposition": "Frozen working SHA only; its byte copy is unavailable. No behavior is attributed to this hash beyond the initial four-root ledger.",
+          "sha256": "e026a002855a7fb967dd17967cc693461c62d581107b9b8eda5e73193da55e83",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "699e4d717b34796891219f66b4301d837cf6377a822dfac7d618e0237978b649",
+        "working_sha256": "412ff120dd8a6788779ec240e8bf29ebd528bf99894ca2e4aedbb974472f1365"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected verifier rejects symlink entries, incomplete predecessor sets, invalid timestamps/assets and inconsistent terminal receipts. Runtime copy omits those checks, so retained capture authority could be overstated. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/multi_asset_capture_verify.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "412ff120dd8a6788779ec240e8bf29ebd528bf99894ca2e4aedbb974472f1365",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "tests/test_multi_asset_capture_job.py"
+      ],
+      "semantic_assessment": "Selected verifier rejects symlink entries, incomplete predecessor sets, invalid timestamps/assets and inconsistent terminal receipts. Runtime copy omits those checks, so retained capture authority could be overstated.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/multi_asset_capture_verify.py",
+              "root": "local_runtime",
+              "sha256": "699e4d717b34796891219f66b4301d837cf6377a822dfac7d618e0237978b649"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Selected verifier rejects symlink entries, incomplete predecessor sets, invalid timestamps/assets and inconsistent terminal receipts. Runtime copy omits those checks, so retained capture authority could be overstated.",
+          "sha256": "699e4d717b34796891219f66b4301d837cf6377a822dfac7d618e0237978b649",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8",
+        "runtime_sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.institutional_contracts",
+        "quant_platform.orchestration.institutional_fund_graph",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only router switches self-directed and institutional graphs, both absent from selected source, with no selected lane admission or caller. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/operating_lane.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.institutional_contracts",
+        "quant_platform.orchestration.institutional_fund_graph",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only router switches self-directed and institutional graphs, both absent from selected source, with no selected lane admission or caller.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/operating_lane.py",
+              "root": "local_runtime",
+              "sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/operating_lane.py",
+              "root": "recovery_project",
+              "sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/operating_lane.py",
+              "root": "source_candidate",
+              "sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only router switches self-directed and institutional graphs, both absent from selected source, with no selected lane admission or caller.",
+          "sha256": "b5a306a4ed7d1428c90d8fdd8423a27eb523082f034cf936725d59c594240dd8",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696",
+        "runtime_sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.institutional_contracts"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only personal evidence graph and self-directed declaration are unadopted; no selected caller or approved declaration/authority envelope binds them. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/personal_trader_graph.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.institutional_contracts"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only personal evidence graph and self-directed declaration are unadopted; no selected caller or approved declaration/authority envelope binds them.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/personal_trader_graph.py",
+              "root": "local_runtime",
+              "sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/personal_trader_graph.py",
+              "root": "recovery_project",
+              "sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/personal_trader_graph.py",
+              "root": "source_candidate",
+              "sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only personal evidence graph and self-directed declaration are unadopted; no selected caller or approved declaration/authority envelope binds them.",
+          "sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae",
+        "runtime_sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only exact directory layout/quarantine contract supports the unselected v6 directory-publication stack and grants no authority by itself. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/publication_target_inventory.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only exact directory layout/quarantine contract supports the unselected v6 directory-publication stack and grants no authority by itself.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/publication_target_inventory.py",
+              "root": "local_runtime",
+              "sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/publication_target_inventory.py",
+              "root": "recovery_project",
+              "sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/publication_target_inventory.py",
+              "root": "source_candidate",
+              "sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only exact directory layout/quarantine contract supports the unselected v6 directory-publication stack and grants no authority by itself.",
+          "sha256": "b317b2ea80d5bc7f2271d565f9b7fb1da932bf47bf5b3c2459dc64abdc6568ae",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d",
+        "runtime_sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only terminal-path templates have no selected writer/reader; importing them alone would not establish a release or scheduler contract. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/scheduler_terminal_paths.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only terminal-path templates have no selected writer/reader; importing them alone would not establish a release or scheduler contract.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/scheduler_terminal_paths.py",
+              "root": "local_runtime",
+              "sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/scheduler_terminal_paths.py",
+              "root": "recovery_project",
+              "sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/scheduler_terminal_paths.py",
+              "root": "source_candidate",
+              "sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d"
+            }
+          ],
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only terminal-path templates have no selected writer/reader; importing them alone would not establish a release or scheduler contract.",
+          "sha256": "9f82e6c0b6c1340dfde12d443813420e3490134e4999a1b627c6b652d41de63d",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "3f477a30f2b428354a231eb73babbc0761512c7cc9fd764e0b0f9d2d15090ae8",
+        "runtime_sha256": "3f477a30f2b428354a231eb73babbc0761512c7cc9fd764e0b0f9d2d15090ae8",
+        "working_sha256": "3f477a30f2b428354a231eb73babbc0761512c7cc9fd764e0b0f9d2d15090ae8"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_b",
+      "queue_historical_sha256_at_base": [
+        "49e1de717fb9091cd9e49535eb4de0a491a40dbfa28b2119c617d360a08e19c2"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected venue gate interprets persisted dYdX and Hyperliquid compatibility flags with astype(bool)/bool, so string 'False' can confirm a route. Forensic_b strictly parses both flags and is a narrow safety-positive candidate. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_SELECTIVE_PERSISTED_BOOL_PORT_REMAINDER_NO_PORT",
+      "recommended_queue_status_now": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/venue_gate.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "3f477a30f2b428354a231eb73babbc0761512c7cc9fd764e0b0f9d2d15090ae8",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/orchestration/copula_shadow_cell.py",
+        "src/quant_platform/orchestration/copula_shadow_comparison.py",
+        "src/quant_platform/orchestration/venue_capabilities.py",
+        "tests/test_copula_shadow_comparison.py",
+        "tests/test_dynamic_agent_venue_gate.py"
+      ],
+      "semantic_assessment": "Selected venue gate interprets persisted dYdX and Hyperliquid compatibility flags with astype(bool)/bool, so string 'False' can confirm a route. Forensic_b strictly parses both flags and is a narrow safety-positive candidate.",
+      "source_decision": "NARROW_STRICT_BOOL_PORT_ONLY_AFTER_TESTED_CANDIDATE",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/venue_gate.py",
+              "root": "forensic_b",
+              "sha256": "49e1de717fb9091cd9e49535eb4de0a491a40dbfa28b2119c617d360a08e19c2"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected venue gate interprets persisted dYdX and Hyperliquid compatibility flags with astype(bool)/bool, so string 'False' can confirm a route. Forensic_b strictly parses both flags and is a narrow safety-positive candidate.",
+          "sha256": "49e1de717fb9091cd9e49535eb4de0a491a40dbfa28b2119c617d360a08e19c2",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_sha256": {
+        "recovery_sha256": "77e98ae9811c2f375e463ebfbf80f3ceb2f4ad7a6a9128ab735a2020bc87c11e",
+        "runtime_sha256": "77e98ae9811c2f375e463ebfbf80f3ceb2f4ad7a6a9128ab735a2020bc87c11e",
+        "working_sha256": "77e98ae9811c2f375e463ebfbf80f3ceb2f4ad7a6a9128ab735a2020bc87c11e"
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "forensic_a;forensic_b;visual_recovery;workspace_outer",
+      "queue_historical_sha256_at_base": [
+        "6873b5e30fb7825a9a3fb3ff11bf33fee00ad7b12d0842648874764e33234f48",
+        "fc136d36a3a9dff8bea0cea27455af9ead1aff9c0b4adf5f31a9c23c6e2e86a3"
+      ],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Selected versioned-learning evidence uses atomic CSV/JSON/Markdown publication. Older copies directly write; forensic_b strictly parses persisted authority flags but keeps the publication regression. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_ACTIVE_RETAIN_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/versioned_learning_comparison.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": "77e98ae9811c2f375e463ebfbf80f3ceb2f4ad7a6a9128ab735a2020bc87c11e",
+      "selected_present": true,
+      "selected_python_reference_paths_at_base": [
+        "src/quant_platform/cli.py",
+        "tests/test_versioned_learning_comparison.py"
+      ],
+      "semantic_assessment": "Selected versioned-learning evidence uses atomic CSV/JSON/Markdown publication. Older copies directly write; forensic_b strictly parses persisted authority flags but keeps the publication regression.",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/versioned_learning_comparison.py",
+              "root": "forensic_a",
+              "sha256": "6873b5e30fb7825a9a3fb3ff11bf33fee00ad7b12d0842648874764e33234f48"
+            },
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/versioned_learning_comparison.py",
+              "root": "visual_recovery",
+              "sha256": "6873b5e30fb7825a9a3fb3ff11bf33fee00ad7b12d0842648874764e33234f48"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/versioned_learning_comparison.py",
+              "root": "workspace_outer",
+              "sha256": "6873b5e30fb7825a9a3fb3ff11bf33fee00ad7b12d0842648874764e33234f48"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected versioned-learning evidence uses atomic CSV/JSON/Markdown publication. Older copies directly write; forensic_b strictly parses persisted authority flags but keeps the publication regression.",
+          "sha256": "6873b5e30fb7825a9a3fb3ff11bf33fee00ad7b12d0842648874764e33234f48",
+          "whole_file_port": false
+        },
+        {
+          "byte_reverified": true,
+          "category": "historical_variant",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/versioned_learning_comparison.py",
+              "root": "forensic_b",
+              "sha256": "fc136d36a3a9dff8bea0cea27455af9ead1aff9c0b4adf5f31a9c23c6e2e86a3"
+            }
+          ],
+          "four_root_roles": [],
+          "semantic_disposition": "Selected versioned-learning evidence uses atomic CSV/JSON/Markdown publication. Older copies directly write; forensic_b strictly parses persisted authority flags but keeps the publication regression. forensic_b strictly parses authority fields but retains direct publication.",
+          "sha256": "fc136d36a3a9dff8bea0cea27455af9ead1aff9c0b4adf5f31a9c23c6e2e86a3",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "0c3c7137f9b4595cca363743c8639d4d5ebb0c5c0c31e0f8e7d1af4890f9009d",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification"
+      ],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only pure retained Hyperliquid /info adapter feeds the unselected frozen-source qualification lane; no selected consumer or source admission adopts it. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter.py",
+      "runtime_missing_selected_internal_imports": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification"
+      ],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only pure retained Hyperliquid /info adapter feeds the unselected frozen-source qualification lane; no selected consumer or source admission adopts it.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter.py",
+              "root": "local_runtime",
+              "sha256": "0c3c7137f9b4595cca363743c8639d4d5ebb0c5c0c31e0f8e7d1af4890f9009d"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only pure retained Hyperliquid /info adapter feeds the unselected frozen-source qualification lane; no selected consumer or source admission adopts it.",
+          "sha256": "0c3c7137f9b4595cca363743c8639d4d5ebb0c5c0c31e0f8e7d1af4890f9009d",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "3b9cb2ded1fbfc7e45316959cafe5486262b3366957c314a93e00e9cfd76a07f",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only bounded one-shot L2 calibration planner/runner has no selected collector, callback authorization or qualification consumer. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only bounded one-shot L2 calibration planner/runner has no selected collector, callback authorization or qualification consumer.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner.py",
+              "root": "local_runtime",
+              "sha256": "3b9cb2ded1fbfc7e45316959cafe5486262b3366957c314a93e00e9cfd76a07f"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only bounded one-shot L2 calibration planner/runner has no selected collector, callback authorization or qualification consumer.",
+          "sha256": "3b9cb2ded1fbfc7e45316959cafe5486262b3366957c314a93e00e9cfd76a07f",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "e9c381eeb6b766c51260d1b2e5e2656ee0971bec222c725b7ad084e63d0bbf24",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only Mac Keychain adapter invokes permit-bound credential reader but has no selected caller or adopted credential route; activating it would add a credential access path. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/wizard_keychain.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only Mac Keychain adapter invokes permit-bound credential reader but has no selected caller or adopted credential route; activating it would add a credential access path.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/wizard_keychain.py",
+              "root": "local_runtime",
+              "sha256": "e9c381eeb6b766c51260d1b2e5e2656ee0971bec222c725b7ad084e63d0bbf24"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only Mac Keychain adapter invokes permit-bound credential reader but has no selected caller or adopted credential route; activating it would add a credential access path.",
+          "sha256": "e9c381eeb6b766c51260d1b2e5e2656ee0971bec222c725b7ad084e63d0bbf24",
+          "whole_file_port": false
+        }
+      ]
+    },
+    {
+      "existing_queue_decision_evidence": "",
+      "four_root_decision": "REVIEW_REQUIRED",
+      "four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "610b036874c63281913c0969ad37bf627f1e11ce6caf349fcf8e2e112ea87dc1",
+        "working_sha256": ""
+      },
+      "prior_missing_import_catalog_entries": [],
+      "queue_historical_copy_roots_at_base": "",
+      "queue_historical_sha256_at_base": [],
+      "recommended_decision_evidence_append": "audit/GATE0_ORIGINAL_ORCHESTRATION_PENDING_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale": "Runtime-only nonexecuting Pydantic route schema fixes authority flags false and allowlists provider operations, but no selected route/probe reads it. Preserve all frozen SHA/copy-root custody; do not whole-file port.",
+      "recommended_queue_status_after_guard_candidate": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "recommended_queue_status_now": "REVIEWED_ORIGINAL_ORCHESTRATION_RUNTIME_DEPENDENCY_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/wizard_source_route_config.py",
+      "runtime_missing_selected_internal_imports": [],
+      "selected_active_at_base_sha256": null,
+      "selected_present": false,
+      "selected_python_reference_paths_at_base": [],
+      "semantic_assessment": "Runtime-only nonexecuting Pydantic route schema fixes authority flags false and allowlists provider operations, but no selected route/probe reads it.",
+      "source_decision": "DEFER_RUNTIME_ONLY_DEPENDENCY_COHORT",
+      "variants": [
+        {
+          "byte_reverified": true,
+          "category": "four_root_or_source_candidate",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/wizard_source_route_config.py",
+              "root": "local_runtime",
+              "sha256": "610b036874c63281913c0969ad37bf627f1e11ce6caf349fcf8e2e112ea87dc1"
+            }
+          ],
+          "four_root_roles": [
+            "runtime"
+          ],
+          "semantic_disposition": "Runtime-only nonexecuting Pydantic route schema fixes authority flags false and allowlists provider operations, but no selected route/probe reads it.",
+          "sha256": "610b036874c63281913c0969ad37bf627f1e11ce6caf349fcf8e2e112ea87dc1",
+          "whole_file_port": false
+        }
+      ]
+    }
+  ],
+  "runtime_only_paths": 24,
+  "schema_version": "thewiz.gate0.original_orchestration_pending_reconciliation.v1",
+  "selected_active_paths": 21,
+  "separate_narrow_guard_candidate_paths": [
+    "src/quant_platform/orchestration/dynamic_stage_runner.py",
+    "src/quant_platform/orchestration/venue_gate.py"
+  ],
+  "whole_file_ports": 0
+}
