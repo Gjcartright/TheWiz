@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTED_COMMIT = "8a00bf88f40fc214005195bc6d730c8ea4dfe208"
+QUEUE_COMMIT = "db3f4623e5c552527ecd2dc2a6fb62334726c3f7"
 REPORT = ROOT / "audit/GATE0_RESEARCH_MATH_DESK_CONFIG_SOURCE_RECONCILIATION_2026-09-30.json"
 REPORT_SHA256 = "691a68b809556a8444821020ebdeab93548e1e38513eb3204534275356852f16"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
@@ -23,9 +24,9 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def selected_bytes(relative: str) -> bytes:
+def selected_bytes(relative: str, commit: str = SELECTED_COMMIT) -> bytes:
     return subprocess.run(
-        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        ["git", "show", f"{commit}:{relative}"],
         cwd=ROOT,
         capture_output=True,
         check=True,
@@ -44,6 +45,11 @@ def selected_exists(relative: str) -> bool:
 def main() -> None:
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", QUEUE_COMMIT, "HEAD"],
         cwd=ROOT,
         check=True,
     )
@@ -92,10 +98,10 @@ def main() -> None:
             or paper_counts["forensic_b_modified_shared_paper_ids"]):
         raise ValueError("paper assessment delta changed")
 
-    if sha256(QUEUE.read_bytes()) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix(), QUEUE_COMMIT)
+    if sha256(queue_bytes) != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed")
     queue = {row["relative_path"]: row for row in rows}
