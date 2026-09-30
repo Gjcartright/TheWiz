@@ -11,6 +11,7 @@ import pandas as pd
 
 from quant_platform.orchestration.contracts import CandidateIdentity, EvidencePacket, VetoRecord
 from quant_platform.orchestration.evidence_integrity import evidence_hash
+from quant_platform.runtime_types import strict_bool
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -54,7 +55,10 @@ def _compatibility(candidate: CandidateIdentity, venue: str, root: Path) -> tupl
         path = active / "dydx_execution_market_compatibility.csv"
         if not path.exists(): return "", False
         frame = pd.read_csv(path)
-        markets = {str(value).upper() for value in frame.loc[frame.get("compatible_for_paper_submit", False).astype(bool), "market"]}
+        compatible = frame.get(
+            "compatible_for_paper_submit", pd.Series(False, index=frame.index)
+        ).map(strict_bool)
+        markets = {str(value).upper() for value in frame.loc[compatible, "market"]}
         return str(path.relative_to(root)), set(candidate.pair.split("/")) <= markets
     if venue == "hyperliquid":
         path = active / "hyperliquid_execution_market_compatibility.csv"
@@ -62,7 +66,10 @@ def _compatibility(candidate: CandidateIdentity, venue: str, root: Path) -> tupl
         frame = pd.read_csv(path)
         pair = candidate.pair.replace("/", "-")
         rows = frame[frame.get("pair", pd.Series(dtype=str)).astype(str).str.upper().eq(pair)]
-        return str(path.relative_to(root)), bool(not rows.empty and rows.iloc[-1].get("mirrorable_for_paper", False))
+        return str(path.relative_to(root)), bool(
+            not rows.empty
+            and strict_bool(rows.iloc[-1].get("mirrorable_for_paper", False))
+        )
     return "", False
 
 
