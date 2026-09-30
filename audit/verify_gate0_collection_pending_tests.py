@@ -63,6 +63,10 @@ def verify(
     assert _sha(queue_bytes) == report["scope"]["selected_active_891_queue_sha256"]
     queue_rows = list(csv.DictReader(io.StringIO(queue_bytes.decode("utf-8"))))
     queue = {row["relative_path"]: row for row in queue_rows}
+    current_queue = {
+        row["relative_path"]: row
+        for row in csv.DictReader((active_repo / QUEUE_PATH).open(newline="", encoding="utf-8"))
+    }
     assert len(queue_rows) == 891
     pending = sorted(
         path
@@ -122,6 +126,10 @@ def verify(
         assert proposed["custody_status"] == "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_TEST_NO_PORT"
         assert proposed["decision_evidence"] == f"audit/{REPORT_NAME}"
         assert proposed["decision_rationale"]
+        current = current_queue[path]
+        assert current["custody_status"] == proposed["custody_status"]
+        assert proposed["decision_rationale"] in current["decision_rationale"]
+        assert proposed["decision_evidence"] in current["decision_evidence"].split("; ")
         for field, value in baseline.items():
             if field not in {"custody_status", "decision_rationale", "decision_evidence"}:
                 assert proposed[field] == value, (path, field)
