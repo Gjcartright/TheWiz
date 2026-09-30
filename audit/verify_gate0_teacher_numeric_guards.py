@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "c3f4d9d628f471eb993655d91806f9fe5b56039c"
+SELECTED_COMMIT = "6cba715163709f82fd49aa9f49afd4b7b8e0abde"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_TEACHER_NUMERIC_GUARDS_2026-09-30.json"
 SAVEPOINT = Path("/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime")
@@ -43,11 +44,20 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def selected_bytes(relative: str) -> bytes:
+    return subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
 def main() -> None:
     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
     for relative, expected in SELECTED.items():
-        path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or digest(path) != expected:
+        if hashlib.sha256(selected_bytes(relative)).hexdigest() != expected:
             raise ValueError(f"selected source, test, or verifier drift: {relative}")
     for relative, expected in SAVEPOINTS.items():
         path = SAVEPOINT / relative
@@ -70,8 +80,8 @@ def main() -> None:
     counts = {key: int(suite.attrib[key]) for key in ("tests", "failures", "errors", "skipped")}
     if counts != {"tests": 2615, "failures": 0, "errors": 0, "skipped": 0}:
         raise ValueError(f"isolated numeric-guard suite is not green: {counts}")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix())
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed size or contains duplicates")
     queue = {row["relative_path"]: row for row in rows}
@@ -117,7 +127,7 @@ def main() -> None:
             "retain_shadow_only_council_boundary",
         ],
         "union_source_queue": {
-            "file_sha256": digest(QUEUE),
+            "file_sha256": hashlib.sha256(queue_bytes).hexdigest(),
             "distinct_paths": len(rows),
             "reviewed_paths": reviewed,
             "nonsource_paths": len(rows) - pending - reviewed,

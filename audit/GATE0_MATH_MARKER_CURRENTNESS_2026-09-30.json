@@ -1,0 +1,57 @@
+{
+  "base_commit": "6cba715163709f82fd49aa9f49afd4b7b8e0abde",
+  "baseline_false_positives": {
+    "adapter_accepts_unbound_marker": true,
+    "control_plane_accepts_unbound_marker": true
+  },
+  "baseline_probe_sha256": "9fcbaed895be03793e6d5395ee9ea1aa164cf1c67797fb3ee04f62b9294f7fe1",
+  "decision": "BOUND_MATH_MARKER_SOURCE_REPORT_AND_CONSUMER_CONTRACT_EXACT_COMMIT_VERIFICATION_REQUIRED",
+  "installed_wheel_probe_sha256": "6d3d8d2a3fb62c3dedf1f610be730f785c8ff7d693485378b27d179002f89bf4",
+  "isolated_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "335250b6a66269903bb8ea61a6d11dc8c28768d16a225c6c7f094666bc14c1f8",
+    "skipped": 0,
+    "tests": 2619
+  },
+  "live_trading_authorized": false,
+  "local_runtime_savepoint_sha256": {
+    "src/quant_platform/math_v2_acceptance.py": "a01ef2e6e2d81794ed6b37bd71b02b05378d38c983328f8a49929963c8c135f1",
+    "src/quant_platform/orchestration/math_acceptance_currentness.py": "ae4f18066ac63f764ca7c662856396387708cd7c783760131011a533c992b37b",
+    "src/quant_platform/orchestration/teacher_adapters.py": "2155c3a7e956148da1a487e406519a34dfaca47369f79f3fa25dc70a3a425a2d",
+    "src/quant_platform/orchestration/teacher_control_plane.py": "ab8a5682d5cdb0290a05479d66f61e8cb46ec89112980a1cf5717e6fde59ca42",
+    "tests/test_math_v2_acceptance.py": "1bd29afbeff2a82c56947146201ecaf505cb12187c2cf32a878ba2efb1a5ba9a",
+    "tests/test_teacher_control_plane.py": "1cf55a7c3ab9e834db9433091c0f81f35f9521b4bc67b4c934e043d61094814b"
+  },
+  "preserved_historical_variant_sha256": {
+    "src/quant_platform/math_v2_acceptance.py": "c32dfe8409c0b299f4b8a38d0dcdefb3f79e88b05a91b8c445a473e760c4d090",
+    "src/quant_platform/orchestration/teacher_control_plane.py": "b99eba103e1746522e69e707707a39cb35e5e10a7e5fb155d7de22ac58ac0ecc"
+  },
+  "research_acceptance": "BLOCKED",
+  "review_decisions": [
+    "reject_unbound_self_reported_math_markers_in_both_teacher_consumers",
+    "bind_math_marker_to_loaded_package_source_and_exact_report_checks",
+    "require_scoped_publication_authority_for_acceptance_reports",
+    "retain_current_v23_math_checks_and_atomic_publication",
+    "account_for_historical_per_file_test_publication_fixtures"
+  ],
+  "schema_version": "thewiz.gate0.math_marker_currentness.v1",
+  "selected_file_sha256": {
+    "audit/verify_gate0_teacher_numeric_guards.py": "b11422e2c2868de8cc9bf8c585daa9eb7ad46c8da6b37b485e4104de502df4a0",
+    "src/quant_platform/math_v2_acceptance.py": "a08855cebdab2e101f8211404c3a01d208bb57a31f786e4294a689ae639f9551",
+    "src/quant_platform/orchestration/math_acceptance_currentness.py": "b56fe4c6866cbc3a4b5d18691a9b5464c9e45d5fabd14be5c4956e32fde904a8",
+    "src/quant_platform/orchestration/teacher_adapters.py": "41bdf698a655c837c9ce5fdcb496dc7ca8e79de7febbed859559ce24117ca63c",
+    "src/quant_platform/orchestration/teacher_control_plane.py": "c86fbf75bb72b586da496de8ba86172b69712fd53389e4f376f99445d5b313e5",
+    "tests/test_math_acceptance_currentness.py": "6d6b47a9e4a9d561bd0c214a492dddf3bba1bb343e75a16edfe3ed66a48430ca",
+    "tests/test_math_v2_acceptance.py": "9599313e1ede12b2aae4a670b10c112987d65d1782e5c39a26ec5b268b11ef1e",
+    "tests/test_teacher_control_plane.py": "0a31f36c5142a2891ec8235adf4636fb972a96ffa57a42dc521e80f68426dd73"
+  },
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "file_sha256": "64c8ff2a572ccc9e749c6a06a5a353c93ee631f937027990509ddcab69e4780e",
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 652,
+    "reviewed_paths": 141
+  }
+}

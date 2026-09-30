@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -14,6 +14,7 @@ from pydantic import ValidationError
 from quant_platform.orchestration.contracts import CandidateIdentity
 from quant_platform.orchestration.corrective_redaction import safe_exception_code
 from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
+from quant_platform.orchestration.math_acceptance_currentness import math_acceptance_marker_passes
 from quant_platform.orchestration.teacher_contracts import (
     EXACT_MODES,
     MATH_V2,
@@ -339,19 +340,7 @@ def _assessment(row: pd.Series, context: CouncilContext) -> CriticAssessment:
 
 
 def _math_marker_passes(path: Path) -> bool:
-    if not path.exists():
-        return False
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    return (
-        payload.get("status") == "passed"
-        and payload.get("math_version") == MATH_V2
-        and payload.get("acceptance_scope") == "core_math_library"
-        and payload.get("all_checks_passed") is True
-        and payload.get("generated_by") == "quant_platform.math_v2_acceptance"
-    )
+    return math_acceptance_marker_passes(path, expected_math_version=MATH_V2)
 
 
 def _write_schema(path: Path, columns: tuple[str, ...]) -> None:
