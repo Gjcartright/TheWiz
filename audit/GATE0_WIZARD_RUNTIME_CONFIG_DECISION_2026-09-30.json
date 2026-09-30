@@ -1,0 +1,29 @@
+{
+  "dashboard_specialist_hard_boundaries": {
+    "may_change_strategy_or_risk_policy": false,
+    "may_claim_best_trade": false,
+    "may_override_critics_or_gates": false,
+    "may_place_orders": false,
+    "may_read_secrets": false,
+    "may_train_on_dashboard_hindsight": false
+  },
+  "dashboard_specialist_status": "configured_waiting_for_authenticated_browser_capture",
+  "decision": "REVIEWED_DEPENDENT_RUNTIME_CONFIG_DEFERRED_NO_PORT",
+  "interpretation": "Both files are preserved as runtime-only source. The dashboard specialist is a research configuration awaiting authenticated capture, and its agent registry entry is absent from active source. The Keychain file is a non-secret selector: the daily runner exists in active source, but its Keychain selector and credential flow exist only in LocalRuntime. Neither config is selected alone without its matching behavior review.",
+  "keychain_config_contains_secret": false,
+  "paths": {
+    "config/crypto_wizards_dashboard_research_specialist.json": {
+      "runtime_sha256": "477130c9b237b6dbf296d4370e037aabc9bd5e9a8456b85d1b8f1a890eb48608",
+      "savepoint_sha256": "477130c9b237b6dbf296d4370e037aabc9bd5e9a8456b85d1b8f1a890eb48608"
+    },
+    "config/crypto_wizards_keychain_reference.json": {
+      "runtime_sha256": "ba2cf25796ef3941669b6abfa89d1b642d7ba85542cb749fd34d8b1dd7a3ced3",
+      "savepoint_sha256": "ba2cf25796ef3941669b6abfa89d1b642d7ba85542cb749fd34d8b1dd7a3ced3"
+    }
+  },
+  "runtime_consumers": [
+    "src/quant_platform/orchestration/mini_agents.py",
+    "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py"
+  ],
+  "schema_version": "thewiz.gate0.wizard_runtime_config_decision.v1"
+}
