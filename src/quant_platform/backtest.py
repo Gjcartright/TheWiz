@@ -40,8 +40,14 @@ class CostModel:
                 raise ValueError(f"{field_name} must be finite and nonnegative")
         if not np.isfinite(float(self.funding_bps_per_day)):
             raise ValueError("funding_bps_per_day must be finite")
-        if int(self.bars_per_day) <= 0:
-            raise ValueError("bars_per_day must be positive")
+        bars = float(self.bars_per_day)
+        if (
+            isinstance(self.bars_per_day, bool)
+            or not np.isfinite(bars)
+            or bars <= 0.0
+            or not bars.is_integer()
+        ):
+            raise ValueError("bars_per_day must be a finite positive integer")
         for field_name in ("partial_fill_probability", "partial_fill_fraction"):
             value = float(getattr(self, field_name))
             if not np.isfinite(value) or not 0.0 <= value <= 1.0:
@@ -53,9 +59,9 @@ class CostModel:
         return bps / 10_000.0
 
     def funding_per_bar(self, *, bars_per_day: float | None = None) -> float:
-        divisor = float(bars_per_day or self.bars_per_day)
-        if divisor <= 0.0:
-            raise ValueError("bars_per_day must be positive")
+        divisor = float(self.bars_per_day if bars_per_day is None else bars_per_day)
+        if not np.isfinite(divisor) or divisor <= 0.0:
+            raise ValueError("bars_per_day must be finite and positive")
         return (self.funding_bps_per_day / 10_000.0) / divisor
 
     def normalized_funding_policy(self) -> FundingPolicy:
@@ -130,6 +136,20 @@ def _series_or_default(frame: pd.DataFrame, column: str, default: float) -> pd.S
     return pd.Series(default, index=frame.index, dtype="float64")
 
 
+def _validated_signal(frame: pd.DataFrame, signal: pd.Series) -> pd.Series:
+    if not frame.index.is_unique or not signal.index.equals(frame.index):
+        raise ValueError("signal must share the unique frame index and order")
+    if any(
+        isinstance(value, (bool, np.bool_, complex, np.complexfloating))
+        for value in signal
+    ):
+        raise ValueError("signal must be real numeric, not boolean or complex")
+    values = pd.to_numeric(signal, errors="coerce").astype(float)
+    if bool((~np.isfinite(values)).any()):
+        raise ValueError("signal must be complete and finite; missing is not flat")
+    return values
+
+
 def backtest_pair(
     frame: pd.DataFrame,
     signal: pd.Series,
@@ -141,7 +161,7 @@ def backtest_pair(
 
     costs = cost_model or CostModel()
     data = frame.copy()
-    data["signal"] = signal.reindex(data.index).fillna(0.0).astype(float)
+    data["signal"] = _validated_signal(data, signal)
     spread_return = pd.to_numeric(data["spread"], errors="coerce").diff().fillna(0.0)
     position = data["signal"].shift(1).fillna(0.0)
     gross_return = position * spread_return
@@ -209,7 +229,7 @@ def backtest_two_leg_spread_with_ledger(
         raise ValueError(f"missing two-leg price columns: {missing}")
 
     data = frame.copy()
-    data["signal"] = signal.reindex(data.index).fillna(0.0).astype(float)
+    data["signal"] = _validated_signal(data, signal)
     price_x = pd.to_numeric(data["price_x"], errors="coerce")
     price_y = pd.to_numeric(data["price_y"], errors="coerce")
     invalid_prices = (
@@ -243,6 +263,8 @@ def backtest_two_leg_spread_with_ledger(
     if present_leg_slippage:
         slippage_x = _series_or_default(data, "slippage_x_model_bps", costs.slippage_bps)
         slippage_y = _series_or_default(data, "slippage_y_model_bps", costs.slippage_bps)
+        if bool((slippage_x.lt(0.0) | slippage_y.lt(0.0)).any()):
+            raise ValueError("modeled leg slippage must be finite and nonnegative")
         slippage_cost = (turnover_x * slippage_x + turnover_y * slippage_y) / 10_000.0
     else:
         slippage_cost = turnover * costs.slippage_bps / 10_000.0
