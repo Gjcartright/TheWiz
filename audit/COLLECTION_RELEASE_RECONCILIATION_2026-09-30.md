@@ -1,0 +1,11 @@
+# Collection release source reconciliation
+
+**Status:** source-custody review only. No collection release code was copied into the active checkout, and no scheduler, provider, order, or trading action was run.
+
+The dated four-root reconciliation lists **34 Python files** under `src/quant_platform/orchestration/collection_release/`. All 34 are absent from the active checkout and have matching SHA-256 values in the LocalRuntime and recovery copies. Eight are in-package test files containing 89 `test_` method definitions. Matching bytes corroborate this historical package candidate; they do not establish current integration or release authority.
+
+The conservative AST import map lists **11 dependency edges** from 10 package files to six internal modules also absent from the active checkout: `collection_owner_binding`, `collection_runtime_route`, `corrective_trusted_artifact`, `precollection_admission`, `precollection_campaign_io`, and `scheduler_terminal_paths` under `quant_platform.orchestration`. The LocalRuntime `scripts/collection_startup_verify.py` names the eight in-package regressions, declares itself an offline verification route, and pins macOS/ARM64 and source/runtime/lock hashes. That script and its surrounding configuration are not active-checkout entrypoints. The package cannot be treated as a standalone port.
+
+The next review should freeze the entire dependency closure and its configuration, compare its release evidence and effect boundaries with the active scheduler, then run its regression suite in a disposable locked environment. Any integration needs current-checkout tests and an explicit research-only receipt. Until that work is done, the active source remains authoritative and the historical release package remains preserved evidence.
+
+Source rows: `audit/evidence_freeze_2026-09-29/source_reconciliation.csv`, `audit/evidence_freeze_2026-09-29/missing_import_edges.csv`, and `audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv`.
