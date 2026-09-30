@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTED_COMMIT = "8a00bf88f40fc214005195bc6d730c8ea4dfe208"
+QUEUE_COMMIT = "5721a4089973249760909c5b81bb2b8a755897ca"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_SELECTED_SAFETY_SOURCE_RECONCILIATION_2026-09-30.json"
 SAVEPOINT = Path("/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime")
@@ -68,9 +69,9 @@ def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def selected_bytes(relative: str) -> bytes:
+def selected_bytes(relative: str, commit: str = SELECTED_COMMIT) -> bytes:
     return subprocess.run(
-        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        ["git", "show", f"{commit}:{relative}"],
         cwd=ROOT,
         capture_output=True,
         check=True,
@@ -88,6 +89,7 @@ def selected_exists(relative: str) -> bool:
 
 def main() -> None:
     subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", QUEUE_COMMIT, "HEAD"], cwd=ROOT, check=True)
     for relative, expected in SELECTED.items():
         if digest(selected_bytes(relative)) != expected:
             raise ValueError(f"selected safety source changed: {relative}")
@@ -119,10 +121,10 @@ def main() -> None:
             raise ValueError(f"diagnostic JUnit counts changed: {label}")
         junit_report[label] = {"sha256": expected_sha, "tests": counts[0], "failures": counts[1], "errors": counts[2]}
 
-    if digest(QUEUE.read_bytes()) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix(), QUEUE_COMMIT)
+    if digest(queue_bytes) != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed")
     queue = {row["relative_path"]: row for row in rows}

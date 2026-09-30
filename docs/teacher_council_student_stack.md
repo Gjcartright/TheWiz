@@ -17,6 +17,9 @@ Crypto Wizards discovery
 
 Crypto Wizards is discovery-only. A Wizard Sharpe ratio, return, exact mode, chart, or conditional probability can nominate a hypothesis but cannot vote toward acceptance, become a training label, or authorize a trade.
 
+On the Expansion checkout, set `UV_PROJECT_ENVIRONMENT` to the Mac internal
+runtime directory and run `uv sync --extra dev --locked` before the commands below.
+
 The seven exact-mode names identify local specialist lanes; they do not certify parity with the corresponding Wizard formulas.
 
 ## Exact-Mode Teachers
@@ -112,7 +115,7 @@ Generated controls:
 ## Canonical Command
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   run-hyperliquid-research-cycle --collect-l2
 ```
 
@@ -129,7 +132,7 @@ For an offline replay that reuses collected L2 evidence, omit `--collect-l2`.
 The approval template is non-approved by default. Before a bounded lifecycle test, the user must complete the exact payload and explicitly set approval. A separate Keychain-backed secret then signs a canonical hash containing the run ID, candidate-set ID, master and agent addresses, expiry, notional limit, and both exact legs:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   hyperliquid-testnet-sign-smoke-approval
 ```
 

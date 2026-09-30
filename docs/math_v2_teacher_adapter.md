@@ -2,6 +2,9 @@
 
 ## Implemented
 
+On the Expansion checkout, set `UV_PROJECT_ENVIRONMENT` to the Mac internal
+runtime directory and run `uv sync --extra dev --locked` before these commands.
+
 The active backtest path uses `math-v2.3-venue-clock-execution` and provides:
 
 - interval-aware annualization for 1m, 5m, 15m, 1h, 4h, and 1d;
@@ -21,7 +24,7 @@ The active backtest path uses `math-v2.3-venue-clock-execution` and provides:
 Run the controlled gate with:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.orchestration.dynamic_cli --stage math_v2
+uv run --locked python -m quant_platform.orchestration.dynamic_cli --stage math_v2
 ```
 
 The generated marker is machine-authored at
@@ -84,7 +87,7 @@ JSONL streams so stale proposals cannot survive a failed refresh.
 Run the complete boundary with:
 
 ```bash
-PYTHONPATH=src .venv312/bin/python -m quant_platform.orchestration.dynamic_cli --stage teacher_council
+uv run --locked python -m quant_platform.orchestration.dynamic_cli --stage teacher_council
 ```
 
 An earlier production-repo evidence run materialized five complete contexts:
