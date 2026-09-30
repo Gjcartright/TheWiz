@@ -320,6 +320,16 @@ def build() -> dict[str, object]:
         for evidence, expected in prior_reports.items():
             if sha((ROOT / evidence).read_bytes()) != expected:
                 raise ValueError(f"prior decision snapshot drift: {evidence}")
+        rationale = (
+            "Additional frozen variant reviewed: " + finding["new"] +
+            " Preserve all SHA/root custody and retain selected source; no whole-file port."
+        )
+        if active_q["custody_status"] != g["prior_custody_status"]:
+            raise ValueError(f"current queue decision not closed: {path}")
+        if rationale not in active_q["decision_rationale"]:
+            raise ValueError(f"current queue missing variant rationale: {path}")
+        if REPORT.relative_to(ROOT).as_posix() not in active_q["decision_evidence"].split("; "):
+            raise ValueError(f"current queue missing report citation: {path}")
         reviews.append({
             "relative_path": path,
             "selected_active_at_base_sha256": selected_sha,
@@ -331,10 +341,7 @@ def build() -> dict[str, object]:
             "prior_custody_status_snapshot": g["prior_custody_status"],
             "queue_status_at_base": q["custody_status"],
             "recommended_queue_status": g["prior_custody_status"],
-            "recommended_decision_rationale_append": (
-                "Additional frozen variant reviewed: " + finding["new"] +
-                " Preserve all SHA/root custody and retain selected source; no whole-file port."
-            ),
+            "recommended_decision_rationale_append": rationale,
             "recommended_decision_evidence_append": REPORT.relative_to(ROOT).as_posix(),
             "prior_decision_evidence_sha256": prior_reports,
             "queue_historical_variant_sha256_at_base": sorted(historical),
