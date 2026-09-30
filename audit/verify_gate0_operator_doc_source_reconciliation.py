@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "4362c54b55afabe38f522289c2f9e84788e9ab67"
+SELECTED_COMMIT = "0b60eadf4f6a8d92cf9653c952f184aa3ea97146"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_OPERATOR_DOC_SOURCE_RECONCILIATION_2026-09-30.json"
 SAVEPOINT = Path("/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime")
@@ -53,8 +54,26 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def selected_bytes(relative: str) -> bytes:
+    return subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
+def selected_exists(relative: str) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", f"{SELECTED_COMMIT}:{relative}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    ).returncode == 0
+
+
 def strategy_counts() -> tuple[int, tuple[int, ...]]:
-    tree = ast.parse((ROOT / "src/quant_platform/strategies.py").read_text(encoding="utf-8"))
+    tree = ast.parse(selected_bytes("src/quant_platform/strategies.py").decode("utf-8"))
     catalog = None
     official = None
     for node in tree.body:
@@ -71,13 +90,13 @@ def strategy_counts() -> tuple[int, tuple[int, ...]]:
 
 def main() -> None:
     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
     for relative, expected in SELECTED.items():
-        path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or digest(path) != expected:
+        if hashlib.sha256(selected_bytes(relative)).hexdigest() != expected:
             raise ValueError(f"selected documentation or source drift: {relative}")
     for relative, expected in RUNTIME_ONLY.items():
         path = SAVEPOINT / relative
-        if (ROOT / relative).exists() or not path.is_file() or digest(path) != expected:
+        if selected_exists(relative) or not path.is_file() or digest(path) != expected:
             raise ValueError(f"deferred runtime-only document changed: {relative}")
     for relative, expected in VARIANTS.items():
         path = VARIANT_ROOT / expected
@@ -92,10 +111,10 @@ def main() -> None:
     if hashlib.sha256(base_operations).hexdigest() != BASE_OPERATIONS_SHA256:
         raise ValueError("pre-repair operator command evidence changed")
 
-    architecture = (ROOT / "docs/architecture.md").read_text(encoding="utf-8")
-    operations = (ROOT / "docs/current_corrective_operations.md").read_text(encoding="utf-8")
-    continuity = (ROOT / "docs/registered_evidence_continuity.md").read_text(encoding="utf-8")
-    mode_fidelity = (ROOT / "docs/wizard_hyperliquid_mode_fidelity.md").read_text(encoding="utf-8")
+    architecture = selected_bytes("docs/architecture.md").decode("utf-8")
+    operations = selected_bytes("docs/current_corrective_operations.md").decode("utf-8")
+    continuity = selected_bytes("docs/registered_evidence_continuity.md").decode("utf-8")
+    mode_fidelity = selected_bytes("docs/wizard_hyperliquid_mode_fidelity.md").decode("utf-8")
     if not all(word in architecture for word in ("UV_PROJECT_ENVIRONMENT", "Node.js", "LangGraph Agent Workflow")):
         raise ValueError("current architecture runtime distinctions missing")
     if (operations.count("uv run --locked python") != 26
@@ -106,15 +125,14 @@ def main() -> None:
         raise ValueError("operator command or recovery guidance changed")
     if ("current_wizard_cost_selected_collection" not in continuity
             or "current_wizard_cost_selected_collection" not in
-            (ROOT / "src/quant_platform/orchestration/corrective_data_evidence.py").read_text(encoding="utf-8")):
+            selected_bytes("src/quant_platform/orchestration/corrective_data_evidence.py").decode("utf-8")):
         raise ValueError("third read-only cost lane is unaccounted for")
     if ("Golden dashboard captures: `0`" not in mode_fidelity
             or "Golden dashboard captures: `14`" not in
             (SAVEPOINT / "docs/wizard_hyperliquid_mode_fidelity.md").read_text(encoding="utf-8")):
         raise ValueError("current versus historical dashboard capture posture changed")
 
-    with (ROOT / "docs/strategy_registry.csv").open(newline="", encoding="utf-8") as stream:
-        registry = list(csv.DictReader(stream))
+    registry = list(csv.DictReader(selected_bytes("docs/strategy_registry.csv").decode("utf-8").splitlines()))
     catalog, official = strategy_counts()
     if catalog != len(registry) or [int(row["id"]) for row in registry] != list(range(1, 38)) or len(official) != 18:
         raise ValueError("full strategy catalog and official active lane differ")
@@ -126,13 +144,13 @@ def main() -> None:
         "src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter.py",
         "src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner.py",
     ):
-        if (ROOT / module).exists() or not (SAVEPOINT / module).is_file():
+        if selected_exists(module) or not (SAVEPOINT / module).is_file():
             raise ValueError(f"deferred document's runtime module custody changed: {module}")
 
-    if digest(QUEUE) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix())
+    if hashlib.sha256(queue_bytes).hexdigest() != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue size or uniqueness changed")
     queue = {row["relative_path"]: row for row in rows}
