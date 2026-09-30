@@ -208,6 +208,14 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
 
     native_claims = _claim_rows(rows)
     external_claims = _external_research_prior_claims(root)
+    native_evidence_ready = not native_claims.empty
+    brain_status = (
+        "native_research_ready"
+        if native_evidence_ready
+        else "blocked_external_priors_only"
+        if not external_claims.empty
+        else "blocked_no_claims"
+    )
     claims = pd.concat([native_claims, external_claims], ignore_index=True, sort=False)
     if not claims.empty:
         claims = claims.drop_duplicates(subset=["claim_id"], keep="last").reset_index(drop=True)
@@ -231,6 +239,7 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
                 "videos": len(video_registry),
                 "claims": len(claims),
                 "native_channel_claims": len(native_claims),
+                "native_evidence_ready": native_evidence_ready,
                 "external_research_priors": len(external_claims),
                 "hudson_thames_must_test_priors": int(
                     external_claims.get("priority", pd.Series(dtype=str)).astype(str).eq("must_test").sum()
@@ -245,7 +254,7 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
                 "duplicate_claim_ids": int(claims.get("claim_id", pd.Series(dtype=str)).duplicated().sum()),
                 "claims_without_video_url": int(claims.get("video_url", pd.Series(dtype=str)).astype(str).eq("").sum()),
                 "promotion_authority": "none_research_only",
-                "status": "ready" if not claims.empty else "blocked_no_claims",
+                "status": brain_status,
             }
         ]
     )
@@ -266,6 +275,8 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
         },
         summary={
             "claims": len(claims),
+            "native_evidence_ready": native_evidence_ready,
+            "status": brain_status,
             "external_research_priors": len(external_claims),
             "formulas": len(formulas),
             "nodes": len(nodes),
@@ -500,6 +511,19 @@ def build_youtube_brain_dashboard(*, root: Path = ROOT) -> CommandResult:
     recommendations = _read_csv(paths["recommendations"])
     caption_insights = _read_csv(paths["caption_insight_candidates"])
     validation = _read_csv(root / "reports" / "active" / "youtube_hypothesis_validation_queue.csv")
+    native_evidence_ready = (
+        _boolish(_first(brain, "native_evidence_ready", False))
+        and _first(brain, "status", "") == "native_research_ready"
+    )
+    dashboard_status = (
+        "research_ready"
+        if native_evidence_ready
+        else "blocked_brain_not_built"
+        if brain.empty
+        else "blocked_external_priors_only"
+        if _first(brain, "status", "") == "blocked_external_priors_only"
+        else "blocked_no_native_evidence"
+    )
     status = pd.DataFrame(
         [
             {
@@ -509,6 +533,7 @@ def build_youtube_brain_dashboard(*, root: Path = ROOT) -> CommandResult:
                 "videos": _first(collection, "videos", 0),
                 "videos_with_captions": _first(collection, "videos_with_captions", 0),
                 "claims": _first(brain, "claims", 0),
+                "native_evidence_ready": native_evidence_ready,
                 "formulas": _first(brain, "formulas", 0),
                 "caption_insight_candidates": len(caption_insights),
                 "caption_recommendations": len(recommendations),
@@ -527,7 +552,7 @@ def build_youtube_brain_dashboard(*, root: Path = ROOT) -> CommandResult:
                 ),
                 "trade_authorized": False,
                 "promotion_authority": "none_research_only",
-                "status": "research_ready" if not brain.empty else "blocked_brain_not_built",
+                "status": dashboard_status,
             }
         ]
     )
