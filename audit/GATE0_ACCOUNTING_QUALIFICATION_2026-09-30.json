@@ -1,0 +1,22 @@
+{
+  "base_commit": "0e44233b890eb217fb62861676272881480913f4",
+  "boolean_probe_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-candidate/risk-metric-boolean-qualified.json",
+  "boolean_probe_sha256": "5d4dc9d558dc3620c5df81919ad869e2255bc23a824432b37f2669546ab79201",
+  "decision": "DISPOSABLE_INTEGRATION_QUALIFIED_ACTIVE_PORT_DEFERRED",
+  "full_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-candidate/full-qualified-junit.xml",
+    "junit_sha256": "178fe0b552b364bffa0cf03c6ca1258aa855833eeaa9be5f85d59ab770752a8b",
+    "log_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-candidate/full-qualified.log",
+    "log_sha256": "ff5a670a8109f3918fd9d36d28a8d65e8d9ecb0ed8015f79578317691d8559ef",
+    "skipped": 0,
+    "tests": 2510
+  },
+  "manifest_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-candidate/QUALIFIED_SOURCE_MANIFEST.json",
+  "manifest_sha256": "af80f54e1bb2b1d3125334bc643683f7832b3832c919011bdb222db718dd97a1",
+  "next_source_decision": "Review the remaining historical variants and active audit contracts, then port the qualified group as one versioned change and requalify the exact active commit.",
+  "qualification_scope": "The preserved accounting modules and dependent V2.2 fixtures pass in a disposable exact-base restore. Invalid funding clocks produce ineligible experiment rows; unavailable profit factor is a teacher blocker; boolean risk inputs are rejected. This does not grant research acceptance, order authority, or approval to replace unresolved historical variants.",
+  "qualified_source_files": 20,
+  "schema_version": "thewiz.gate0.accounting_qualification.v1"
+}
