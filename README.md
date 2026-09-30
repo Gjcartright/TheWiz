@@ -466,18 +466,18 @@ For a full local network check from VS Code Terminal or macOS Terminal, run:
 ./scripts/check_crypto_wizards_network.sh
 ```
 
-If Python networking is blocked but your Terminal can reach the API with `curl`, run the curl-based crawler:
+The old direct curl crawler is retired. It exits before reading credentials or contacting Crypto Wizards. Inspect the governed dashboard inventory instead:
 
 ```bash
-./scripts/crawl_crypto_wizards_with_curl.sh
+uv run --locked python scripts/build_dashboard_full_inventory.py
 ```
 
-On success it writes:
+Historical direct crawls wrote:
 
 - `data/raw/prescanned.json`
 - `docs/crypto_wizards_live_field_dictionary.csv`
 
-Then verify the live crawl artifacts:
+Verify any retained crawl artifacts before using them as research evidence:
 
 ```bash
 PYTHONPATH=src python3 -m quant_platform.cli verify-crypto-wizards-live-artifacts

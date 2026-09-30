@@ -1,0 +1,49 @@
+{
+  "current_authority": "governed V2 exact-mode and observed-cost pipeline; governed dashboard surface validator",
+  "review_date": "2026-09-30",
+  "schema_version": "thewiz.gate0.legacy_script_triage.v1",
+  "scope": {
+    "scripts/build_dashboard_full_inventory.py": {
+      "base_commit": "da40a10d03e5dd5e06381a672fecf967a121a4b7",
+      "base_source_sha256": "95a52ad1b04339ef49339da7f64acec827ac04234d095c8c19a03093ce68c839",
+      "decision": "REVIEWED_DORMANT_DASHBOARD_INVENTORY_RETAIN_RUNTIME_NO_PORT",
+      "preserved_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+      "preserved_sha256": "22bd9898d54b2881e26a001242e0472776f4674d2b8c37b41757b86e2f2eddaa",
+      "queue_status_before": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Active main delegates to the governed surface-inventory readiness validator. The differing legacy snapshot builder is dormant; its August 2026 text refers to capture files absent from both current checkout and Mac savepoint and a 24-hour browser proof expired before this review. Preserve the variant as historical observation, not as current integration authority.",
+      "selected_source_sha256": "95a52ad1b04339ef49339da7f64acec827ac04234d095c8c19a03093ce68c839",
+      "source": "local_runtime"
+    },
+    "scripts/crawl_crypto_wizards_with_curl.sh": {
+      "base_commit": "da40a10d03e5dd5e06381a672fecf967a121a4b7",
+      "base_source_sha256": "dcc214cffda9d2d91c48a51cbf0368b5853859982abd7d1ad8ac2cc2586b1851",
+      "decision": "REVIEWED_LEGACY_DIRECT_CRAWLER_RETIRED",
+      "preserved_root": "/Volumes/Expansion/TheWizForensic-20260819b",
+      "preserved_sha256": "d6b9b7e464be0711d66413434fda342df2a35f212fbaad23e1018151a6b0de4b",
+      "queue_status_before": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "The direct curl helper could call a live Crypto Wizards endpoint before current effect-authority publication failed. Its forensic variant reduced credential exposure but retained the unsupported direct producer. The active entry point now exits 78 before reading credentials or contacting a provider; original and variant bytes remain in Git and the forensic copy.",
+      "selected_source_sha256": "9fb04db176260934a259fdfe129a76b04e43dc461422d9c1e7750e06fd691ccf",
+      "source": "forensic_b"
+    },
+    "scripts/run_evidence_pipeline_phase9_final_promotion.py": {
+      "base_commit": "da40a10d03e5dd5e06381a672fecf967a121a4b7",
+      "base_source_sha256": "6dab32cd6990de1d53684333eedae71ea7d4b58763cd73a9bd97afdcb45d564e",
+      "decision": "REVIEWED_LEGACY_PHASE9_AUTHORITY_REPAIR",
+      "preserved_root": "/Volumes/Expansion/TheWizForensic-20260819b",
+      "preserved_sha256": "62b5dd735428a2455d4cc0ca25f5941b9df6c8dad7704de7ce0c1414d835a1be",
+      "queue_status_before": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected the historical V1 quarantine idea: even a winning walk-forward and stress row is research_only, every output row has promotion_authority false, and the report states no paper-trade or execution authority. The governed V2 pipeline retains current acceptance authority.",
+      "selected_source_sha256": "84034e45ebe52af92b311d7944a5a86ba0982dd5388173881a0a99fcfceef39a",
+      "source": "forensic_b"
+    }
+  },
+  "source_commit_before": "da40a10d03e5dd5e06381a672fecf967a121a4b7",
+  "tests": {
+    "external_provider_calls": 0,
+    "legacy_crawler_exit_code": 78,
+    "targeted": "3 passed, 26 unrelated temporary-directory cleanup warnings"
+  }
+}
