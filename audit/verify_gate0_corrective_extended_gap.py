@@ -134,13 +134,20 @@ def build() -> dict[str, object]:
     inputs: dict[str, bytes] = {}
     for relative, expected in INPUT_SHA256.items():
         data = at_base(relative)
-        if sha(data) != expected or (ROOT / relative).read_bytes() != data:
+        if sha(data) != expected:
             raise ValueError(f"frozen input drift: {relative}")
+        # The queue is intentionally updated after this review; its exact
+        # decision snapshot remains anchored to BASE.
+        if relative != QUEUE and (ROOT / relative).read_bytes() != data:
+            raise ValueError(f"current frozen input drift: {relative}")
         inputs[relative] = data
     gap = json.loads(inputs[GAP])
     manifest = csv_rows(inputs[MANIFEST])
     baseline = {row["relative_path"]: row for row in csv_rows(inputs[FOUR_ROOT])}
     queue = {row["relative_path"]: row for row in csv_rows(inputs[QUEUE])}
+    current_queue = {
+        row["relative_path"]: row for row in csv_rows((ROOT / QUEUE).read_bytes())
+    }
     manifest_copies = {
         (row["root_label"], row["relative_path"], row["sha256"], row["absolute_path"])
         for row in manifest if row["status"] == "hashed"
@@ -186,7 +193,20 @@ def build() -> dict[str, object]:
             raise ValueError(f"selected guard anchor invalid: {path}")
         if variant_anchor not in variant_text or variant_anchor in active_text:
             raise ValueError(f"variant regression anchor invalid: {path}")
+        if any(
+            row["four_root_baseline_sha256"][key] != baseline[path][key]
+            for key in ("working_sha256", "recovery_sha256", "runtime_sha256")
+        ):
+            raise ValueError(f"gap/four-root baseline mismatch: {path}")
         queued = queue[path]
+        current = current_queue[path]
+        if (
+            variant["sha256"] not in current["historical_variant_sha256"].split(";")
+            or not {copy["root"] for copy in copies}.issubset(
+                current["historical_copy_roots"].split(";")
+            )
+        ):
+            raise ValueError(f"current queue lost frozen variant metadata: {path}")
         recorded_shas = [value for value in queued["historical_variant_sha256"].split(";") if value]
         recorded_roots = [value for value in queued["historical_copy_roots"].split(";") if value]
         if (queued["custody_status"] != "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED"
@@ -195,6 +215,18 @@ def build() -> dict[str, object]:
             raise ValueError(f"frozen queue metadata mismatch: {path}")
         if not {copy["root"] for copy in copies}.issubset(recorded_roots):
             raise ValueError(f"frozen queue root metadata mismatch: {path}")
+        expected_rationale = (
+            current["decision_rationale"].replace(
+                "Additional frozen source variant requires semantic review; prior decision covers the previously recorded copies.",
+                "",
+            ).strip()
+        )
+        if current["custody_status"] != row["prior_custody_status"]:
+            raise ValueError(f"current queue decision not closed: {path}")
+        if "Additional frozen variant " + variant["sha256"] not in expected_rationale:
+            raise ValueError(f"current queue missing variant rationale: {path}")
+        if REPORT.relative_to(ROOT).as_posix() not in current["decision_evidence"].split("; "):
+            raise ValueError(f"current queue missing report citation: {path}")
         rows.append({
             "relative_path": path,
             "selected_active_sha256": sha(active_bytes),
