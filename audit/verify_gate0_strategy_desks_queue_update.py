@@ -98,6 +98,32 @@ def main() -> int:
     if dict(states) != EXPECTED_QUEUE_STATES:
         errors.append(f"queue_state_count_mismatch:{dict(states)}")
 
+    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(newline="") as handle:
+        current_queue = {row["relative_path"]: row for row in csv.DictReader(handle)}
+    with (AUDIT / "GATE0_RL_THREE_PATH_UNION_QUEUE_ADDITION_PROPOSAL_2026-09-30.csv").open(newline="") as handle:
+        three_path_proposals = {row["relative_path"]: row for row in csv.DictReader(handle)}
+    for item in rows:
+        path = item["relative_path"]
+        queued = current_queue.get(path)
+        if queued is None:
+            errors.append(f"missing_current_queue_path:{path}")
+            continue
+        expected_status = item["suggested_custody_status"]
+        if path == "tests/test_static_desk_math_adapter.py":
+            # The later tooling review already resolved this blocked test as
+            # an exact active-math contract mismatch with no port.
+            expected_status = "REVIEWED_MATH_TOOL_CONTRACT_MISMATCH_NO_PORT"
+        if queued["custody_status"] != expected_status:
+            errors.append(f"current_queue_status_mismatch:{path}")
+        expected_rationale = three_path_proposals[path]["decision_rationale"] if path in three_path_proposals else item["decision_rationale"]
+        if expected_rationale not in queued["decision_rationale"]:
+            errors.append(f"current_queue_rationale_missing:{path}")
+        if TABLE.relative_to(ROOT).as_posix() not in queued["decision_evidence"].split("; "):
+            errors.append(f"current_queue_evidence_missing:{path}")
+        visual_sha = item["visual_recovery_variant_sha256"]
+        if visual_sha and visual_sha not in queued["historical_variant_sha256"].split(";"):
+            errors.append(f"current_queue_visual_sha_missing:{path}")
+
     for row in rows:
         path = row["relative_path"]
         selected = ROOT / path
@@ -123,6 +149,8 @@ def main() -> int:
     selected_src = ROOT / "src"
     imported_desks = []
     for source in selected_src.rglob("*.py"):
+        if source.name.startswith("._") or not source.is_file():
+            continue
         contents = source.read_text(encoding="utf-8")
         if any(f"quant_platform.{desk}_desk" in contents for desk in ("static", "dynamic", "copula")):
             imported_desks.append(str(source.relative_to(ROOT)))
