@@ -1,0 +1,252 @@
+{
+  "focused_test_evidence": {
+    "calibration_orchestration_static_signal": {
+      "errors": 0,
+      "failures": 0,
+      "path": "/tmp/strategy-desks-calibration-focused.xml",
+      "sha256": "b06976f09f06c1153968ebedada7575975387402f096a81ed1f4a0554416588c",
+      "skipped": 0,
+      "tests": 88
+    },
+    "full_after_calibration": {
+      "errors": 0,
+      "failures": 0,
+      "path": "/tmp/strategy-desks-calibration-full.xml",
+      "sha256": "3dd0054246f550edba13ebac7056806973a4a9dfe07fcdd04d6e7301fa1dcaab",
+      "skipped": 0,
+      "tests": 2841
+    },
+    "full_after_strict_bool_oos": {
+      "errors": 0,
+      "failures": 0,
+      "path": "/tmp/strategy-desks-forward-full.xml",
+      "sha256": "1ec0752c8ab6f58006936061e60265075ced4c8119233bf0d52f6ae17ccfc128",
+      "skipped": 0,
+      "tests": 2840
+    },
+    "strict_bool_oos_static_signal": {
+      "errors": 0,
+      "failures": 0,
+      "path": "/tmp/strategy-desks-forward-focused.xml",
+      "sha256": "ab83744fc4c15f24a69872ee270072cb32b595a1892588a9442f17ad0209865a",
+      "skipped": 0,
+      "tests": 142
+    }
+  },
+  "forensic_orchestration_test": {
+    "after_repair": "Exact function passed and complete suite passed 2841/2841.",
+    "before_repair_observation": "Appending future zscore 1000 changed prior proposed_hold_bars from [10,12] to [4,4] in selected source before f74611f.",
+    "exact_function_sha256": "450105702ff813ba7f1c584625222118d2578097560bbcbe249b26b32f0d0e45",
+    "exact_ported_function": "test_rl_simulation_strength_scaling_does_not_use_evaluation_future",
+    "forensic_b_sha256": "24c60e72ab21ce0e4d7267f0274087ed4b169cf3c461b295139402193683e9be",
+    "path": "tests/test_orchestration_rl.py"
+  },
+  "manifests": {
+    "extended_same_path_drift": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/strategy-desks-gate0-candidate/audit/SECOND_PASS_SAME_PATH_DRIFT_2026-09-29.csv",
+    "frozen_four_root_manifest": "/Volumes/Expansion/Crypto Wizard/audit/evidence_freeze_2026-09-29/file_manifest.csv",
+    "frozen_union_queue": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/strategy-desks-gate0-candidate/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
+  },
+  "paths": [
+    {
+      "forensic_b_sha256": "d441889749b201b44c2ad9f546275239eab8755c6013783c6aeb320f7cee3acc",
+      "path": "src/quant_platform/rl/base_rl_lane.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "d441889749b201b44c2ad9f546275239eab8755c6013783c6aeb320f7cee3acc",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_70d7eda",
+      "selected_sha256": "c63323acaba3b32737b8d4d83091ea06edac8e3849f98264202820ba99003741",
+      "semantic_rationale": "Visual copy has unsafe truth coercions for paper, model, pair and readiness gates and ordinary output writes. Selected candidate parses persisted booleans strictly, fails closed on missing preflight ready, and retains atomic writes.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "069b09880d994cd4bced1c315f852cdbbe07cadc2b50ad5caaa41bb011b1c07c"
+    },
+    {
+      "forensic_b_sha256": "5717ae0abcd7bb584d8417f6f6b8be7576bb96711a08bd1556042a9d65f4c45e",
+      "path": "src/quant_platform/rl/brain_contract.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "5717ae0abcd7bb584d8417f6f6b8be7576bb96711a08bd1556042a9d65f4c45e",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_70d7eda",
+      "selected_sha256": "1c9922d397331611a6e5b6baf0886065866dfee98684e79cc7531ae96ce5a723",
+      "semantic_rationale": "Visual copy treats nonempty outcome_known False as true and uses unsafe paper/native/overall readiness coercions. Selected candidate has strict gate parsing and atomic writes.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "f22b1136cf29dee7546e28bf63221f531b13c962ef7d3b89fda597cdd5c1f700"
+    },
+    {
+      "forensic_b_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+      "path": "src/quant_platform/rl/brain_cycle.py",
+      "queue_path_present": false,
+      "queue_recorded_historical_sha256": "",
+      "queue_records_visual_variant": false,
+      "recommendation": "RETAIN_SELECTED_NO_PORT",
+      "selected_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+      "semantic_rationale": "Visual difference is ordinary CSV writes. Selected atomic writes preserve the same brain-cycle calculations.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952"
+    },
+    {
+      "forensic_b_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+      "path": "src/quant_platform/rl/features.py",
+      "queue_path_present": false,
+      "queue_recorded_historical_sha256": "",
+      "queue_records_visual_variant": false,
+      "recommendation": "RETAIN_SELECTED_NO_PORT",
+      "selected_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+      "semantic_rationale": "Visual difference is ordinary feature-schema text write. Selected atomic write preserves the same schema payload.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4"
+    },
+    {
+      "forensic_b_sha256": "02f633736bc8181023a0940b705b9df14bee76f422d6327ca8d418d21633c379",
+      "path": "src/quant_platform/rl/quantization.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "02f633736bc8181023a0940b705b9df14bee76f422d6327ca8d418d21633c379",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_70d7eda",
+      "selected_sha256": "fcdcd4214a6ab11afc9dd0540c61d662a3099b95d096d915c159cb7a547ea7d4",
+      "semantic_rationale": "Visual copy can treat persisted accepted False as true and uses ordinary report writes. Selected candidate parses acceptance strictly and retains atomic writes.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "86f18a43694957f9cef5b8d4fc2182322aa116777e5607869ecc949569e55cf8"
+    },
+    {
+      "forensic_b_sha256": "ead88db6ee183d07807b9f24dc25fb3740cf25f966f638cb25b3c61a76759d52",
+      "path": "src/quant_platform/rl/rl_backtest.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "ead88db6ee183d07807b9f24dc25fb3740cf25f966f638cb25b3c61a76759d52",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_f74611f",
+      "selected_sha256": "b5d7cfc29841e42b3155470c386b9a21994795c40ac3e8b2eb1dcee066f55417",
+      "semantic_rationale": "Visual copy zero-fills invalid outcomes, uses unsafe global_label_purge coercion, recomputes zscore strength cap from evaluation rows, and uses ordinary writes. Selected source retains no-zero-fill and atomic writes, parses purge strictly, and freezes the strength cap in policy calibration.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "6530595be7593a76a18917a15971d22fef8b15cf13c6c7d976c224e8e3b1a1d1"
+    },
+    {
+      "forensic_b_sha256": "6c19d2bf17be4299ae96dd1f5f47497a12dc574e3b2a64154cf5e508ca914bf9",
+      "path": "src/quant_platform/rl/rl_idea_engine.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "6c19d2bf17be4299ae96dd1f5f47497a12dc574e3b2a64154cf5e508ca914bf9",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_70d7eda",
+      "selected_sha256": "f4ad7a7be420b4a31511d1112a75eecacfcdd23283060e862411deb14204a879",
+      "semantic_rationale": "Visual copy ranks realized outcomes and labels ideas candidate. Selected candidate requires finite out-of-sample prediction with explicit provenance, ranks forward scores, labels hypothesis_only, and retains atomic writes.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "0113e730d620facbb9099b4b798ddf5186a10bf0adabb277ed1207383be8838f"
+    },
+    {
+      "forensic_b_sha256": "7fc8760edce6b8930d4132dccd8e44bd4c6d6ee1e84e8dbd13a0ad3b894375ea",
+      "path": "src/quant_platform/rl/rl_learning_agent.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "7fc8760edce6b8930d4132dccd8e44bd4c6d6ee1e84e8dbd13a0ad3b894375ea",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_PORT_COMPLETE_AFTER_70d7eda",
+      "selected_sha256": "e5c4c0c346aa1e24d22ffb55b989fdb9db5e80ff82ab7628b0c14064e2af6447",
+      "semantic_rationale": "Visual copy zero-fills invalid outcomes, lacks qualified calendar metric checks, uses unsafe eligibility coercion, and ordinary writes. Selected source retains qualified no-zero-fill gates, strict eligibility, and atomic writes.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "20c7893a8512581de9e608a40039c1e2d04893202dfbd1478d6f0369455b2cc1"
+    },
+    {
+      "forensic_b_sha256": "83e259440a0514b8d741b516d62598762ab1f0d03e56e0588264ec6382514d9d",
+      "path": "src/quant_platform/rl/rl_strategy_selector.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "83e259440a0514b8d741b516d62598762ab1f0d03e56e0588264ec6382514d9d",
+      "queue_records_visual_variant": null,
+      "recommendation": "RETAIN_SELECTED_WITH_FORENSIC_SELECTIVE_PORT_AFTER_70d7eda",
+      "selected_sha256": "bf50d15ca0c146f48db7bbc2129463f7bb936b18183f910b084690598e858a5a",
+      "semantic_rationale": "No distinct visual copy exists. Source-candidate equals frozen baseline; forensic_b accepted-filter issue is handled by strict_bool in selected candidate.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68",
+      "visual_drift_hash_verified": null,
+      "visual_is_distinct_variant": false,
+      "visual_recovery_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68"
+    },
+    {
+      "forensic_b_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+      "path": "src/quant_platform/rl/train_ppo.py",
+      "queue_path_present": false,
+      "queue_recorded_historical_sha256": "",
+      "queue_records_visual_variant": false,
+      "recommendation": "RETAIN_SELECTED_NO_PORT",
+      "selected_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+      "semantic_rationale": "Visual difference is ordinary dependency-report write. Selected atomic write preserves the same no-live-authority report.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050"
+    },
+    {
+      "forensic_b_sha256": "24c60e72ab21ce0e4d7267f0274087ed4b169cf3c461b295139402193683e9be",
+      "path": "tests/test_orchestration_rl.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "24c60e72ab21ce0e4d7267f0274087ed4b169cf3c461b295139402193683e9be",
+      "queue_records_visual_variant": false,
+      "recommendation": "SELECTIVE_TEST_PORT_AFTER_f74611f",
+      "selected_sha256": "e3919ccd239980e37ec238d9dc10e9752cd6df7fa5a9b6c57358e7ff21268281",
+      "semantic_rationale": "Visual copy has old root-dependent agent-stage assertions and old RL acceptance expectation. Forensic_b separately supplies the exact forward-only strength-cap regression, copied verbatim into selected tests; selected forward OOS and report-only tests remain.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "8a63d69fb5279b6a5f63aeb4e034b4906d834d4bca7146aa33291430dd78d501",
+      "visual_drift_hash_verified": true,
+      "visual_is_distinct_variant": true,
+      "visual_recovery_sha256": "a2077b4af3593c2cf73c046a2bb4fd8c5607d02b33e95f520fdf8d0969c97183"
+    },
+    {
+      "forensic_b_sha256": "7a5f4c0120779f28ac1ee9d4d62ad4388370ba93926b44b04b3ca8567eea7f23",
+      "path": "tests/test_rl_brain_contract.py",
+      "queue_path_present": true,
+      "queue_recorded_historical_sha256": "7a5f4c0120779f28ac1ee9d4d62ad4388370ba93926b44b04b3ca8567eea7f23",
+      "queue_records_visual_variant": null,
+      "recommendation": "RETAIN_SELECTED_FORENSIC_TEST_NO_EXACT_PORT",
+      "selected_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "semantic_rationale": "No distinct visual copy exists. Source-candidate equals frozen baseline. The forensic_b test variant has a stale current_state strategy-acceptance expectation; selected tests retain current contract.",
+      "source_candidate_hash_in_frozen_baseline": true,
+      "source_candidate_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "visual_drift_hash_verified": null,
+      "visual_is_distinct_variant": false,
+      "visual_recovery_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd"
+    }
+  ],
+  "queue_recommendation": "Add the 10 distinct visual_recovery SHA variants to the historical variant inventory before marking this cohort reviewed. After both candidate commits are integrated, record selective ports for RL gate and calibration paths; retain the older ordinary-write and stale-test bytes as preserved no-port evidence. Do not infer execution or capital authority from these research repairs.",
+  "roots": {
+    "forensic_b": "/Volumes/Expansion/TheWizForensic-20260819b",
+    "isolated_candidate": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/strategy-desks-gate0-candidate",
+    "source_candidate": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate",
+    "visual_recovery": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working"
+  },
+  "schema_version": "thewiz.gate0.rl_visual_variant_calibration_supplement.v1",
+  "scope": "RL strategy cohort visual_recovery/source_candidate copies and direct orchestration test variant; no provider calls, Expansion edits, or shared queue edits.",
+  "source_test_commits": {
+    "calibration": "f74611f15250de9bcecf938db34e5ea5bebec29a",
+    "strict_bool_forward_oos": "70d7edab06f760ec596b56d3a21721f3d76611fa"
+  },
+  "static_desk_signal_exact_port_sha256": "7d3e7e527e445898a3b5fdd91e25cc07579b2bee53e6047d85bf94c3268d838c",
+  "variant_counts": {
+    "distinct_visual_variants_absent_from_union_queue": 10,
+    "source_candidate_copies_checked": 12,
+    "source_candidate_new_variants": 0,
+    "visual_recovery_copies_checked": 12,
+    "visual_recovery_distinct_variants": 10
+  }
+}
