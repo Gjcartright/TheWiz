@@ -1,6 +1,6 @@
 # Math Desk source reconciliation
 
-**Status:** research-only dependency audit. No Math Desk code was copied into the working checkout, no MATLAB Engine connection was claimed, and no trading or market archive state was changed.
+**Gate 0 source decision:** retain the exact 27-file Math Desk package as an evidence-blocked, unselected candidate. No Math Desk code was copied into the working checkout, no MATLAB Engine connection was claimed, and no trading or market archive state was changed. The source decision and accessible-source search limits are in `audit/GATE0_MATH_DESK_DECISION_2026-09-30.json` and `audit/MATH_DESK_SOURCE_AVAILABILITY_2026-09-30.json`.
 
 ## Source identity
 
