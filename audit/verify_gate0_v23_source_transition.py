@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -20,6 +21,7 @@ JUNIT = EVIDENCE / "full-v23-release-junit.xml"
 QUEUE = AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = AUDIT / "GATE0_V23_SOURCE_TRANSITION_2026-09-30.json"
 BASE = "989a67c4833422da57065863d4fc6edf218da7d7"
+SELECTED_COMMIT = "039611077e125624fe9cb26ffc9a5f93d025d29a"
 MANIFEST_SHA256 = "1234259c9904550905da1a01ec9e8d7518cf2a5c00c89a78819d1aabc0be60ec"
 
 REVIEWED_PORTED = {
@@ -53,6 +55,16 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def selected_bytes(relative: Path) -> bytes:
+    result = subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative.as_posix()}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout
+
+
 def main() -> None:
     if digest(MANIFEST) != MANIFEST_SHA256:
         raise ValueError("qualified V2.3 manifest changed")
@@ -66,8 +78,8 @@ def main() -> None:
         relative = Path(item["path"])
         if relative.is_absolute() or ".." in relative.parts or relative.parts[0] not in {"src", "tests"}:
             raise ValueError(f"unsafe source path: {relative}")
-        active = ROOT / relative
-        if active.is_symlink() or digest(active) != item["sha256"] or active.stat().st_size != item["bytes"]:
+        selected = selected_bytes(relative)
+        if hashlib.sha256(selected).hexdigest() != item["sha256"] or len(selected) != item["bytes"]:
             raise ValueError(f"selected V2.3 source drift: {relative}")
 
     suite = next(ET.parse(JUNIT).getroot().iter("testsuite"))
@@ -76,8 +88,7 @@ def main() -> None:
     ):
         raise ValueError("V2.3 qualification is not green")
 
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(selected_bytes(QUEUE.relative_to(ROOT)).decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed size or contains duplicates")
     queue = {row["relative_path"]: row for row in rows}
@@ -91,7 +102,12 @@ def main() -> None:
         if row["custody_status"] != status or OUTPUT.name not in row["decision_evidence"]:
             raise ValueError(f"V2.3 queue decision drift: {path}")
     for old, new in REPLACED_TESTS.items():
-        if (ROOT / old).exists() or not (ROOT / new).is_file():
+        old_exists = subprocess.run(
+            ["git", "cat-file", "-e", f"{SELECTED_COMMIT}:{old}"],
+            cwd=ROOT,
+            capture_output=True,
+        ).returncode == 0
+        if old_exists or not selected_bytes(Path(new)):
             raise ValueError(f"runtime test was copied under an unversioned name: {old}")
     pending = sum(
         row["custody_status"] in {
@@ -116,7 +132,7 @@ def main() -> None:
         "partial_historical_review_paths": sorted(PARTIAL_REVIEW),
         "replaced_runtime_tests": REPLACED_TESTS,
         "union_source_queue": {
-            "file_sha256": digest(QUEUE),
+            "file_sha256": hashlib.sha256(selected_bytes(QUEUE.relative_to(ROOT))).hexdigest(),
             "distinct_paths": len(rows),
             "reviewed_paths": reviewed,
             "nonsource_paths": nonsource,

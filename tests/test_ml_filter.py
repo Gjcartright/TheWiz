@@ -13,6 +13,7 @@ from quant_platform.experiments import PairDataset
 from quant_platform.ml_filter import (
     CATEGORICAL_FEATURES,
     GLOBAL_PURGED_SPLIT_SCHEME,
+    MODEL_FEATURE_COLUMNS,
     NON_FEATURE_COLUMNS,
     _build_model_pipeline,
     _chronology_isolated_fold_partitions,
@@ -314,6 +315,7 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
         pd.to_datetime(dataset["entry_timestamp"], utc=True) + pd.Timedelta(minutes=30)
     ).map(pd.Timestamp.isoformat)
     dataset["wizard_learning_feature_state"] = "cold_start"
+    dataset["future_profit_factor"] = dataset["label_profitable"] * 10.0
     dataset["experiment_id"] = [f"experiment-{index}" for index in range(len(dataset))]
     dataset["registered_contract_id"] = "contract-1"
     dataset["registered_execution_id"] = "execution-1"
@@ -395,6 +397,8 @@ def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
     assert manifest["best_model_sha256"] == sha256(paths["best_model"].read_bytes()).hexdigest()
     assert artifact["model_name"] in set(summary["model_name"].astype(str))
     assert "estimator" in artifact
+    assert "future_profit_factor" not in artifact["feature_columns"]
+    assert "wizard_learning_feature_state" not in artifact["feature_columns"]
     assert "threshold" in artifact
     assert artifact["threshold_calibration_scheme"] == ("training_only_minimum_participation_v1")
     assert artifact["minimum_training_take_rate"] == 0.10
@@ -729,3 +733,56 @@ def test_preregistered_random_forest_uses_locked_regularization_parameters():
     assert parameters["class_weight"] == "balanced_subsample"
     assert parameters["random_state"] == 7
     assert parameters["n_jobs"] == -1
+
+
+def test_trade_dataset_rejects_spread_point_only_labels():
+    history = _pair_history_frame().drop(columns=["price_x", "price_y"])
+
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)],
+        strategies=(STRATEGIES[0],),
+    )
+
+    assert frame.empty
+
+
+def test_trade_dataset_preserves_missing_optional_features():
+    history = _pair_history_frame().drop(
+        columns=[
+            "cvar",
+            "var",
+            "tail_dependence",
+            "crisis_probability",
+            "liquidity_score",
+            "bid_ask_spread_bps",
+            "slippage_bps",
+            "volume_x_usd",
+            "volume_y_usd",
+        ]
+    )
+
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)],
+        strategies=(STRATEGIES[0],),
+    )
+
+    assert not frame.empty
+    assert frame["cvar"].isna().all()
+    assert frame["liquidity_score"].isna().all()
+    assert frame["slippage_bps"].isna().all()
+
+
+def test_trade_dataset_rejects_boolean_risk_features_and_unregistered_future_columns():
+    history = _pair_history_frame()
+    history["cvar"] = True
+    history["future_profit"] = 1.0
+
+    frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", history)],
+        strategies=(STRATEGIES[0],),
+    )
+
+    assert not frame.empty
+    assert frame["cvar"].isna().all()
+    assert "future_profit" not in frame.columns
+    assert "future_profit" not in MODEL_FEATURE_COLUMNS

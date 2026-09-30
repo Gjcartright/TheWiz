@@ -1,0 +1,31 @@
+{
+  "base_commit": "039611077e125624fe9cb26ffc9a5f93d025d29a",
+  "decision": "ISOLATED_REPAIR_QUALIFIED_EXACT_COMMIT_VERIFICATION_REQUIRED",
+  "file_sha256": {
+    "audit/verify_gate0_v23_source_transition.py": "eed2364941c1c3533bcd611859c0b48a0b0a9ab075ab770bac0921841fbd02ab",
+    "src/quant_platform/dydx_candles.py": "d7a0543bb7523b3d026be472af0bf0b9192e50441a6731b5f2c605b6a30b0725",
+    "src/quant_platform/ml_filter.py": "94b935fa9e4c798ca749893318490b102bd26b43d072830a0f3e5e44e133d977",
+    "tests/test_dydx_candles.py": "cfd7f965690187218d8d68352d8a94f04106b32fcbcb0eeb8a09447eda1efc6a",
+    "tests/test_ml_filter.py": "2428cca07501adbb487e07aa08a8575f7030b52599c76306cb41f5d97a430f00"
+  },
+  "isolated_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "4e667b58582d7c8719c5e09a8b3a92d0b02fedf3ee6786f18fad5e01eaa1d81e",
+    "skipped": 0,
+    "tests": 2590
+  },
+  "live_trading_authorized": false,
+  "remaining_semantic_review_paths": 671,
+  "repairs": [
+    "funding_observations_cannot_fill_earlier_or_out_of_order_candles",
+    "undated_funding_cannot_be_retroactively_assigned",
+    "spread_point_only_trade_labels_are_rejected",
+    "optional_entry_features_preserve_missingness_and_boolean_values_are_rejected",
+    "model_features_use_an_entry_time_allowlist_excluding_future_and_hindsight_columns",
+    "prior_v23_source_receipt_reads_its_frozen_selected_commit"
+  ],
+  "research_acceptance": "BLOCKED",
+  "schema_version": "thewiz.gate0.ml_funding_repair.v1",
+  "testnet_order_authority": false
+}

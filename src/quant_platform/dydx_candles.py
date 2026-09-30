@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import atomic_write_text
-
 import json
 import math
 import os
@@ -15,6 +13,7 @@ import pandas as pd
 
 from quant_platform.economic_contract import y_on_x_beta, y_on_x_log_spread
 from quant_platform.funding import normalize_funding_rows
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
 from quant_platform.performance_math import MATH_VERSION
 from quant_platform.statistics.math_v2 import attach_math_v2_statistics
 from quant_platform.zscore_utils import attach_row_level_zscores
@@ -460,10 +459,7 @@ def _attach_leg_funding_to_rows(
     if market_funding.empty:
         return
     if "timestamp" not in rows[0] or market_funding["timestamp"].isna().all():
-        latest = market_funding["funding_bps"].dropna()
-        if not latest.empty:
-            for row in rows:
-                row[output_column] = float(latest.iloc[-1])
+        # An undated observation cannot be placed before a dated candle.
         return
 
     frame = pd.DataFrame(rows).reset_index().rename(columns={"index": "_row_index"})
@@ -475,10 +471,6 @@ def _attach_leg_funding_to_rows(
         pd.to_datetime(right["timestamp"], errors="coerce", utc=True).astype("datetime64[ns, UTC]")
     ).sort_values()
     if right.empty:
-        latest = market_funding["funding_bps"].dropna()
-        if not latest.empty:
-            for row in rows:
-                row[output_column] = float(latest.iloc[-1])
         return
 
     frame["_timestamp"] = pd.to_datetime(frame["_timestamp"], utc=True, errors="coerce").astype(
@@ -494,7 +486,9 @@ def _attach_leg_funding_to_rows(
         on="_timestamp",
         direction="backward",
     ).sort_values("_row_index")
-    values = pd.Series(merged["funding_bps"]).ffill().bfill().to_list()
+    # merge_asof already chose the latest observation at or before each candle.
+    # Filling after original row order is restored can leak across out-of-order rows.
+    values = merged["funding_bps"].to_list()
     for row, value in zip(rows, values):
         if value is not None and not pd.isna(value):
             row[output_column] = float(value)

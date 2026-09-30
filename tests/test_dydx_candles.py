@@ -1,6 +1,9 @@
 import json
 
+import pandas as pd
+
 from quant_platform.dydx_candles import (
+    _attach_leg_funding_to_rows,
     archive_dydx_candles,
     backfill_provisional_pair_history_features,
     build_pair_history_from_candles,
@@ -10,6 +13,21 @@ from quant_platform.dydx_candles import (
     load_loose_candle_payload,
     merge_dydx_candle_windows,
 )
+
+
+def test_funding_merge_does_not_leak_across_out_of_order_candles():
+    rows = [
+        {"timestamp": "2026-06-18T00:15:00Z"},
+        {"timestamp": "2026-06-18T00:00:00Z"},
+    ]
+    funding = pd.DataFrame(
+        [{"market": "AAA-USD", "timestamp": "2026-06-18T00:10:00Z", "funding_bps": 1.0}]
+    )
+
+    _attach_leg_funding_to_rows(rows, funding, "AAA-USD", "funding_x_bps")
+
+    assert rows[0]["funding_x_bps"] == 1.0
+    assert "funding_x_bps" not in rows[1]
 
 
 def test_load_loose_candle_payload_accepts_pasted_response_fragment(tmp_path):
@@ -512,3 +530,105 @@ def test_backfill_provisional_pair_history_features_generates_row_varying_signal
     assert len(ml_values) > 1
     assert len(profile_values) > 1
     assert len(ou_values) > 1
+
+
+def test_pair_history_funding_merge_keeps_pre_observation_rows_unknown(tmp_path):
+    left = tmp_path / "left.json"
+    right = tmp_path / "right.json"
+    timestamps = [f"2026-06-18T00:{minute:02d}:00Z" for minute in range(0, 30, 5)]
+    for path, ticker, base in (
+        (left, "AAA-USD", 100.0),
+        (right, "BBB-USD", 50.0),
+    ):
+        path.write_text(
+            json.dumps(
+                {
+                    "candles": [
+                        {
+                            "startedAt": timestamp,
+                            "ticker": ticker,
+                            "resolution": "5MINS",
+                            "close": base + index,
+                        }
+                        for index, timestamp in enumerate(timestamps)
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+    funding = pd.DataFrame(
+        [
+            {
+                "market": market,
+                "timestamp": "2026-06-18T00:10:00Z",
+                "funding_bps": value,
+            }
+            for market, value in (("AAA-USD", 1.0), ("BBB-USD", 2.0))
+        ]
+    )
+
+    output = build_pair_history_from_candles(
+        left_path=left,
+        right_path=right,
+        output_path=tmp_path / "pair.json",
+        pair_id="aaa_bbb",
+        asset_x="AAA-USD",
+        asset_y="BBB-USD",
+        hedge_ratio=1.0,
+        beta=1.0,
+        interval="5mins",
+        zscore_window=3,
+        min_zscore_window=2,
+        funding_rows=funding,
+    )
+
+    history = json.loads(output.read_text(encoding="utf-8"))["history"]
+    assert "funding_x_bps" not in history[0]
+    assert "funding_y_bps" not in history[1]
+    assert history[2]["funding_x_bps"] == 1.0
+    assert history[2]["funding_y_bps"] == 2.0
+
+
+def test_pair_history_does_not_assign_undated_funding_to_past_candles(tmp_path):
+    left = tmp_path / "left.json"
+    right = tmp_path / "right.json"
+    timestamps = [f"2026-06-18T00:{minute:02d}:00Z" for minute in range(0, 30, 5)]
+    for path, ticker, base in ((left, "AAA-USD", 100.0), (right, "BBB-USD", 50.0)):
+        path.write_text(
+            json.dumps(
+                {
+                    "candles": [
+                        {
+                            "startedAt": timestamp,
+                            "ticker": ticker,
+                            "resolution": "5MINS",
+                            "close": base + index,
+                        }
+                        for index, timestamp in enumerate(timestamps)
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+    funding = pd.DataFrame(
+        [
+            {"market": "AAA-USD", "timestamp": None, "funding_bps": 1.0},
+            {"market": "BBB-USD", "timestamp": None, "funding_bps": 2.0},
+        ]
+    )
+    output = build_pair_history_from_candles(
+        left_path=left,
+        right_path=right,
+        output_path=tmp_path / "pair.json",
+        pair_id="aaa_bbb",
+        asset_x="AAA-USD",
+        asset_y="BBB-USD",
+        hedge_ratio=1.0,
+        beta=1.0,
+        interval="5mins",
+        zscore_window=3,
+        min_zscore_window=2,
+        funding_rows=funding,
+    )
+    history = json.loads(output.read_text(encoding="utf-8"))["history"]
+    assert all("funding_x_bps" not in row and "funding_y_bps" not in row for row in history)
