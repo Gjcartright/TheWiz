@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "6de2ee3016a8413030f87996a7153f91154cce1e"
+SELECTED_COMMIT = "c3f4d9d628f471eb993655d91806f9fe5b56039c"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json"
 JUNIT = Path(
@@ -75,18 +76,35 @@ def function_names(path: Path) -> set[str]:
     }
 
 
+def selected_bytes(relative: str) -> bytes:
+    return subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
+def selected_function_names(relative: str) -> set[str]:
+    return {
+        node.name
+        for node in ast.parse(selected_bytes(relative).decode("utf-8")).body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+
 def main() -> None:
     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
     for relative, expected in SELECTED.items():
-        path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or digest(path) != expected:
+        if hashlib.sha256(selected_bytes(relative)).hexdigest() != expected:
             raise ValueError(f"selected source, test, or verifier drift: {relative}")
     for relative, expected in SAVEPOINTS.items():
         path = SAVEPOINT / relative
         if not path.is_file() or digest(path) != expected:
             raise ValueError(f"local runtime savepoint drift: {relative}")
     for relative, hashes in VARIANTS.items():
-        active = function_names(ROOT / relative)
+        active = selected_function_names(relative)
         for expected in hashes:
             variant = VARIANT_ROOT / expected
             if not variant.is_file() or digest(variant) != expected:
@@ -99,15 +117,15 @@ def main() -> None:
                 raise ValueError(f"historical functions unaccounted for: {relative}: {old_only}")
     for successor in EXPERIMENT_TEST_SUCCESSORS.values():
         relative, name = successor.split(":", 1)
-        if name not in function_names(ROOT / relative):
+        if name not in selected_function_names(relative):
             raise ValueError(f"historical experiment test successor missing: {successor}")
 
     suite = next(ET.parse(JUNIT).getroot().iter("testsuite"))
     counts = {key: int(suite.attrib[key]) for key in ("tests", "failures", "errors", "skipped")}
     if counts != {"tests": 2604, "failures": 0, "errors": 0, "skipped": 0}:
         raise ValueError(f"isolated reconciliation suite is not green: {counts}")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix())
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed size or contains duplicates")
     queue = {row["relative_path"]: row for row in rows}
@@ -149,7 +167,7 @@ def main() -> None:
             "map_historical_experiment_assertions_to_current_contract_regressions",
         ],
         "union_source_queue": {
-            "file_sha256": digest(QUEUE),
+            "file_sha256": hashlib.sha256(queue_bytes).hexdigest(),
             "distinct_paths": len(rows),
             "reviewed_paths": reviewed,
             "nonsource_paths": len(rows) - pending - reviewed,

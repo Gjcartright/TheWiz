@@ -56,6 +56,10 @@ class StudentReadinessPolicy:
     max_mode_share: float = 0.50
     required_math_version: str = MATH_V2
 
+    def __post_init__(self) -> None:
+        if self.required_math_version != MATH_V2:
+            raise ValueError("student readiness requires the current math version")
+
 
 def audit_student_training_dataset(
     dataset: pd.DataFrame,

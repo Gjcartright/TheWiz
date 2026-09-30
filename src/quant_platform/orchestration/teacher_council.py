@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from fractions import Fraction
 from hashlib import sha256
+from numbers import Real
 
 from quant_platform.orchestration.teacher_contracts import (
+    MATH_V2,
+    REQUIRED_CRITICS,
     CouncilContext,
     CouncilDecision,
     CouncilStatus,
     CriticAssessment,
-    CriticType,
     CriticVerdict,
     EvidenceAuthority,
     ExactMode,
-    MATH_V2,
-    REQUIRED_CRITICS,
     StudentOutcomeForecast,
     StudentRouterPrediction,
     TeacherAction,
@@ -38,6 +40,25 @@ class TeacherCouncilPolicy:
     max_execution_failure_probability: float = 0.25
     required_math_version: str = MATH_V2
 
+    def __post_init__(self) -> None:
+        for name in (
+            "max_teacher_disagreement",
+            "max_uncertainty",
+            "min_weighted_confidence",
+            "min_student_support",
+            "min_feature_completeness",
+            "max_structural_break_probability",
+            "max_execution_failure_probability",
+        ):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError(f"{name} must be a finite probability threshold")
+        age = self.max_evidence_age_hours
+        if isinstance(age, bool) or not isinstance(age, Real) or not math.isfinite(age) or age < 0:
+            raise ValueError("max_evidence_age_hours must be finite and nonnegative")
+        if self.required_math_version != MATH_V2:
+            raise ValueError("teacher council requires the current math version")
+
 
 def arbitrate_teacher_council(
     *,
@@ -52,7 +73,7 @@ def arbitrate_teacher_council(
     """Aggregate local teacher evidence with hard vetoes and mandatory abstention."""
 
     policy = policy or TeacherCouncilPolicy()
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     proposal_ids = tuple(proposal.proposal_id for proposal in proposals)
     assessment_ids = tuple(assessment.assessment_id for assessment in assessments)
     blockers = _integrity_blockers(
@@ -252,7 +273,7 @@ def _is_acceptance_teacher(
 
 
 def _teacher_vote(proposals: tuple[TeacherProposal, ...]) -> dict[str, object]:
-    if not proposals:
+    if not proposals or len({proposal.proposal_id for proposal in proposals}) != len(proposals):
         return {
             "action": TeacherAction.ABSTAIN,
             "selected": None,
@@ -263,11 +284,13 @@ def _teacher_vote(proposals: tuple[TeacherProposal, ...]) -> dict[str, object]:
         }
 
     weights = {proposal.proposal_id: proposal.confidence * (1.0 - proposal.uncertainty) for proposal in proposals}
+    total_weight = sum(weights.values())
+    if not math.isfinite(total_weight) or total_weight <= 0.0:
+        return _teacher_vote(())
     action_weights = {action: 0.0 for action in TeacherAction}
     for proposal in proposals:
         action_weights[proposal.proposed_action] += weights[proposal.proposal_id]
     winner = max(action_weights, key=lambda action: (action_weights[action], action.value))
-    total_weight = sum(weights.values())
     winner_weight = action_weights[winner]
     supporters = tuple(proposal for proposal in proposals if proposal.proposed_action == winner)
     selected = max(
@@ -305,10 +328,19 @@ def _teacher_vote(proposals: tuple[TeacherProposal, ...]) -> dict[str, object]:
 
 def _weighted_average(values, *, default):
     rows = tuple(values)
-    total = sum(weight for _, weight in rows)
-    if not rows or total <= 0.0:
+    if not rows or any(
+        isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value)
+        or isinstance(weight, bool) or not isinstance(weight, Real)
+        or not math.isfinite(weight) or weight < 0.0
+        for value, weight in rows
+    ):
         return default
-    return sum(float(value) * weight for value, weight in rows) / total
+    positive = tuple((Fraction(float(value)), Fraction(float(weight))) for value, weight in rows if weight > 0.0)
+    if not positive:
+        return default
+    total = sum(weight for _, weight in positive)
+    result = float(sum(value * weight for value, weight in positive) / total)
+    return result if math.isfinite(result) else default
 
 
 def _apply_student_abstention(
