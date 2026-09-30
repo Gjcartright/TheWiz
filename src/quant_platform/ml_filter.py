@@ -151,6 +151,22 @@ NON_FEATURE_COLUMNS = {
     "registered_candidate",
     "accepted_stage4_survivor",
     "experiment_id",
+    "native_promotion_basis",
+    "shared_outcome_count",
+    "shared_outcome_mean_drawdown",
+    "shared_outcome_mean_return",
+    "shared_outcome_win_rate",
+    "shared_verified_outcome_count",
+    "wizard_history_feature_count",
+    "wizard_learning_feature_state",
+    "wizard_same_regime_count",
+    "wizard_same_regime_strategy_venue_count",
+    "wizard_same_regime_strategy_venue_mean_drawdown",
+    "wizard_same_regime_strategy_venue_mean_return",
+    "wizard_same_regime_strategy_venue_win_rate",
+    "wizard_same_strategy_family_count",
+    "wizard_same_venue_count",
+    "wizard_verified_same_regime_strategy_venue_count",
     "pair_group_key",
     "pair_group_id",
     "walkforward_id",
@@ -1427,21 +1443,16 @@ def _detailed_backtest_frame(
     data["spread_change_3"] = data["spread"].diff(3).fillna(0.0)
     data["spread_vol_12"] = data["spread"].diff().rolling(12, min_periods=2).std().fillna(0.0)
     data["spread_vol_48"] = data["spread"].diff().rolling(48, min_periods=2).std().fillna(0.0)
-    data["funding_diff_bps"] = pd.to_numeric(
-        data.get("funding_y_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-    ).fillna(0.0) - pd.to_numeric(
-        data.get("funding_x_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-    ).fillna(0.0)
-    data["funding_abs_total_bps"] = (
-        pd.to_numeric(data.get("funding_x_bps", pd.Series(0.0, index=data.index)), errors="coerce")
-        .fillna(0.0)
-        .abs()
-        + pd.to_numeric(
-            data.get("funding_y_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-        )
-        .fillna(0.0)
-        .abs()
-    )
+    if {"funding_x_bps", "funding_y_bps"}.issubset(data.columns):
+        funding_x = pd.to_numeric(data["funding_x_bps"], errors="coerce")
+        funding_y = pd.to_numeric(data["funding_y_bps"], errors="coerce")
+        data["funding_diff_bps"] = funding_y - funding_x
+        data["funding_abs_total_bps"] = funding_x.abs() + funding_y.abs()
+    else:
+        # The cost model may supply an explicit simulation assumption, but it
+        # must not become an observed entry feature for the ML model.
+        data["funding_diff_bps"] = np.nan
+        data["funding_abs_total_bps"] = np.nan
 
     if {"price_x", "price_y", "hedge_ratio"}.issubset(data.columns):
         backtest_mode = "two_leg"

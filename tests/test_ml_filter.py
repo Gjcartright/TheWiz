@@ -51,6 +51,10 @@ def test_registered_learning_lineage_and_outcomes_cannot_be_model_features():
         "hold_bars",
         "testnet_order_authority",
         "live_trading_authorized",
+        "native_promotion_basis",
+        "shared_outcome_mean_return",
+        "wizard_learning_feature_state",
+        "wizard_same_regime_strategy_venue_mean_return",
     }
 
     assert forbidden.issubset(NON_FEATURE_COLUMNS)
@@ -307,6 +311,17 @@ def test_build_trade_filter_dataset_normalizes_timeframe_aliases():
     )
 
     assert set(frame["timeframe"]) == {"5m"}
+
+    daily_history = _pair_history_frame()
+    daily_history["timestamp"] = pd.date_range(
+        "2026-01-01", periods=len(daily_history), freq="D", tz="UTC"
+    )
+    daily_history["interval"] = "daily"
+    daily_frame = build_trade_filter_dataset(
+        [PairDataset("BTC-USD-SOL-USD", daily_history)], strategies=(STRATEGIES[0],)
+    )
+
+    assert set(daily_frame["timeframe"]) == {"1d"}
 
 
 def test_train_trade_filter_walkforward_writes_outputs(tmp_path):
@@ -758,6 +773,9 @@ def test_trade_dataset_preserves_missing_optional_features():
             "slippage_bps",
             "volume_x_usd",
             "volume_y_usd",
+            "funding_x_bps",
+            "funding_y_bps",
+            "funding_bps_per_day",
         ]
     )
 
@@ -770,6 +788,11 @@ def test_trade_dataset_preserves_missing_optional_features():
     assert frame["cvar"].isna().all()
     assert frame["liquidity_score"].isna().all()
     assert frame["slippage_bps"].isna().all()
+    assert frame["funding_x_bps"].isna().all()
+    assert frame["funding_y_bps"].isna().all()
+    assert frame["funding_diff_bps"].isna().all()
+    assert frame["funding_abs_total_bps"].isna().all()
+    assert frame["funding_bps_per_day"].isna().all()
 
 
 def test_trade_dataset_rejects_boolean_risk_features_and_unregistered_future_columns():

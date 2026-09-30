@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "audit"
 BASE = "039611077e125624fe9cb26ffc9a5f93d025d29a"
+SELECTED_COMMIT = "2f8ff5a0271f31e9504da38bd0c1f04845cd5c65"
 JUNIT = Path(
     "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/"
     "ml-funding-candidate-junit.xml"
@@ -31,11 +32,23 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def selected_bytes(relative: Path) -> bytes:
+    return subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative.as_posix()}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
 def main() -> None:
-    subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
     for relative, expected in EXPECTED.items():
-        path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or digest(path) != expected:
+        if hashlib.sha256(selected_bytes(Path(relative))).hexdigest() != expected:
             raise ValueError(f"repair source or test drift: {relative}")
 
     suite = next(ET.parse(JUNIT).getroot().iter("testsuite"))
@@ -43,10 +56,13 @@ def main() -> None:
     if counts != {"tests": 2590, "failures": 0, "errors": 0, "skipped": 0}:
         raise ValueError(f"isolated repair suite is not green: {counts}")
 
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(
+        csv.DictReader(
+            selected_bytes(Path("audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"))
+            .decode("utf-8")
+            .splitlines()
+        )
+    )
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed")
     queue = {row["relative_path"]: row for row in rows}

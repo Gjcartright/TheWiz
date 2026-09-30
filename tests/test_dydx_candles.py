@@ -198,6 +198,63 @@ def test_dydx_two_leg_request_rows_builds_candle_funding_and_local_steps():
     assert "funded-research-spine" in rows[5]["import_command"]
 
 
+def test_monthly_request_keeps_calendar_month_distinct_from_minute(tmp_path):
+    rows = dydx_two_leg_request_rows(
+        asset_x="BNB-USD",
+        asset_y="STX-USD",
+        resolution="1M",
+        output_dir=tmp_path,
+    )
+
+    assert rows[0]["request_name"] == "asset_x_candles_1M"
+    assert "resolution=1M" in rows[0]["url"]
+    assert "_1M_dydx_candles_derived_history.json" in rows[4]["save_as"]
+    assert "--interval 1M" in rows[4]["import_command"]
+
+
+def test_pair_history_preserves_calendar_month_interval(tmp_path):
+    timestamps = pd.date_range("2026-01-01", periods=6, freq="MS", tz="UTC")
+    paths = (tmp_path / "left.json", tmp_path / "right.json")
+    for path, ticker, base in (
+        (paths[0], "BNB-USD", 100.0),
+        (paths[1], "STX-USD", 50.0),
+    ):
+        path.write_text(
+            json.dumps(
+                {
+                    "candles": [
+                        {
+                            "startedAt": timestamp.isoformat(),
+                            "ticker": ticker,
+                            "resolution": "1M",
+                            "close": base + index,
+                        }
+                        for index, timestamp in enumerate(timestamps)
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    output = build_pair_history_from_candles(
+        left_path=paths[0],
+        right_path=paths[1],
+        output_path=tmp_path / "pair.json",
+        pair_id="monthly",
+        asset_x="BNB-USD",
+        asset_y="STX-USD",
+        hedge_ratio=1.0,
+        interval="1M",
+        zscore_window=3,
+        min_zscore_window=2,
+        derive_ecm=False,
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["interval"] == "1M"
+    assert payload["interval"] != "1m"
+
+
 def test_build_pair_history_from_5min_candles_namespaces_proxies_and_adds_math_v2(tmp_path):
     left = tmp_path / "left.json"
     right = tmp_path / "right.json"
@@ -485,10 +542,41 @@ def test_backfill_provisional_pair_history_features_updates_existing_files(tmp_p
     assert written == [path]
     payload = json.loads(path.read_text(encoding="utf-8"))
     row = payload["history"][0]
-    assert "conditional_probability_distortion" in row
-    assert "half_life" in row
-    assert "ml_confidence" in row
+    assert "research_proxy_conditional_probability_distortion" in row
+    assert "research_proxy_half_life" in row
+    assert "research_proxy_ml_confidence" in row
+    assert "conditional_probability_distortion" not in row
+    assert "half_life" not in row
+    assert "ml_confidence" not in row
     assert "provisional derived features" in payload["source_note"]
+
+
+def test_backfill_preserves_existing_native_feature_values(tmp_path):
+    pair_dir = tmp_path / "pairs"
+    pair_dir.mkdir()
+    path = pair_dir / "pair_demo_5mins_dydx_candles_derived_history.json"
+    original = {
+        "timestamp": "2026-06-18T00:00:00.000Z",
+        "price_x": 100,
+        "price_y": 50,
+        "spread": 50,
+        "zscore": 2.0,
+        "ml_confidence": 0.91,
+        "conditional_probability_distortion": 0.15,
+        "half_life": 12.0,
+    }
+    path.write_text(json.dumps({"history": [original], "source_note": "native inputs"}))
+
+    backfill_provisional_pair_history_features(pair_dir)
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    row = payload["history"][0]
+    for key, value in original.items():
+        assert row[key] == value
+    assert "research_proxy_ml_confidence" in row
+    assert "research_proxy_conditional_probability_distortion" in row
+    assert "research_proxy_half_life" in row
+    assert "research_proxy_*" in payload["source_note"]
 
 
 def test_backfill_provisional_pair_history_features_generates_row_varying_signal_scores(tmp_path):
@@ -524,9 +612,9 @@ def test_backfill_provisional_pair_history_features_generates_row_varying_signal
 
     payload = json.loads(path.read_text(encoding="utf-8"))
     enriched = payload["history"]
-    ml_values = {round(float(row["ml_confidence"]), 6) for row in enriched}
-    profile_values = {round(float(row["profile_match"]), 6) for row in enriched}
-    ou_values = {round(float(row["ou_optimal"]), 6) for row in enriched}
+    ml_values = {round(float(row["research_proxy_ml_confidence"]), 6) for row in enriched}
+    profile_values = {round(float(row["research_proxy_profile_match"]), 6) for row in enriched}
+    ou_values = {round(float(row["research_proxy_ou_optimal"]), 6) for row in enriched}
     assert len(ml_values) > 1
     assert len(profile_values) > 1
     assert len(ou_values) > 1
