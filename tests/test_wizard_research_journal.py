@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from quant_platform.wizard_research_journal import (
     _apply_stationarity_and_copula_interpretation,
@@ -44,9 +45,36 @@ def test_terminal_ou_v6_rows_are_included_in_research_journal(tmp_path: Path):
     journal = pd.read_csv(result.paths["wizard_research_journal"])
 
     assert result.summary["ou_v6_terminal_rows"] == 1
+    assert journal.columns.is_unique
+    assert list(journal.columns).count("journal_layer") == 1
     assert journal["journal_layer"].eq("ou_v6_terminal_evaluation").sum() == 1
     row = journal.loc[journal["journal_layer"].eq("ou_v6_terminal_evaluation")].iloc[0]
     assert row["capture_blocker"] == "trend_selector_mismatch"
+
+
+def test_research_journal_rejects_duplicate_schema_field_definitions(tmp_path: Path):
+    reports = tmp_path / "reports"
+    (reports / "active").mkdir(parents=True)
+    schema = pd.read_csv(PROJECT_ROOT / "reports" / "wizard_research_journal_schema.csv")
+    duplicate_pair = schema.loc[schema["field_name"].eq("pair")].copy()
+    pd.concat([schema, duplicate_pair], ignore_index=True).to_csv(
+        reports / "wizard_research_journal_schema.csv", index=False
+    )
+
+    with pytest.raises(ValueError, match=r"duplicate field definitions: pair"):
+        build_wizard_research_journal(root=tmp_path)
+
+
+def test_research_journal_rejects_schema_owned_journal_layer(tmp_path: Path):
+    reports = tmp_path / "reports"
+    (reports / "active").mkdir(parents=True)
+    schema = pd.read_csv(PROJECT_ROOT / "reports" / "wizard_research_journal_schema.csv")
+    schema.loc[len(schema), "field_name"] = "journal_layer"
+    schema.loc[len(schema) - 1, "capture_layer"] = "shared"
+    schema.to_csv(reports / "wizard_research_journal_schema.csv", index=False)
+
+    with pytest.raises(ValueError, match=r"must not define journal_layer"):
+        build_wizard_research_journal(root=tmp_path)
 
 
 def test_detail_records_preserve_top_metrics_separately_from_detail_metrics(tmp_path):

@@ -174,7 +174,28 @@ def _matrix_source_paths(root: Path) -> list[Path]:
 
 def _schema_fields(root: Path) -> list[str]:
     schema = pd.read_csv(root / "reports" / "wizard_research_journal_schema.csv")
-    return list(dict.fromkeys(schema["field_name"].dropna().astype(str).tolist()))
+    if not {"capture_layer", "field_name"}.issubset(schema.columns):
+        raise ValueError("wizard research journal schema is missing capture_layer or field_name")
+    definitions = [
+        (
+            str(layer).strip() if pd.notna(layer) else "",
+            str(field).strip() if pd.notna(field) else "",
+        )
+        for layer, field in zip(schema["capture_layer"], schema["field_name"])
+    ]
+    if any(not layer or not field for layer, field in definitions):
+        raise ValueError("wizard research journal schema contains an empty field definition")
+    duplicates = sorted({field for layer, field in definitions if definitions.count((layer, field)) > 1})
+    if duplicates:
+        raise ValueError(
+            "wizard research journal schema contains duplicate field definitions: "
+            + ", ".join(duplicates)
+        )
+    fields = [field for _, field in definitions]
+    if "journal_layer" in fields:
+        raise ValueError("wizard research journal schema must not define journal_layer")
+    # Scanner and pair-detail layers may describe the same output field.
+    return list(dict.fromkeys(fields))
 
 
 def _load_json_list(path: Path) -> list[dict[str, object]]:
