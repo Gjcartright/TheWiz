@@ -9851,7 +9851,7 @@ def _learning_dashboard_metric(frame: pd.DataFrame) -> str:
         f"events={int(row.get('events', 0) or 0)};"
         f"outcomes={int(row.get('outcome_events', 0) or 0)};"
         f"outcomes_remaining={int(row.get('outcome_events_remaining', 0) or 0)};"
-        f"ready_for_modeling={bool(row.get('ready_for_modeling', False))}"
+        f"ready_for_modeling={strict_bool(row.get('ready_for_modeling', False))}"
     )
 
 

@@ -6012,6 +6012,18 @@ def test_priority_readiness_rejects_nontrue_modeling_flag_from_report(tmp_path, 
     assert "ready_for_modeling=False" in gate["evidence"]
 
 
+def test_learning_dashboard_metric_rejects_nontrue_modeling_flag():
+    frame = pd.DataFrame([{
+        "source": "combined",
+        "events": 100,
+        "outcome_events": 100,
+        "outcome_events_remaining": 0,
+        "ready_for_modeling": "not-verified",
+    }])
+
+    assert cli._learning_dashboard_metric(frame).endswith("ready_for_modeling=False")
+
+
 def test_priority_readiness_blocks_record_only_dydx_adapter(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())
