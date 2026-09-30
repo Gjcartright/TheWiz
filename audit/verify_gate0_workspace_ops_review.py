@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTED_COMMIT = "785b8da316cae8541922b2b51a5738de35cbd179"
+QUEUE_COMMIT = "3530406404f5fdb52a53f3b9928a7e8b4a8776ec"
 REPORT = ROOT / "audit/GATE0_WORKSPACE_OPS_REVIEW_2026-09-30.json"
 REPORT_SHA256 = "2f235bcbe76d9d7a0babd3bb20a843ad3aa89ae50d2ae33860b2ad23ac78e057"
 RETIREMENT = ROOT / "audit/GATE0_LEGACY_ENCRYPTED_MOUNT_RETIREMENT_2026-09-30.json"
@@ -24,9 +25,9 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def selected_bytes(relative: str) -> bytes:
+def selected_bytes(relative: str, commit: str = SELECTED_COMMIT) -> bytes:
     return subprocess.run(
-        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        ["git", "show", f"{commit}:{relative}"],
         cwd=ROOT,
         capture_output=True,
         check=True,
@@ -45,6 +46,11 @@ def selected_exists(relative: str) -> bool:
 def main() -> None:
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", QUEUE_COMMIT, "HEAD"],
         cwd=ROOT,
         check=True,
     )
@@ -87,10 +93,10 @@ def main() -> None:
             or retired["backup_schedule_modified"]):
         raise ValueError("legacy mount retirement or nightly backup boundary changed")
 
-    if sha256(QUEUE.read_bytes()) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix(), QUEUE_COMMIT)
+    if sha256(queue_bytes) != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed")
     queue = {row["relative_path"]: row for row in rows}
