@@ -10,6 +10,19 @@ from quant_platform.wizard_pair_detail_ui_bundle import (
 )
 
 
+def test_browser_pair_capture_redacts_input_values_before_serialization():
+    script = (
+        Path(__file__).resolve().parents[1]
+        / "scripts/capture_crypto_wizards_pair_detail_ui_bundle.js"
+    ).read_text(encoding="utf-8")
+    inputs = script.split('const inputs = Array.from(document.querySelectorAll("input"))', 1)[1]
+    inputs = inputs.split("const stationarity =", 1)[0]
+    assert "value: safeInputValue(element)" in inputs
+    assert "value: element.value" not in inputs
+    assert '"password", "email", "hidden"' in script
+    assert '"current-password", "new-password", "one-time-code"' in script
+
+
 def _auth_observation(route_kind: str = "pair_detail") -> dict[str, object]:
     pair = route_kind == "pair_detail"
     url = (

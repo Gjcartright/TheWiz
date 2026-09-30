@@ -1,0 +1,13 @@
+{
+  "current_sha256": "328a0675f9e7483100962d5d4bf3eb0d54c1b96f5e3e03af71c4e5cdd00c45a8",
+  "decision": "REVIEWED_PORTED_RUNTIME_REDACTION_FIX",
+  "focused_junit_sha256": "2f9df897620de0afc4cb3497846010bdfa9c917e20a0c3cd95d693f37cbfe9df",
+  "focused_python_tests_passed": 16,
+  "frozen_active_sha256": "2bfc3b65d6a763afbe181a8eabf34011a433ed7835cae7100001212259cb7c9e",
+  "interpretation": "The active browser capture now applies its existing sensitive-value redaction helper to input rows. No credential, network, order, or trading action was run.",
+  "javascript_syntax": "PASS",
+  "mock_browser_input_redaction": "PASS_PASSWORD_EMAIL_TOKEN_ONE_TIME_CODE",
+  "preserved_runtime_sha256": "328a0675f9e7483100962d5d4bf3eb0d54c1b96f5e3e03af71c4e5cdd00c45a8",
+  "schema_version": "thewiz.gate0.pair_capture_redaction_decision.v1",
+  "source_path": "scripts/capture_crypto_wizards_pair_detail_ui_bundle.js"
+}
