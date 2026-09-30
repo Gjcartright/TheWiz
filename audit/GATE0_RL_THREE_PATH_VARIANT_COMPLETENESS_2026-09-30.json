@@ -1,0 +1,211 @@
+{
+  "authority_claims": [
+    "No source port, provider call, execution authority change, or Expansion/shared queue edit."
+  ],
+  "cause": "Four-root source_reconciliation marked all three SAME/NO_PORT_NEEDED, so the union queue omitted them. The full extended manifest later found a distinct visual_recovery/forensic_b hash for each. The extended gap filtered to existing queue paths, so it could not enumerate these three omissions.",
+  "gap_paths_before": 103,
+  "input_sha256": {
+    "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/strategy-desks-gate0-candidate/audit/SECOND_PASS_SAME_PATH_DRIFT_2026-09-29.csv": "44d5280279a4461bee715f47f0a9208c0946c2e42a69629de2ac27ce33701e47",
+    "/Volumes/Expansion/Crypto Wizard/audit/GATE0_EXTENDED_VARIANT_GAP_2026-09-30.json": "843abe2a6f4c2234ee1acad4d78c53e13e4ebbc9ef375a402dc6ef1daf136383",
+    "/Volumes/Expansion/Crypto Wizard/audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "/Volumes/Expansion/Crypto Wizard/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "d5f77589e1c95aa85d352b82b0a642daa530b44b2ea0f3ca60523177fa63b282",
+    "/Volumes/Expansion/Crypto Wizard/audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918",
+    "/Volumes/Expansion/Crypto Wizard/audit/evidence_freeze_2026-09-29/file_manifest.csv": "a0fc9ecc843f79dacc994b46e04bc3a23cf81c12ae7254121b59ec165fb65b2c",
+    "/Volumes/Expansion/Crypto Wizard/audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "paths": [
+    {
+      "absent_from_filtered_gap_inputs": true,
+      "absent_from_gap_report": true,
+      "absent_from_union_queue": true,
+      "extended_manifest_direct_hashes_verified": true,
+      "extended_manifest_hashes": {
+        "forensic_b": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+        "source_candidate": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "visual_recovery": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952"
+      },
+      "four_root_manifest_hashes": {
+        "local_runtime": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "recovery_project": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "working_git": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6"
+      },
+      "four_root_reconciliation": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "relative_path": "src/quant_platform/rl/brain_cycle.py",
+        "runtime_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "working_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "working_vs_runtime": "SAME"
+      },
+      "historical_copies": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_to_selected_changed_lines": {
+        "added": 7,
+        "removed": 5
+      },
+      "historical_variant_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+      "proposed_queue_row": {
+        "custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+        "decision_evidence": "audit/GATE0_RL_THREE_PATH_VARIANT_COMPLETENESS_2026-09-30.json;audit/GATE0_RL_VISUAL_VARIANT_AND_CALIBRATION_SUPPLEMENT_2026-09-30.json",
+        "decision_rationale": "Selected brain-cycle calculations and report payloads match frozen four-root bytes; the older visual/forensic copy uses ordinary CSV writes where selected uses atomic CSV publication.",
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+        "in_four_root_reconciliation": "False",
+        "in_same_path_drift": "True",
+        "recovery_sha256_at_freeze": "",
+        "relative_path": "src/quant_platform/rl/brain_cycle.py",
+        "runtime_sha256_at_freeze": "",
+        "working_sha256_at_freeze": "",
+        "working_vs_runtime": ""
+      },
+      "queue_recommendation": "ADD_REVIEWED_HISTORICAL_VARIANT_NO_PORT",
+      "relative_path": "src/quant_platform/rl/brain_cycle.py",
+      "same_path_drift_hashes_verified": true,
+      "selected_direct_consumer_paths": [
+        "src/quant_platform/rl/__init__.py"
+      ],
+      "selected_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+      "semantic_delta": "Historical variant uses direct CSV writes for candidate rollup, cycle report and readiness trend; selected uses atomic_write_csv for the same calculations and payloads.",
+      "source_candidate_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6"
+    },
+    {
+      "absent_from_filtered_gap_inputs": true,
+      "absent_from_gap_report": true,
+      "absent_from_union_queue": true,
+      "extended_manifest_direct_hashes_verified": true,
+      "extended_manifest_hashes": {
+        "forensic_b": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+        "source_candidate": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "visual_recovery": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4"
+      },
+      "four_root_manifest_hashes": {
+        "local_runtime": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "recovery_project": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "working_git": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f"
+      },
+      "four_root_reconciliation": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "relative_path": "src/quant_platform/rl/features.py",
+        "runtime_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "working_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "working_vs_runtime": "SAME"
+      },
+      "historical_copies": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_to_selected_changed_lines": {
+        "added": 3,
+        "removed": 1
+      },
+      "historical_variant_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+      "proposed_queue_row": {
+        "custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+        "decision_evidence": "audit/GATE0_RL_THREE_PATH_VARIANT_COMPLETENESS_2026-09-30.json;audit/GATE0_RL_VISUAL_VARIANT_AND_CALIBRATION_SUPPLEMENT_2026-09-30.json",
+        "decision_rationale": "Selected feature schema payload matches frozen four-root bytes; the older visual/forensic copy uses ordinary text write where selected uses atomic text publication.",
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+        "in_four_root_reconciliation": "False",
+        "in_same_path_drift": "True",
+        "recovery_sha256_at_freeze": "",
+        "relative_path": "src/quant_platform/rl/features.py",
+        "runtime_sha256_at_freeze": "",
+        "working_sha256_at_freeze": "",
+        "working_vs_runtime": ""
+      },
+      "queue_recommendation": "ADD_REVIEWED_HISTORICAL_VARIANT_NO_PORT",
+      "relative_path": "src/quant_platform/rl/features.py",
+      "same_path_drift_hashes_verified": true,
+      "selected_direct_consumer_paths": [
+        "src/quant_platform/rl/pair_trading_env.py",
+        "src/quant_platform/rl/rl_backtest.py",
+        "src/quant_platform/rl/rl_idea_engine.py",
+        "src/quant_platform/rl/rl_learning_agent.py"
+      ],
+      "selected_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+      "semantic_delta": "Historical variant uses Path.write_text for the feature schema; selected uses atomic_write_text for the same JSON payload.",
+      "source_candidate_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f"
+    },
+    {
+      "absent_from_filtered_gap_inputs": true,
+      "absent_from_gap_report": true,
+      "absent_from_union_queue": true,
+      "extended_manifest_direct_hashes_verified": true,
+      "extended_manifest_hashes": {
+        "forensic_b": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+        "source_candidate": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "visual_recovery": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050"
+      },
+      "four_root_manifest_hashes": {
+        "local_runtime": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "recovery_project": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "working_git": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3"
+      },
+      "four_root_reconciliation": {
+        "decision": "NO_PORT_NEEDED",
+        "recovery_matches_runtime": "True",
+        "recovery_matches_working": "True",
+        "recovery_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "relative_path": "src/quant_platform/rl/train_ppo.py",
+        "runtime_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "working_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "working_vs_runtime": "SAME"
+      },
+      "historical_copies": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_to_selected_changed_lines": {
+        "added": 4,
+        "removed": 5
+      },
+      "historical_variant_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+      "proposed_queue_row": {
+        "custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+        "decision_evidence": "audit/GATE0_RL_THREE_PATH_VARIANT_COMPLETENESS_2026-09-30.json;audit/GATE0_RL_VISUAL_VARIANT_AND_CALIBRATION_SUPPLEMENT_2026-09-30.json",
+        "decision_rationale": "Selected optional PPO dependency report retains research-only behavior; the older visual/forensic copy uses ordinary text write where selected uses atomic text publication.",
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+        "in_four_root_reconciliation": "False",
+        "in_same_path_drift": "True",
+        "recovery_sha256_at_freeze": "",
+        "relative_path": "src/quant_platform/rl/train_ppo.py",
+        "runtime_sha256_at_freeze": "",
+        "working_sha256_at_freeze": "",
+        "working_vs_runtime": ""
+      },
+      "queue_recommendation": "ADD_REVIEWED_HISTORICAL_VARIANT_NO_PORT",
+      "relative_path": "src/quant_platform/rl/train_ppo.py",
+      "same_path_drift_hashes_verified": true,
+      "selected_direct_consumer_paths": [
+        "src/quant_platform/cli.py"
+      ],
+      "selected_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+      "semantic_delta": "Historical variant uses Path.write_text for the optional PPO dependency report; selected uses atomic_write_text for the same research-only report.",
+      "source_candidate_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3"
+    }
+  ],
+  "proposal": {
+    "custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+    "expected_union_rows_after_addition": 814,
+    "new_rows": 3,
+    "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/strategy-desks-gate0-candidate/audit/GATE0_RL_THREE_PATH_UNION_QUEUE_ADDITION_PROPOSAL_2026-09-30.csv",
+    "preserved_selected_bytes": true,
+    "schema_semantics": "in_four_root_reconciliation=False denotes no four-root delta selected into the union queue, even though the full frozen source_reconciliation.csv contains a SAME/NO_PORT_NEEDED row for each path; the exact frozen baseline hashes are retained in this scoped report.",
+    "sha256": "c7c27bd9239b37b2208291021e72c0488463ec53bf11e46058ceb049f5ba7daa",
+    "unique_new_historical_hashes": 3
+  },
+  "queue_rows_before": 811,
+  "schema_version": "thewiz.gate0.rl_three_path_variant_completeness.v1",
+  "scope": "Three RL source paths absent from the 811-path union queue and its queue-relative extended variant gap; read-only audit of frozen four-root and second-pass evidence."
+}
