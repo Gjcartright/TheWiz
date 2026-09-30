@@ -62,6 +62,27 @@ from quant_platform.orchestration.effect_authority import (
 )
 
 
+@pytest.mark.parametrize(
+    "live",
+    [
+        {"checked": False, "open_markets": [], "positions": [], "blocker": "account_state_unverified"},
+        {"checked": True, "open_markets": [], "positions": [], "blocker": "account_state_stale"},
+    ],
+)
+def test_browser_flat_claim_cannot_replace_blocked_live_account_state(tmp_path, monkeypatch, live):
+    execution_module.write_browser_account_state_override(True, root=tmp_path)
+    monkeypatch.setattr(execution_module, "dydx_account_state_snapshot", lambda config=None: dict(live))
+
+    effective = execution_module.effective_dydx_account_state_snapshot(root=tmp_path)
+
+    assert effective["checked"] is live["checked"]
+    assert effective["open_markets"] == live["open_markets"]
+    assert effective["positions"] == live["positions"]
+    assert effective["blocker"] == live["blocker"]
+    assert effective["source"] == "dydx_indexer"
+    assert effective["browser_override_authority"] is False
+
+
 def test_dydx_sdk_order_adapter_client_id_stays_in_valid_range():
     adapter = DydxSdkOrderAdapter()
     adapter._client_id_seed = DydxSdkOrderAdapter._MAX_CLIENT_ID - 1

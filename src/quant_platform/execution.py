@@ -2487,35 +2487,23 @@ def effective_dydx_account_state_snapshot(
     config: DydxNetworkConfig | None = None,
     root: Path = ROOT,
 ) -> dict[str, object]:
-    live = dydx_account_state_snapshot(config=config)
+    """Keep live indexer state authoritative; a browser claim is advisory."""
+
+    live = dict(dydx_account_state_snapshot(config=config))
     override = load_browser_account_state_override(root=root)
     live_open_markets = [str(market) for market in live.get("open_markets", []) if str(market)]
     live_positions = live.get("positions", [])
     live_has_open_positions = bool(live_open_markets or live_positions)
-    if str(override.get("confirmed_flat", "")).strip().lower() in {"true", "1", "yes"}:
-        if strict_bool(live.get("checked", False)) and live_has_open_positions:
-            live = dict(live)
+    live["source"] = "dydx_indexer"
+    if override:
+        live["browser_override_present"] = True
+        live["browser_override_authority"] = False
+        live["browser_override_confirmed_at_utc"] = str(override.get("confirmed_at_utc", ""))
+        live["browser_override_note"] = str(override.get("note", ""))
+        if override.get("confirmed_flat") is True and strict_bool(live.get("checked", False)) and live_has_open_positions:
             live["source"] = "dydx_indexer_browser_override_conflict"
-            live["browser_override_confirmed_at_utc"] = str(override.get("confirmed_at_utc", ""))
-            live["browser_override_note"] = str(override.get("note", ""))
             live["browser_override_conflict"] = True
             live["blocker"] = str(live.get("blocker", "") or "orphan_leg_open")
-            return live
-        return {
-            "checked": True,
-            "open_markets": [],
-            "positions": [],
-            "blocker": "",
-            "source": "browser_override",
-            "browser_override_confirmed_at_utc": str(override.get("confirmed_at_utc", "")),
-            "browser_override_note": str(override.get("note", "")),
-            "live_snapshot_checked": strict_bool(live.get("checked", False)),
-            "live_snapshot_open_markets": live.get("open_markets", []),
-            "live_snapshot_positions": live.get("positions", []),
-            "live_snapshot_blocker": str(live.get("blocker", "")),
-        }
-    live = dict(live)
-    live["source"] = "dydx_indexer"
     return live
 
 

@@ -15,6 +15,7 @@ from quant_platform.binance_testnet import (
 )
 from quant_platform.execution import (
     ExecutionMode,
+    FillReport,
     OrderIntent,
     build_execution_venue,
     validate_venue_order_client_adapter,
@@ -198,3 +199,30 @@ def test_pair_execution_denies_unapproved_adapter_before_rollback_or_journal(tmp
         )
     assert adapter.session.posts == []
     assert not (tmp_path / "journal.csv").exists()
+
+
+@pytest.mark.parametrize("mutation", ["instance", "class"])
+def test_pair_execution_denies_mutated_canonical_order_method_before_effects(tmp_path, monkeypatch, mutation):
+    config = BinanceTestnetConfig.usdm_testnet()
+    adapter = BinanceUsdmTestnetOrderAdapter(session=FakeSession())
+    calls = []
+
+    def bypass(self, intent, config):
+        calls.append(intent)
+        return FillReport("bypassed", intent.market, intent.side, intent.size, 0.0, 0.0, 0.0, "paper_submitted")
+
+    if mutation == "instance":
+        adapter.place_order = lambda intent, config: bypass(adapter, intent, config)
+    else:
+        monkeypatch.setattr(BinanceUsdmTestnetOrderAdapter, "place_order", bypass)
+    intents = (
+        OrderIntent(market="BTCUSDT", side="BUY", size=0.01),
+        OrderIntent(market="ETHUSDT", side="SELL", size=0.1),
+    )
+    journal = tmp_path / "journal.csv"
+
+    with pytest.raises(ValueError, match="gate00g_binance_order_callable_denied"):
+        execute_binance_testnet_pair(intents=intents, config=config, adapter=adapter, journal_path=journal)
+    assert calls == []
+    assert adapter.session.posts == []
+    assert not journal.exists()

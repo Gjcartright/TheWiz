@@ -285,6 +285,9 @@ class BinanceUsdmTestnetOrderAdapter(_BinanceTestnetOrderAdapter):
         return "/fapi/v1/order"
 
 
+_CANONICAL_BINANCE_PLACE_ORDER = _BinanceTestnetOrderAdapter.place_order
+
+
 def binance_testnet_preflight(
     *,
     root: Path = ROOT,
@@ -436,7 +439,7 @@ def execute_binance_testnet_pair(
     fills: list[FillReport] = []
     rollback_fills: list[FillReport] = []
     for intent in intents:
-        fill = client.place_order(intent, config)
+        fill = _gate00g_binance_pair_order_call(client, intent, config)
         fills.append(fill)
         if str(fill.status) == "paper_submitted":
             continue
@@ -450,7 +453,9 @@ def execute_binance_testnet_pair(
             _append_pair_execution_result(result, intents=intents, journal_path=journal_path)
             return result
         first_intent = intents[0]
-        rollback = client.place_order(_reverse_intent(first_intent, lane=config.lane), config)
+        rollback = _gate00g_binance_pair_order_call(
+            client, _reverse_intent(first_intent, lane=config.lane), config
+        )
         rollback_fills.append(rollback)
         result = BinancePairExecutionResult(
             lane=config.lane,
@@ -479,7 +484,21 @@ def _require_gate00g_binance_pair_adapter(
         BinanceUsdmTestnetOrderAdapter,
     }:
         raise ValueError("gate00g_binance_order_adapter_denied")
+    if (
+        "place_order" in vars(client)
+        or getattr(type(client), "place_order", None) is not _CANONICAL_BINANCE_PLACE_ORDER
+    ):
+        raise ValueError("gate00g_binance_order_callable_denied")
     return client
+
+
+def _gate00g_binance_pair_order_call(
+    client: _BinanceTestnetOrderAdapter,
+    intent: OrderIntent,
+    config: BinanceTestnetConfig,
+) -> FillReport:
+    canonical = _require_gate00g_binance_pair_adapter(client)
+    return _CANONICAL_BINANCE_PLACE_ORDER(canonical, intent, config)
 
 
 def _append_pair_execution_result(
