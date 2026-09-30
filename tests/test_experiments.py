@@ -398,6 +398,8 @@ def test_write_reports_includes_acceptance_report(tmp_path):
         "strategy_id",
         "strategy_name",
         "family",
+        "implementation_kind",
+        "acceptance_authority",
         "production_eligible",
         "preferred_eligible",
         "research_eligible",

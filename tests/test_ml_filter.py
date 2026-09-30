@@ -299,13 +299,13 @@ def test_build_trade_filter_dataset_rejects_integer_bar_indexes_as_timestamps():
 
 def test_build_trade_filter_dataset_normalizes_timeframe_aliases():
     history = _pair_history_frame()
-    history["interval"] = "daily"
+    history["interval"] = "5min"
 
     frame = build_trade_filter_dataset(
         [PairDataset("BTC-USD-SOL-USD", history)], strategies=(STRATEGIES[0],)
     )
 
-    assert set(frame["timeframe"]) == {"1d"}
+    assert set(frame["timeframe"]) == {"5m"}
 
 
 def test_train_trade_filter_walkforward_writes_outputs(tmp_path):

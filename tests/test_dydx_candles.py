@@ -249,7 +249,7 @@ def test_build_pair_history_from_5min_candles_namespaces_proxies_and_adds_math_v
     }.issubset(payload["history"][0])
     assert "ecm_strength" not in payload["history"][0]
     assert "conditional_probability_distortion" not in payload["history"][0]
-    assert payload["math_version"] == "math-v2.1-y-on-x"
+    assert payload["math_version"] == "math-v2.3-venue-clock-execution"
     assert payload["math_v2_signal_use_status"].startswith("blocked")
     assert "funding_x_bps" not in payload["history"][0]
     assert "funding_y_bps" not in payload["history"][0]

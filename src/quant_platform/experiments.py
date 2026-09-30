@@ -18,7 +18,12 @@ from quant_platform.backtest import (
 from quant_platform.feature_engine import FeatureEngine
 from quant_platform.orchestration.corrective_runtime import atomic_write_csv
 from quant_platform.regimes import regime_pair_strategy_report
-from quant_platform.strategies import STRATEGIES, STRATEGY_REQUIRED_COLUMNS, StrategySpec
+from quant_platform.strategies import (
+    STRATEGIES,
+    STRATEGY_BY_ID,
+    STRATEGY_REQUIRED_COLUMNS,
+    StrategySpec,
+)
 from quant_platform.zscore_utils import coalesce_zscore
 
 
@@ -639,13 +644,52 @@ def _coalesce_signal_zscore(frame: pd.DataFrame) -> pd.DataFrame:
 
 def _input_coverage_flags(frame: pd.DataFrame) -> dict[str, bool]:
     return {
-        "has_price_x": "price_x" in frame.columns,
-        "has_price_y": "price_y" in frame.columns,
-        "has_hedge_ratio": "hedge_ratio" in frame.columns,
-        "has_beta": "beta" in frame.columns,
-        "has_funding_x": "funding_x_bps" in frame.columns,
-        "has_funding_y": "funding_y_bps" in frame.columns,
+        "has_price_x": _complete_numeric_input(frame, "price_x", positive=True),
+        "has_price_y": _complete_numeric_input(frame, "price_y", positive=True),
+        "has_hedge_ratio": _complete_numeric_input(frame, "hedge_ratio"),
+        "has_beta": _complete_numeric_input(frame, "beta"),
+        "has_funding_x": _complete_numeric_input(frame, "funding_x_bps"),
+        "has_funding_y": _complete_numeric_input(frame, "funding_y_bps"),
     }
+
+
+def _complete_numeric_input(
+    frame: pd.DataFrame, column: str, *, positive: bool = False
+) -> bool:
+    if frame.empty or column not in frame.columns:
+        return False
+    source = frame[column]
+    if source.map(lambda value: isinstance(value, (bool, np.bool_))).any():
+        return False
+    values = pd.to_numeric(source, errors="coerce")
+    if values.isna().any() or not values.map(isfinite).all():
+        return False
+    return bool(values.gt(0.0).all()) if positive else True
+
+
+def _incomplete_strategy_columns(frame: pd.DataFrame, strategy: StrategySpec) -> list[str]:
+    incomplete: list[str] = []
+    for column in sorted(_effective_required_columns(frame, strategy)):
+        if column not in frame.columns:
+            continue
+        if column == "regime":
+            values = frame[column].fillna("").astype(str).str.strip().str.lower()
+            if values.isin({"", "nan", "none", "unknown"}).any():
+                incomplete.append(column)
+            continue
+        source = frame[column]
+        if source.map(lambda value: isinstance(value, (bool, np.bool_))).any():
+            incomplete.append(column)
+            continue
+        values = pd.to_numeric(source, errors="coerce")
+        finite = values.map(lambda value: pd.notna(value) and isfinite(float(value)))
+        if not finite.any():
+            incomplete.append(column)
+            continue
+        first_valid_position = int(finite.to_numpy().argmax())
+        if not finite.iloc[first_valid_position:].all():
+            incomplete.append(column)
+    return incomplete
 
 
 def _pairs_missing_cost_buckets(
@@ -793,6 +837,25 @@ class ExperimentHarness:
             return ExperimentResult(
                 **base, status="skipped", eligible=False, reason=f"rows<{self.config.min_rows}"
             )
+        incomplete_inputs = [
+            column
+            for column, flag in (
+                ("price_x", "has_price_x"),
+                ("price_y", "has_price_y"),
+                ("hedge_ratio", "has_hedge_ratio"),
+                ("beta", "has_beta"),
+                ("funding_x_bps", "has_funding_x"),
+                ("funding_y_bps", "has_funding_y"),
+            )
+            if column in frame.columns and not input_flags[flag]
+        ]
+        if incomplete_inputs:
+            return ExperimentResult(
+                **base,
+                status="skipped",
+                eligible=False,
+                reason="incomplete_numeric_inputs:" + ",".join(incomplete_inputs),
+            )
         frame = _coalesce_signal_zscore(frame)
         if strategy.signal_function is None:
             return ExperimentResult(
@@ -805,6 +868,14 @@ class ExperimentHarness:
                 status="skipped",
                 eligible=False,
                 reason=f"missing_columns:{','.join(missing)}",
+            )
+        incomplete_strategy_inputs = _incomplete_strategy_columns(frame, strategy)
+        if incomplete_strategy_inputs:
+            return ExperimentResult(
+                **base,
+                status="skipped",
+                eligible=False,
+                reason="incomplete_strategy_inputs:" + ",".join(incomplete_strategy_inputs),
             )
 
         signal = strategy.signal_function(frame)
@@ -820,12 +891,21 @@ class ExperimentHarness:
                 eligible=False,
                 reason="missing_backtest_inputs:spread_or_complete_two_leg_contract",
             )
-        result = (
-            backtest_two_leg_spread(frame, signal, bucket.cost_model)
-            if backtest_mode == "two_leg"
-            else backtest_pair(frame, signal, bucket.cost_model)
-        )
+        try:
+            result = (
+                backtest_two_leg_spread(frame, signal, bucket.cost_model)
+                if backtest_mode == "two_leg"
+                else backtest_pair(frame, signal, bucket.cost_model)
+            )
+        except ValueError as exc:
+            reason = str(exc)
+            if not reason.startswith("funding clock is not valid: "):
+                raise
+            return ExperimentResult(**base, status="skipped", eligible=False, reason=reason)
         eligible, reason = self.config.gate.evaluate(result)
+        if backtest_mode == "spread":
+            eligible = False
+            reason = _append_blocker(reason, "spread_only_pnl_has_no_acceptance_notional")
         return ExperimentResult(
             **base,
             status="evaluated",
@@ -970,6 +1050,8 @@ def strategy_acceptance_report(
         "strategy_id",
         "strategy_name",
         "family",
+        "implementation_kind",
+        "acceptance_authority",
         "production_eligible",
         "preferred_eligible",
         "research_eligible",
@@ -1012,11 +1094,29 @@ def strategy_acceptance_report(
     ):
         decision = gate.evaluate_strategy(group)
         research_decision = research_gate.evaluate_strategy(group)
+        strategy = STRATEGY_BY_ID.get(int(strategy_id))
+        if strategy is None:
+            implementation_kind = "custom_or_unregistered"
+            acceptance_authority = "research_only_until_strategy_registered"
+        elif strategy.name != strategy_name or strategy.family != family:
+            implementation_kind = "identity_mismatch"
+            acceptance_authority = "research_only_until_strategy_identity_verified"
+        else:
+            implementation_kind = strategy.implementation_kind
+            acceptance_authority = strategy.acceptance_authority
+        if acceptance_authority != "local_costed_walkforward":
+            authority_blocker = f"acceptance_authority:{acceptance_authority}"
+            decision["production_eligible"] = False
+            decision["preferred_eligible"] = False
+            decision["acceptance_reason"] = _append_blocker(decision["acceptance_reason"], authority_blocker)
+            decision["preferred_reason"] = _append_blocker(decision["preferred_reason"], authority_blocker)
         rows.append(
             {
                 "strategy_id": strategy_id,
                 "strategy_name": strategy_name,
                 "family": family,
+                "implementation_kind": implementation_kind,
+                "acceptance_authority": acceptance_authority,
                 **decision,
                 **research_decision,
             }
@@ -1025,6 +1125,13 @@ def strategy_acceptance_report(
         ["production_eligible", "preferred_eligible", "passing_pairs", "median_profit_factor"],
         ascending=[False, False, False, False],
     )
+
+
+def _append_blocker(reason: object, blocker: str) -> str:
+    current = str(reason or "").strip()
+    if not current or current == "passed":
+        return blocker
+    return f"{current};{blocker}"
 
 
 def write_strategy_acceptance_report(

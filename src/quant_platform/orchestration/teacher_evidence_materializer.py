@@ -24,7 +24,7 @@ from quant_platform.economic_contract import (
     tail_actions,
     y_on_x_log_spread,
 )
-from quant_platform.orchestration.teacher_contracts import EXACT_MODES, MATH_V2, REQUIRED_CRITICS, ExactMode
+from quant_platform.orchestration.teacher_contracts import EXACT_MODES, MATH_V2, ExactMode
 from quant_platform.orchestration.hyperliquid_run_manifest import build_hyperliquid_run_manifest
 from quant_platform.statistics.math_v2 import (
     estimate_hurst_dfa,
@@ -305,6 +305,8 @@ def _materialize_context(
             blockers.extend(replay.missing_inputs)
         if result.sharpe_status != "valid":
             blockers.append("sharpe_invalid")
+        if result.profit_factor_status != "valid":
+            blockers.append("profit_factor_unavailable")
         if result.trades < policy.min_closed_trades:
             blockers.append(f"closed_trades<{policy.min_closed_trades}")
         if result.expectancy_lower_95 is None:
@@ -680,7 +682,7 @@ def _teacher_action(signal: float) -> str:
 
 def _confidence(result: BacktestResult) -> float:
     trade_support = min(result.trades / 10.0, 1.0)
-    profit_factor = 2.0 if math.isinf(result.profit_factor) else max(result.profit_factor, 0.0)
+    profit_factor = max(result.profit_factor, 0.0) if math.isfinite(result.profit_factor) else 0.0
     pf_support = min(profit_factor / 2.0, 1.0)
     sharpe_support = float(np.clip(0.5 + result.sharpe / 6.0, 0.0, 1.0)) if math.isfinite(result.sharpe) else 0.0
     return float(np.clip(0.15 + 0.30 * trade_support + 0.30 * pf_support + 0.25 * sharpe_support, 0.05, 0.95))

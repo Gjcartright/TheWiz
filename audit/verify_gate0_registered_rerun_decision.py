@@ -84,14 +84,6 @@ def main() -> None:
     runtime_kwonly = kwonly_names(RUNTIME / RUNTIME_API, "promote_staged_directory")
     if "immutable" in active_kwonly or "immutable" not in runtime_kwonly:
         raise ValueError("directory promotion API relationship changed")
-    active_runtime_types = ast.parse(
-        (ROOT / "src/quant_platform/runtime_types.py").read_text(encoding="utf-8")
-    )
-    if any(
-        isinstance(node, ast.FunctionDef) and node.name == "strict_bool"
-        for node in active_runtime_types.body
-    ):
-        raise ValueError("historical strict_bool dependency became active")
     junit = next(ET.parse(JUNIT).getroot().iter("testsuite"))
     if any(junit.attrib[key] != value for key, value in (("tests", "49"), ("failures", "0"), ("errors", "0"))):
         raise ValueError("focused registered-rerun tests did not pass")
@@ -106,7 +98,7 @@ def main() -> None:
         "runtime_directory_promotion_kwonly": sorted(runtime_kwonly),
         "active_focused_tests_passed": 49,
         "focused_junit_sha256": digest(JUNIT),
-        "interpretation": "Retain active guarded publication and exception redaction. The forensic candidate bypasses those guards and has an absent strict_bool dependency; the LocalRuntime mutable-directory call needs its matching runtime API and further safety review.",
+        "interpretation": "Retain active guarded publication and exception redaction. The forensic candidate bypasses those guards; availability of strict_bool does not select it. The LocalRuntime mutable-directory call needs its matching runtime API and further safety review.",
     }
     OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print("PASS registered_rerun_source_decision")

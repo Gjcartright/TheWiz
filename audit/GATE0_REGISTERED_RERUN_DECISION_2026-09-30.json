@@ -6,7 +6,7 @@
   "active_sha256": "a20b38253f6d6e4a0e3735c1e4c95b7f9a66bc66fd83bbfcc93e78301ef37885",
   "decision": "REVIEWED_ACTIVE_RETAIN_CANDIDATE_DEFERRED_NO_PORT",
   "focused_junit_sha256": "88ee5e9e762fd5cbdda8dd308a9ecbf643e0a216a5f228b521b3358fc61330d9",
-  "interpretation": "Retain active guarded publication and exception redaction. The forensic candidate bypasses those guards and has an absent strict_bool dependency; the LocalRuntime mutable-directory call needs its matching runtime API and further safety review.",
+  "interpretation": "Retain active guarded publication and exception redaction. The forensic candidate bypasses those guards; availability of strict_bool does not select it. The LocalRuntime mutable-directory call needs its matching runtime API and further safety review.",
   "preserved_forensic_sha256": "263e059b0dc6897dde037688afae87285a8c0b0d19d474e997ae8883a839382b",
   "runtime_directory_promotion_kwonly": [
     "immutable",

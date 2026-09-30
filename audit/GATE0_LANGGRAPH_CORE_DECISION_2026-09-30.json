@@ -25,7 +25,7 @@
   "dry_run_graph_blockers": 0,
   "dry_run_stages": 25,
   "focused_tests_passed": 4,
-  "interpretation": "Retain the current guide and active/runtime-identical graph and assistant source. Their preserved forensic variants replace governed atomic writes with direct writes and rely on an absent strict_bool helper. The exact committed restore produced seven reports for 25 dry-run stages, eight lanes, and eight edges; bare CLI report publication failed closed without a session. Four focused tests passed. This verifies the scoped diagnostic route only.",
+  "interpretation": "Retain the current guide and active/runtime-identical graph and assistant source. Their preserved forensic variants replace governed atomic writes with direct writes; the availability of strict_bool does not select those variants. The exact committed restore produced seven reports for 25 dry-run stages, eight lanes, and eight edges; bare CLI report publication failed closed without a session. Four focused tests passed. This verifies the scoped diagnostic route only.",
   "open_contracts": [
     "nodes.py candidate adds two unselected Wizard validation stages",
     "historical strict_bool flag coercion needs separate typed-input review",

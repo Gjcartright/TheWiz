@@ -1,0 +1,44 @@
+{
+  "base_commit": "989a67c4833422da57065863d4fc6edf218da7d7",
+  "decision": "VERSIONED_V23_SOURCE_SELECTED_EXACT_COMMIT_REQUALIFICATION_REQUIRED",
+  "live_trading_authorized": false,
+  "next_check": "Run full diagnostics, CI, wheel, graph dry run, and off-drive restore on the exact selected commit.",
+  "partial_historical_review_paths": [
+    "src/quant_platform/orchestration/teacher_evidence_materializer.py",
+    "tests/test_dydx_candles.py",
+    "tests/test_experiments.py",
+    "tests/test_ml_filter.py",
+    "tests/test_student_readiness.py",
+    "tests/test_teacher_adapters.py",
+    "tests/test_teacher_council.py",
+    "tests/test_teacher_evidence_materializer.py"
+  ],
+  "qualified_junit_sha256": "2fb25d49ba1f32c31665241a44510f315aeec9288362c75e13f745c8d53e5b8a",
+  "qualified_manifest_sha256": "1234259c9904550905da1a01ec9e8d7518cf2a5c00c89a78819d1aabc0be60ec",
+  "replaced_runtime_tests": {
+    "tests/test_accounting_repairs.py": "tests/test_accounting_repairs_v23.py",
+    "tests/test_risk_metrics.py": "tests/test_risk_metrics_v23.py"
+  },
+  "research_acceptance": "BLOCKED",
+  "reviewed_ported_paths": [
+    "src/quant_platform/backtest.py",
+    "src/quant_platform/economic_contract.py",
+    "src/quant_platform/experiments.py",
+    "src/quant_platform/performance_math.py",
+    "src/quant_platform/protective_exits.py",
+    "src/quant_platform/risk_metrics.py",
+    "src/quant_platform/runtime_types.py",
+    "src/quant_platform/strategies.py",
+    "src/quant_platform/trade_ledger.py"
+  ],
+  "schema_version": "thewiz.gate0.v23_source_transition.v1",
+  "selected_source_and_test_files": 27,
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "file_sha256": "e2960e88ec5da5631f8a9cb7c16cb2734439d149cb40c0a6c83d68752015174d",
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 671,
+    "reviewed_paths": 122
+  }
+}

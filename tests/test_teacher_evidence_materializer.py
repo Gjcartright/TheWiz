@@ -116,6 +116,7 @@ def test_materializer_builds_seven_teachers_and_six_independent_critics(tmp_path
     assert teachers["point_in_time_status"].eq("confirmed").all()
     assert teachers["mode_fidelity_status"].eq("local_validated_estimator").all()
     assert teachers["wizard_nominated"].sum() == 1
+    assert "profit_factor_unavailable" in ";".join(teachers["blockers"].fillna(""))
     assert len(critics) == 6
     assert set(critics["critic_type"]) == {"dependency", "regime", "risk", "cost", "execution", "outcome"}
     actions = pd.read_csv(result["next_actions"])

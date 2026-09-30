@@ -95,8 +95,6 @@ def main() -> None:
         old = (VARIANTS / "variants" / VARIANT_HASHES[relative]).read_text(encoding="utf-8")
         if "atomic_write" not in active or "strict_bool" not in old or "strict_bool" in active:
             raise ValueError(f"atomic/boolean variant distinction changed: {relative}")
-    if "def strict_bool" in (ROOT / "src/quant_platform/runtime_types.py").read_text():
-        raise ValueError("strict_bool became active; reassess historical variants")
 
     dry_run = json.loads((DIAGNOSTIC / "LANGGRAPH_DRY_RUN_RECEIPT.json").read_text())
     if dry_run["source_commit"] != HEAD_AT_PROBE:
@@ -139,7 +137,7 @@ def main() -> None:
             "historical strict_bool flag coercion needs separate typed-input review",
             "dry-run evidence does not authorize stage actions or trading",
         ],
-        "interpretation": "Retain the current guide and active/runtime-identical graph and assistant source. Their preserved forensic variants replace governed atomic writes with direct writes and rely on an absent strict_bool helper. The exact committed restore produced seven reports for 25 dry-run stages, eight lanes, and eight edges; bare CLI report publication failed closed without a session. Four focused tests passed. This verifies the scoped diagnostic route only.",
+        "interpretation": "Retain the current guide and active/runtime-identical graph and assistant source. Their preserved forensic variants replace governed atomic writes with direct writes; the availability of strict_bool does not select those variants. The exact committed restore produced seven reports for 25 dry-run stages, eight lanes, and eight edges; bare CLI report publication failed closed without a session. Four focused tests passed. This verifies the scoped diagnostic route only.",
     }
     OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print("PASS three_langgraph_core_source_decisions")

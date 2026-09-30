@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -18,6 +20,7 @@ DIAGNOSTIC = Path(
     "accounting-candidate"
 )
 OUTPUT = AUDIT / "GATE0_ACCOUNTING_CANDIDATE_DECISION_2026-09-30.json"
+FROZEN_HEAD = "989a67c4833422da57065863d4fc6edf218da7d7"
 DEFERRED = (
     "src/quant_platform/risk_metrics.py",
     "src/quant_platform/protective_exits.py",
@@ -63,9 +66,12 @@ def suite_result(path: Path) -> tuple[int, int, int, set[str]]:
 
 
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
+    frozen_queue = subprocess.check_output(
+        ["git", "show", f"{FROZEN_HEAD}:audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"],
+        cwd=ROOT,
+        text=True,
+    )
+    with io.StringIO(frozen_queue) as stream:
         queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
     saved = json.loads((SAVEPOINT / "SAVEPOINT_MANIFEST.json").read_text())
     saved_hashes = {
@@ -78,7 +84,10 @@ def main() -> None:
         if (row["working_vs_runtime"] != "RUNTIME_ONLY"
             or row["custody_status"] != "REVIEWED_ACCOUNTING_CANDIDATE_DEFERRED_NO_PORT"
             or OUTPUT.name not in row["decision_evidence"]
-            or (ROOT / relative).exists()):
+            or subprocess.run(
+                ["git", "cat-file", "-e", f"{FROZEN_HEAD}:{relative}"],
+                cwd=ROOT, capture_output=True,
+            ).returncode == 0):
             raise ValueError(f"accounting candidate unexpectedly active: {relative}")
         expected = row["runtime_sha256_at_freeze"]
         if (digest(RUNTIME / relative) != expected

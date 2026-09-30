@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 from quant_platform.math_v2_acceptance import build_math_v2_acceptance
+from quant_platform.statistics.math_v2 import MATH_VERSION
 from quant_platform.orchestration.teacher_adapters import build_teacher_evidence_adapters
 from quant_platform.orchestration.teacher_contracts import EXACT_MODES, REQUIRED_CRITICS
 
@@ -42,7 +43,7 @@ def _write_complete_inputs(root):
                 "required_regime": "all",
                 "source_system": "hyperliquid_local_replay",
                 "formula_version": "formula-v2",
-                "math_version": "math-v2.1-y-on-x",
+                "math_version": MATH_VERSION,
                 "mode_fidelity_status": "local_validated_estimator",
                 "point_in_time_status": "confirmed",
                 "history_hash": "history-hash-1",

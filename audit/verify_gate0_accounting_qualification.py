@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -21,6 +23,7 @@ LOG = EVIDENCE / "full-qualified.log"
 BOOLEAN = EVIDENCE / "risk-metric-boolean-qualified.json"
 OUTPUT = AUDIT / "GATE0_ACCOUNTING_QUALIFICATION_2026-09-30.json"
 BASE = "0e44233b890eb217fb62861676272881480913f4"
+FROZEN_HEAD = "989a67c4833422da57065863d4fc6edf218da7d7"
 PRESERVED_PATHS = (
     "src/quant_platform/risk_metrics.py",
     "src/quant_platform/protective_exits.py",
@@ -63,14 +66,20 @@ def main() -> None:
     ):
         raise ValueError("boolean financial inputs were not rejected")
 
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
+    frozen_queue = subprocess.check_output(
+        ["git", "show", f"{FROZEN_HEAD}:audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"],
+        cwd=ROOT,
+        text=True,
+    )
+    with io.StringIO(frozen_queue) as stream:
         queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
     for path in PRESERVED_PATHS:
         if (
             queue[path]["custody_status"] != "REVIEWED_ACCOUNTING_CANDIDATE_DEFERRED_NO_PORT"
-            or (ROOT / path).exists()
+            or subprocess.run(
+                ["git", "cat-file", "-e", f"{FROZEN_HEAD}:{path}"],
+                cwd=ROOT, capture_output=True,
+            ).returncode == 0
         ):
             raise ValueError(f"qualified candidate was ported without a source decision: {path}")
 

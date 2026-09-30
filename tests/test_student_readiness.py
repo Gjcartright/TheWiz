@@ -11,6 +11,7 @@ from quant_platform.orchestration.student_readiness import (
     write_student_training_readiness,
 )
 from quant_platform.orchestration.teacher_contracts import ExactMode
+from quant_platform.statistics.math_v2 import MATH_VERSION
 
 
 NOW = datetime(2026, 8, 6, 18, tzinfo=timezone.utc)
@@ -31,7 +32,7 @@ def _dataset() -> pd.DataFrame:
                 "feature_timestamp": NOW - timedelta(hours=2),
                 "label_timestamp": NOW,
                 "point_in_time_status": "confirmed",
-                "math_version": "math-v2.1-y-on-x",
+                "math_version": MATH_VERSION,
                 "source_system": "hyperliquid_local_replay",
                 "label_source": "backtest_label",
                 "uses_wizard_as_label": False,

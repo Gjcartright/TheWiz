@@ -130,7 +130,8 @@ def test_fixture_datasets_flow_into_experiment_harness(tmp_path):
 
     assert not results.empty
     assert set(results["pair"]) == {"ETH-BTC", "SOL-ETH"}
-    assert set(results["status"]) == {"evaluated"}
+    assert set(results["status"]) == {"skipped"}
+    assert set(results["reason"]) == {"funding clock is not valid: insufficient_timestamp_observations"}
 
 
 def test_fixture_ingestion_derives_beta_from_leg_prices_when_missing():

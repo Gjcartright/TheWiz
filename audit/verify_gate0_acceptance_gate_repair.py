@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
 import subprocess
 import xml.etree.ElementTree as ET
@@ -14,6 +15,7 @@ AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
 DIAGNOSTICS = Path("/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30")
 BASE = "56377e002d98636ea23cd9bc8066b1edc8277187"
+FROZEN_HEAD = "989a67c4833422da57065863d4fc6edf218da7d7"
 SOURCE = "src/quant_platform/experiments.py"
 TEST = "tests/test_experiments.py"
 OUTPUT = AUDIT / "GATE0_ACCEPTANCE_GATE_REPAIR_2026-09-30.json"
@@ -31,10 +33,16 @@ def baseline_digest(path: str) -> str:
     return digest(subprocess.check_output(["git", "show", f"{BASE}:{path}"], cwd=ROOT))
 
 
+def frozen_digest(path: str) -> str:
+    return digest(subprocess.check_output(["git", "show", f"{FROZEN_HEAD}:{path}"], cwd=ROOT))
+
+
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
+    frozen_queue = subprocess.check_output(
+        ["git", "show", f"{FROZEN_HEAD}:audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"],
+        cwd=ROOT, text=True,
+    )
+    with io.StringIO(frozen_queue) as stream:
         queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
     if any(queue[path]["custody_status"] != "PRESERVED_REVIEW_REQUIRED_NO_PORT" for path in (SOURCE, TEST)):
         raise ValueError("partial acceptance source review must stay pending")
@@ -79,13 +87,13 @@ def main() -> None:
         "source_sha256": {
             SOURCE: {
                 "baseline": source_baseline,
-                "patched": file_digest(ROOT / SOURCE),
+                "patched": frozen_digest(SOURCE),
                 "runtime_candidate": queue[SOURCE]["runtime_sha256_at_freeze"],
                 "forensic_variant": queue[SOURCE]["historical_variant_sha256"],
             },
             TEST: {
                 "baseline": test_baseline,
-                "patched": file_digest(ROOT / TEST),
+                "patched": frozen_digest(TEST),
                 "forensic_variant": queue[TEST]["historical_variant_sha256"],
             },
         },

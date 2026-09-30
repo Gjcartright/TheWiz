@@ -18,6 +18,7 @@ from quant_platform.orchestration.teacher_contracts import (
     TeacherProposal,
 )
 from quant_platform.orchestration.teacher_council import arbitrate_teacher_council
+from quant_platform.statistics.math_v2 import MATH_VERSION
 
 
 NOW = datetime(2026, 8, 6, 18, tzinfo=timezone.utc)
@@ -40,7 +41,7 @@ def _proposal(
     action: TeacherAction = TeacherAction.SHORT_X_LONG_Y,
     authority: EvidenceAuthority = EvidenceAuthority.LOCAL_POINT_IN_TIME,
     source_system: str = "hyperliquid_local_replay",
-    math_version: str = "math-v2.1-y-on-x",
+    math_version: str = MATH_VERSION,
 ) -> TeacherProposal:
     context = _context()
     return TeacherProposal(

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
 import subprocess
 import xml.etree.ElementTree as ET
@@ -14,6 +15,7 @@ AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
 DIAGNOSTICS = Path("/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30")
 BASE = "f8cb4a8efcab3b539575505acab65ec43e946d7a"
+FROZEN_HEAD = "989a67c4833422da57065863d4fc6edf218da7d7"
 SOURCE = "src/quant_platform/backtest.py"
 TEST = "tests/test_backtest.py"
 OUTPUT = AUDIT / "GATE0_BACKTEST_INPUT_REPAIR_2026-09-30.json"
@@ -32,10 +34,17 @@ def prior_sha(path: str) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def frozen_sha(path: str) -> str:
+    content = subprocess.check_output(["git", "show", f"{FROZEN_HEAD}:{path}"], cwd=ROOT)
+    return hashlib.sha256(content).hexdigest()
+
+
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
+    frozen_queue = subprocess.check_output(
+        ["git", "show", f"{FROZEN_HEAD}:audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"],
+        cwd=ROOT, text=True,
+    )
+    with io.StringIO(frozen_queue) as stream:
         queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
     if any(queue[path]["custody_status"] != "PRESERVED_REVIEW_REQUIRED_NO_PORT" for path in (SOURCE, TEST)):
         raise ValueError("broader backtest source review must remain pending")
@@ -71,12 +80,12 @@ def main() -> None:
         "baseline_commit": BASE,
         "source_sha256": {
             SOURCE: {
-                "baseline": prior_sha(SOURCE), "patched": sha(ROOT / SOURCE),
+                "baseline": prior_sha(SOURCE), "patched": frozen_sha(SOURCE),
                 "runtime_candidate": queue[SOURCE]["runtime_sha256_at_freeze"],
                 "historical_variants": queue[SOURCE]["historical_variant_sha256"].split(";"),
             },
             TEST: {
-                "baseline": prior_sha(TEST), "patched": sha(ROOT / TEST),
+                "baseline": prior_sha(TEST), "patched": frozen_sha(TEST),
                 "runtime_candidate": queue[TEST]["runtime_sha256_at_freeze"],
                 "historical_variant": queue[TEST]["historical_variant_sha256"],
             },
