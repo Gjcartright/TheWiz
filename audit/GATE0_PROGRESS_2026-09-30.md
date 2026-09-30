@@ -1,6 +1,8 @@
-# Gate 0 progress and open decisions
+# Gate 0 progress and decisions
 
-**Status:** Open. This is a source and custody receipt, not a research acceptance or trading authorization.
+**Status:** Source review complete. The exact-commit restore, diagnostics, and GitHub CI must be confirmed in a separate off-drive exit receipt. This is a source and custody record, not a research acceptance or trading authorization.
+
+The joined queue now contains **891 path decisions**: 873 reviewed source/support paths and 18 verified non-source artifacts. No row remains marked `REVIEW_REQUIRED`. A reviewed decision can retain or defer a preserved variant; it does not imply that the variant was copied into active source. The final 13 test candidates produced 12 exact test-only ports and one partial port with its incompatible remainder recorded. The final seven desk modules were reviewed and deferred because their import closure is absent, and two historical test variants were reviewed with their specific source-contract blockers. The exact 13-path and nine-path reports, their preserved hashes, and deterministic queue verifiers are versioned beside this file. Historical counts in the chronology below describe earlier checkpoints.
 
 ## Canonical source candidate
 
@@ -84,10 +86,8 @@ The first full disposable suite finished with 2,358 passes and three failures, a
 
 The first GitHub Quality run failed six Phase 00 closure tests because its Ubuntu runner lacks `/usr/bin/sandbox-exec`. The tested closure code deliberately fails closed without kernel containment. The workflow now selects a macOS runner for the full suite, matching the production containment mechanism. Both push and draft-PR checks on source commit `928b620931f61d50467e4c0d599202b31085c191` passed all **2,362 tests**, along with locked installation, compilation, correctness lint, and dependency checks. No code fallback that weakens containment was added. Each later checkpoint needs its own CI result and exact off-drive restore receipt before an exit claim; the latest verified SHA and run URLs are in the dated off-drive Gate 0 source receipt.
 
-## Remaining Gate 0 exit work
+## Gate 0 exit boundary
 
-1. Requalify the latest selected source commit, then finish semantic decisions for the 658 still-open paths in the joined source queue. Resolve Math Desk's missing dependencies/governed files, the collection release package's missing imports, and the effect-authority contract before considering those integrations.
-2. Keep a green GitHub CI result tied to the final Gate 0 source commit and retain the historical variant and restore receipts off-drive.
-3. Keep research acceptance, Testnet orders, and live trading blocked while later gates address the historical math, costs, dashboard, and execution differences.
+The source review is closed in the 891-row queue. The exact-commit exit receipt must bind the final Git tree to a verified Mac internal bundle restore, the full suite, source-decision verifiers, offline dependency checks, wheel install, LangGraph dry run, and GitHub Quality runs. The dated historical-variant archive and nightly save-point receipts remain separate custody evidence.
 
-No Gate 1 data qualification, strategy acceptance, Testnet order, or live trading authority follows from this progress receipt.
+Dependency-blocked Math Desk and collection-release packages, the unselected effect-authority contract, the partial regime-clock test remainder, and dashboard/provider qualification stay explicit work for later gates. Gate 0 grants no Gate 1 data qualification, research acceptance, Testnet order, or live trading authority.
