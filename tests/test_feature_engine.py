@@ -1,4 +1,5 @@
 from quant_platform.feature_engine import FeatureEngine
+from quant_platform.strategies import composite_quant_score_signal
 import pandas as pd
 
 
@@ -142,3 +143,41 @@ def test_feature_engine_preserves_scores_for_complete_canonical_metrics():
 
     assert engine.tail_risk_score(row).score > 0.0
     assert engine.backtest_quality_score(row).score > 0.0
+
+
+def test_feature_engine_rescores_supplied_claims_before_strategy_use():
+    supplied = pd.DataFrame(
+        [
+            {
+                "spread": 0.1,
+                "zscore": 2.4,
+                "cointegration_score": 99.0,
+                "ecm_score": 99.0,
+                "copula_dislocation_score": 99.0,
+                "tail_risk_score": 99.0,
+                "backtest_quality_score": 99.0,
+                "composite_score": 99.0,
+            }
+        ]
+    )
+
+    scored = FeatureEngine().score_frame(supplied)
+
+    assert composite_quant_score_signal(supplied).iloc[0] == -1.0
+    assert composite_quant_score_signal(scored).iloc[0] == 0.0
+    assert scored["tail_risk_score"].iloc[0] == 0.0
+    assert scored["backtest_quality_score"].iloc[0] == 0.0
+    assert scored["composite_score"].iloc[0] < 70.0
+    for name in (
+        "cointegration_score",
+        "ecm_score",
+        "copula_dislocation_score",
+        "tail_risk_score",
+        "backtest_quality_score",
+        "composite_score",
+    ):
+        assert scored[f"reported_{name}"].iloc[0] == 99.0
+
+    rescored = FeatureEngine().score_frame(scored)
+    assert rescored["reported_composite_score"].iloc[0] == 99.0
+    assert rescored["composite_score"].iloc[0] == scored["composite_score"].iloc[0]

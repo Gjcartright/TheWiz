@@ -76,7 +76,7 @@ class FeatureEngine:
         }
 
     def score_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Append explainable 0-100 scores used by composite strategy families."""
+        """Derive strategy scores; retain supplied score claims for review only."""
         enriched = frame.copy()
         score_rows: list[dict[str, float]] = []
         for _, row in enriched.iterrows():
@@ -85,10 +85,12 @@ class FeatureEngine:
         if score_rows:
             score_frame = pd.DataFrame(score_rows, index=enriched.index)
             for column in score_frame.columns:
-                if column not in enriched.columns:
-                    enriched[column] = score_frame[column]
-            if "composite_score" not in enriched.columns:
-                enriched["composite_score"] = score_frame.mean(axis=1)
+                if column in enriched.columns and f"reported_{column}" not in enriched.columns:
+                    enriched[f"reported_{column}"] = enriched[column]
+                enriched[column] = score_frame[column]
+            if "composite_score" in enriched.columns and "reported_composite_score" not in enriched.columns:
+                enriched["reported_composite_score"] = enriched["composite_score"]
+            enriched["composite_score"] = score_frame.mean(axis=1)
         return enriched
 
     def cointegration_score(self, row: Mapping[str, float]) -> ScoreResult:
