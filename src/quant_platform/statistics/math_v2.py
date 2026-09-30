@@ -58,6 +58,29 @@ def fit_engle_granger(
 ) -> EstimatorResult:
     """Fit the canonical log(Y)-on-log(X) Engle-Granger relation."""
 
+    method = "engle_granger_log_ols"
+    if not price_x.index.identical(price_y.index):
+        return _invalid(method, "price_index_identity_mismatch", len(price_x))
+    if len(price_x) < min_rows:
+        return _invalid(method, "insufficient_rows", len(price_x))
+    grid_reason = _temporal_pair_grid_reason(price_x.index)
+    if grid_reason:
+        return _invalid(method, grid_reason, len(price_x))
+    paired = pd.concat(
+        [pd.to_numeric(price_x, errors="coerce"), pd.to_numeric(price_y, errors="coerce")],
+        axis=1,
+        keys=["x", "y"],
+    )
+    if np.iscomplexobj(paired.to_numpy()):
+        return _invalid(method, "non_finite_prices", len(price_x))
+    try:
+        prices = paired.to_numpy(dtype=float, na_value=np.nan)
+    except (TypeError, ValueError):
+        return _invalid(method, "non_finite_prices", len(price_x))
+    if not np.isfinite(prices).all():
+        return _invalid(method, "non_finite_prices", len(price_x))
+    if not (prices > 0.0).all():
+        return _invalid(method, "nonpositive_prices", len(price_x))
     data = _positive_log_prices(price_x, price_y)
     if len(data) < min_rows:
         return _invalid("engle_granger_log_ols", "insufficient_rows", len(data))
@@ -101,6 +124,39 @@ def fit_engle_granger(
         values,
         len(data),
     )
+
+
+def _temporal_pair_grid_reason(index: pd.Index) -> str:
+    """Require an ordered, regular, explicitly typed observation grid."""
+
+    temporal = isinstance(index, (pd.DatetimeIndex, pd.TimedeltaIndex, pd.PeriodIndex))
+    integer = pd.api.types.is_integer_dtype(index.dtype)
+    floating = pd.api.types.is_float_dtype(index.dtype)
+    if not temporal and not integer and not floating:
+        return "unsupported_temporal_index"
+    if len(index) < 2:
+        return "insufficient_temporal_observations"
+    if index.hasnans or not index.is_unique or not index.is_monotonic_increasing:
+        return "invalid_observation_grid"
+    if temporal:
+        coordinates = [int(value) for value in index.asi8]
+    elif integer:
+        coordinates = [int(value) for value in index]
+    else:
+        coordinates = [float(value) for value in index]
+        if not all(math.isfinite(value) for value in coordinates):
+            return "invalid_observation_grid"
+    differences = [right - left for left, right in zip(coordinates, coordinates[1:])]
+    if not all(math.isfinite(value) and value > 0 for value in differences):
+        return "invalid_observation_grid"
+    if floating:
+        regular = all(
+            math.isclose(value, differences[0], rel_tol=1e-9, abs_tol=0.0)
+            for value in differences
+        )
+    else:
+        regular = all(value == differences[0] for value in differences)
+    return "" if regular else "irregular_observation_grid"
 
 
 def fit_ou(spread: pd.Series, *, min_rows: int = 60, delta_t: float = 1.0) -> EstimatorResult:
