@@ -1,0 +1,1785 @@
+{
+  "active_head_checked": "7eecd20d45232ce4a4658c16158efa1307318019",
+  "authority": "Evidence only. No Expansion source or shared queue edit; no provider or order calls.",
+  "base_commit": "9b7fabfd5133904451199219cce53111f14de7cb",
+  "decision": "Retain active selected source for all 33; historical visual/forensic copies preserved without port. Propose queue status/rationale/evidence updates only.",
+  "expanded_queue_sha256_at_review": "0e6d003cda0c4c32e875c258e911d05238a1b18a5c0dc3ad1c1df2aca98cba9a",
+  "expanded_union_queue_path": "/Volumes/Expansion/Crypto Wizard/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "extended_manifest_path": "/Volumes/Expansion/Crypto Wizard/audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv",
+  "four_root_freeze_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+  "original_union_queue_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "paths": [
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/dynamic_rollout.py",
+        "src/quant_platform/orchestration/dynamic_stage_runner.py",
+        "src/quant_platform/orchestration/dynamic_supreme_team.py",
+        "tests/test_copula_shadow_comparison.py"
+      ],
+      "active_sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "root_label": "forensic_b",
+          "sha256": "ad63349b99523a1e57fe5b08db86a8de5edd52599238cbd62c35a7cba8aed72d",
+          "size_bytes": 6608
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "root_label": "source_candidate",
+          "sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006",
+          "size_bytes": 6784
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "root_label": "visual_recovery",
+          "sha256": "ad63349b99523a1e57fe5b08db86a8de5edd52599238cbd62c35a7cba8aed72d",
+          "size_bytes": 6608
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "ad63349b99523a1e57fe5b08db86a8de5edd52599238cbd62c35a7cba8aed72d",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical CSV and Markdown writers are direct; selected source uses atomic publication. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/copula_shadow_comparison.py",
+      "unified_diff_lines": 18,
+      "unified_diff_sha256": "831e66a3c456aa5947bd0d0275b84e219fa6a487ef7daa6a2020a11e8accef41"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "tests/test_corrective_artifact_retention.py",
+        "tests/test_phase00_supreme_diagnostics.py"
+      ],
+      "active_sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "root_label": "forensic_b",
+          "sha256": "6d2fb9e5e78fee17dc8f05f36512ae28f8d8d4a1cb9efb67684108f7534e1632",
+          "size_bytes": 10561
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "root_label": "source_candidate",
+          "sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d",
+          "size_bytes": 11816
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "root_label": "visual_recovery",
+          "sha256": "6d2fb9e5e78fee17dc8f05f36512ae28f8d8d4a1cb9efb67684108f7534e1632",
+          "size_bytes": 10561
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "6d2fb9e5e78fee17dc8f05f36512ae28f8d8d4a1cb9efb67684108f7534e1632",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Selected source adds projected reclaimable/retained byte accounting and atomic archive/log rotation; historical copy drops capacity forecast and uses direct replacement. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_artifact_retention.py",
+      "unified_diff_lines": 75,
+      "unified_diff_sha256": "48d8d9f03f4f64a909d8f03dc522c772d2c3fac280f4ba8fc29ea9d3dc5785e7"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+        "src/quant_platform/orchestration/corrective_live_parity_capture.py",
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "tests/test_corrective_live_canary.py",
+        "tests/test_corrective_live_canary_execution.py"
+      ],
+      "active_sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary.py",
+          "root_label": "forensic_b",
+          "sha256": "a53c3576874b90a395c153339d988368b809cca5fe34716d4b5016afee32484a",
+          "size_bytes": 44301
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_live_canary.py",
+          "root_label": "source_candidate",
+          "sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879",
+          "size_bytes": 44407
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary.py",
+          "root_label": "visual_recovery",
+          "sha256": "a53c3576874b90a395c153339d988368b809cca5fe34716d4b5016afee32484a",
+          "size_bytes": 44301
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_live_canary.py",
+          "sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_live_canary.py",
+          "sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_live_canary.py",
+          "sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "a53c3576874b90a395c153339d988368b809cca5fe34716d4b5016afee32484a",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical canary receipts use Path.replace; selected source promotes staged files through corrective_runtime. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "de60dc7b413f3530a395472fe5c742c97ccc33fe985518d9e00e792c973fc1d4"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/corrective_live_canary.py",
+        "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+        "tests/test_corrective_live_canary.py"
+      ],
+      "active_sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "root_label": "forensic_b",
+          "sha256": "6f1fec979f7104dd80d89177b7fb1e5c30341ce5cd049bde628137838ab4c44e",
+          "size_bytes": 20254
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "root_label": "source_candidate",
+          "sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421",
+          "size_bytes": 20348
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "root_label": "visual_recovery",
+          "sha256": "6f1fec979f7104dd80d89177b7fb1e5c30341ce5cd049bde628137838ab4c44e",
+          "size_bytes": 20254
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "6f1fec979f7104dd80d89177b7fb1e5c30341ce5cd049bde628137838ab4c44e",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical outcome receipt uses Path.replace; selected source promotes the staged file. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+      "unified_diff_lines": 12,
+      "unified_diff_sha256": "da952c26817c00f0ee627a6ce890a14bbbc0f770a671c8d7e8d850a4801690a3"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_learning.py",
+        "src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+        "tests/test_corrective_registered_learning.py"
+      ],
+      "active_sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "root_label": "forensic_b",
+          "sha256": "b569e62c1e06ab50dd23a000edf88c190527d4cff87ef24be36cf7d8e19039ea",
+          "size_bytes": 13642
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "root_label": "source_candidate",
+          "sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062",
+          "size_bytes": 13601
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "root_label": "visual_recovery",
+          "sha256": "b569e62c1e06ab50dd23a000edf88c190527d4cff87ef24be36cf7d8e19039ea",
+          "size_bytes": 13642
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "b569e62c1e06ab50dd23a000edf88c190527d4cff87ef24be36cf7d8e19039ea",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical protocol uses a local exclusive-write sequence; selected source centralizes immutable bytes and staged promotion, retaining collision protection. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+      "unified_diff_lines": 36,
+      "unified_diff_sha256": "a14f5130ee23b23df76c66bcd202ecbc68ca1ca20a578acd11ed76ad2db74fb2"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+        "src/quant_platform/orchestration/corrective_program.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+        "src/quant_platform/orchestration/corrective_statistical_remediation.py",
+        "tests/test_corrective_registered_learning.py",
+        "tests/test_corrective_registered_rerun.py",
+        "tests/test_corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "root_label": "forensic_b",
+          "sha256": "f86ee3080218032934be11a523a256d9ba13ce220ff1d609d15d4e197c50dfb5",
+          "size_bytes": 94941
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "root_label": "source_candidate",
+          "sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69",
+          "size_bytes": 95073
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "root_label": "visual_recovery",
+          "sha256": "f86ee3080218032934be11a523a256d9ba13ce220ff1d609d15d4e197c50dfb5",
+          "size_bytes": 94941
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "f86ee3080218032934be11a523a256d9ba13ce220ff1d609d15d4e197c50dfb5",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical rerun matrix and receipts use Path.replace; selected source promotes staged files. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_rerun.py",
+      "unified_diff_lines": 26,
+      "unified_diff_sha256": "56133ac48598e45eb25c8781d42f550e16d8c8c8ac6f78a77aae804fc5fa8a04"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_canonical_status.py",
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+        "src/quant_platform/orchestration/corrective_program.py",
+        "src/quant_platform/orchestration/corrective_statistical_remediation.py",
+        "tests/test_corrective_stage4_handoff_readiness.py"
+      ],
+      "active_sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "root_label": "forensic_b",
+          "sha256": "5579fefd458e85a64fb159683dd22fdbef0aac50ff1534f353b5a6a7aaa5af0c",
+          "size_bytes": 41141
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "root_label": "source_candidate",
+          "sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85",
+          "size_bytes": 41247
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "root_label": "visual_recovery",
+          "sha256": "5579fefd458e85a64fb159683dd22fdbef0aac50ff1534f353b5a6a7aaa5af0c",
+          "size_bytes": 41141
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "5579fefd458e85a64fb159683dd22fdbef0aac50ff1534f353b5a6a7aaa5af0c",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical handoff readiness receipts use Path.replace; selected source promotes staged files. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "fb6fff1327d4a3adf580829ccd40b2c4954cbbd7c7d13095f8318118c2710fb7"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_program.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+        "tests/test_corrective_registered_rerun_executor.py",
+        "tests/test_corrective_statistical_remediation.py"
+      ],
+      "active_sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "root_label": "forensic_b",
+          "sha256": "881ed537831d427d155dad9302f8fa206e968436fd9e733dd254370b4d191889",
+          "size_bytes": 43481
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "root_label": "source_candidate",
+          "sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e",
+          "size_bytes": 43635
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "root_label": "visual_recovery",
+          "sha256": "881ed537831d427d155dad9302f8fa206e968436fd9e733dd254370b4d191889",
+          "size_bytes": 43481
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "881ed537831d427d155dad9302f8fa206e968436fd9e733dd254370b4d191889",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical remediation summaries use direct writes and Path.replace; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_statistical_remediation.py",
+      "unified_diff_lines": 31,
+      "unified_diff_sha256": "af885c293a7cfe29c6e3054f7afb2467b88b5cc3f299d12b9fa28f12a34bb665"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "tests/test_corrective_testnet_cohort_readiness.py"
+      ],
+      "active_sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "root_label": "forensic_b",
+          "sha256": "156748876c46b67920adc9363abd123e270d7ae87a70b48f723a54ffa0632485",
+          "size_bytes": 17966
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "root_label": "source_candidate",
+          "sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5",
+          "size_bytes": 18072
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "root_label": "visual_recovery",
+          "sha256": "156748876c46b67920adc9363abd123e270d7ae87a70b48f723a54ffa0632485",
+          "size_bytes": 17966
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "156748876c46b67920adc9363abd123e270d7ae87a70b48f723a54ffa0632485",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical testnet cohort receipts use Path.replace; selected source promotes staged files. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "f0377dc289cc3babeca5cf8fa597c96876eb7699d6bd5f1d6d065c0fa6714e24"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_program.py",
+        "tests/test_corrective_testnet_collateral_transfer.py",
+        "tests/test_gate00g_order_authority.py"
+      ],
+      "active_sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "root_label": "forensic_b",
+          "sha256": "763139a9baeb90de83655d8dedd01fe0ea925a32a2be20692cfc6198f568e5cd",
+          "size_bytes": 26036
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "root_label": "source_candidate",
+          "sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9",
+          "size_bytes": 28940
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "root_label": "visual_recovery",
+          "sha256": "763139a9baeb90de83655d8dedd01fe0ea925a32a2be20692cfc6198f568e5cd",
+          "size_bytes": 26036
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "763139a9baeb90de83655d8dedd01fe0ea925a32a2be20692cfc6198f568e5cd",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical execution can reach keychain and exchange transfer without consumed order-effect authority. Selected source requires and claims an exact account-mutation authorization and uses immutable receipts. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+      "unified_diff_lines": 151,
+      "unified_diff_sha256": "cd10dc9c1a6ec644e80da43fb5841c581ebcfab7394ebf1e5539c56846cbb9dc"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+        "src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+        "tests/test_corrective_wizard_api_credit_receipt.py"
+      ],
+      "active_sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "root_label": "forensic_b",
+          "sha256": "43b74760fcb38176ceb3d72ba369ec3b7d5e5708a0b72d9fca478a3c5b455731",
+          "size_bytes": 6857
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "root_label": "source_candidate",
+          "sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172",
+          "size_bytes": 7122
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "root_label": "visual_recovery",
+          "sha256": "43b74760fcb38176ceb3d72ba369ec3b7d5e5708a0b72d9fca478a3c5b455731",
+          "size_bytes": 6857
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "43b74760fcb38176ceb3d72ba369ec3b7d5e5708a0b72d9fca478a3c5b455731",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical receipt loads the full .env.local and includes raw exception text; selected source loads only the Wizard API key, redacts errors, and promotes staged output. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+      "unified_diff_lines": 27,
+      "unified_diff_sha256": "7302a7af956dafd1b2a5df1c3971defe8695404c23f3d29614eafb81e710b0f4"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/orchestration/corrective_wizard_reset_readiness.py",
+        "tests/capture_reconciliation_support.py",
+        "tests/test_corrective_wizard_capture_manifest.py",
+        "tests/test_corrective_wizard_capture_reconciliation.py",
+        "tests/test_corrective_wizard_proof_launcher.py",
+        "tests/test_corrective_wizard_proof_scheduler.py",
+        "tests/test_corrective_wizard_reset_readiness.py"
+      ],
+      "active_sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "root_label": "forensic_b",
+          "sha256": "7d484dfe0af761b3e671bcb74afb2d17630de02b69ce758ee667d7369f35da77",
+          "size_bytes": 71036
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "root_label": "source_candidate",
+          "sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5",
+          "size_bytes": 70651
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "root_label": "visual_recovery",
+          "sha256": "7d484dfe0af761b3e671bcb74afb2d17630de02b69ce758ee667d7369f35da77",
+          "size_bytes": 71036
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "7d484dfe0af761b3e671bcb74afb2d17630de02b69ce758ee667d7369f35da77",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical capture manifest has bespoke immutable writes and raw exception text; selected source uses shared immutable bytes, staged promotion, and redacted blockers. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+      "unified_diff_lines": 54,
+      "unified_diff_sha256": "764d5356ffa3b599926064aa687b149c33225d9644304e57d376bc6a5b48f3d8"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/wizard_dynamic_comparator_activation.py",
+        "src/quant_platform/wizard_ou_comparator_activation.py",
+        "src/quant_platform/wizard_ou_v4_comparator_activation.py",
+        "src/quant_platform/wizard_ou_v5_comparator_activation.py",
+        "src/quant_platform/wizard_ou_v6_comparator_activation.py",
+        "tests/test_corrective_wizard_capture_reconciliation.py"
+      ],
+      "active_sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "root_label": "forensic_b",
+          "sha256": "175030976a734825cf8c55a905b5e2d870aed0a0467ffd2afe4f5c8a6141850e",
+          "size_bytes": 58181
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "root_label": "source_candidate",
+          "sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc",
+          "size_bytes": 57644
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "root_label": "visual_recovery",
+          "sha256": "175030976a734825cf8c55a905b5e2d870aed0a0467ffd2afe4f5c8a6141850e",
+          "size_bytes": 58181
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "175030976a734825cf8c55a905b5e2d870aed0a0467ffd2afe4f5c8a6141850e",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical reconciliation has bespoke JSON link/write logic and raw exception text; selected source uses shared immutable JSON and redacted blockers. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+      "unified_diff_lines": 60,
+      "unified_diff_sha256": "69ab972fcd6db909d1ef8731dc00ed0296f7df55a5880b9213f30c89a909d81b"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "tests/test_corrective_wizard_copula_behavioral.py"
+      ],
+      "active_sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "root_label": "forensic_b",
+          "sha256": "cfe89322867090a86440d7983fe2b1ae21f1f1e0ffcad2e2e3d1899107b97140",
+          "size_bytes": 65139
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "root_label": "source_candidate",
+          "sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063",
+          "size_bytes": 64911
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "root_label": "visual_recovery",
+          "sha256": "cfe89322867090a86440d7983fe2b1ae21f1f1e0ffcad2e2e3d1899107b97140",
+          "size_bytes": 65139
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "cfe89322867090a86440d7983fe2b1ae21f1f1e0ffcad2e2e3d1899107b97140",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical copula path resolves the Wizard key during dry run and uses bespoke direct writes/raw exception text; selected source gates key access on execute and uses immutable publication/redaction. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+      "unified_diff_lines": 77,
+      "unified_diff_sha256": "aed779e2926b0c7d22b8178c328b654b29109edced43f97d974c633733d9ebfd"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/wizard_dynamic_comparator_activation.py",
+        "tests/test_corrective_wizard_dynamic_holdout.py",
+        "tests/test_corrective_wizard_dynamic_supreme_review.py"
+      ],
+      "active_sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "root_label": "forensic_b",
+          "sha256": "dff1493c12bbc2abda3925b90cafaebbb456508efd1c67fcbb43aa80a2fd8497",
+          "size_bytes": 16893
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "root_label": "source_candidate",
+          "sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb",
+          "size_bytes": 17013
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "root_label": "visual_recovery",
+          "sha256": "dff1493c12bbc2abda3925b90cafaebbb456508efd1c67fcbb43aa80a2fd8497",
+          "size_bytes": 16893
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "dff1493c12bbc2abda3925b90cafaebbb456508efd1c67fcbb43aa80a2fd8497",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical review writes text directly and replaces a staged file; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "bb1cf9dfad5dd521b80ba745e1018fb13ea194fc30e825f6ebc131aa27c36f0e"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "tests/test_corrective_wizard_ou_v4_failure_attribution.py"
+      ],
+      "active_sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "root_label": "forensic_b",
+          "sha256": "af7b894ab1c75c3869c26e38eca67efd241ad0d429e7a84a7b6daa6bfd24b430",
+          "size_bytes": 17008
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "root_label": "source_candidate",
+          "sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd",
+          "size_bytes": 17101
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "root_label": "visual_recovery",
+          "sha256": "af7b894ab1c75c3869c26e38eca67efd241ad0d429e7a84a7b6daa6bfd24b430",
+          "size_bytes": 17008
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "af7b894ab1c75c3869c26e38eca67efd241ad0d429e7a84a7b6daa6bfd24b430",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical failure receipt uses Path.replace; selected source promotes the staged file. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+      "unified_diff_lines": 11,
+      "unified_diff_sha256": "82d366e729376acd55cbdf32d7a6fc730947b02f5a4c474f80df04a737f5182a"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/wizard_ou_v4_comparator_activation.py",
+        "tests/test_corrective_wizard_ou_v4_holdout.py"
+      ],
+      "active_sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "root_label": "forensic_b",
+          "sha256": "05eb88f5dc80634e643f5a34d5a4633672fda3691b426b1f82134e1471aabe7c",
+          "size_bytes": 17794
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "root_label": "source_candidate",
+          "sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca",
+          "size_bytes": 17914
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "root_label": "visual_recovery",
+          "sha256": "05eb88f5dc80634e643f5a34d5a4633672fda3691b426b1f82134e1471aabe7c",
+          "size_bytes": 17794
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "05eb88f5dc80634e643f5a34d5a4633672fda3691b426b1f82134e1471aabe7c",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical supreme review uses direct text and Path.replace; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "410523659b372a40488a35fb6750af22828645195f4581576fefd3aa30a03ece"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "tests/test_corrective_wizard_ou_v5_failure_attribution.py"
+      ],
+      "active_sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "root_label": "forensic_b",
+          "sha256": "28988952519159c8d2803589831a04517b5d462deef61816f07658ea5f6efa63",
+          "size_bytes": 15974
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "root_label": "source_candidate",
+          "sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e",
+          "size_bytes": 16067
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "root_label": "visual_recovery",
+          "sha256": "28988952519159c8d2803589831a04517b5d462deef61816f07658ea5f6efa63",
+          "size_bytes": 15974
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "28988952519159c8d2803589831a04517b5d462deef61816f07658ea5f6efa63",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical failure receipt uses Path.replace; selected source promotes the staged file. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+      "unified_diff_lines": 11,
+      "unified_diff_sha256": "ebb2a3077b1088e3ceb4ac817fe97d52fdae1fb3e910248c1cb5740a58a1003a"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/wizard_ou_v5_comparator_activation.py",
+        "tests/test_corrective_wizard_ou_v5_holdout.py"
+      ],
+      "active_sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "root_label": "forensic_b",
+          "sha256": "65317e5886415f1c6a28f147159028809f2014bf6cc47b01779b19b70f151cc5",
+          "size_bytes": 19637
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "root_label": "source_candidate",
+          "sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf",
+          "size_bytes": 19757
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "root_label": "visual_recovery",
+          "sha256": "65317e5886415f1c6a28f147159028809f2014bf6cc47b01779b19b70f151cc5",
+          "size_bytes": 19637
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "65317e5886415f1c6a28f147159028809f2014bf6cc47b01779b19b70f151cc5",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical supreme review uses direct text and Path.replace; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "d404c9465a3d51ce7e15dcfbd8bd31f254be7f8d28486cb49e6615b1f54871cd"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+        "src/quant_platform/wizard_ou_v6_comparator_activation.py",
+        "tests/test_corrective_wizard_ou_v6_holdout.py"
+      ],
+      "active_sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "root_label": "forensic_b",
+          "sha256": "cf5a3bedd77e7d970b8e650a74ca81ef0de9d9e0a4be58f4439c948561ddc51b",
+          "size_bytes": 21892
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "root_label": "source_candidate",
+          "sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1",
+          "size_bytes": 22012
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "root_label": "visual_recovery",
+          "sha256": "cf5a3bedd77e7d970b8e650a74ca81ef0de9d9e0a4be58f4439c948561ddc51b",
+          "size_bytes": 21892
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "cf5a3bedd77e7d970b8e650a74ca81ef0de9d9e0a4be58f4439c948561ddc51b",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical supreme review uses direct text and Path.replace; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+      "unified_diff_lines": 16,
+      "unified_diff_sha256": "706418a0725121e69e1188efb7ce248b943df4e24efd7dffba0294cd9c23107b"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+        "tests/test_corrective_wizard_unattended_preflight.py"
+      ],
+      "active_sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "root_label": "forensic_b",
+          "sha256": "a1d4b4223074a53bea72be47be0885c90c9a6e5f5ef6ce4047f87aadfdddea78",
+          "size_bytes": 15125
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "root_label": "source_candidate",
+          "sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015",
+          "size_bytes": 15523
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "root_label": "visual_recovery",
+          "sha256": "a1d4b4223074a53bea72be47be0885c90c9a6e5f5ef6ce4047f87aadfdddea78",
+          "size_bytes": 15125
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "a1d4b4223074a53bea72be47be0885c90c9a6e5f5ef6ce4047f87aadfdddea78",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical preflight removes the injectable Wizard key path and exposes raw exception strings; selected source preserves injected credential flow, redacted blockers, and staged publication. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+      "unified_diff_lines": 55,
+      "unified_diff_sha256": "df1985b7efbc82f791cc4f670b638e22bdf19ebb322b248413e43d0d87ff7e20"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "tests/test_current_wizard_hyperliquid_archive.py"
+      ],
+      "active_sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "root_label": "forensic_b",
+          "sha256": "ded1b879c2d0b81581f76af7aaf3f839a3ddc70fe9a09f08e52079b230712ce6",
+          "size_bytes": 26441
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "root_label": "source_candidate",
+          "sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79",
+          "size_bytes": 26622
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "root_label": "visual_recovery",
+          "sha256": "ded1b879c2d0b81581f76af7aaf3f839a3ddc70fe9a09f08e52079b230712ce6",
+          "size_bytes": 26441
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "ded1b879c2d0b81581f76af7aaf3f839a3ddc70fe9a09f08e52079b230712ce6",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical release dry-run plan and manifest use direct writes; selected source publishes them atomically. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+      "unified_diff_lines": 25,
+      "unified_diff_sha256": "24b47c434c6e7c4a24add9e96b5014c959e48f63e0d426d18cf151bd5b9dec3d"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "tests/test_corrective_release_gates.py",
+        "tests/test_current_wizard_hyperliquid_testnet_protocol.py",
+        "tests/test_hyperliquid_learning_and_risk.py"
+      ],
+      "active_sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "root_label": "forensic_b",
+          "sha256": "c56f2d7558176bf64a1ed0dad79e632bcb90f680ac3a16af7c13d9b59932a9b0",
+          "size_bytes": 24830
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "root_label": "source_candidate",
+          "sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa",
+          "size_bytes": 25033
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "root_label": "visual_recovery",
+          "sha256": "c56f2d7558176bf64a1ed0dad79e632bcb90f680ac3a16af7c13d9b59932a9b0",
+          "size_bytes": 24830
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "c56f2d7558176bf64a1ed0dad79e632bcb90f680ac3a16af7c13d9b59932a9b0",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical testnet protocol scenario, transition, validation, and manifest outputs use direct writes; selected source publishes atomically. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+      "unified_diff_lines": 29,
+      "unified_diff_sha256": "46a2223c89c608a7cdacc17824911269ce3b498c4c8f8321d165af09bee67954"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/copula_shadow_cell.py",
+        "src/quant_platform/orchestration/copula_shadow_comparison.py",
+        "src/quant_platform/orchestration/dynamic_arbiter.py",
+        "src/quant_platform/orchestration/dynamic_rollout.py",
+        "src/quant_platform/orchestration/dynamic_router.py",
+        "tests/test_dynamic_agent_arbiter.py",
+        "tests/test_dynamic_agent_ledger.py",
+        "tests/test_dynamic_agent_router.py",
+        "tests/test_dynamic_rollout.py"
+      ],
+      "active_sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_ledger.py",
+          "root_label": "forensic_b",
+          "sha256": "475f66cd19f53641f05fc399765345c8019c6d5b01fc3043d8c87d31d2ebd031",
+          "size_bytes": 13066
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/dynamic_ledger.py",
+          "root_label": "source_candidate",
+          "sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8",
+          "size_bytes": 13128
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_ledger.py",
+          "root_label": "visual_recovery",
+          "sha256": "475f66cd19f53641f05fc399765345c8019c6d5b01fc3043d8c87d31d2ebd031",
+          "size_bytes": 13066
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/dynamic_ledger.py",
+          "sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/dynamic_ledger.py",
+          "sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/dynamic_ledger.py",
+          "sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "475f66cd19f53641f05fc399765345c8019c6d5b01fc3043d8c87d31d2ebd031",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical dynamic event ledger appends directly and uses os.replace; selected source uses atomic append and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/dynamic_ledger.py",
+      "unified_diff_lines": 29,
+      "unified_diff_sha256": "4718f6739c5f4a0fbf52fdf3427d67ec36a969f267e9059f05b76ea2ab04ac7f"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/dynamic_stage_runner.py",
+        "src/quant_platform/orchestration/dynamic_supreme_team.py",
+        "tests/test_dynamic_rollout.py"
+      ],
+      "active_sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_rollout.py",
+          "root_label": "forensic_b",
+          "sha256": "51412071f3eb14c658b690e46907074cf6dffb8325c73dff892bb13a36644c27",
+          "size_bytes": 7468
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/dynamic_rollout.py",
+          "root_label": "source_candidate",
+          "sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290",
+          "size_bytes": 7644
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_rollout.py",
+          "root_label": "visual_recovery",
+          "sha256": "51412071f3eb14c658b690e46907074cf6dffb8325c73dff892bb13a36644c27",
+          "size_bytes": 7468
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/dynamic_rollout.py",
+          "sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/dynamic_rollout.py",
+          "sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/dynamic_rollout.py",
+          "sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "51412071f3eb14c658b690e46907074cf6dffb8325c73dff892bb13a36644c27",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical rollout reports use direct CSV/text writes; selected source publishes atomically. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/dynamic_rollout.py",
+      "unified_diff_lines": 17,
+      "unified_diff_sha256": "639748b1229d367924db840d8080b98cb9d42770a9bd5246a8bc5ab064ad3c3e"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/copula_shadow_cell.py",
+        "src/quant_platform/orchestration/dynamic_rollout.py",
+        "tests/test_dynamic_agent_router.py"
+      ],
+      "active_sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_router.py",
+          "root_label": "forensic_b",
+          "sha256": "3de589b799c026fa891b354631ccabd5ee44361537445f4c1119a6b5b6c0215e",
+          "size_bytes": 6826
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/dynamic_router.py",
+          "root_label": "source_candidate",
+          "sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259",
+          "size_bytes": 6882
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_router.py",
+          "root_label": "visual_recovery",
+          "sha256": "3de589b799c026fa891b354631ccabd5ee44361537445f4c1119a6b5b6c0215e",
+          "size_bytes": 6826
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/dynamic_router.py",
+          "sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/dynamic_router.py",
+          "sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/dynamic_router.py",
+          "sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "3de589b799c026fa891b354631ccabd5ee44361537445f4c1119a6b5b6c0215e",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical routing plan appends directly to JSONL; selected source uses atomic append. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/dynamic_router.py",
+      "unified_diff_lines": 23,
+      "unified_diff_sha256": "bec7e33530e9df10bf0ac111c0e96cdd240af612716f5ae1e0b6d3ad67452d12"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/dynamic_stage_runner.py",
+        "tests/test_dynamic_supreme_team.py"
+      ],
+      "active_sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "root_label": "forensic_b",
+          "sha256": "cfc213192c64d901a455a04a6dc06b47e4fcbb3b71f8bbe83357d81c8b01a88c",
+          "size_bytes": 4365
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "root_label": "source_candidate",
+          "sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568",
+          "size_bytes": 4541
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "root_label": "visual_recovery",
+          "sha256": "cfc213192c64d901a455a04a6dc06b47e4fcbb3b71f8bbe83357d81c8b01a88c",
+          "size_bytes": 4365
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "cfc213192c64d901a455a04a6dc06b47e4fcbb3b71f8bbe83357d81c8b01a88c",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical team report uses direct CSV/text writes; selected source publishes atomically. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/dynamic_supreme_team.py",
+      "unified_diff_lines": 17,
+      "unified_diff_sha256": "167706492ff3b8be6aa7387a1b9b301dc358db822a7a5d749b27c5d047b7b987"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/reporting.py"
+      ],
+      "active_sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/events.py",
+          "root_label": "forensic_b",
+          "sha256": "3ea47c054da9202fa563bbeda176819a8c55e6d1ae4f47237680926c8516a0eb",
+          "size_bytes": 438
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/events.py",
+          "root_label": "source_candidate",
+          "sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b",
+          "size_bytes": 495
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/events.py",
+          "root_label": "visual_recovery",
+          "sha256": "3ea47c054da9202fa563bbeda176819a8c55e6d1ae4f47237680926c8516a0eb",
+          "size_bytes": 438
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/events.py",
+          "sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/events.py",
+          "sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/events.py",
+          "sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "3ea47c054da9202fa563bbeda176819a8c55e6d1ae4f47237680926c8516a0eb",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical orchestration event log appends directly; selected source uses atomic append. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/events.py",
+      "unified_diff_lines": 15,
+      "unified_diff_sha256": "4cf08746b96812fbbd30d876a3e8ece11b7bfc4871578e4a6e581990dab00d60"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+      ],
+      "active_sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "root_label": "forensic_b",
+          "sha256": "ff06000dab9edac93d2e1df55a506afaea4a09461137f09e11cdb4abf788330e",
+          "size_bytes": 31031
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "root_label": "source_candidate",
+          "sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92",
+          "size_bytes": 31234
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "root_label": "visual_recovery",
+          "sha256": "ff06000dab9edac93d2e1df55a506afaea4a09461137f09e11cdb4abf788330e",
+          "size_bytes": 31031
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "ff06000dab9edac93d2e1df55a506afaea4a09461137f09e11cdb4abf788330e",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical concentration snapshots use mutable shutil.copy2 and direct reports; selected source uses immutable snapshot copy and atomic reports. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+      "unified_diff_lines": 50,
+      "unified_diff_sha256": "6b45d245548aff24c491cef126118ce85278a197a9a45e368f1ccf465f127386"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+        "tests/test_exhaustive_wizard_hyperliquid_learning.py"
+      ],
+      "active_sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "root_label": "forensic_b",
+          "sha256": "5ee616e8e5de56fd7b10169ba9d7cea105ab405a7ee0d0d1b6e0dfbc792d811e",
+          "size_bytes": 21000
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "root_label": "source_candidate",
+          "sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3",
+          "size_bytes": 21221
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "root_label": "visual_recovery",
+          "sha256": "5ee616e8e5de56fd7b10169ba9d7cea105ab405a7ee0d0d1b6e0dfbc792d811e",
+          "size_bytes": 21000
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "5ee616e8e5de56fd7b10169ba9d7cea105ab405a7ee0d0d1b6e0dfbc792d811e",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical learning inputs use mutable shutil.copy2 and direct outputs; selected source uses immutable snapshot copy and atomic reports. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+      "unified_diff_lines": 49,
+      "unified_diff_sha256": "ed593b0501f5e1bf6cea4b527d3ba4d2e3fca6f92c15136c796478dfd532a874"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/hyperliquid_testnet.py",
+        "src/quant_platform/orchestration/corrective_release_gates.py",
+        "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+        "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+        "src/quant_platform/orchestration/hyperliquid_research_cycle.py",
+        "src/quant_platform/orchestration/hyperliquid_testnet_lifecycle_evidence.py",
+        "tests/test_corrective_release_gates.py",
+        "tests/test_corrective_testnet_collateral_transfer.py",
+        "tests/test_hyperliquid_learning_and_risk.py",
+        "tests/test_hyperliquid_testnet.py",
+        "tests/test_hyperliquid_testnet_lifecycle_evidence.py",
+        "tests/test_teacher_evidence_materializer.py"
+      ],
+      "active_sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "root_label": "forensic_b",
+          "sha256": "bbf9a06f55c1ef4364638c1b22090debc71608f883b1ae29b04cfb7c934357e3",
+          "size_bytes": 67802
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "root_label": "source_candidate",
+          "sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191",
+          "size_bytes": 67951
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "root_label": "visual_recovery",
+          "sha256": "bbf9a06f55c1ef4364638c1b22090debc71608f883b1ae29b04cfb7c934357e3",
+          "size_bytes": 67802
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "bbf9a06f55c1ef4364638c1b22090debc71608f883b1ae29b04cfb7c934357e3",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical risk and testnet lifecycle reports use direct writes/replacement; selected source uses atomic text and staged promotion. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+      "unified_diff_lines": 73,
+      "unified_diff_sha256": "2908c01a1bfd7e3f1789a8bc2748c9ef80b507b76ce856738a0c1771426f052f"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/orchestration/langgraph_workflow.py",
+        "src/quant_platform/orchestration/nodes.py",
+        "src/quant_platform/orchestration/orchestrator.py"
+      ],
+      "active_sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/reporting.py",
+          "root_label": "forensic_b",
+          "sha256": "d55594bc83be423f0512b6843da4107e36a6224562067ea8a2c61da992396016",
+          "size_bytes": 3830
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/reporting.py",
+          "root_label": "source_candidate",
+          "sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e",
+          "size_bytes": 4014
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/reporting.py",
+          "root_label": "visual_recovery",
+          "sha256": "d55594bc83be423f0512b6843da4107e36a6224562067ea8a2c61da992396016",
+          "size_bytes": 3830
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/reporting.py",
+          "sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/reporting.py",
+          "sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/reporting.py",
+          "sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "d55594bc83be423f0512b6843da4107e36a6224562067ea8a2c61da992396016",
+      "proposed_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical status reports use direct CSV/text writes; selected source publishes atomically. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/reporting.py",
+      "unified_diff_lines": 21,
+      "unified_diff_sha256": "5ae57364d0fe4239fc77b527c8494aa9f46cd818ed33058b66b29fd65a2dee82"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "tests/test_wizard_pair_detail_api_pilot.py"
+      ],
+      "active_sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e",
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "root_label": "forensic_b",
+          "sha256": "56e18f95f7abc34e7b005ad76f04fea2b850fb55340e2d00d8c9108fc7dd9efa",
+          "size_bytes": 30465
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "root_label": "source_candidate",
+          "sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e",
+          "size_bytes": 31956
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "root_label": "visual_recovery",
+          "sha256": "56e18f95f7abc34e7b005ad76f04fea2b850fb55340e2d00d8c9108fc7dd9efa",
+          "size_bytes": 30465
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/omission33/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e"
+        }
+      },
+      "four_root_decision": "SAME/NO_PORT_NEEDED",
+      "historical_sha256": "56e18f95f7abc34e7b005ad76f04fea2b850fb55340e2d00d8c9108fc7dd9efa",
+      "proposed_custody_status": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+      "proposed_decision_evidence": "audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.json;audit/GATE0_ORCHESTRATION_UNION_OMISSION33_2026-09-30.md;audit/verify_gate0_orchestration_omission33.py",
+      "proposed_decision_rationale": "Historical pilot uses direct requests.get, raw exception text, and direct evidence writes; selected source uses bounded shared fetch, credential redaction, and atomic publication. Four-root freeze and source_candidate equal selected active bytes; preserve visual/forensic bytes with no source port.",
+      "queue_current_in_four_root_reconciliation": "False",
+      "queue_current_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+      "unified_diff_lines": 188,
+      "unified_diff_sha256": "a4c7a779e78335edd87c87c92e3bc7054b59a3207946e8818d94d5b35e4c35b9"
+    }
+  ],
+  "schema_version": "gate0.orchestration_union_omission33.v1",
+  "scope": "33 newly added orchestration source paths in expanded 891-row queue minus original 811-row queue"
+}
