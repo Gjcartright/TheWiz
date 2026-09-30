@@ -1,44 +1,47 @@
-# Workspace Alignment Plan (Step 4 Deepening)
+# Workspace Alignment Plan — June 2026 Historical Record
 
-## Goal
-Keep all active work, code, and command execution in a single canonical repository:
+This plan was committed on 2026-06-26 at `c0f7f5c`. Its Documents/Codex paths
+and credential observations describe that earlier workspace. They are not current
+operating instructions.
 
-- `/Users/gregc/Documents/Codex/TheWiz-publish-20260625`
+As of the 2026-09-30 Gate 0 source review, the designated writable source checkout
+is `/Volumes/Expansion/Crypto Wizard`, directly on the mounted Expansion drive.
+The encrypted workspace images are preserved historical copies, not active source
+or a prerequisite for the current checkout. See
+[current corrective operations](current_corrective_operations.md) and the dated
+Gate 0 custody receipts for the current source and backup state.
 
-while preserving every older folder as historical reference and avoiding accidental
-credential or configuration drift.
+## Historical goal and context
 
-## Why this needed
-We discovered multiple local folders with overlapping project content:
+The June plan sought one repository under
+`/Users/gregc/Documents/Codex/TheWiz-publish-20260625` while preserving older
+folders as references. Several Documents/Codex folders overlapped, and the
+inventory found only one Git checkout at that time. Running commands from a
+non-Git folder could disconnect `.env.local` and artifacts from the active branch.
 
-- `/Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are/`
-- `/Users/gregc/Documents/Codex/2026-06-15-quantized-statistical-arbitrage-ai-agent-master/`
-- `/Users/gregc/Documents/Codex/TheWiz-publish-20260625/` (git repo with remote `Gjcartright/TheWiz`)
+## Historical operating rules
 
-Only one folder has an active `.git` checkout. Running commands from any non-git folder
-kept `.env.local` and artifacts logically disconnected from the active branch.
+The June plan designated the Documents/Codex repository as its execution root,
+kept older folders as read-only references, kept secrets out of Git, and called
+for `check-live-config` and `system-check` before research runs. That designation
+was superseded by the Expansion checkout above. The old `.env.local` observations
+in [the inventory](../work/legacy_workspace_inventory.csv) are dated facts, not
+current credential evidence or permission to run API-dependent commands.
 
-## Canonical operating rules
-1. **Single execution root**: run all CLI commands from
-   `/Users/gregc/Documents/Codex/TheWiz-publish-20260625`.
-2. **Do not run research or publish commands in folders without `.git`.**
-3. **Never copy secrets into git-tracked files.** Keep keys only in `.env.local`.
-4. **Before any research run**, execute:
-   - `python -m quant_platform.cli check-live-config`
-   - `python -m quant_platform.cli system-check`
-5. **Record legacy references only as read-only pointers** (not execution source).
+## Artifacts from that plan
 
-## Concrete actions executed
-- Added workspace validation command in `scripts/ops/validate_workspace.sh`.
-- Added `work/legacy_workspace_inventory.csv` with all local `/Users/Codex` folders.
-- Added analyses artifacts under `reports/`:
-  - `gap_analysis_workspace_alignment.csv`
-  - `pre_mortem_workspace_alignment.md`
-  - `post_mortem_workspace_alignment.md`
-  - `red_team_workspace_alignment.md`
-- Added status report `reports/workspace_alignment_status.md`.
-- Added this plan document for repeatable onboarding.
+- `work/legacy_workspace_inventory.csv` records the 2026-06-26 folder inventory.
+- `reports/workspace_alignment_status.md` points to the original committed status
+  placeholder; its former assertions are not current checks.
+- The gap analysis, pre-mortem, post-mortem, and red-team reports remain historical
+  review artifacts.
 
-## Ownership
-Use `scripts/ops/validate_workspace.sh` at the start of every session to detect
-environment mismatch before any command that depends on API credentials.
+## Current local checkout check
+
+`scripts/ops/validate_workspace.sh` records the Git root, branch, commit,
+upstream, and working-tree change count of the checkout that runs it. Its
+transient output goes to the Git-ignored
+`reports/active/workspace_alignment_status.md`. The script does not inspect
+credentials, confirm canonical-source selection, or grant research, release,
+Testnet, or live trading authority. Use the current operations guide and dated
+Gate 0 receipts to identify the designated source and backup state.

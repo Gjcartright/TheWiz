@@ -1,8 +1,8 @@
-workspace_path,is_git_repo,env_local_present,notes
-/Users/gregc/Documents/Codex/2026-06-14,false,false,legacy folder only (no .git checkout found)
-/Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are,false,true,contains prior .env.local with populated API credentials + legacy artifacts; preserve as historical reference
-/Users/gregc/Documents/Codex/2026-06-15-quantized-statistical-arbitrage-ai-agent-master,false,false,empty/incomplete clone shell
-/Users/gregc/Documents/Codex/2026-06-16,false,false,legacy folder only
-/Users/gregc/Documents/Codex/2026-06-18,false,false,legacy folder only
-/Users/gregc/Documents/Codex/2026-06-21,false,false,legacy folder only
-/Users/gregc/Documents/Codex/TheWiz-publish-20260625,true,true,active git workspace for TheWiz repository
+workspace_path,is_git_repo,env_local_present,notes,inventory_as_of
+/Users/gregc/Documents/Codex/2026-06-14,false,false,legacy folder only (no .git checkout found),2026-06-26
+/Users/gregc/Documents/Codex/2026-06-15-chief-quantitative-research-architect-you-are,false,true,historical .env.local observed; contents not rechecked; preserve as reference,2026-06-26
+/Users/gregc/Documents/Codex/2026-06-15-quantized-statistical-arbitrage-ai-agent-master,false,false,empty/incomplete clone shell,2026-06-26
+/Users/gregc/Documents/Codex/2026-06-16,false,false,legacy folder only,2026-06-26
+/Users/gregc/Documents/Codex/2026-06-18,false,false,legacy folder only,2026-06-26
+/Users/gregc/Documents/Codex/2026-06-21,false,false,legacy folder only,2026-06-26
+/Users/gregc/Documents/Codex/TheWiz-publish-20260625,true,true,historical Git workspace at inventory time; superseded by the direct Expansion checkout on 2026-09-30; environment-file presence is historical only,2026-06-26
