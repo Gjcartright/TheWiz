@@ -502,6 +502,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
                 "regime": "trend",
                 "exact_mode": "Static Spread",
                 "profit_after_cost": 0.15,
+                "predicted_return": 0.15,
+                "prediction_is_oos": True,
                 "zscore": 1.2,
                 "spread": 0.08,
                 "closed_trades": 4,
@@ -515,6 +517,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
                 "regime": "range",
                 "exact_mode": "OU Spread",
                 "profit_after_cost": 0.06,
+                "predicted_return": 0.06,
+                "prediction_is_oos": True,
                 "zscore": -1.1,
                 "spread": 0.04,
                 "closed_trades": 6,
@@ -538,6 +542,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
     assert not ideas.empty
     assert ideas.iloc[0]["strategy"] == "Static Spread"
     assert ideas.iloc[0]["timeframe"] == "1d"
+    assert ideas.iloc[0]["status"] == "hypothesis_only"
+    assert ideas.iloc[0]["source"] == "rl_oos_prediction_hypothesis"
 
 
 def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
@@ -548,6 +554,8 @@ def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
             {
                 "pair": "BTC-USD/ETH-USD",
                 "profit_after_cost": 0.11,
+                "predicted_return": 0.11,
+                "prediction_is_oos": True,
                 "timeframe": "1d",
                 "strategy": "Static Spread",
                 "regime": "range",

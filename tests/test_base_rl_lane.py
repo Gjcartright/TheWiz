@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import pytest
 
 import quant_platform.active_pipeline as active_pipeline
 from quant_platform.active_pipeline import CommandResult
@@ -74,7 +75,11 @@ def test_base_rl_paper_handoff_blocks_when_shortlist_pair_lacks_support(tmp_path
     assert bool(frame.iloc[0]["paper_authorized"]) is False
 
 
-def test_base_rl_paper_handoff_accepts_route_specific_model_gate(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("preflight_row", "expected_status"),
+    [({"ready": True}, "paper_authorized"), ({"check": "present_without_ready"}, "research_only")],
+)
+def test_base_rl_paper_handoff_accepts_route_specific_model_gate(tmp_path, monkeypatch, preflight_row, expected_status):
     reports = tmp_path / "reports"
     (reports / "rl").mkdir(parents=True)
     (reports / "ml").mkdir(parents=True)
@@ -86,7 +91,7 @@ def test_base_rl_paper_handoff_accepts_route_specific_model_gate(tmp_path, monke
             {"gate": "paper_execution_gate", "ready": True},
         ]
     ).to_csv(reports / "priority_readiness.csv", index=False)
-    pd.DataFrame([{"ready": True}, {"ready": True}]).to_csv(reports / "paper_execution_preflight.csv", index=False)
+    pd.DataFrame([preflight_row, preflight_row]).to_csv(reports / "paper_execution_preflight.csv", index=False)
     pd.DataFrame([{"accepted": False}]).to_csv(reports / "ml" / "model_gated_acceptance.csv", index=False)
     pd.DataFrame(
         [
@@ -119,8 +124,11 @@ def test_base_rl_paper_handoff_accepts_route_specific_model_gate(tmp_path, monke
 
     assert bool(frame.iloc[0]["route_model_gate_accepted"]) is True
     assert bool(frame.iloc[0]["model_gate_accepted"]) is True
-    assert frame.iloc[0]["status"] == "paper_authorized"
-    assert bool(frame.iloc[0]["paper_authorized"]) is True
+    assert frame.iloc[0]["status"] == expected_status
+    assert bool(frame.iloc[0]["paper_authorized"]) is (expected_status == "paper_authorized")
+    if expected_status == "research_only":
+        assert bool(frame.iloc[0]["paper_execution_ready"]) is False
+        assert frame.iloc[0]["blocker"] == "paper_execution_not_ready"
 
 
 def test_base_rl_paper_handoff_blocks_when_route_specific_model_gate_is_weak(tmp_path, monkeypatch):

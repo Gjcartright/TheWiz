@@ -21,6 +21,7 @@ from quant_platform.rl.features import (
     write_feature_schema,
 )
 from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
+from quant_platform.runtime_types import strict_bool
 
 
 def run_rl_research(
@@ -200,7 +201,7 @@ def run_rl_research(
         blocked = _blocked_frame(str(acceptance.get("blocker", pd.Series(["rl_live_use_blocked"])).iloc[0]) or "rl_live_use_blocked", pair_id)
 
     leakage_audit["global_label_purge"] = bool(
-        not split_audit.empty and split_audit.get("global_label_purge", pd.Series([False])).fillna(False).astype(bool).all()
+        not split_audit.empty and split_audit.get("global_label_purge", pd.Series([False])).map(strict_bool).all()
     )
     leakage_audit["split_status"] = (
         "ready" if not split_audit.empty and split_audit.get("status", pd.Series(dtype=str)).eq("ready").all() else "blocked"

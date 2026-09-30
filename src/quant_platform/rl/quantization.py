@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
+from quant_platform.runtime_types import strict_bool
 
 
 def export_rl_policy(root: Path = ROOT) -> CommandResult:
@@ -18,7 +19,7 @@ def export_rl_policy(root: Path = ROOT) -> CommandResult:
     reports.mkdir(parents=True, exist_ok=True)
     models.mkdir(parents=True, exist_ok=True)
     acceptance = _read_csv(reports / "rl_acceptance_report.csv")
-    accepted = bool(not acceptance.empty and acceptance.get("accepted", pd.Series([False])).astype(bool).iloc[0])
+    accepted = bool(not acceptance.empty and acceptance.get("accepted", pd.Series([False])).map(strict_bool).iloc[0])
     blocker = "" if accepted else "rl_acceptance_not_passed"
     export_report = {
         "accepted": accepted,

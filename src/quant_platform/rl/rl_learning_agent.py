@@ -23,6 +23,7 @@ from quant_platform.rl.rl_acceptance import (
     return_summary,
 )
 from quant_platform.rl.rl_backtest import simulate_strategy_returns
+from quant_platform.runtime_types import strict_bool
 
 
 def run_rl_learning_cycle(
@@ -193,7 +194,7 @@ def run_rl_learning_cycle(
                 source_frame=test,
             )
             test_gates = _policy_gate_outcomes(test_summary, baseline_test, len(test), prefix="test")
-            test_gate_passed = bool(test_gates["test_eligible"])
+            test_gate_passed = strict_bool(test_gates["test_eligible"])
             for key, value in test_summary.items():
                 if key != "variant":
                     best_payload[f"test_{key}"] = value
@@ -207,7 +208,7 @@ def run_rl_learning_cycle(
             )
             per_policy_logs.append(test_log)
 
-        validation_passed = bool(top.get("validation_eligible", False)) and split_ready
+        validation_passed = strict_bool(top.get("validation_eligible", False)) and split_ready
         oos_validated = validation_passed and test_gate_passed
         best_payload["policy_selection_status"] = "OOS_VALIDATED" if oos_validated else "REJECTED"
         best_payload["status"] = "research_only" if oos_validated else "blocked"
@@ -245,7 +246,7 @@ def run_rl_learning_cycle(
                 "status": best_payload.get("status", "blocked"),
                 "blocker": best_payload.get("blocker", ""),
                 "policy_selection_status": best_payload.get("policy_selection_status", "REJECTED"),
-                "oos_test_passed": bool(best_payload.get("test_eligible", False)),
+                "oos_test_passed": strict_bool(best_payload.get("test_eligible", False)),
                 "split_ready": split_ready,
                 "live_enabled": False,
                 "generated_at": _now(),
@@ -475,7 +476,7 @@ def _select_policy_candidate(backtests: pd.DataFrame) -> pd.DataFrame:
     if backtests.empty:
         return backtests.head(0)
     ranked = backtests.copy()
-    ranked["_eligible_rank"] = ranked.get("validation_eligible", False).fillna(False).astype(bool).astype(int)
+    ranked["_eligible_rank"] = ranked.get("validation_eligible", False).map(strict_bool).astype(int)
     ranked["_gate_rank"] = pd.to_numeric(ranked.get("validation_gate_count", 0), errors="coerce").fillna(0)
     ranked["_pf_rank"] = pd.to_numeric(ranked.get("profit_factor", 0.0), errors="coerce").replace([np.inf, -np.inf], 10.0).fillna(0.0).clip(upper=10.0)
     ranked["_sharpe_rank"] = pd.to_numeric(ranked.get("sharpe", 0.0), errors="coerce").fillna(0.0)
