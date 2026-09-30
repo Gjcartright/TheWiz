@@ -1,0 +1,18 @@
+{
+  "active_directory_promotion_kwonly": [
+    "publication_scope"
+  ],
+  "active_focused_tests_passed": 49,
+  "active_sha256": "a20b38253f6d6e4a0e3735c1e4c95b7f9a66bc66fd83bbfcc93e78301ef37885",
+  "decision": "REVIEWED_ACTIVE_RETAIN_CANDIDATE_DEFERRED_NO_PORT",
+  "focused_junit_sha256": "88ee5e9e762fd5cbdda8dd308a9ecbf643e0a216a5f228b521b3358fc61330d9",
+  "interpretation": "Retain active guarded publication and exception redaction. The forensic candidate bypasses those guards and has an absent strict_bool dependency; the LocalRuntime mutable-directory call needs its matching runtime API and further safety review.",
+  "preserved_forensic_sha256": "263e059b0dc6897dde037688afae87285a8c0b0d19d474e997ae8883a839382b",
+  "runtime_directory_promotion_kwonly": [
+    "immutable",
+    "publication_scope"
+  ],
+  "runtime_sha256": "bc0d01a52db7aa847bfd6e38284fe10f5c0b92f882eb41fd3e893d03e587bc47",
+  "schema_version": "thewiz.gate0.registered_rerun_decision.v1",
+  "source_path": "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+}
