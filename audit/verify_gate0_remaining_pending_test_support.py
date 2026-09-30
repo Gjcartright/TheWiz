@@ -16,7 +16,12 @@ from pathlib import Path
 REPORT = "GATE0_REMAINING_PENDING_TEST_SUPPORT_RECONCILIATION_2026-09-30.json"
 PROPOSAL = "GATE0_REMAINING_PENDING_TEST_SUPPORT_QUEUE_UPDATE_2026-09-30.csv"
 QUEUE = "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
-MANIFEST = "audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv"
+ORIGINAL_QUEUE_SNAPSHOT = "audit/GATE0_ORIGINAL_811_SOURCE_QUEUE_SNAPSHOT_2026-09-30.csv"
+MANIFEST_COHORT_SNAPSHOT = (
+    "audit/GATE0_REMAINING_PENDING_TEST_SUPPORT_MANIFEST_SNAPSHOT_2026-09-30.csv"
+)
+MANIFEST_COHORT_SHA256 = "b0b4f115d6f8b024410da59a1d1c37414be05a62438147f4ab716e4e5370378d"
+FULL_MANIFEST_ORIGIN_SHA256 = "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918"
 
 
 def sha(payload: bytes) -> str:
@@ -39,13 +44,16 @@ def verify(repo: Path, active: Path, report_path: Path, proposal_path: Path) -> 
     assert report["schema_version"] == "gate0.remaining_pending_test_support.v1"
     scope = report["scope"]
     commit = scope["selected_active_commit"]
-    original_bytes = (repo / QUEUE).read_bytes()
+    # These snapshots keep the original membership and in-scope variant rows
+    # stable after the live queue and source tree move forward.
+    original_bytes = (repo / ORIGINAL_QUEUE_SNAPSHOT).read_bytes()
     selected_bytes = git_bytes(active, commit, QUEUE)
-    manifest_bytes = (active / MANIFEST).read_bytes()
+    manifest_bytes = (repo / MANIFEST_COHORT_SNAPSHOT).read_bytes()
     assert selected_bytes is not None
     assert sha(original_bytes) == scope["original_811_queue_sha256"]
     assert sha(selected_bytes) == scope["selected_active_891_queue_sha256"]
-    assert sha(manifest_bytes) == scope["extended_manifest_sha256"]
+    assert sha(manifest_bytes) == MANIFEST_COHORT_SHA256
+    assert scope["extended_manifest_sha256"] == FULL_MANIFEST_ORIGIN_SHA256
     original = {r["relative_path"] for r in csv.DictReader(io.StringIO(original_bytes.decode()))}
     selected_rows = list(csv.DictReader(io.StringIO(selected_bytes.decode())))
     selected = {r["relative_path"]: r for r in selected_rows}
@@ -73,9 +81,12 @@ def verify(repo: Path, active: Path, report_path: Path, proposal_path: Path) -> 
     assert [r["relative_path"] for r in rows] == paths
     assert [r["relative_path"] for r in proposed] == paths
     manifest = {}
-    for row in csv.DictReader(io.StringIO(manifest_bytes.decode())):
-        if row["status"] == "hashed":
-            manifest.setdefault(row["relative_path"], []).append(row)
+    manifest_rows = list(csv.DictReader(io.StringIO(manifest_bytes.decode())))
+    assert len(manifest_rows) == 164
+    for row in manifest_rows:
+        assert row["status"] == "hashed"
+        assert row["relative_path"] in paths
+        manifest.setdefault(row["relative_path"], []).append(row)
     runtime = Path(scope["runtime_root"])
     source_candidate = Path(scope["source_candidate_root"])
     decisions = Counter()

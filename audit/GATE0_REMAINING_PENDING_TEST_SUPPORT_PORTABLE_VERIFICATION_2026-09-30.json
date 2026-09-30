@@ -1,0 +1,19 @@
+{
+  "checks": {
+    "canonical_staged_copy_without_live_queue_or_full_manifest": "PASS",
+    "expansion_files_edited": false,
+    "isolated_direct": "PASS",
+    "provider_calls_made": false,
+    "source_and_queue_read_from_pinned_selected_commit": true
+  },
+  "input_sha256": {
+    "cohort_manifest_snapshot": "b0b4f115d6f8b024410da59a1d1c37414be05a62438147f4ab716e4e5370378d",
+    "original_queue_snapshot": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+    "proposal": "7f8bc87ec95fbe5633f1b921ef2d1cd78d2375f37cdae63686cd0cb0367ca796",
+    "report": "79c73324d32f1abf429e8c434208e3484da67d9f05ae9e465e24ddd0b0ee2d33",
+    "verifier": "a4aceefe804538f49de0ef7857863eec466f7cb232918c00f70fc00ad6b07737"
+  },
+  "schema_version": "gate0.remaining_pending_test_support.portable_verification.v1",
+  "selected_active_commit": "58d4f95b826fd1abca61ed5cd80a8adadd2c4455",
+  "status": "PASS"
+}
