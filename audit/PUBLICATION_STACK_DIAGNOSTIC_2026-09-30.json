@@ -1,0 +1,40 @@
+{
+  "active_directory_promotion_kwonly": [
+    "publication_scope"
+  ],
+  "adjusted_junit_sha256": "b72ec99a8859562d2af59ef1fc441cb8bab380844cb03817f4823df440e98f82",
+  "adjusted_tests_passed": 156,
+  "baseline_failed_missing_synthetic_authority": 13,
+  "baseline_junit_sha256": "0fde6f8d2b0e491b61d1d78f3b02802ac5c4e14e65fb82aedf5795647b27090f",
+  "baseline_nonpass_modules": {
+    "tests.test_corrective_runtime": 4,
+    "tests.test_exact_publication_targets": 9
+  },
+  "baseline_passed": 143,
+  "baseline_tests": 156,
+  "candidate_directory_promotion_kwonly": [
+    "immutable",
+    "publication_scope"
+  ],
+  "candidate_only_publication_symbols": {
+    "src/quant_platform/orchestration/corrective_scheduler_lock.py": "validate_current_directory_inventory",
+    "src/quant_platform/orchestration/effect_authority.py": "authorize_directory_publication"
+  },
+  "decision": "PARTIAL_REVIEW_NO_SOURCE_SELECTION",
+  "fixture_adjustment": "In the disposable copy only, add test_corrective_runtime.py and test_exact_publication_targets.py to the existing synthetic publication-authority fixture file list; restore conftest byte-for-byte afterward.",
+  "fixture_restored_sha256": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b",
+  "schema_version": "thewiz.gate0.publication_stack_diagnostic.v1",
+  "scope_limit": "The passing candidate cohort uses synthetic test authority and does not certify the full candidate suite or justify porting the larger publication/effect stack. The unmanaged-path probe covers a disposable path outside a governed repository only.",
+  "source_and_test_sha256": {
+    "src/quant_platform/orchestration/corrective_runtime.py": "494fcdb5b12029126382b6dfcd392b711565119a80daf3d34e2d80d2294f8936",
+    "src/quant_platform/orchestration/corrective_scheduler_lock.py": "3ea56f7571c6b605b2ce1eacf29dd0164a768fb1063c0ef4673afdaa1c936ef5",
+    "src/quant_platform/orchestration/effect_authority.py": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+    "tests/conftest.py": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b",
+    "tests/test_corrective_runtime.py": "c62b6fb1f90e1d4d702947d2d5a1ac111eef67c3dcb5d6f9f18e8373d2d649ae",
+    "tests/test_corrective_scheduler_lock.py": "2fc1baee9ee8c29afd958c7d8be483bba99e2eff92deb4d512e80fadddc4d20f",
+    "tests/test_exact_publication_targets.py": "55c2536ff9def950766b83bbd650a9ddf905cb514df484b9b1f45ef287a412aa"
+  },
+  "source_snapshot_receipt_sha256": "57e784c2d1603b3c36ad9e2aa731b7b0c410de5b40d7a704bff9173cb1b09c35",
+  "source_snapshot_root": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/publication-candidate-source-snapshot",
+  "unmanaged_path_diagnostic_sha256": "0efbe30c73e0e3a0ea8ac5ab1edcf9d2d5448c2d0ba458a5c32e6641d70048a1"
+}
