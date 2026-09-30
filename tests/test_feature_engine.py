@@ -69,3 +69,76 @@ def test_feature_engine_enriches_frames_with_scores_and_composite():
     assert "copula_dislocation_score" in enriched
     assert "composite_score" in enriched
     assert 0 <= enriched["composite_score"].iloc[0] <= 100
+
+
+def test_feature_engine_tail_and_backtest_scores_fail_closed_for_proxy_metrics():
+    engine = FeatureEngine()
+    proxy_only = {
+        "research_proxy_cvar": 0.01,
+        "research_proxy_var": 0.005,
+        "research_proxy_drawdown": 0.01,
+        "research_proxy_sharpe": 4.0,
+        "profit_factor": 3.0,
+        "completed_trades": 500,
+    }
+
+    tail = engine.tail_risk_score(proxy_only)
+    backtest = engine.backtest_quality_score(proxy_only)
+
+    assert tail.score == 0.0
+    assert "point-in-time" in tail.explanation
+    assert backtest.score == 0.0
+    assert "point-in-time" in backtest.explanation
+
+
+def test_feature_engine_rejects_canonical_values_with_proxy_provenance():
+    engine = FeatureEngine()
+    row = {
+        "cvar": 0.01,
+        "var": 0.005,
+        "drawdown": 0.01,
+        "sharpe": 4.0,
+        "cvar_feature_source": "research_proxy_cvar",
+        "var_feature_source": "research_proxy_var",
+        "drawdown_feature_source": "full_sample_hindsight",
+        "sharpe_feature_source": "research_proxy_sharpe",
+        "profit_factor": 3.0,
+        "completed_trades": 500,
+    }
+
+    assert engine.tail_risk_score(row).score == 0.0
+    assert engine.backtest_quality_score(row).score == 0.0
+
+
+def test_feature_engine_rejects_unlabeled_copies_of_research_proxy_metrics():
+    engine = FeatureEngine()
+    row = {
+        "cvar": 0.01,
+        "var": 0.005,
+        "drawdown": 0.01,
+        "sharpe": 4.0,
+        "research_proxy_cvar": 0.01,
+        "research_proxy_var": 0.005,
+        "research_proxy_drawdown": 0.01,
+        "research_proxy_sharpe": 4.0,
+        "profit_factor": 3.0,
+        "completed_trades": 500,
+    }
+
+    assert engine.tail_risk_score(row).score == 0.0
+    assert engine.backtest_quality_score(row).score == 0.0
+
+
+def test_feature_engine_preserves_scores_for_complete_canonical_metrics():
+    engine = FeatureEngine()
+    row = {
+        "cvar": 0.04,
+        "var": 0.02,
+        "drawdown": 0.05,
+        "sharpe": 1.8,
+        "profit_factor": 1.9,
+        "completed_trades": 300,
+    }
+
+    assert engine.tail_risk_score(row).score > 0.0
+    assert engine.backtest_quality_score(row).score > 0.0
