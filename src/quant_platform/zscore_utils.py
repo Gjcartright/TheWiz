@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+import numpy as np
 import pandas as pd
 
 
@@ -45,7 +46,14 @@ def attach_row_level_zscores(rows: list[dict], *, spread_key: str = "spread", zs
         row[zscore_key] = float(scores.iloc[idx]) if pd.notna(scores.iloc[idx]) else float("nan")
 
 
-def coalesce_zscore(frame: pd.DataFrame, *, prefer_reconstructed: bool = True, prefer_provider: bool = True, prefer_rolling: bool = True) -> pd.Series:
+def coalesce_zscore(
+    frame: pd.DataFrame,
+    *,
+    prefer_reconstructed: bool = True,
+    prefer_provider: bool = True,
+    prefer_rolling: bool = True,
+    source_column: str | None = None,
+) -> pd.Series:
     """Return the canonical z-score stream for a data frame.
 
     Preference:
@@ -53,24 +61,44 @@ def coalesce_zscore(frame: pd.DataFrame, *, prefer_reconstructed: bool = True, p
     2) provided z-score,
     3) rolling z-score,
     4) reconstructed from spread as rolling z-score.
+
+    Select a declared source from the input schema rather than the values in a
+    current or future row. Missing values in the selected stream remain missing.
+    A growing schema must bind its source before evaluating historical prefixes.
     """
 
-    if prefer_reconstructed and "zscore_reconstructed" in frame.columns:
-        reconstructed = pd.to_numeric(frame["zscore_reconstructed"], errors="coerce")
-        if reconstructed.dropna().any():
-            return reconstructed
+    declared = frame.attrs.get("zscore_source_column")
+    if source_column is not None and declared is not None and source_column != declared:
+        raise ValueError("explicit z-score source conflicts with the frame binding")
+    selected = source_column if source_column is not None else declared
+    allowed = {"zscore_reconstructed", "zscore", "rolling_zscore", "spread"}
+    if selected is not None:
+        if not isinstance(selected, str) or selected not in allowed:
+            raise ValueError("unsupported declared z-score source column")
+        if selected not in frame.columns:
+            result = pd.Series(math.nan, index=frame.index, dtype=float)
+        elif selected == "spread":
+            result = rolling_zscore(frame[selected])
+        else:
+            values = pd.to_numeric(frame[selected], errors="coerce")
+            result = values.where(np.isfinite(values))
+        result.attrs["zscore_source_column"] = selected
+        return result
 
-    if prefer_provider and "zscore" in frame.columns:
-        provided = pd.to_numeric(frame["zscore"], errors="coerce")
-        if provided.dropna().any():
-            return provided
-
-    if prefer_rolling and "rolling_zscore" in frame.columns:
-        rolling = pd.to_numeric(frame["rolling_zscore"], errors="coerce")
-        if rolling.dropna().any():
-            return rolling
+    for enabled, column in (
+        (prefer_reconstructed, "zscore_reconstructed"),
+        (prefer_provider, "zscore"),
+        (prefer_rolling, "rolling_zscore"),
+    ):
+        if enabled and column in frame.columns:
+            values = pd.to_numeric(frame[column], errors="coerce")
+            result = values.where(np.isfinite(values))
+            result.attrs["zscore_source_column"] = column
+            return result
 
     if "spread" in frame.columns:
-        return rolling_zscore(frame["spread"])
+        result = rolling_zscore(frame["spread"])
+        result.attrs["zscore_source_column"] = "spread"
+        return result
 
     return pd.Series([math.nan] * len(frame), index=frame.index)
