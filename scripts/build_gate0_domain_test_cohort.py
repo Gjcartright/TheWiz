@@ -181,12 +181,28 @@ def _copy(path: Path) -> dict[str, object]:
     return {"exists": True, "sha256": _hash(data), "test_names": _test_names(data) if path.suffix == ".py" and path.name.startswith("test_") else []}
 
 
+def _base_copy(path: str) -> dict[str, object]:
+    """Use the review commit so later selective ports do not rewrite the evidence."""
+    result = subprocess.run(
+        ["git", "show", f"{BASE_COMMIT}:{path}"], cwd=ROOT, capture_output=True
+    )
+    if result.returncode:
+        return {"exists": False, "sha256": "", "test_names": []}
+    data = result.stdout
+    return {
+        "exists": True,
+        "sha256": _hash(data),
+        "test_names": _test_names(data) if path.startswith("tests/test_") and path.endswith(".py") else [],
+    }
+
+
 def _git_bytes(revision: str, path: str) -> bytes:
     return subprocess.check_output(["git", "show", f"{revision}:{path}"], cwd=ROOT)
 
 
 def build() -> dict[str, object]:
-    queue = [(line, row) for line, row in enumerate(_read_csv(QUEUE), 2) if row["relative_path"].startswith(PREFIXES) and row["custody_status"] == "PRESERVED_REVIEW_REQUIRED_NO_PORT"]
+    base_queue = csv.DictReader(io.StringIO(_git_bytes(BASE_COMMIT, QUEUE.relative_to(ROOT).as_posix()).decode("utf-8")))
+    queue = [(line, row) for line, row in enumerate(base_queue, 2) if row["relative_path"].startswith(PREFIXES) and row["custody_status"] == "PRESERVED_REVIEW_REQUIRED_NO_PORT"]
     assert {row["relative_path"] for _, row in queue} == set(DECISIONS), "cohort membership changed"
     freeze = {row["relative_path"]: row for row in _read_csv(FREEZE)}
     extended: dict[str, list[dict[str, str]]] = {}
@@ -197,11 +213,7 @@ def build() -> dict[str, object]:
     for line, q in queue:
         relative = q["relative_path"]
         status, rationale, risk, source = DECISIONS[relative]
-        selected = _copy(ROOT / relative)
-        if selected["exists"]:
-            current_data = _git_bytes(BASE_COMMIT, relative)
-            selected_data = (ROOT / relative).read_bytes()
-            assert selected_data == current_data, f"selected test changed: {relative}"
+        selected = _base_copy(relative)
         frozen = freeze[relative]
         if q["working_sha256_at_freeze"]:
             assert q["working_sha256_at_freeze"] == frozen["working_sha256"]
@@ -227,7 +239,7 @@ def build() -> dict[str, object]:
         distinct_historical = {item["sha256"] for item in variants} - frozen_hashes
         assert distinct_historical == set(q["historical_variant_sha256"].split(";")) - {""}
         assert len(distinct_historical) == int(q["historical_variant_count"] or 0)
-        src = _copy(ROOT / source)
+        src = _base_copy(source)
         entry = {
             "path": relative,
             "queue_line": line,
@@ -260,8 +272,8 @@ def build() -> dict[str, object]:
     return {
         "report_type": "gate0_original_811_domain_test_cohort",
         "base_commit": BASE_COMMIT,
-        "queue_path": str(QUEUE),
-        "freeze_path": str(FREEZE),
+        "queue_path": QUEUE.relative_to(ROOT).as_posix(),
+        "freeze_path": FREEZE.relative_to(ROOT).as_posix(),
         "extended_manifest_path": str(EXTENDED),
         "pending_count": len(files),
         "status_counts": counts,

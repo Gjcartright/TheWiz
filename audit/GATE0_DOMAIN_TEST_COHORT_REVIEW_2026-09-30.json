@@ -2227,10 +2227,10 @@
       "source_path": "src/quant_platform/youtube_brain.py"
     }
   ],
-  "freeze_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/domain-tests19/audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+  "freeze_path": "audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
   "pending_count": 19,
   "preserved_copies_verified": 103,
-  "queue_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/domain-tests19/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "queue_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
   "report_type": "gate0_original_811_domain_test_cohort",
   "selection_rule": "original-811 pending PRESERVED_REVIEW_REQUIRED_NO_PORT paths matching listed test prefixes",
   "status_counts": {
