@@ -104,56 +104,58 @@ def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _csv_rows(path: Path) -> list[dict[str, str]]:
-    with path.open(newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
-
-
 def _git_bytes(revision: str, relative: str) -> bytes:
     return subprocess.check_output(["git", "show", f"{revision}:{relative}"], cwd=ROOT)
+
+
+def _git_csv(relative: str) -> list[dict[str, str]]:
+    return list(csv.DictReader(io.StringIO(_git_bytes(BASE_COMMIT, relative).decode("utf-8"))))
 
 
 def _physical(path: Path) -> dict[str, object]:
     assert path.is_file(), f"missing preserved copy: {path}"
     data = path.read_bytes()
-    stat = path.stat()
-    return {"path": str(path), "sha256": _sha(data), "size_bytes": len(data), "mtime_ns_now": stat.st_mtime_ns}
+    return {"sha256": _sha(data), "size_bytes": len(data)}
 
 
-def _top_defs(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _top_defs(data: bytes, filename: str) -> list[str]:
+    tree = ast.parse(data.decode("utf-8"), filename=filename)
     return sorted({node.name for node in tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))})
 
 
 def _direct_importers() -> dict[str, dict[str, list[str]]]:
     names = {f"quant_platform.{name[:-3]}": name for name in DECISIONS}
     result = {name: {"source": [], "scripts": [], "tests": []} for name in DECISIONS}
-    for kind, directory in (("source", "src"), ("scripts", "scripts"), ("tests", "tests")):
-        for path in sorted((ROOT / directory).rglob("*.py")):
-            try:
-                tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            except (OSError, UnicodeDecodeError, SyntaxError):
-                continue
-            targets: set[str] = set()
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    targets.update(alias.name for alias in node.names)
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module:
-                        targets.add(node.module)
-                        targets.update(f"{node.module}.{alias.name}" for alias in node.names)
-            relative = path.relative_to(ROOT).as_posix()
-            for module, name in names.items():
-                if module in targets and relative != f"src/quant_platform/{name}":
-                    result[name][kind].append(relative)
+    tracked = subprocess.check_output(
+        ["git", "ls-tree", "-r", "--name-only", BASE_COMMIT, "--", "src", "scripts", "tests"],
+        cwd=ROOT,
+        text=True,
+    ).splitlines()
+    for relative in sorted(path for path in tracked if path.endswith(".py")):
+        kind = "source" if relative.startswith("src/") else "scripts" if relative.startswith("scripts/") else "tests"
+        try:
+            tree = ast.parse(_git_bytes(BASE_COMMIT, relative).decode("utf-8"), filename=relative)
+        except (UnicodeDecodeError, SyntaxError):
+            continue
+        targets: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                targets.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                if node.module:
+                    targets.add(node.module)
+                    targets.update(f"{node.module}.{alias.name}" for alias in node.names)
+        for module, name in names.items():
+            if module in targets and relative != f"src/quant_platform/{name}":
+                result[name][kind].append(relative)
     return result
 
 
 def build() -> dict[str, object]:
-    queue = {row["relative_path"]: (line, row) for line, row in enumerate(_csv_rows(QUEUE), 2)}
-    freeze = {row["relative_path"]: row for row in _csv_rows(FREEZE)}
+    queue = {row["relative_path"]: (line, row) for line, row in enumerate(_git_csv(QUEUE.relative_to(ROOT).as_posix()), 2)}
+    freeze = {row["relative_path"]: row for row in _git_csv(FREEZE.relative_to(ROOT).as_posix())}
     ext_by_path: dict[str, list[dict[str, str]]] = {}
-    for row in _csv_rows(EXTENDED):
+    for row in _git_csv(EXTENDED.relative_to(ROOT).as_posix()):
         ext_by_path.setdefault(row["relative_path"], []).append(row)
     importers = _direct_importers()
     files = []
@@ -162,8 +164,8 @@ def build() -> dict[str, object]:
         line, q = queue[relative]
         assert q["custody_status"] == "PRESERVED_REVIEW_REQUIRED_NO_PORT"
         f = freeze[relative]
-        selected = _physical(ROOT / relative)
-        assert selected["sha256"] == _sha(_git_bytes(BASE_COMMIT, relative))
+        selected_bytes = _git_bytes(BASE_COMMIT, relative)
+        selected = {"sha256": _sha(selected_bytes), "size_bytes": len(selected_bytes)}
         assert f["working_sha256"] == _sha(_git_bytes(FREEZE_GIT_COMMIT, relative))
         if q["working_sha256_at_freeze"]:
             assert q["working_sha256_at_freeze"] == f["working_sha256"]
@@ -185,10 +187,10 @@ def build() -> dict[str, object]:
             assert physical["size_bytes"] == int(row["size_bytes"])
             variants.append({
                 "root_label": row["root_label"],
-                "path": physical["path"],
+                "relative_path": relative,
                 "sha256": physical["sha256"],
                 "size_bytes": physical["size_bytes"],
-                "top_level_definition_count": len(_top_defs(Path(row["absolute_path"]))),
+                "top_level_definition_count": len(_top_defs(Path(row["absolute_path"]).read_bytes(), relative)),
             })
         frozen_hashes = {f[key] for key in ("working_sha256", "recovery_sha256", "runtime_sha256") if f[key]}
         historical = {variant["sha256"] for variant in variants} - frozen_hashes
@@ -204,13 +206,13 @@ def build() -> dict[str, object]:
             "selected_commit": BASE_COMMIT,
             "selected_sha256": selected["sha256"],
             "selected_changed_since_freeze": selected["sha256"] != f["working_sha256"],
-            "selected_top_level_definitions": _top_defs(ROOT / relative),
+            "selected_top_level_definitions": _top_defs(selected_bytes, relative),
             "frozen_working_sha256": f["working_sha256"],
             "frozen_working_git_provenance": FREEZE_GIT_COMMIT,
             "frozen_recovery_sha256": f["recovery_sha256"],
             "frozen_runtime_sha256": f["runtime_sha256"],
-            "recovery_copy": recovery,
-            "runtime_copy": runtime,
+            "recovery_copy": {"root_label": "recovery", "relative_path": relative, **recovery},
+            "runtime_copy": {"root_label": "runtime", "relative_path": relative, **runtime},
             "extended_copies": variants,
             "direct_importers": importers[name],
             "completed_narrow_port_commit": completed_commit,
@@ -222,9 +224,9 @@ def build() -> dict[str, object]:
         "report_type": "gate0_original_811_nonorchestration_source11",
         "base_commit": BASE_COMMIT,
         "freeze_git_commit": FREEZE_GIT_COMMIT,
-        "queue_path": str(QUEUE),
-        "freeze_path": str(FREEZE),
-        "extended_manifest_path": str(EXTENDED),
+        "queue_path": QUEUE.relative_to(ROOT).as_posix(),
+        "freeze_path": FREEZE.relative_to(ROOT).as_posix(),
+        "extended_manifest_path": EXTENDED.relative_to(ROOT).as_posix(),
         "selection_rule": "11 named original-811 pending non-orchestration source paths",
         "pending_count": len(files),
         "physical_copy_hashes_verified": sum(2 + len(item["extended_copies"]) for item in files),

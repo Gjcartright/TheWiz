@@ -1,6 +1,6 @@
 {
   "base_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
-  "extended_manifest_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/nonorch-source11-7776c58/audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv",
+  "extended_manifest_path": "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv",
   "files": [
     {
       "completed_narrow_port_commit": "0311956",
@@ -15,21 +15,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/ablations.py",
+          "relative_path": "src/quant_platform/ablations.py",
           "root_label": "forensic_b",
           "sha256": "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089",
           "size_bytes": 9370,
           "top_level_definition_count": 8
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/ablations.py",
+          "relative_path": "src/quant_platform/ablations.py",
           "root_label": "source_candidate",
           "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
           "size_bytes": 9391,
           "top_level_definition_count": 8
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/ablations.py",
+          "relative_path": "src/quant_platform/ablations.py",
           "root_label": "visual_recovery",
           "sha256": "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456",
           "size_bytes": 9302,
@@ -53,14 +53,14 @@
       "rationale": "Selected source retains atomic CSV publication and now parses persisted tested/baseline eligibility with strict_bool. Forensic_b only changes atomic publication to direct to_csv; visual_recovery also uses bool('False') and would elevate false eligibility. No whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/ablations.py",
+        "relative_path": "src/quant_platform/ablations.py",
+        "root_label": "recovery",
         "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
         "size_bytes": 9391
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/ablations.py",
+        "relative_path": "src/quant_platform/ablations.py",
+        "root_label": "runtime",
         "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
         "size_bytes": 9391
       },
@@ -92,21 +92,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/apify_sources.py",
+          "relative_path": "src/quant_platform/apify_sources.py",
           "root_label": "forensic_b",
           "sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
           "size_bytes": 20161,
           "top_level_definition_count": 20
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/apify_sources.py",
+          "relative_path": "src/quant_platform/apify_sources.py",
           "root_label": "source_candidate",
           "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
           "size_bytes": 44169,
           "top_level_definition_count": 31
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/apify_sources.py",
+          "relative_path": "src/quant_platform/apify_sources.py",
           "root_label": "visual_recovery",
           "sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
           "size_bytes": 20161,
@@ -129,14 +129,14 @@
       "rationale": "Recovery/runtime source switches real Apify requests to ExactHttpRequest with exact method, path, query, and payload binding while retaining the injected-client callback. The selected corrective external-effect module lacks that request type/API, so the source cannot be transplanted. Forensic/visual copy predates the governed call path. Keep selected callback authority until a complete exact-request dependency is integrated.",
       "recommended_queue_status": "REVIEWED_EXACT_REQUEST_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/apify_sources.py",
+        "relative_path": "src/quant_platform/apify_sources.py",
+        "root_label": "recovery",
         "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
         "size_bytes": 44169
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/apify_sources.py",
+        "relative_path": "src/quant_platform/apify_sources.py",
+        "root_label": "runtime",
         "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
         "size_bytes": 44169
       },
@@ -191,21 +191,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/binance_testnet.py",
+          "relative_path": "src/quant_platform/binance_testnet.py",
           "root_label": "forensic_b",
           "sha256": "ed0fed7a11611761a253093f8837d4a7c5c929fc88adb62af7009cf0a08e8223",
           "size_bytes": 19567,
           "top_level_definition_count": 20
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/binance_testnet.py",
+          "relative_path": "src/quant_platform/binance_testnet.py",
           "root_label": "source_candidate",
           "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
           "size_bytes": 24540,
           "top_level_definition_count": 22
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/binance_testnet.py",
+          "relative_path": "src/quant_platform/binance_testnet.py",
           "root_label": "visual_recovery",
           "sha256": "ed0fed7a11611761a253093f8837d4a7c5c929fc88adb62af7009cf0a08e8223",
           "size_bytes": 19567,
@@ -228,14 +228,14 @@
       "rationale": "Selected source enforces gate00g testnet adapter type/order authority; older forensic/visual copy removes those checks. Runtime source candidate adds canonical type registration and instance-method binding checks, but depends on a broader execution attestation API. Review a focused source/test guard; no wholesale import of the older or runtime file.",
       "recommended_queue_status": "REVIEWED_ADAPTER_AUTHORITY_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/binance_testnet.py",
+        "relative_path": "src/quant_platform/binance_testnet.py",
+        "root_label": "recovery",
         "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
         "size_bytes": 24540
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/binance_testnet.py",
+        "relative_path": "src/quant_platform/binance_testnet.py",
+        "root_label": "runtime",
         "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
         "size_bytes": 24540
       },
@@ -284,21 +284,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/env.py",
+          "relative_path": "src/quant_platform/env.py",
           "root_label": "forensic_b",
           "sha256": "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0",
           "size_bytes": 4400,
           "top_level_definition_count": 7
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/env.py",
+          "relative_path": "src/quant_platform/env.py",
           "root_label": "source_candidate",
           "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
           "size_bytes": 2237,
           "top_level_definition_count": 3
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/env.py",
+          "relative_path": "src/quant_platform/env.py",
           "root_label": "visual_recovery",
           "sha256": "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13",
           "size_bytes": 957,
@@ -322,14 +322,14 @@
       "rationale": "Selected, recovery, and runtime bytes match. Forensic adds owner-only and non-symlink secret-file resolution but removes load_selected_env_keys, which active proof scheduler and API credit receipt import; visual also drops the loader. Keep selected API and review a narrow file-provenance guard.",
       "recommended_queue_status": "REVIEWED_SECRET_PROVENANCE_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/env.py",
+        "relative_path": "src/quant_platform/env.py",
+        "root_label": "recovery",
         "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
         "size_bytes": 2237
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/env.py",
+        "relative_path": "src/quant_platform/env.py",
+        "root_label": "runtime",
         "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
         "size_bytes": 2237
       },
@@ -369,21 +369,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/execution.py",
+          "relative_path": "src/quant_platform/execution.py",
           "root_label": "forensic_b",
           "sha256": "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a",
           "size_bytes": 167259,
           "top_level_definition_count": 111
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/execution.py",
+          "relative_path": "src/quant_platform/execution.py",
           "root_label": "source_candidate",
           "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
           "size_bytes": 200503,
           "top_level_definition_count": 135
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/execution.py",
+          "relative_path": "src/quant_platform/execution.py",
           "root_label": "visual_recovery",
           "sha256": "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c",
           "size_bytes": 166719,
@@ -407,14 +407,14 @@
       "rationale": "Selected source now strictly parses persisted venue compatibility/preflight flags. Older forensic/visual source omits later gate00g controls; runtime candidate adds a large coherent canonical-adapter attestation and advisory-only browser account-state contract. Keep completed strict-bool repair; review high-risk authority guards separately, not as a whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_AUTHORITY_GAP_DEFERRED_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/execution.py",
+        "relative_path": "src/quant_platform/execution.py",
+        "root_label": "recovery",
         "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
         "size_bytes": 200503
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/execution.py",
+        "relative_path": "src/quant_platform/execution.py",
+        "root_label": "runtime",
         "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
         "size_bytes": 200503
       },
@@ -551,21 +551,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/family_matrix.py",
+          "relative_path": "src/quant_platform/family_matrix.py",
           "root_label": "forensic_b",
           "sha256": "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a",
           "size_bytes": 14851,
           "top_level_definition_count": 8
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/family_matrix.py",
+          "relative_path": "src/quant_platform/family_matrix.py",
           "root_label": "source_candidate",
           "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
           "size_bytes": 14885,
           "top_level_definition_count": 8
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/family_matrix.py",
+          "relative_path": "src/quant_platform/family_matrix.py",
           "root_label": "visual_recovery",
           "sha256": "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce",
           "size_bytes": 14666,
@@ -589,14 +589,14 @@
       "rationale": "Selected source retains atomic family report publication and strict persisted production/preferred eligibility parsing. Forensic_b replaces atomic writers with direct writes; visual_recovery also drops registry authority columns and uses bool('False'). No whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/family_matrix.py",
+        "relative_path": "src/quant_platform/family_matrix.py",
+        "root_label": "recovery",
         "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
         "size_bytes": 14885
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/family_matrix.py",
+        "relative_path": "src/quant_platform/family_matrix.py",
+        "root_label": "runtime",
         "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
         "size_bytes": 14885
       },
@@ -627,21 +627,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/meta_learning.py",
+          "relative_path": "src/quant_platform/meta_learning.py",
           "root_label": "forensic_b",
           "sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
           "size_bytes": 12184,
           "top_level_definition_count": 15
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/meta_learning.py",
+          "relative_path": "src/quant_platform/meta_learning.py",
           "root_label": "source_candidate",
           "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
           "size_bytes": 17911,
           "top_level_definition_count": 26
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/meta_learning.py",
+          "relative_path": "src/quant_platform/meta_learning.py",
           "root_label": "visual_recovery",
           "sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
           "size_bytes": 12184,
@@ -664,14 +664,14 @@
       "rationale": "Recovery/runtime revision separates finite normalized returns and holds verified readiness false but changes report schema and CLI expectations. Selected CLI P5 directly consumes ready_for_modeling. Selected file must retain current report/CLI contract while a focused outcome-proof and readiness repair is reviewed; older forensic/visual variant also reverts atomic publication.",
       "recommended_queue_status": "REVIEWED_MODEL_READINESS_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/meta_learning.py",
+        "relative_path": "src/quant_platform/meta_learning.py",
+        "root_label": "recovery",
         "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
         "size_bytes": 17911
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/meta_learning.py",
+        "relative_path": "src/quant_platform/meta_learning.py",
+        "root_label": "runtime",
         "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
         "size_bytes": 17911
       },
@@ -715,21 +715,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/pair_detail_ingestion.py",
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
           "root_label": "forensic_b",
           "sha256": "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1",
           "size_bytes": 65751,
           "top_level_definition_count": 78
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/pair_detail_ingestion.py",
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
           "root_label": "source_candidate",
           "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
           "size_bytes": 65843,
           "top_level_definition_count": 78
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/pair_detail_ingestion.py",
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
           "root_label": "visual_recovery",
           "sha256": "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65",
           "size_bytes": 65642,
@@ -753,14 +753,14 @@
       "rationale": "Selected source retains atomic/promoted capture publication and now strictly parses persisted ECM, research usability, and execution-readiness flags. Forensic_b replaces atomic/promoted writes; visual_recovery also uses bool('False') for those guards. No whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/pair_detail_ingestion.py",
+        "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+        "root_label": "recovery",
         "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
         "size_bytes": 65843
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/pair_detail_ingestion.py",
+        "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+        "root_label": "runtime",
         "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
         "size_bytes": 65843
       },
@@ -866,21 +866,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_ingestion.py",
+          "relative_path": "src/quant_platform/research_ingestion.py",
           "root_label": "forensic_b",
           "sha256": "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a",
           "size_bytes": 11960,
           "top_level_definition_count": 20
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_ingestion.py",
+          "relative_path": "src/quant_platform/research_ingestion.py",
           "root_label": "source_candidate",
           "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
           "size_bytes": 11991,
           "top_level_definition_count": 20
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_ingestion.py",
+          "relative_path": "src/quant_platform/research_ingestion.py",
           "root_label": "visual_recovery",
           "sha256": "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08",
           "size_bytes": 11796,
@@ -904,14 +904,14 @@
       "rationale": "Selected source keeps atomic manifest/audit publication and the narrow AppleDouble sidecar exclusion from forensic_b. Forensic_b uses direct writes; visual_recovery lacks sidecar filtering and UnicodeDecodeError quarantine. No whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/research_ingestion.py",
+        "relative_path": "src/quant_platform/research_ingestion.py",
+        "root_label": "recovery",
         "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
         "size_bytes": 11991
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/research_ingestion.py",
+        "relative_path": "src/quant_platform/research_ingestion.py",
+        "root_label": "runtime",
         "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
         "size_bytes": 11991
       },
@@ -957,21 +957,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_knowledge_store.py",
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
           "root_label": "forensic_b",
           "sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
           "size_bytes": 6596,
           "top_level_definition_count": 7
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/research_knowledge_store.py",
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
           "root_label": "source_candidate",
           "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
           "size_bytes": 7570,
           "top_level_definition_count": 9
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_knowledge_store.py",
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
           "root_label": "visual_recovery",
           "sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
           "size_bytes": 6596,
@@ -994,14 +994,14 @@
       "rationale": "Recovery/runtime only add query_research_evidence and answer_research_question wrappers around research_rag.client.configured_rag, but selected tree has no research_rag package. Existing CLI/YouTube/Udemy consumers use selected CSV builder/query paths. Forensic/visual revert atomic CSV/Markdown publication. Defer RAG wrappers until the package and contract are selected.",
       "recommended_queue_status": "REVIEWED_RAG_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/research_knowledge_store.py",
+        "relative_path": "src/quant_platform/research_knowledge_store.py",
+        "root_label": "recovery",
         "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
         "size_bytes": 7570
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/research_knowledge_store.py",
+        "relative_path": "src/quant_platform/research_knowledge_store.py",
+        "root_label": "runtime",
         "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
         "size_bytes": 7570
       },
@@ -1031,21 +1031,21 @@
       },
       "extended_copies": [
         {
-          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/v2_run.py",
+          "relative_path": "src/quant_platform/v2_run.py",
           "root_label": "forensic_b",
           "sha256": "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54",
           "size_bytes": 31735,
           "top_level_definition_count": 30
         },
         {
-          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/v2_run.py",
+          "relative_path": "src/quant_platform/v2_run.py",
           "root_label": "source_candidate",
           "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
           "size_bytes": 31854,
           "top_level_definition_count": 30
         },
         {
-          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/v2_run.py",
+          "relative_path": "src/quant_platform/v2_run.py",
           "root_label": "visual_recovery",
           "sha256": "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b",
           "size_bytes": 31640,
@@ -1069,14 +1069,14 @@
       "rationale": "Selected V2 source retains atomic pointer/publication controls and now strictly parses persisted readiness and authority booleans. Forensic_b replaces atomic publication; visual_recovery also uses truthiness on serialized flags. A remaining _control_plane_blockers permissive false-like field parse is a schema issue, but the pointer still forces live authority false. No whole-file port.",
       "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
       "recovery_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/v2_run.py",
+        "relative_path": "src/quant_platform/v2_run.py",
+        "root_label": "recovery",
         "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
         "size_bytes": 31854
       },
       "runtime_copy": {
-        "mtime_ns_now": 1789388156000000000,
-        "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/v2_run.py",
+        "relative_path": "src/quant_platform/v2_run.py",
+        "root_label": "runtime",
         "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
         "size_bytes": 31854
       },
@@ -1118,10 +1118,10 @@
     }
   ],
   "freeze_git_commit": "b98d5b9447a109938b57b239a7d458f47606d7c9",
-  "freeze_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/nonorch-source11-7776c58/audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+  "freeze_path": "audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
   "pending_count": 11,
   "physical_copy_hashes_verified": 55,
-  "queue_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/nonorch-source11-7776c58/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "queue_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
   "report_type": "gate0_original_811_nonorchestration_source11",
   "selection_rule": "11 named original-811 pending non-orchestration source paths",
   "status_counts": {
