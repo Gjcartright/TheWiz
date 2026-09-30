@@ -299,10 +299,17 @@ def run_rl_research(
 
 
 def _return_column(frame: pd.DataFrame) -> pd.Series:
+    """Extract trade outcomes without manufacturing missing or invalid returns."""
+    if not frame.columns.is_unique:
+        return pd.Series(np.nan, index=frame.index, dtype=float)
     for column in ["profit_after_cost", "realized_return", "trade_return", "return", "returns"]:
         if column in frame.columns:
-            return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
-    return pd.Series(0.0, index=frame.index)
+            raw = frame[column]
+            invalid_type = raw.map(
+                lambda value: isinstance(value, (bool, np.bool_, complex, np.complexfloating))
+            )
+            return pd.to_numeric(raw.where(~invalid_type, np.nan), errors="coerce")
+    return pd.Series(np.nan, index=frame.index, dtype=float)
 
 
 def _to_numeric(series: pd.Series) -> pd.Series:

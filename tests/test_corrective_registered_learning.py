@@ -39,11 +39,53 @@ from quant_platform.orchestration.corrective_registered_rerun import (
 from quant_platform.orchestration.corrective_release_gates import (
     _validated_registered_learning,
 )
-from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
+from quant_platform.rl.rl_acceptance import (
+    EquityReturnContract,
+    GLOBAL_IDENTITIES,
+    return_summary,
+    rl_acceptance_report,
+)
 from quant_platform.rl.rl_learning_agent import _chronological_rl_partitions
 from quant_platform.wizard_mode_replay import CANONICAL_WIZARD_MODES
 
 NOW = datetime(2026, 8, 10, 1, tzinfo=UTC)
+
+
+def _qualified_rl_comparison() -> pd.DataFrame:
+    """Synthetic qualified calendar equity for tests of economic thresholds."""
+    frame = pd.DataFrame({name: [index % 4 for index in range(40)]
+                          for name in ("pair", "timeframe", "regime")})
+    rows = []
+    for split, start in (("validation", "2026-01-01"), ("held_out_test", "2026-02-01")):
+        for variant in ("non_rl_baseline", "safe_rl_policy"):
+            baseline = variant == "non_rl_baseline"
+            trade_returns = pd.Series(([.01] if baseline else [.02]) * 20 + [-.01] * 20)
+            equity = pd.Series(
+                [.01, -.02, .005, -.002] if baseline else [.02, -.01, .015, -.005],
+                index=pd.date_range(start, periods=4, freq="D", tz="UTC"),
+            )
+            row = return_summary(
+                variant, frame, trade_returns, 40, source_frame=frame,
+                equity_returns=equity,
+                equity_contract=EquityReturnContract(
+                    variant + start, "1d", "common-initial-capital",
+                    "common_capital_net_pnl_fraction",
+                ),
+            )
+            assert row["metrics_status"] == "qualified", row["metrics_reason"]
+            for field in GLOBAL_IDENTITIES:
+                row[field] = sha256(field.encode()).hexdigest() if field.endswith("_sha256") else "experiment-1"
+            row.update({
+                "evaluation_split": split, "split_id": split, "policy_id": variant,
+                "training_label_cutoff_utc": "2025-12-01T00:00:00Z",
+                "model_fitted_at_utc": "2025-12-02T00:00:00Z",
+            })
+            for field in ("source_partition_sha256", "opportunity_set_sha256", "fold_receipt_sha256"):
+                row[field] = sha256((split + field).encode()).hexdigest()
+            for field in ("policy_configuration_sha256", "model_artifact_sha256"):
+                row[field] = sha256((variant + field).encode()).hexdigest()
+            rows.append(row)
+    return pd.DataFrame(rows)
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -1041,95 +1083,36 @@ def test_stage5_model_and_rl_take_rate_floor_is_ten_percent():
     comparison.loc[comparison["variant"].eq("model_gated_strategy"), "take_rate"] = 0.10
     assert bool(_model_gated_acceptance(comparison).iloc[0]["accepted"])
 
-    rows = []
-    for split in ("validation", "held_out_test"):
-        rows.extend(
-            [
-                {
-                    "evaluation_split": split,
-                    "variant": "non_rl_baseline",
-                    "profit_factor": 1.2,
-                    "max_drawdown": 0.25,
-                    "sharpe": 0.5,
-                    "total_return": 0.05,
-                    "trades": 200,
-                    "take_rate": 1.0,
-                    "pair_concentration": 0.5,
-                    "pair_pnl_concentration": 0.5,
-                    "timeframe_concentration": 0.5,
-                    "timeframe_pnl_concentration": 0.5,
-                    "regime_concentration": 0.5,
-                    "regime_pnl_concentration": 0.5,
-                },
-                {
-                    "evaluation_split": split,
-                    "variant": "safe_rl_policy",
-                    "profit_factor": 1.4,
-                    "max_drawdown": 0.20,
-                    "sharpe": 0.6,
-                    "total_return": 0.06,
-                    "trades": 20,
-                    "take_rate": 0.09,
-                    "pair_concentration": 0.5,
-                    "pair_pnl_concentration": 0.5,
-                    "timeframe_concentration": 0.5,
-                    "timeframe_pnl_concentration": 0.5,
-                    "regime_concentration": 0.5,
-                    "regime_pnl_concentration": 0.5,
-                },
-            ]
-        )
-    evaluation = pd.DataFrame(rows)
-    assert not bool(rl_acceptance_report(evaluation).iloc[0]["accepted"])
-    evaluation.loc[evaluation["variant"].eq("safe_rl_policy"), "take_rate"] = 0.10
-    assert bool(rl_acceptance_report(evaluation).iloc[0]["accepted"])
+    evaluation = _qualified_rl_comparison()
+    baseline = evaluation["variant"].eq("non_rl_baseline")
+    policy = evaluation["variant"].eq("safe_rl_policy")
+    evaluation.loc[:, "opportunity_count"] = 200
+    evaluation.loc[baseline, "trades"] = 200
+    evaluation.loc[baseline, "take_rate"] = 1.0
+    evaluation.loc[policy, "trades"] = 18
+    evaluation.loc[policy, "take_rate"] = 0.09
+    rejected = rl_acceptance_report(evaluation).iloc[0]
+    assert not bool(rejected["accepted"])
+    assert "minimum_take_rate" in rejected["validation_gate_failures"]
+    evaluation.loc[policy, "trades"] = 20
+    evaluation.loc[policy, "take_rate"] = 0.10
+    accepted = rl_acceptance_report(evaluation).iloc[0]
+    assert bool(accepted["accepted"]), accepted["blocker"]
+
 
 
 def test_stage5_rl_rejects_negative_after_cost_split_despite_relative_improvement():
-    rows = []
-    for split in ("validation", "held_out_test"):
-        rows.extend(
-            [
-                {
-                    "evaluation_split": split,
-                    "variant": "non_rl_baseline",
-                    "profit_factor": 0.7,
-                    "max_drawdown": 0.25,
-                    "sharpe": -0.5,
-                    "total_return": -0.10,
-                    "trades": 200,
-                    "take_rate": 1.0,
-                    "pair_concentration": 0.5,
-                    "pair_pnl_concentration": 0.5,
-                    "timeframe_concentration": 0.5,
-                    "timeframe_pnl_concentration": 0.5,
-                    "regime_concentration": 0.5,
-                    "regime_pnl_concentration": 0.5,
-                },
-                {
-                    "evaluation_split": split,
-                    "variant": "safe_rl_policy",
-                    "profit_factor": 0.9,
-                    "max_drawdown": 0.20,
-                    "sharpe": -0.3,
-                    "total_return": -0.01,
-                    "trades": 20,
-                    "take_rate": 0.10,
-                    "pair_concentration": 0.5,
-                    "pair_pnl_concentration": 0.5,
-                    "timeframe_concentration": 0.5,
-                    "timeframe_pnl_concentration": 0.5,
-                    "regime_concentration": 0.5,
-                    "regime_pnl_concentration": 0.5,
-                },
-            ]
-        )
-
-    report = rl_acceptance_report(pd.DataFrame(rows)).iloc[0]
+    evaluation = _qualified_rl_comparison()
+    baseline = evaluation["variant"].eq("non_rl_baseline")
+    policy = evaluation["variant"].eq("safe_rl_policy")
+    evaluation.loc[baseline, "total_return"] = -0.10
+    evaluation.loc[policy, "total_return"] = -0.01
+    report = rl_acceptance_report(evaluation).iloc[0]
 
     assert not bool(report["accepted"])
     assert report["validation_gate_failures"] == "positive_after_cost_return"
     assert report["held_out_test_gate_failures"] == "positive_after_cost_return"
+
 
 
 def test_stage5_rl_survivor_requires_positive_validation_and_test_returns():
@@ -1727,9 +1710,7 @@ def _registered_learning_runners(
             evaluation.loc[safe_test, "pair_concentration"] = 0.01
         rl_acceptance = rl_acceptance_report(evaluation)
         if attack == "rl_acceptance_mismatch":
-            rl_acceptance.loc[:, "rl_profit_factor"] = (
-                pd.to_numeric(rl_acceptance["rl_profit_factor"], errors="coerce") + 0.25
-            )
+            rl_acceptance.loc[:, "blocker"] = "forged_rl_acceptance_blocker"
         active_pointer = json.loads(
             (root / "fake-learning" / "active_pointer.json").read_text(encoding="utf-8")
         )
@@ -1852,7 +1833,7 @@ def test_registered_learning_executes_once_and_binds_required_artifacts(tmp_path
     second = run_registered_learning_research(**kwargs)
     receipt = json.loads(first.paths["learning_receipt"].read_text())
 
-    assert first.summary["status"] == "PASS_RESEARCH_LEARNING_GATES"
+    assert first.summary["status"] == "REJECTED_RESEARCH_LEARNING_GATES"
     assert second.summary["status"] == "ALREADY_COMPLETE"
     assert calls == [
         "dataset_builder",
@@ -1863,7 +1844,9 @@ def test_registered_learning_executes_once_and_binds_required_artifacts(tmp_path
         "governance_builder",
     ]
     assert receipt["training_accepted_oos"] is True
-    assert receipt["stage5_research_gate_pass"] is True
+    assert receipt["stage5_research_gate_pass"] is False
+    assert receipt["rl_accepted_oos"] is False
+    assert "rl.acceptance_recomputed" in receipt["acceptance_blockers"]
     assert len(receipt["artifact_hashes"]) == 26
     assert "registered_survivor_support_policy" in receipt["artifact_roles"]
     assert "registered_stage5_protocol" in receipt["artifact_roles"]
@@ -1875,15 +1858,13 @@ def test_registered_learning_executes_once_and_binds_required_artifacts(tmp_path
     learning, model_authority, stage4, learning_path, blocker = _validated_registered_learning(
         root=tmp_path
     )
-    assert blocker == ""
-    assert learning["learning_id"] == receipt["learning_id"]
-    assert model_authority["model_authority"] == "RESEARCH_ONLY"
-    assert stage4["execution_id"] == receipt["registered_execution_id"]
-    assert learning_path == first.paths["learning_receipt"]
+    assert learning == model_authority == stage4 == {}
+    assert learning_path is None
+    assert "registered_learning_stage5_pass_missing" in blocker
     audit = latest_verified_registered_learning(root=tmp_path)
-    assert audit["status"] == "PASS_VERIFIED_REGISTERED_LEARNING_ACCEPTANCE"
+    assert audit["status"] == "PASS_VERIFIED_REGISTERED_LEARNING_REJECTION"
     assert audit["evidence_valid"] is True
-    assert audit["stage5_research_gate_pass"] is True
+    assert audit["stage5_research_gate_pass"] is False
     assert audit["registered_execution_id"] == receipt["registered_execution_id"]
     assert audit["testnet_order_authority"] is False
     assert audit["live_trading_authorized"] is False
@@ -1945,13 +1926,10 @@ def test_release_gate_rejects_rehashed_learning_with_relocated_stage4_receipt(
     active["learning_receipt_sha256"] = _file_hash(learning_path)
     _write_json(active_path, active)
 
-    validated, model, stage4, receipt_path, blocker = _validated_registered_learning(root=tmp_path)
+    audit = latest_verified_registered_learning(root=tmp_path)
 
-    assert validated == {}
-    assert model == {}
-    assert stage4 == {}
-    assert receipt_path is None
-    assert "execution receipt path is not canonical" in blocker
+    assert audit["status"] == "BLOCKED_REGISTERED_LEARNING_EVIDENCE"
+    assert "execution receipt path is not canonical" in audit["blockers"][0]
 
 
 def test_registered_learning_rejection_remains_research_only(tmp_path):
@@ -1977,7 +1955,7 @@ def test_registered_learning_rejection_remains_research_only(tmp_path):
     assert audit["acceptance_blockers"]
 
 
-def test_registered_learning_allows_only_the_deferred_stage6_sample_blocker(tmp_path):
+def test_deferred_stage6_sample_cannot_override_unqualified_rl(tmp_path):
     execution = _registered_stage4_fixture(tmp_path)
     result = run_registered_learning_research(
         root=tmp_path,
@@ -1988,8 +1966,9 @@ def test_registered_learning_allows_only_the_deferred_stage6_sample_blocker(tmp_
     )
     receipt = json.loads(result.paths["learning_receipt"].read_text())
 
-    assert result.summary["status"] == "PASS_RESEARCH_LEARNING_GATES"
-    assert receipt["stage5_research_gate_pass"] is True
+    assert result.summary["status"] == "REJECTED_RESEARCH_LEARNING_GATES"
+    assert receipt["stage5_research_gate_pass"] is False
+    assert "rl.acceptance_recomputed" in receipt["acceptance_blockers"]
     assert receipt["testnet_candidate_authority"] is False
 
 

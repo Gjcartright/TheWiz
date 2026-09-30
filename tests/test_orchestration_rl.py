@@ -771,11 +771,11 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
         ],
         ignore_index=True,
     )
-    accepted = rl_acceptance_report(oos)
+    rejected = rl_acceptance_report(oos)
 
-    assert bool(accepted.iloc[0]["accepted"])
-    assert bool(accepted.iloc[0]["validation_passed"])
-    assert bool(accepted.iloc[0]["held_out_test_passed"])
+    assert not bool(rejected.iloc[0]["accepted"])
+    assert "missing_fields" in rejected.iloc[0]["blocker"]
+    assert not bool(rejected.iloc[0]["capital_authority"])
 
 
 def test_rl_concentration_separates_opportunity_mix_from_pnl_dependency():

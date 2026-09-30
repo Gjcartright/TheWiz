@@ -421,8 +421,12 @@ def _blocked_split_audit(blocker: str, **values: object) -> pd.DataFrame:
 def _return_series(frame: pd.DataFrame) -> pd.Series:
     for column in ("profit_after_cost", "realized_return", "trade_return", "return", "returns"):
         if column in frame.columns:
-            return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
-    return pd.Series(0.0, index=frame.index)
+            if not frame.columns.is_unique:
+                return pd.Series(np.nan, index=frame.index, dtype=float)
+            raw = frame[column]
+            invalid_type = raw.map(lambda value: isinstance(value, (bool, np.bool_, complex, np.complexfloating)))
+            return pd.to_numeric(raw.where(~invalid_type, np.nan), errors="coerce")
+    return pd.Series(np.nan, index=frame.index, dtype=float)
 
 
 def _policy_gate_outcomes(
@@ -433,18 +437,25 @@ def _policy_gate_outcomes(
     prefix: str,
 ) -> dict[str, object]:
     minimum_trades = minimum_trade_count(total_rows)
+    def metric(row: dict[str, object], key: str) -> float:
+        value = row.get(key)
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, float, np.integer, np.floating)):
+            return float("nan")
+        return float(value) if np.isfinite(value) else float("nan")
+
     checks = {
-        "profit_factor_improves": float(summary.get("profit_factor", 0.0) or 0.0) > float(baseline.get("profit_factor", 0.0) or 0.0),
-        "drawdown_not_worse": float(summary.get("max_drawdown", 1.0) or 1.0) <= float(baseline.get("max_drawdown", 1.0) or 1.0),
-        "sharpe_not_materially_worse": float(summary.get("sharpe", 0.0) or 0.0) >= float(baseline.get("sharpe", 0.0) or 0.0) - 0.25,
-        "minimum_trades": int(summary.get("trades", 0) or 0) >= minimum_trades,
-        "minimum_take_rate": float(summary.get("take_rate", 0.0) or 0.0) >= MINIMUM_TAKE_RATE,
-        "pair_concentration": float(summary.get("pair_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "pair_pnl_concentration": float(summary.get("pair_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "timeframe_selection_concentration": float(summary.get("timeframe_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "timeframe_pnl_concentration": float(summary.get("timeframe_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "regime_concentration": float(summary.get("regime_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "regime_pnl_concentration": float(summary.get("regime_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "qualified_calendar_metrics": summary.get("metrics_status") == "qualified" and baseline.get("metrics_status") == "qualified",
+        "profit_factor_improves": metric(summary, "profit_factor") > metric(baseline, "profit_factor"),
+        "drawdown_not_worse": metric(summary, "max_drawdown") <= metric(baseline, "max_drawdown"),
+        "sharpe_not_materially_worse": metric(summary, "sharpe") >= metric(baseline, "sharpe") - 0.25,
+        "minimum_trades": metric(summary, "trades") >= minimum_trades,
+        "minimum_take_rate": metric(summary, "take_rate") >= MINIMUM_TAKE_RATE,
+        "pair_concentration": metric(summary, "pair_concentration") <= MAXIMUM_CONCENTRATION,
+        "pair_pnl_concentration": metric(summary, "pair_pnl_concentration") <= MAXIMUM_CONCENTRATION,
+        "timeframe_selection_concentration": metric(summary, "timeframe_concentration") <= MAXIMUM_CONCENTRATION,
+        "timeframe_pnl_concentration": metric(summary, "timeframe_pnl_concentration") <= MAXIMUM_CONCENTRATION,
+        "regime_concentration": metric(summary, "regime_concentration") <= MAXIMUM_CONCENTRATION,
+        "regime_pnl_concentration": metric(summary, "regime_pnl_concentration") <= MAXIMUM_CONCENTRATION,
     }
     failed = [name for name, passed in checks.items() if not passed]
     output: dict[str, object] = {
