@@ -4,8 +4,10 @@
   "baseline_junit_sha256": "4b9651811985a2d41cac2890656f1cb5b878dce433046db4c8c4f9308cc93280",
   "baseline_passed": 89,
   "baseline_tests": 174,
+  "candidate_module_count": 27,
+  "candidate_test_file_count": 11,
   "decision": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
-  "interpretation": "Retain all 27 exact Math Desk modules as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
+  "interpretation": "Retain all 27 exact Math Desk modules and 11 matching test files as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
   "lecture_index_missing_fields": [
     "review_status",
     "topic_tags",
@@ -38,7 +40,18 @@
     "src/quant_platform/math_desk/scope_registry.py": "99d8421e2edae0c478da55d74c6e676dc4b578445bb0f0be7187452a9376c92c",
     "src/quant_platform/math_desk/serialization.py": "78e170270ead323a9cc14709b27c5e0ec703c01db3b9cfaf1b0645f8f13f485e",
     "src/quant_platform/math_desk/source_math_oracles.py": "2aaf806b79236a1447e80959847c617deba07acd07d5368de04dfa1b4622cd68",
-    "src/quant_platform/math_desk/stage_artifacts.py": "3a86bbdf1d09977d05462c19d658adafca701c42a9331936ae683a6cdd6760fb"
+    "src/quant_platform/math_desk/stage_artifacts.py": "3a86bbdf1d09977d05462c19d658adafca701c42a9331936ae683a6cdd6760fb",
+    "tests/test_math_desk_census.py": "f3bbdc9bbd4127791ee7cda8e2d460717af213f4d9fa9ab51189e6866d8ec31c",
+    "tests/test_math_desk_contracts.py": "a0e0fe85fb9989965b070d4832ad90885f4539aad4d5ff6fa2d4f31aa3b8900f",
+    "tests/test_math_desk_m3_core.py": "c58fe03d3102b51e55138274ac885918dff7ed70630d32b0b7fd82f488be8f0b",
+    "tests/test_math_desk_m4_wizard_parity.py": "6a0de7143bd10b4dada1498bd3977d11883ddcf292d997669ae84c66844b892f",
+    "tests/test_math_desk_m5_exhaustive.py": "64ec19627b588b17791cca4c0c14e042b594427f0decadd1939adbc3d2293146",
+    "tests/test_math_desk_m5_source_evidence.py": "81733f126d1a8bbcbd16ec1cc0f51d5bdfec3567527b4fee472d645c3a6795d6",
+    "tests/test_math_desk_m5_visual.py": "d9feae11f4dcfabbf5fab67a119703c74230750269759f9b44922b5279a423e3",
+    "tests/test_math_desk_m6_backlog_resolution.py": "3e3451edae58c88115caaf958b7fdb0e07be4af6052c4d0dc0961582f2e5d85d",
+    "tests/test_math_desk_m6_m8.py": "cd1ffd03ec34c5f415558bc4058fc9d9efccbb57e4ee1cd26c053e8011fa48f7",
+    "tests/test_math_desk_risk_census.py": "20952500c605519f5ea2a6af9ce95adde46da8aabf3013fa63b597037dfd1100",
+    "tests/test_math_desk_scope_registry.py": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
   },
   "required_governed_paths": [
     "docs/math_desk_constitution.md",

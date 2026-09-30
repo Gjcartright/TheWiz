@@ -17,7 +17,8 @@ SAVEPOINT = Path("/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtim
 DIAGNOSTICS = Path("/Users/gregc/Backups/TheWiz/mathdesk-diagnostics/2026-09-30")
 AVAILABILITY = AUDIT / "MATH_DESK_SOURCE_AVAILABILITY_2026-09-30.json"
 OUTPUT = AUDIT / "GATE0_MATH_DESK_DECISION_2026-09-30.json"
-PREFIX = "src/quant_platform/math_desk/"
+MODULE_PREFIX = "src/quant_platform/math_desk/"
+TEST_PREFIX = "tests/test_math_desk"
 STATUS = "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT"
 REQUIRED_PATHS = (
     "docs/math_desk_constitution.md",
@@ -42,10 +43,17 @@ def main() -> None:
     ) as stream:
         queue = [
             row for row in csv.DictReader(stream)
-            if row["relative_path"].startswith(PREFIX)
+            if row["relative_path"].startswith((MODULE_PREFIX, TEST_PREFIX))
         ]
-    if len(queue) != 27 or len({row["relative_path"] for row in queue}) != 27:
-        raise ValueError("Math Desk source queue changed")
+    modules = [row for row in queue if row["relative_path"].startswith(MODULE_PREFIX)]
+    tests = [row for row in queue if row["relative_path"].startswith(TEST_PREFIX)]
+    if (
+        len(queue) != 38
+        or len(modules) != 27
+        or len(tests) != 11
+        or len({row["relative_path"] for row in queue}) != 38
+    ):
+        raise ValueError("Math Desk source/test queue changed")
     manifest = json.loads(
         (SAVEPOINT.parent / "SAVEPOINT_MANIFEST.json").read_text(encoding="utf-8")
     )
@@ -141,6 +149,8 @@ def main() -> None:
         "schema_version": "thewiz.gate0.math_desk_decision.v1",
         "decision": STATUS,
         "path_sha256": dict(sorted(hashes.items())),
+        "candidate_module_count": len(modules),
+        "candidate_test_file_count": len(tests),
         "source_availability_sha256": digest(AVAILABILITY),
         "required_governed_paths": list(REQUIRED_PATHS),
         "baseline_junit_sha256": digest(DIAGNOSTICS / "mathdesk-junit.xml"),
@@ -152,10 +162,10 @@ def main() -> None:
         "risk_census_tests_passed": 8,
         "risk_census_errors": 4,
         "lecture_index_missing_fields": diagnostic["lecture_index_missing_fields"],
-        "interpretation": "Retain all 27 exact Math Desk modules as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
+        "interpretation": "Retain all 27 exact Math Desk modules and 11 matching test files as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
     }
     OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print("PASS twenty_seven_math_desk_source_decisions")
+    print("PASS thirty_eight_math_desk_source_and_test_decisions")
 
 
 if __name__ == "__main__":
