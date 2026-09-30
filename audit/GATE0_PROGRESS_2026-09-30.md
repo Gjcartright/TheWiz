@@ -5,9 +5,9 @@
 ## Canonical source candidate
 
 - Writable checkout: `/Volumes/Expansion/Crypto Wizard` on the mounted Expansion drive.
-- Branch at inventory: `codex/wiz-v3-source-reconciliation`; prior committed head: `b98d5b9447a109938b57b239a7d458f47606d7c9`.
+- Branch at inventory: `codex/wiz-v3-source-reconciliation`; prior committed head: `b98d5b9447a109938b57b239a7d458f47606d7c9`. The reviewed Gate 0 checkpoint was later committed and pushed as `b87f49deb170023fbfae56aef99a1a44d81ffc2d` with a draft PR against `codex/corrective-evidence-plan`.
 - The internal `TheWiz-LocalRuntime`, forensic copies, candidate tree, and encrypted sparsebundles are not writable source authorities. The encrypted bundles remain unmounted.
-- Local staged, unstaged, and untracked changes still need a reviewed source commit. The public `TheWiz` code branch has not yet received them.
+- Additional untracked audit and research materials remain outside that checkpoint and require later disposition. Their prior bytes are in the private nightly source backup; the public source branch includes only the reviewed selection.
 
 ## Custody and restore
 
@@ -21,6 +21,8 @@
 ## Source delta
 
 The dated 856-row same-path drift scan is normalized in `GATE0_SOURCE_DELTA_REGISTER_2026-09-30.csv` and its JSON summary. There are 427 paths and 553 distinct path/hash variants: 190 match a known Git ancestor, 133 are retained as historical evidence rather than source, and 230 still require semantic review. None of those 230 hashes is content in the currently reachable Git object set. This register does not claim that the pending 230 were ported or adjudicated.
+
+The separate initial four-root source reconciliation is broader than same-path drift. Its 1,096 source/config/doc/script/test/app paths include 378 active/runtime matches, 191 changed paths, 526 runtime-only paths, and one working-only path. Thus 718 rows still require review in that scope; the sets overlap and must not be added to the 230 figure. The 27 runtime-only `math_desk` modules are a material case. The isolated Math Desk attempt found missing imports; the coherent LocalRuntime test attempt had 89 passes, 18 failures, and 67 setup errors, including five missing governed files. See `audit/evidence_freeze_2026-09-29/source_reconciliation.csv` and `audit/MATH_DESK_RECONCILIATION_2026-09-29.md`. No Math Desk code was promoted into the active checkout.
 
 The candidate branch contains a collection startup verifier and a precollection poll launcher absent from the active tree; their support modules and configuration are also absent. They are preserved for later integration review and are not a safe drop-in replacement. Historical live-canary and scheduler variants require safety-specific review before any source selection.
 
@@ -38,8 +40,8 @@ The first full disposable suite finished with 2,358 passes and three failures, a
 
 ## Remaining Gate 0 exit work
 
-1. Finish semantic decisions for the 230 historical source/test/document variants and bind an immutable source commit with a reviewed patch record.
-2. Record the locked environment and LangGraph report results against that exact commit in a disposable checkout.
-3. Push a reviewable code branch, obtain green CI for the commit, and tie the restore/backup receipt to it.
+1. Finish semantic decisions for the 230 same-path variants and 718 review rows in the broader four-root reconciliation, explicitly accounting for overlap. Resolve Math Desk's missing dependencies and governed files before considering an integration.
+2. Treat the reviewed source commit and local verification receipt as a checkpoint. Obtain green GitHub CI tied to the final Gate 0 source commit and keep the historical variant and restore receipts available off-drive.
+3. Keep research acceptance, Testnet orders, and live trading blocked while later gates address the historical math, costs, dashboard, and execution differences.
 
 No Gate 1 data qualification, strategy acceptance, Testnet order, or live trading authority follows from this progress receipt.
