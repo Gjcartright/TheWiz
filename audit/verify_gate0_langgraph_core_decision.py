@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from gate0_queue_receipts import original_decision_queue
 
 AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
@@ -32,10 +33,7 @@ def digest(path: Path) -> str:
 
 
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
-        queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
+    queue = original_decision_queue(ROOT)
     for relative in (DOC, WORKFLOW, ASSISTANT):
         row = queue[relative]
         if not row["custody_status"].startswith("REVIEWED_") or OUTPUT.name not in row["decision_evidence"]:

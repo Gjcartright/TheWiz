@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import ast
-import csv
 import hashlib
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from gate0_queue_receipts import original_decision_queue
 
 
 AUDIT = Path(__file__).resolve().parent
@@ -38,13 +39,10 @@ def kwonly_names(path: Path, function: str) -> set[str]:
 
 
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
-        rows = [row for row in csv.DictReader(stream) if row["relative_path"] == RELATIVE]
-    if len(rows) != 1 or rows[0]["custody_status"] != STATUS:
+    rows = original_decision_queue(ROOT)
+    if RELATIVE not in rows or rows[RELATIVE]["custody_status"] != STATUS:
         raise ValueError("registered-rerun source decision missing or duplicated")
-    row = rows[0]
+    row = rows[RELATIVE]
     historical_hash = row["historical_variant_sha256"]
     if int(row["historical_variant_count"]) != 1:
         raise ValueError("unexpected registered-rerun variant count")

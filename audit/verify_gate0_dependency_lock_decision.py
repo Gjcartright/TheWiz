@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import subprocess
 import tomllib
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from gate0_queue_receipts import original_decision_queue
 
 AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
@@ -47,10 +48,7 @@ def package_set(lock: dict) -> set[str]:
 
 
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
-        queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
+    queue = original_decision_queue(ROOT)
     selected = {"pyproject.toml": MANIFEST_STATUS, "uv.lock": MANIFEST_STATUS}
     selected.update(dict.fromkeys(BUILD_PATHS, BUILD_STATUS))
     for relative, status in selected.items():
