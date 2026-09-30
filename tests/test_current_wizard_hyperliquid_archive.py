@@ -11,6 +11,7 @@ import pytest
 from quant_platform.orchestration import (
     current_wizard_hyperliquid_archive_release as release_module,
 )
+from quant_platform.orchestration import current_wizard_hyperliquid_archive as archive_module
 from quant_platform.orchestration import current_wizard_hyperliquid_storage as storage
 from quant_platform.orchestration.current_wizard_hyperliquid_archive import (
     stage_current_wizard_hyperliquid_archive_copy,
@@ -88,6 +89,33 @@ def _build_verified_copy(
         now=datetime(2026, 8, 8, 20, 0, tzinfo=timezone.utc),
     )
     return root, destination, source, result
+
+
+def test_archive_copy_rejects_string_false_preflight(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, destination, source, result = _build_verified_copy(tmp_path, monkeypatch)
+    original_receipts = list(destination.rglob("*copy*receipt*.json"))
+    monkeypatch.setattr(
+        archive_module,
+        "_archive_destination_preflight",
+        lambda **_kwargs: {
+            "archive_copy_preflight_ready": "False",
+            "archive_destination_blocker": "explicit_false_preflight",
+            "archive_destination_path": str(destination),
+        },
+    )
+
+    with pytest.raises(ValueError, match="explicit_false_preflight"):
+        stage_current_wizard_hyperliquid_archive_copy(
+            root=root,
+            archive_destination=destination,
+            approval_id="second-copy-approval",
+            now=datetime(2026, 8, 8, 21, 0, tzinfo=timezone.utc),
+        )
+
+    assert source.is_dir()
+    assert list(destination.rglob("*copy*receipt*.json")) == original_receipts
 
 
 def test_archive_copy_is_hash_verified_idempotent_and_never_releases_source(

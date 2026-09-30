@@ -18,6 +18,7 @@ from typing import Any
 import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult
+from quant_platform.runtime_types import strict_bool
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "wizard_hyperliquid_storage_reclamation.v2"
@@ -157,7 +158,7 @@ def build_current_wizard_hyperliquid_storage_reclamation_plan(
             ascending=[False, False],
         ).reset_index(drop=True)
     safe_rows = plan.loc[
-        plan.get("safe_to_archive_later", pd.Series(dtype=bool)).astype(bool)
+        plan.get("safe_to_archive_later", pd.Series(dtype=bool)).map(strict_bool)
     ]
     reclaimable = int(safe_rows.get("size_bytes", pd.Series(dtype=int)).sum())
     destination = _archive_destination_preflight(
@@ -207,7 +208,7 @@ def build_current_wizard_hyperliquid_storage_reclamation_plan(
         "candidate_branches": int(len(plan)),
         "safe_archive_candidate_branches": int(len(safe_rows)),
         "hash_verified_candidate_branches": int(
-            plan.get("hash_verified", pd.Series(dtype=bool)).astype(bool).sum()
+            plan.get("hash_verified", pd.Series(dtype=bool)).map(strict_bool).sum()
         ),
         "manual_review_branches": int(len(plan) - len(safe_rows)),
         "protected_snapshot_paths": int(len(protected_paths)),
@@ -302,7 +303,7 @@ def _validation(
     destination: dict[str, object],
 ) -> pd.DataFrame:
     safe = plan.loc[
-        plan.get("safe_to_archive_later", pd.Series(dtype=bool)).astype(bool)
+        plan.get("safe_to_archive_later", pd.Series(dtype=bool)).map(strict_bool)
     ]
     roots = [root / value for value in plan.get("snapshot_path", pd.Series(dtype=str))]
     no_overlap = all(
@@ -324,14 +325,14 @@ def _validation(
         ),
         (
             "safe_candidates_have_manifests",
-            safe.empty or safe["manifest_present"].astype(bool).all(),
+            safe.empty or safe["manifest_present"].map(strict_bool).all(),
             "manifest_present=true",
         ),
         (
             "safe_candidates_have_verified_tree_hashes",
             safe.empty
             or (
-                safe["hash_verified"].astype(bool).all()
+                safe["hash_verified"].map(strict_bool).all()
                 and safe["manifest_sha256"].astype(str).str.len().eq(64).all()
                 and safe["tree_sha256"].astype(str).str.len().eq(64).all()
             ),
@@ -342,28 +343,28 @@ def _validation(
             safe.empty
             or (
                 safe["protected_current_paths"].astype(int).eq(0).all()
-                and not safe["current_lineage"].astype(bool).any()
+                and not safe["current_lineage"].map(strict_bool).any()
             ),
             "protected_current_paths=0",
         ),
         (
             "no_move_performed",
-            plan.empty or not plan["move_performed"].astype(bool).any(),
+            plan.empty or not plan["move_performed"].map(strict_bool).any(),
             "move_performed=false",
         ),
         (
             "no_delete_performed",
-            plan.empty or not plan["delete_performed"].astype(bool).any(),
+            plan.empty or not plan["delete_performed"].map(strict_bool).any(),
             "delete_performed=false",
         ),
         (
             "archive_destination_ready_only_if_off_volume",
-            not bool(destination["archive_copy_preflight_ready"])
+            not strict_bool(destination["archive_copy_preflight_ready"])
             or (
-                bool(destination["archive_destination_configured"])
-                and bool(destination["archive_destination_exists"])
-                and bool(destination["archive_destination_writable"])
-                and not bool(destination["archive_destination_same_device"])
+                strict_bool(destination["archive_destination_configured"])
+                and strict_bool(destination["archive_destination_exists"])
+                and strict_bool(destination["archive_destination_writable"])
+                and not strict_bool(destination["archive_destination_same_device"])
                 and int(destination["archive_destination_free_bytes"])
                 >= int(destination["archive_destination_required_bytes"])
             ),
@@ -371,12 +372,12 @@ def _validation(
         ),
         (
             "archive_release_preflight_false",
-            not bool(destination["archive_release_preflight_ready"]),
+            not strict_bool(destination["archive_release_preflight_ready"]),
             "archive_release_preflight_ready=false",
         ),
         (
             "live_authority_false",
-            plan.empty or not plan["live_trading_authorized"].astype(bool).any(),
+            plan.empty or not plan["live_trading_authorized"].map(strict_bool).any(),
             "live_trading_authorized=false",
         ),
     )
