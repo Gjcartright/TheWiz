@@ -1,0 +1,28 @@
+{
+  "authority": "DISPOSABLE_LOCAL_TEST_NO_EXTERNAL_OR_ORDER",
+  "errors": 0,
+  "failed": 2,
+  "failure_causes": {
+    "TEST_CALLS_REMOVED_CONTAINMENT_HELPER": 1,
+    "TEST_USES_OLD_SANITIZED_ENV_SIGNATURE": 1
+  },
+  "interpretation": "Candidate safety code passes 91 focused checks but its preserved tests call an obsolete closure API; candidate certification is not established.",
+  "junit_path": "/Users/gregc/Backups/TheWiz/effect-authority-diagnostics/2026-09-30/effect-authority-junit.xml",
+  "junit_sha256": "cba83815c94e7a81aa450ca9e274020ad2eaa29eae4fab54224be29c4dec4024",
+  "passed": 91,
+  "per_module": {
+    "tests.test_gate00g_order_authority": {
+      "PASS": 29
+    },
+    "tests.test_phase00_effect_authority": {
+      "FAIL": 2,
+      "PASS": 55
+    },
+    "tests.test_phase00_effect_guard": {
+      "PASS": 7
+    }
+  },
+  "schema_version": "thewiz.gate0.effect_authority_diagnostic.v1",
+  "source_and_test_hash_matches": 4,
+  "tests": 93
+}
