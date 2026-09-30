@@ -1,8 +1,11 @@
 {
+  "decisions_file": "GATE0_SOURCE_DECISIONS_2026-09-30.csv",
   "four_root_only": 633,
   "four_root_review_paths": 718,
-  "meaning": "Custody and queue counts only; semantic decisions and ports remain open.",
+  "meaning": "18 ignored logs/generated files were classified as non-source; other semantic decisions and ports remain open.",
   "overlap_paths": 85,
+  "remaining_semantic_review_paths": 793,
+  "resolved_nonsource_paths": 18,
   "same_path_only": 93,
   "same_path_review_paths": 178,
   "same_path_review_variants": 230,

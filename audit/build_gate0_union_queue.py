@@ -16,6 +16,7 @@ DELTA = AUDIT / "GATE0_SOURCE_DELTA_REGISTER_2026-09-30.csv"
 ROOTS = AUDIT / "evidence_freeze_2026-09-29" / "source_reconciliation.csv"
 OUTPUT = AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 SUMMARY = AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.json"
+DECISIONS = AUDIT / "GATE0_SOURCE_DECISIONS_2026-09-30.csv"
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -34,6 +35,25 @@ def main() -> None:
         if row["decision"] == "REVIEW_REQUIRED"
     }
     paths = sorted(set(delta) | set(roots))
+    decisions = {}
+    for decision in read_rows(DECISIONS):
+        path = decision["relative_path"]
+        if path in decisions or path not in paths:
+            raise ValueError(f"Invalid or duplicate source decision: {path}")
+        if decision["decision"] not in {
+            "RETAIN_HISTORICAL_LOG_NO_PORT",
+            "GENERATED_PACKAGE_METADATA_NO_PORT",
+        } or not decision["rationale"] or not decision["custody_evidence"]:
+            raise ValueError(f"Unsupported source decision: {path}")
+        if decision["decision"] == "RETAIN_HISTORICAL_LOG_NO_PORT" and not (
+            path.startswith("scripts/schedule_logs/") and path.endswith(".log")
+        ):
+            raise ValueError(f"Log decision applied outside schedule logs: {path}")
+        if decision["decision"] == "GENERATED_PACKAGE_METADATA_NO_PORT" and not path.startswith(
+            "src/quantized_stat_arb_platform.egg-info/"
+        ):
+            raise ValueError(f"Package metadata decision applied outside egg-info: {path}")
+        decisions[path] = decision
     fieldnames = [
         "relative_path",
         "in_same_path_drift",
@@ -46,6 +66,8 @@ def main() -> None:
         "recovery_sha256_at_freeze",
         "runtime_sha256_at_freeze",
         "custody_status",
+        "decision_rationale",
+        "decision_evidence",
     ]
     with OUTPUT.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
@@ -75,7 +97,11 @@ def main() -> None:
                     "working_sha256_at_freeze": root.get("working_sha256", ""),
                     "recovery_sha256_at_freeze": root.get("recovery_sha256", ""),
                     "runtime_sha256_at_freeze": root.get("runtime_sha256", ""),
-                    "custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+                    "custody_status": decisions.get(path, {}).get(
+                        "decision", "PRESERVED_REVIEW_REQUIRED_NO_PORT"
+                    ),
+                    "decision_rationale": decisions.get(path, {}).get("rationale", ""),
+                    "decision_evidence": decisions.get(path, {}).get("custody_evidence", ""),
                 }
             )
     overlap = set(delta) & set(roots)
@@ -90,7 +116,10 @@ def main() -> None:
         "same_path_only": len(set(delta) - set(roots)),
         "four_root_only": len(set(roots) - set(delta)),
         "union_review_paths": len(paths),
-        "meaning": "Custody and queue counts only; semantic decisions and ports remain open.",
+        "resolved_nonsource_paths": len(decisions),
+        "remaining_semantic_review_paths": len(paths) - len(decisions),
+        "decisions_file": str(DECISIONS.relative_to(AUDIT)),
+        "meaning": "18 ignored logs/generated files were classified as non-source; other semantic decisions and ports remain open.",
     }
     SUMMARY.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 

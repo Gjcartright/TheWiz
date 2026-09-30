@@ -7,6 +7,7 @@
 - The working checkout has `src/quant_platform/statistics/math_v2.py` and related paper/math modules, but no `src/quant_platform/math_desk/` package.
 - LocalRuntime and the recovery project each have **27 Python Math Desk modules**, byte-identical across those two copies in the 2026-09-29 hash manifest. That agreement makes them one corroborated source candidate, not an accepted canonical source.
 - Their `statistics/math_v2.py` and `research_paper_reproduction.py` differ from the working checkout. The later `math_v2.py` adds tighter temporal/sample identity and Engle-Granger/ECM validation. Replacing the working file wholesale would need compatibility review.
+- LocalRuntime `pyproject.toml` and `uv.lock` add an optional `math-research` dependency profile (`sympy`, `pyvinecopulib`, `arch`, and `cvxpy`) absent from the active project contract. The active locked environment cannot stand in for that candidate's dependency receipt.
 - `audit/evidence_freeze_2026-09-29/source_reconciliation.csv` identifies each file and SHA-256. `missing_import_edges.csv` maps internal dependencies absent from the working checkout.
 
 ## Isolated diagnostic

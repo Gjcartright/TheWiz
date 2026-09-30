@@ -1,0 +1,14 @@
+{
+  "active_only_symbol_count": 69,
+  "active_paths_changed_since_freeze": 6,
+  "active_root": "/Volumes/Expansion/Crypto Wizard",
+  "changed_python_paths": 176,
+  "meaning": "AST surface comparison only; semantic review remains open.",
+  "paths_with_active_only_symbols": 25,
+  "paths_with_runtime_only_symbols": 123,
+  "runtime_only_symbol_count": 1506,
+  "runtime_paths_changed_since_freeze": 0,
+  "runtime_root": "/Users/gregc/TheWiz-LocalRuntime",
+  "schema_version": "thewiz.gate0.runtime_symbol_triage.v1",
+  "source": "evidence_freeze_2026-09-29/source_reconciliation.csv"
+}
