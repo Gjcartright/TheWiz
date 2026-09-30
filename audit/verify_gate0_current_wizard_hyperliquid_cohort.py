@@ -42,6 +42,10 @@ def verify() -> dict[str, int]:
     base = report["base_commit"]
     records = report["paths"]
     queue = _rows(_git_bytes(base, report["queue_path"]))
+    current_queue = {
+        row["relative_path"]: row
+        for row in _rows((ROOT / report["queue_path"]).read_bytes())
+    }
     freeze = {
         row["relative_path"]: row
         for row in _rows(_git_bytes(base, report["four_root_freeze_path"]))
@@ -79,6 +83,23 @@ def verify() -> dict[str, int]:
             filter(None, queue_row["historical_variant_sha256"].split(";"))
         ), relative_path
         assert len(history_hashes) == int(queue_row["historical_variant_count"])
+        decision = record["decision"]
+        expected_status = (
+            "REVIEWED_SELECTIVE_PERSISTED_BOOL_PORT"
+            if decision == "SELECTIVE_PORT_READY"
+            else "REVIEWED_LEGACY_HYPERLIQUID_DEPENDENCY_DEFERRED_NO_PORT"
+            if decision.startswith("DEFER_")
+            else "REVIEWED_ACTIVE_LEGACY_HYPERLIQUID_NO_PORT"
+        )
+        current = current_queue[relative_path]
+        if current["custody_status"] != expected_status:
+            raise AssertionError(f"current queue decision not closed: {relative_path}")
+        if "Historical decision " + decision + ": " + record["semantic_rationale"] not in current["decision_rationale"]:
+            raise AssertionError(f"current queue rationale missing: {relative_path}")
+        if REPORT.relative_to(ROOT).as_posix() not in current["decision_evidence"].split("; "):
+            raise AssertionError(f"current queue report citation missing: {relative_path}")
+        if current["historical_variant_sha256"] != queue_row["historical_variant_sha256"]:
+            raise AssertionError(f"current queue lost frozen SHA: {relative_path}")
 
     return {"paths": len(records), "verified_copies": variant_count}
 

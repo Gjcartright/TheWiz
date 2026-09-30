@@ -210,6 +210,13 @@ def build() -> dict[str, object]:
             if path.endswith("hyperliquid_run_manifest.py")
             else "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT"
         )
+        rationale = "Reviewed all frozen source variants: " + new_finding + " " + older_finding + " Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable."
+        if active_q["custody_status"] != status:
+            raise ValueError(f"current queue decision not closed: {path}")
+        if rationale not in active_q["decision_rationale"]:
+            raise ValueError(f"current queue missing variant rationale: {path}")
+        if REPORT.relative_to(ROOT).as_posix() not in active_q["decision_evidence"].split("; "):
+            raise ValueError(f"current queue missing report citation: {path}")
         reviews.append({
             "relative_path": path,
             "selected_active_at_base_sha256": sha(selected),
@@ -219,7 +226,7 @@ def build() -> dict[str, object]:
             "prior_custody_status_snapshot": prior,
             "queue_status_at_base": q["custody_status"],
             "recommended_queue_status": status,
-            "recommended_decision_rationale_append": "Reviewed all frozen source variants: " + new_finding + " " + older_finding + " Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+            "recommended_decision_rationale_append": rationale,
             "recommended_decision_evidence_append": REPORT.relative_to(ROOT).as_posix(),
             "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
             "variants": variants,
