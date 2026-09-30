@@ -181,6 +181,7 @@ from quant_platform.meta_learning import (
     TradeRecord,
     write_learning_event_summary_report,
 )
+from quant_platform.runtime_types import strict_bool
 from quant_platform.ml_filter import (
     build_trade_filter_dataset,
     shadow_model_branch_comparison,
@@ -9137,7 +9138,7 @@ def _priority_readiness_report(
     learning_outcomes = int(combined_row.get("outcome_events", 0) or 0)
     learning_audit_only = int(combined_row.get("audit_only_events", 0) or 0)
     learning_outcomes_remaining = int(combined_row.get("outcome_events_remaining", 100) or 0)
-    learning_ready_for_modeling = bool(combined_row.get("ready_for_modeling", False))
+    learning_ready_for_modeling = strict_bool(combined_row.get("ready_for_modeling", False))
     learning_ready = learning_ready_for_modeling
     learning_blocker = (
         "missing_learning_events" if learning_events == 0 else "missing_model_ready_outcomes"
