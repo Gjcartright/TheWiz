@@ -923,6 +923,7 @@ def build_cost_collection_status(
     strict_window_hours = float(policy.get("strict_l2_window_hours", 2.0))
     minimum_samples = int(policy.get("minimum_strict_l2_samples", 12))
     minimum_span_minutes = float(policy.get("minimum_strict_l2_span_minutes", 100.0))
+    maximum_gap_minutes = float(policy.get("maximum_strict_l2_gap_minutes", 15.0))
     current_funding_path = active / "current_wizard_hyperliquid_funding_asset_results.csv"
     exhaustive_funding_path = active / "exhaustive_wizard_hyperliquid_funding_asset_results.csv"
     corrective_l2_funding_path = active / "corrective_l2_funding_asset_results.csv"
@@ -980,7 +981,22 @@ def build_cost_collection_status(
             if len(strict_timestamps) >= 2
             else 0.0
         )
-        cadence_ready = strict >= minimum_samples and span_minutes >= minimum_span_minutes
+        ordered_timestamps = strict_timestamps.sort_values()
+        observation_gaps = ordered_timestamps.diff().dropna().dt.total_seconds() / 60.0
+        max_gap_minutes = (
+            float(observation_gaps.max()) if not observation_gaps.empty else math.inf
+        )
+        latest_age_minutes = (
+            float((pd.Timestamp(now) - ordered_timestamps.max()).total_seconds() / 60.0)
+            if not ordered_timestamps.empty
+            else math.inf
+        )
+        cadence_ready = bool(
+            strict >= minimum_samples
+            and span_minutes >= minimum_span_minutes
+            and max_gap_minutes <= maximum_gap_minutes
+            and latest_age_minutes <= maximum_gap_minutes
+        )
         funding_complete_rows = f.get("funding_status", pd.Series("", index=f.index, dtype=str)).eq(
             "COMPLETE"
         )
@@ -1025,6 +1041,10 @@ def build_cost_collection_status(
             blockers.append("strict_l2_sample_target_not_met")
         elif span_minutes < minimum_span_minutes:
             blockers.append("strict_l2_observation_span_not_met")
+        if strict >= 2 and max_gap_minutes > maximum_gap_minutes:
+            blockers.append("strict_l2_maximum_gap_exceeded")
+        if strict >= 1 and latest_age_minutes > maximum_gap_minutes:
+            blockers.append("strict_l2_latest_observation_stale")
         rows.append(
             {
                 "asset": asset,
@@ -1038,9 +1058,16 @@ def build_cost_collection_status(
                 "strict_l2_local_capture_timestamp_fallbacks": strict_local_fallbacks,
                 "provisional_l2_local_capture_timestamp_fallbacks": provisional_local_fallbacks,
                 "strict_l2_span_minutes": span_minutes,
+                "strict_l2_max_gap_minutes": (
+                    max_gap_minutes if math.isfinite(max_gap_minutes) else ""
+                ),
+                "strict_l2_latest_age_minutes": (
+                    latest_age_minutes if math.isfinite(latest_age_minutes) else ""
+                ),
                 "strict_l2_cadence_ready": cadence_ready,
                 "minimum_strict_l2_samples": minimum_samples,
                 "minimum_strict_l2_span_minutes": minimum_span_minutes,
+                "maximum_strict_l2_gap_minutes": maximum_gap_minutes,
                 "l2_timestamp_policy": L2_TIMESTAMP_POLICY,
                 "latest_l2_at": (
                     observations["effective_l2_observation_timestamp"].max().isoformat()
@@ -1110,6 +1137,7 @@ def build_pair_cost_stress_surfaces(
     policy = _cost_gate_policy(root)
     minimum_samples = int(policy.get("minimum_strict_l2_samples", 12))
     minimum_span_minutes = float(policy.get("minimum_strict_l2_span_minutes", 100.0))
+    maximum_gap_minutes = float(policy.get("maximum_strict_l2_gap_minutes", 15.0))
     profile = _read_json(profile_path)
     fee = _finite(profile.get("taker_fee_bps"))
     execution_risk = _finite(profile.get("execution_risk_bps"))
@@ -1184,6 +1212,8 @@ def build_pair_cost_stress_surfaces(
                 blockers.append(f"asset_{label}_strict_l2_sample_target_not_met:{asset}")
             if stats["span_minutes"] < minimum_span_minutes:
                 blockers.append(f"asset_{label}_strict_l2_span_not_met:{asset}")
+            if stats["max_gap_minutes"] > maximum_gap_minutes:
+                blockers.append(f"asset_{label}_strict_l2_maximum_gap_exceeded:{asset}")
             if (
                 not math.isfinite(stats["available_notional_p05_usd"])
                 or stats["available_notional_p05_usd"] < 1_000.0
@@ -1259,6 +1289,9 @@ def build_pair_cost_stress_surfaces(
                 "l2_timestamp_policy": L2_TIMESTAMP_POLICY,
                 "strict_l2_span_minutes_x": stats_x["span_minutes"],
                 "strict_l2_span_minutes_y": stats_y["span_minutes"],
+                "strict_l2_max_gap_minutes_x": stats_x["max_gap_minutes"],
+                "strict_l2_max_gap_minutes_y": stats_y["max_gap_minutes"],
+                "maximum_strict_l2_gap_minutes": maximum_gap_minutes,
                 "strict_l2_start_at": min(
                     value for value in (stats_x["start_at"], stats_y["start_at"]) if value
                 )
@@ -1532,6 +1565,9 @@ def _strict_asset_cost_statistics(frame: pd.DataFrame, asset: str) -> dict[str, 
         if len(timestamps) >= 2
         else 0.0
     )
+    ordered_timestamps = timestamps.sort_values()
+    gaps = ordered_timestamps.diff().dropna().dt.total_seconds() / 60.0
+    max_gap = float(gaps.max()) if not gaps.empty else math.inf
     slippage = pd.to_numeric(
         samples.get("one_way_slippage_bps", pd.Series(dtype=float)), errors="coerce"
     ).dropna()
@@ -1559,6 +1595,7 @@ def _strict_asset_cost_statistics(frame: pd.DataFrame, asset: str) -> dict[str, 
             .sum()
         ),
         "span_minutes": span,
+        "max_gap_minutes": max_gap,
         "start_at": timestamps.min().isoformat() if len(timestamps) else "",
         "end_at": timestamps.max().isoformat() if len(timestamps) else "",
         "slippage_p95_bps": float(slippage.quantile(0.95)) if not slippage.empty else math.nan,
@@ -1729,6 +1766,9 @@ def validate_pair_cost_bundle_artifacts(
         "strict_l2_local_capture_timestamp_fallbacks_y",
         "strict_l2_span_minutes_x",
         "strict_l2_span_minutes_y",
+        "strict_l2_max_gap_minutes_x",
+        "strict_l2_max_gap_minutes_y",
+        "maximum_strict_l2_gap_minutes",
         "strict_l2_start_at",
         "strict_l2_end_at",
         "slippage_x_p95_bps",
@@ -1812,6 +1852,9 @@ def validate_pair_cost_bundle_artifacts(
         "funding_complete",
         "strict_l2_samples",
         "strict_l2_span_minutes",
+        "strict_l2_max_gap_minutes",
+        "strict_l2_latest_age_minutes",
+        "maximum_strict_l2_gap_minutes",
         "strict_l2_cadence_ready",
         "minimum_strict_l2_samples",
         "minimum_strict_l2_span_minutes",
@@ -1887,11 +1930,23 @@ def validate_pair_cost_bundle_artifacts(
             asset: _strict_asset_cost_statistics(l2, asset)
             for asset in relevant_assets
         }
+        expected_maximum_gap = float(
+            _cost_gate_policy(root).get("maximum_strict_l2_gap_minutes", 15.0)
+        )
+        model_as_of = pd.to_datetime(
+            manifest.get("model_as_of_utc"), utc=True, errors="coerce"
+        )
         if any(not stats["statistics_complete"] for stats in l2_stats.values()):
             blockers.append("pair_cost_bundle_l2_statistics_incomplete")
         for asset in relevant_assets:
             stats = l2_stats.get(asset, {})
             status = status_by_asset.get(asset, {})
+            end_at = pd.to_datetime(stats.get("end_at"), utc=True, errors="coerce")
+            expected_latest_age = (
+                float((model_as_of - end_at).total_seconds() / 60.0)
+                if pd.notna(model_as_of) and pd.notna(end_at)
+                else math.inf
+            )
             if (
                 not stats
                 or not status
@@ -1902,10 +1957,26 @@ def validate_pair_cost_bundle_artifacts(
                     status.get("strict_l2_span_minutes"),
                     stats.get("span_minutes"),
                 )
+                or not _number_matches(
+                    status.get("strict_l2_max_gap_minutes"),
+                    stats.get("max_gap_minutes"),
+                )
+                or not _number_matches(
+                    status.get("strict_l2_latest_age_minutes"),
+                    expected_latest_age,
+                )
                 or _finite(stats.get("samples"))
                 < _finite(status.get("minimum_strict_l2_samples"))
                 or _finite(stats.get("span_minutes"))
                 < _finite(status.get("minimum_strict_l2_span_minutes"))
+                or _finite(stats.get("max_gap_minutes"))
+                > _finite(status.get("maximum_strict_l2_gap_minutes"))
+                or expected_latest_age
+                > _finite(status.get("maximum_strict_l2_gap_minutes"))
+                or not _number_matches(
+                    status.get("maximum_strict_l2_gap_minutes"),
+                    expected_maximum_gap,
+                )
                 or _text(status.get("l2_timestamp_policy")) != L2_TIMESTAMP_POLICY
             ):
                 blockers.append("pair_cost_bundle_cost_status_l2_mismatch")
@@ -2027,6 +2098,9 @@ def validate_pair_cost_bundle_artifacts(
             ],
             "strict_l2_span_minutes_x": stats_x["span_minutes"],
             "strict_l2_span_minutes_y": stats_y["span_minutes"],
+            "strict_l2_max_gap_minutes_x": stats_x["max_gap_minutes"],
+            "strict_l2_max_gap_minutes_y": stats_y["max_gap_minutes"],
+            "maximum_strict_l2_gap_minutes": expected_maximum_gap,
             "slippage_x_p95_bps": stats_x["slippage_p95_bps"],
             "slippage_y_p95_bps": stats_y["slippage_p95_bps"],
             "spread_x_p95_bps": stats_x["spread_p95_bps"],
