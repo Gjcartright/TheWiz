@@ -380,6 +380,12 @@ def validate_wizard_browser_auth_readiness(
         if sha256(receipt_path.read_bytes()).hexdigest() != status.get("receipt_sha256"):
             raise ValueError("receipt hash mismatch")
         max_age_hours = float(receipt["max_age_hours"])
+        # A matching pointer and receipt hash cannot relax the creator's
+        # bounded age or required independent route population.
+        if not (0 < max_age_hours <= 168):
+            raise ValueError("max_age_hours out of range")
+        if receipt.get("required_route_kinds") != list(REQUIRED_ROUTE_KINDS):
+            raise ValueError("required route kinds mismatch")
         route_kinds: set[str] = set()
         source_paths: set[str] = set()
         for item in receipt.get("selected_evidence", []):

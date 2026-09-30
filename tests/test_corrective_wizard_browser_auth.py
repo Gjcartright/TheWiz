@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
+
+import pytest
 
 from quant_platform.orchestration.corrective_wizard_browser_auth import (
     build_wizard_browser_auth_readiness,
@@ -245,3 +248,39 @@ def test_same_source_cannot_supply_both_required_routes(tmp_path: Path) -> None:
         observation_paths=[path],
     )
     assert result.summary["status"] == "BLOCKED"
+
+
+@pytest.mark.parametrize(
+    ("field", "forged_value"),
+    [
+        ("max_age_hours", 169),
+        ("required_route_kinds", ["pair_detail", "scanner"]),
+    ],
+)
+def test_readiness_rejects_self_consistent_forged_contract_fields(
+    tmp_path: Path, field: str, forged_value: object
+) -> None:
+    _write_contract(tmp_path)
+    raw = tmp_path / "data" / "raw" / "crypto_wizards" / "browser_auth"
+    raw.mkdir(parents=True)
+    for route_kind in ("scanner", "pair_detail"):
+        (raw / f"{route_kind}.json").write_text(
+            json.dumps(_observation(route_kind)), encoding="utf-8"
+        )
+    build_wizard_browser_auth_readiness(root=tmp_path, now=NOW)
+
+    status_path = tmp_path / "reports/active/wizard_browser_auth_readiness.json"
+    status = json.loads(status_path.read_text(encoding="utf-8"))
+    receipt_path = tmp_path / status["receipt_path"]
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt[field] = forged_value
+    status[field] = forged_value
+    receipt_bytes = json.dumps(receipt, sort_keys=True).encode("utf-8")
+    receipt_path.chmod(0o600)
+    receipt_path.write_bytes(receipt_bytes)
+    status["receipt_sha256"] = sha256(receipt_bytes).hexdigest()
+    status_path.write_text(json.dumps(status), encoding="utf-8")
+
+    validation = validate_wizard_browser_auth_readiness(root=tmp_path, now=NOW)
+    assert validation["status"] == "BLOCKED"
+    assert validation["blocker"] == "invalid_wizard_browser_auth_readiness:ValueError"
