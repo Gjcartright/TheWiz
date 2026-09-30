@@ -20,6 +20,11 @@ BASELINE = ROOT / "audit/evidence_freeze_2026-09-29/source_reconciliation.csv"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 REPORT_SHA = "5144abddd4aeea00f12ac7745d83702f8a6b0651f37b75c27cb90efa5d90b4d7"
 PROPOSAL_SHA = "7aefca1b000c48a4be0176dde758cc5f8f0c16a8eeaea0bb4bb99d25aae7a38e"
+LATER_SELECTED_TEST_REPAIR = {
+    # The historical visual copy remains a no-port decision. This selected
+    # test later gained a focused persisted-readiness regression at 0311956.
+    "tests/test_v2_run.py": "ddaea665932d18a1edfaa028bb338ad4a7b468bce5598eac99d0ed8509127511",
+}
 
 
 def sha(data: bytes) -> str:
@@ -61,7 +66,10 @@ def verify() -> dict[str, int]:
         frozen = baseline[path]
         if sha(selected(path)) != record["selected_active_sha256"]:
             raise ValueError(f"selected base source changed: {path}")
-        if sha((ROOT / path).read_bytes()) != record["selected_active_sha256"]:
+        if sha((ROOT / path).read_bytes()) not in {
+            record["selected_active_sha256"],
+            LATER_SELECTED_TEST_REPAIR.get(path, record["selected_active_sha256"]),
+        }:
             raise ValueError(f"selected current source changed: {path}")
         if frozen["decision"] != "NO_PORT_NEEDED" or frozen["working_vs_runtime"] != "SAME":
             raise ValueError(f"four-root status mismatch: {path}")
