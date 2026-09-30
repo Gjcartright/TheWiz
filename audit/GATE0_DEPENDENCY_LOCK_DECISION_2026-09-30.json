@@ -1,0 +1,74 @@
+{
+  "active_lock_only_vs_historical": [
+    "aiodns==4.0.4",
+    "aiohappyeyeballs==2.7.1",
+    "aiohttp==3.14.3",
+    "aiosignal==1.4.0",
+    "attrs==26.1.0",
+    "ccxt==4.4.26",
+    "cryptography==50.0.0",
+    "frozenlist==1.8.0",
+    "multidict==6.7.1",
+    "propcache==0.5.2",
+    "pycares==5.0.1",
+    "yarl==1.24.5"
+  ],
+  "active_lock_packages": 140,
+  "candidate_package_build_junit_sha256": "a042b2f4472c5011a202565fb0094e7f9eeade9a2c27d820ac2035ff84cfa485",
+  "candidate_package_build_tests_passed": 2,
+  "custody": {
+    "pyproject.toml": {
+      "active_sha256": "b3eddc87483f8b31a1b3e4d68a68cda447f2d7ff1eb491f08e2d157128d67981",
+      "historical_variant_sha256": [
+        "a311ff77f4662dc08089616b7ec07a0dea4a4d214fc1ff94d7340ee59f56b9af",
+        "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+      ],
+      "runtime_sha256": "9d7c24ea6551dd54e361c983f8039d0936728818a9e8036e2d5379465f29a6f1"
+    },
+    "scripts/build_clean_wheel.py": {
+      "runtime_sha256": "95ec4114690d4b5e98ec073251aea3e6f2b18536bcb758be11e63c0a37f5a1a2"
+    },
+    "src/quant_platform/package_build.py": {
+      "runtime_sha256": "cc9c5e3a6d1840f308d673b475ae4cbc8d8b6effb94b14d5c793e22006cc5789"
+    },
+    "tests/test_package_build.py": {
+      "runtime_sha256": "41e6ce70511f9f146ab0c62faa1e9691968859e636df5239107bb517c6aff1e6"
+    },
+    "uv.lock": {
+      "active_sha256": "c8955d2a94ad5d7c97da861cab9db9a32d3d489d17825052632ee9b96dcad634",
+      "historical_variant_sha256": [
+        "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+      ],
+      "runtime_sha256": "bc67c17f3873991bc3dfb7a3bf782153d81838402a9c6057de4be9a854549a9a"
+    }
+  },
+  "decision": "RETAIN_ACTIVE_PROJECT_AND_LOCK_USE_COMMIT_BOUND_INTERNAL_WHEEL_STAGE",
+  "historical_lock_only": [
+    "scipy==1.18.0"
+  ],
+  "historical_lock_packages": 129,
+  "interpretation": "Retain the active dependency manifest and lock. The preserved manifest/lock pair resolves SciPy 1.18 for Python 3.12 and omits active ccxt dependencies. The runtime Math Desk and collection extras belong to unselected source. A clean Expansion wheel build fails at setuptools install_scripts, while the same committed source succeeds on Mac internal staging; the historical package-discovery exclude did not establish a fix. Use the commit-bound staged builder and keep the three runtime-only helper/test files as exact preserved candidates.",
+  "runtime_lock_only_vs_active": [
+    "arch==8.0.0",
+    "clarabel==0.11.1",
+    "contourpy==1.3.3",
+    "cvxpy==1.9.2",
+    "cycler==0.12.1",
+    "fonttools==4.64.0",
+    "highspy==1.15.1",
+    "kiwisolver==1.5.1",
+    "matplotlib==3.11.1",
+    "osqp==1.1.3",
+    "pillow==12.3.0",
+    "pydot==4.0.1",
+    "pyparsing==3.3.2",
+    "pyvinecopulib==0.7.6",
+    "qdldl==0.1.9.post1",
+    "scs==3.3.1",
+    "sparsediffpy==0.3.0"
+  ],
+  "runtime_lock_packages": 157,
+  "schema_version": "thewiz.gate0.dependency_lock_decision.v1",
+  "wheel_diagnostic_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/wheel-probe/DIAGNOSTIC.json",
+  "wheel_diagnostic_sha256": "f1984bd399a1dba9d205a0e4082f93d552434f6c9fec7224c5b3e3ead15e8cfb"
+}
