@@ -1,0 +1,36 @@
+{
+  "active_disposable_adjusted_tests_passed": 24,
+  "active_disposable_baseline_failed": 2,
+  "active_disposable_baseline_passed": 22,
+  "decision": "RETAIN_ACTIVE_GRAPH_STAGE_MAP_PRESERVE_EVIDENCE_GATED_WIZARD_CANDIDATE",
+  "diagnostic_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/wizard-stage-candidate-ykzl2pf4/DIAGNOSTIC.json",
+  "diagnostic_sha256": "32fa0282d3fcfba7c5fec2fffe88a52c016109b07f13282dffa0e8bfbe22b8d1",
+  "interpretation": "Keep the active 25-stage graph and its safe exception redaction. Preserve the six runtime-only source, doc and test files and the alternate nodes.py bytes without partial promotion. Candidate modules are local-only and encode zero collection, promotion, paper and execution authority; they pass 24 tests under a disposable active fixture adjustment. The active checkout has neither required input file. Independent source evidence and a versioned current-checkout fixture/integration decision are needed before enabling these stages.",
+  "path_sha256": {
+    "docs/wizard_frozen_source_qualification.md": {
+      "runtime_sha256": "a4de7d9f48fa19187de514b40260c7e79a0d957a4b3c4c7223dae303105292f2"
+    },
+    "docs/wizard_research_validation_spine.md": {
+      "runtime_sha256": "3672533c0800cadaf23d4af0095209df8b959e296300040dfe21139782e61409"
+    },
+    "src/quant_platform/orchestration/nodes.py": {
+      "active_sha256": "ce147c8c3aad5a21d27c0f93ba70c9ceb5da10a4e36ea06525bb9521e77e0ca5",
+      "historical_variant_sha256": "4eb064001bf1c011bdf6666f4d74153bdcf990f60bc4f61c02e869270e35f1ff",
+      "runtime_sha256": "81f25d20cff59a6ada863362cd4907f5d93e9772e2f344da43bf8477aaffd4b7"
+    },
+    "src/quant_platform/orchestration/wizard_frozen_source_qualification.py": {
+      "runtime_sha256": "4814908884f63d6203f254c480a2e7f96f00a4f41ef7e34b3819c27846a6396d"
+    },
+    "src/quant_platform/orchestration/wizard_research_validation_spine.py": {
+      "runtime_sha256": "30b77827d00884e770a982911f4c570cb8a74bf0ea96c75724a6310e9ee42eb4"
+    },
+    "tests/test_wizard_frozen_source_qualification.py": {
+      "runtime_sha256": "14958574e349651888de3cc9daae5e0a6676f8dedc0220e502e1d59a277d3091"
+    },
+    "tests/test_wizard_research_validation_spine.py": {
+      "runtime_sha256": "c634dec029981c4971719742b97b208ea60c4ca35eab087d0c722285648a6b06"
+    }
+  },
+  "runtime_candidate_tests_passed": 24,
+  "schema_version": "thewiz.gate0.wizard_graph_candidate_decision.v1"
+}

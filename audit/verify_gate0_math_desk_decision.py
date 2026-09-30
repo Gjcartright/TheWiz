@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Verify the evidence-blocked Math Desk source selection for Gate 0."""
 
 from __future__ import annotations
@@ -9,7 +10,6 @@ import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
 AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
 RUNTIME = Path("/Users/gregc/TheWiz-LocalRuntime")
@@ -19,6 +19,11 @@ AVAILABILITY = AUDIT / "MATH_DESK_SOURCE_AVAILABILITY_2026-09-30.json"
 OUTPUT = AUDIT / "GATE0_MATH_DESK_DECISION_2026-09-30.json"
 MODULE_PREFIX = "src/quant_platform/math_desk/"
 TEST_PREFIX = "tests/test_math_desk"
+RELATED_TEST = "tests/test_node_contract_repairs.py"
+RELATED_JUNIT = Path(
+    "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/"
+    "node-contract-candidate-junit.xml"
+)
 STATUS = "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT"
 REQUIRED_PATHS = (
     "docs/math_desk_constitution.md",
@@ -41,10 +46,12 @@ def main() -> None:
     with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
         newline="", encoding="utf-8"
     ) as stream:
+        all_rows = list(csv.DictReader(stream))
         queue = [
-            row for row in csv.DictReader(stream)
+            row for row in all_rows
             if row["relative_path"].startswith((MODULE_PREFIX, TEST_PREFIX))
         ]
+    related = next(row for row in all_rows if row["relative_path"] == RELATED_TEST)
     modules = [row for row in queue if row["relative_path"].startswith(MODULE_PREFIX)]
     tests = [row for row in queue if row["relative_path"].startswith(TEST_PREFIX)]
     if (
@@ -63,7 +70,7 @@ def main() -> None:
         if entry["type"] == "file"
     }
     hashes = {}
-    for row in queue:
+    for row in (*queue, related):
         relative = row["relative_path"]
         if (
             row["custody_status"] != STATUS
@@ -120,6 +127,7 @@ def main() -> None:
 
     baseline = suite(DIAGNOSTICS / "mathdesk-junit.xml")
     followup = suite(DIAGNOSTICS / "risk-census-junit.xml")
+    node_contract = suite(RELATED_JUNIT)
     if any(
         baseline[key] != value
         for key, value in (("tests", "174"), ("failures", "18"), ("errors", "67"))
@@ -130,6 +138,11 @@ def main() -> None:
         for key, value in (("tests", "12"), ("failures", "0"), ("errors", "4"))
     ):
         raise ValueError("Math Desk risk-census outcome changed")
+    if any(
+        node_contract[key] != value
+        for key, value in (("tests", "57"), ("failures", "0"), ("errors", "0"))
+    ):
+        raise ValueError("Math Desk related node-contract test outcome changed")
     diagnostic = json.loads(
         (AUDIT / "MATH_DESK_DIAGNOSTIC_2026-09-30.json").read_text(
             encoding="utf-8"
@@ -151,6 +164,9 @@ def main() -> None:
         "path_sha256": dict(sorted(hashes.items())),
         "candidate_module_count": len(modules),
         "candidate_test_file_count": len(tests),
+        "related_node_contract_test_file_count": 1,
+        "related_node_contract_junit_sha256": digest(RELATED_JUNIT),
+        "related_node_contract_tests_passed": 57,
         "source_availability_sha256": digest(AVAILABILITY),
         "required_governed_paths": list(REQUIRED_PATHS),
         "baseline_junit_sha256": digest(DIAGNOSTICS / "mathdesk-junit.xml"),
@@ -162,10 +178,10 @@ def main() -> None:
         "risk_census_tests_passed": 8,
         "risk_census_errors": 4,
         "lecture_index_missing_fields": diagnostic["lecture_index_missing_fields"],
-        "interpretation": "Retain all 27 exact Math Desk modules and 11 matching test files as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
+        "interpretation": "Retain all 27 exact Math Desk modules, 11 matching test files, and one related pure node-contract metadata test as a preserved, unselected candidate for Gate 0. The related test passes 57 cases. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
     }
     OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print("PASS thirty_eight_math_desk_source_and_test_decisions")
+    print("PASS thirty_nine_math_desk_source_and_test_decisions")
 
 
 if __name__ == "__main__":

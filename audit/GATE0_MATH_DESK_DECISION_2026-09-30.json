@@ -7,7 +7,7 @@
   "candidate_module_count": 27,
   "candidate_test_file_count": 11,
   "decision": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
-  "interpretation": "Retain all 27 exact Math Desk modules and 11 matching test files as a preserved, unselected candidate for Gate 0. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
+  "interpretation": "Retain all 27 exact Math Desk modules, 11 matching test files, and one related pure node-contract metadata test as a preserved, unselected candidate for Gate 0. The related test passes 57 cases. Five governed source documents are unavailable in accessible source locations but are not proven deleted; the optional dependency profile and lecture-index schema also differ from active source. Existing focused passes do not establish algorithm acceptance, MATLAB parity, strategy promotion, or trading authority. Revisit only with independently sourced governed evidence and a coherent dependency/data contract.",
   "lecture_index_missing_fields": [
     "review_status",
     "topic_tags",
@@ -51,8 +51,12 @@
     "tests/test_math_desk_m6_backlog_resolution.py": "3e3451edae58c88115caaf958b7fdb0e07be4af6052c4d0dc0961582f2e5d85d",
     "tests/test_math_desk_m6_m8.py": "cd1ffd03ec34c5f415558bc4058fc9d9efccbb57e4ee1cd26c053e8011fa48f7",
     "tests/test_math_desk_risk_census.py": "20952500c605519f5ea2a6af9ce95adde46da8aabf3013fa63b597037dfd1100",
-    "tests/test_math_desk_scope_registry.py": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+    "tests/test_math_desk_scope_registry.py": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+    "tests/test_node_contract_repairs.py": "6274397a604c44f9a35c4d8068512cf757af1450207f890770b220d145204a08"
   },
+  "related_node_contract_junit_sha256": "643f2fffb0f79ce0d8a9edde32c019c5365db79c8021f302b1f9f3b6310f4ada",
+  "related_node_contract_test_file_count": 1,
+  "related_node_contract_tests_passed": 57,
   "required_governed_paths": [
     "docs/math_desk_constitution.md",
     "docs/math_desk_m3_core_contract.md",
