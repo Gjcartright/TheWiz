@@ -1,0 +1,28 @@
+{
+  "decisions": {
+    "scripts/build_corrective_checkpoint.py": {
+      "current_active_sha256": "020423b83689da87245c3f9725996f3eb1048a1449d8e528909ccd3fee2d4c5e",
+      "decision": "REVIEWED_ACTIVE_RETAIN_RUNTIME_AND_FORENSIC_NO_PORT",
+      "frozen_active_sha256": "020423b83689da87245c3f9725996f3eb1048a1449d8e528909ccd3fee2d4c5e",
+      "historical_copy_roots": "forensic_a;forensic_b;workspace_outer",
+      "preserved_historical_sha256": "33e1f176ef73f3fc5f4e0c28c1409146ebadb5a418cda085ad41c92f46339094",
+      "runtime_sha256": "346641ad47e755de7a20e8c778a2a83d55ab8e8646f397946bb84f841c8c3e8e"
+    },
+    "scripts/build_current_recovery_checkpoint.py": {
+      "current_active_sha256": "ab609c7f6b56fb7abf694c5f96cf54349f4168812ecc24332ab14f9062152f5c",
+      "decision": "REVIEWED_REPAIRED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "frozen_active_sha256": "ddf254e87562d648eb4e51912aab6155489af880fb61628d5b9b866d986bcd9f",
+      "historical_copy_roots": "forensic_a;forensic_b;workspace_outer",
+      "preserved_historical_sha256": "e17c86327b82d986a8729519ba437b3e6bc2ac9b73b8095910b75d824dddd665",
+      "runtime_sha256": "2efead7edc86b63f4e29d72c8bec8cab63ec121ae5b1eafcfab785784d45bc01"
+    }
+  },
+  "disposable_restore_smoke_tests_passed": 15,
+  "focused_junit_sha256": "a417e0ad05fdd5e422a42444efee7b3dee4d20f00e9b89f83bc4361075ca8e5b",
+  "focused_tests_passed": 58,
+  "interpretation": "Retain the current auxiliary-app exclusion, leave encrypted-workspace keyword/evidence additions in preserved custody, and use the repaired active optional packager with its verified clean-checkout restore. The scheduled midnight backup remains the primary current route.",
+  "route_diagnostic_sha256": "771cdd95f62daaab294931845ab1719cf5a6ae66e21e6fa97e419e399b9467ae",
+  "schema_version": "thewiz.gate0.recovery_script_decisions.v1",
+  "variant_custody_receipt_canonical_sha256": "2d0d5a213b91d966a8677f7d62ea9a4b6a6ac0d125dec509099ae49aab10970b",
+  "variant_manifest_sha256": "00b5987281dd1cb5ffeaaee5dc29cca2183cbce7a67bf73ae8e23cfd69379fd4"
+}

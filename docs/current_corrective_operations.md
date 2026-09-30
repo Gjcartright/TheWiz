@@ -750,13 +750,19 @@ Stop progression and keep `RESEARCH_ONLY` when any of these is true:
 
 ## Recovery
 
-The active workspace is the mounted encrypted volume at `/Volumes/CodexWorkspace`. The Git remote protects committed source only; ignored evidence and uncommitted work require a separately verified encrypted recovery snapshot. A recovery receipt is current only when its commit and source-manifest hashes match the active workspace and a clean restore drill passes.
-
-With the encrypted recovery volume mounted, build a redacted, restore-tested checkpoint with:
+The canonical source checkout is `/Volumes/Expansion/Crypto Wizard` on the mounted Expansion drive. The loaded `com.thewiz.nightly-savepoint` LaunchAgent runs at midnight, copying a dated project and LocalRuntime snapshot to Expansion and the Mac internal drive and pushing a source-only mirror to the private GitHub backup repository. The installed script matches `scripts/ops/nightly_savepoint.py` byte for byte. Check the three destination results and manifest hash with:
 
 ```bash
-python scripts/build_corrective_checkpoint.py
-python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery
+python scripts/ops/nightly_savepoint.py --status
 ```
 
-The builder excludes environment secrets, data corpora, models, generated reports from the source layer, and unrelated `apps/the-ave` work. It stores a separate allowlisted evidence snapshot and refuses completion unless hashes, compilation, and critical smoke tests pass.
+The dated receipt is stored under `/Users/gregc/Backups/TheWiz/state/`. A current source commit also needs its own complete Git bundle and independent restore proof under `/Users/gregc/Backups/TheWiz/gate0-checkpoints/<commit>/`; the latest head-tied Gate 0 source receipt names that bundle, its SHA-256, the clean restore, and the corresponding GitHub CI runs. The nightly snapshot and exact-commit bundle cover different points in time.
+
+For an additional manual redacted package from a clean reviewed checkout, use the locked Mac internal Python environment:
+
+```bash
+'/Users/gregc/Library/Application Support/TheWizRuntime/venv/bin/python' scripts/build_corrective_checkpoint.py
+'/Users/gregc/Library/Application Support/TheWizRuntime/venv/bin/python' scripts/build_current_recovery_checkpoint.py --destination /Users/gregc/Backups/TheWiz/manual-recovery
+```
+
+This package includes committed source through a Git bundle and snapshots eligible changed source when present. Its restore drill checks the exact Git head, source hashes, compilation, and selected smoke tests. A disposable clean-checkout drill on 2026-09-30 passed 15 smoke tests with zero changed-source rows. The older encrypted-workspace evidence variants remain preserved for separate source review; they are not part of the scheduled midnight save point.

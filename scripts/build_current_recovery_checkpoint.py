@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 
@@ -21,6 +22,7 @@ ACTIVE = ROOT / "reports" / "active"
 BASELINE_MANIFEST = ACTIVE / "corrective_baseline_manifest.json"
 BASELINE_FILES = ACTIVE / "corrective_baseline_files.csv"
 SECRET_SCAN = ACTIVE / "corrective_secret_scan.csv"
+SOURCE_COMMIT_MANIFEST = ACTIVE / "corrective_source_commit_manifest.csv"
 FORBIDDEN_SOURCE_PREFIXES = (
     ".git/",
     ".venv",
@@ -101,26 +103,80 @@ def _run(*args: str, cwd: Path = ROOT, env: dict[str, str] | None = None) -> sub
     )
 
 
+def _current_git_state() -> tuple[str, str, list[tuple[str, str]]]:
+    head = _run("git", "rev-parse", "HEAD").stdout.strip()
+    branch = _run("git", "branch", "--show-current").stdout.strip()
+    raw = _run("git", "status", "--porcelain=v1", "-z", "-uall").stdout
+    parts = raw.split("\0")
+    entries: list[tuple[str, str]] = []
+    index = 0
+    while index < len(parts):
+        item = parts[index]
+        if not item:
+            index += 1
+            continue
+        status = item[:2]
+        path = item[3:]
+        if status[0] in {"R", "C"}:
+            index += 1
+            if index < len(parts) and parts[index]:
+                path = parts[index]
+        entries.append((status, path))
+        index += 1
+    return head, branch, entries
+
+
 def _load_source_rows() -> list[dict[str, str]]:
-    if not BASELINE_MANIFEST.is_file() or not BASELINE_FILES.is_file() or not SECRET_SCAN.is_file():
+    if not all(
+        path.is_file()
+        for path in (BASELINE_MANIFEST, BASELINE_FILES, SECRET_SCAN, SOURCE_COMMIT_MANIFEST)
+    ):
         raise ValueError("run scripts/build_corrective_checkpoint.py before recovery packaging")
     baseline = json.loads(BASELINE_MANIFEST.read_text(encoding="utf-8"))
     if int(baseline.get("secret_blockers", -1)) != 0:
         raise ValueError("baseline secret scan has blocking findings")
+    for field, path in (
+        ("manifest_sha256", SOURCE_COMMIT_MANIFEST),
+        ("baseline_files_sha256", BASELINE_FILES),
+        ("secret_scan_sha256", SECRET_SCAN),
+    ):
+        if baseline.get(field) != _hash(path):
+            raise ValueError(f"baseline artifact changed: {field}")
+    head, branch, current_entries = _current_git_state()
+    if head != baseline.get("git_head") or branch != baseline.get("git_branch"):
+        raise ValueError("Git state changed after baseline manifest")
+    with SOURCE_COMMIT_MANIFEST.open(newline="", encoding="utf-8") as handle:
+        recorded_entries = [
+            (row["git_status"], row["path"]) for row in csv.DictReader(handle)
+        ]
+    if sorted(current_entries) != sorted(recorded_entries):
+        raise ValueError("worktree paths changed after baseline manifest")
     with BASELINE_FILES.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    if not rows:
-        raise ValueError("baseline source manifest is empty")
+    if len(rows) != int(baseline.get("commit_candidate_files", -1)):
+        raise ValueError("baseline changed-source count differs from manifest")
+    if not rows and not (
+        baseline.get("clean_checkout_reproducible") is True
+        and int(baseline.get("worktree_entries", -1)) == 0
+        and not current_entries
+    ):
+        raise ValueError("empty source manifest requires a verified clean checkout")
     for row in rows:
         relative = str(row.get("path", "")).strip()
         if (
             not relative
+            or Path(relative).is_absolute()
+            or ".." in Path(relative).parts
             or relative in FORBIDDEN_SOURCE_FILES
             or relative.startswith(FORBIDDEN_SOURCE_PREFIXES)
         ):
             raise ValueError(f"forbidden recovery source path: {relative}")
         source = ROOT / relative
-        if not source.is_file() or source.is_symlink():
+        if (
+            not source.is_file()
+            or source.is_symlink()
+            or not source.resolve().is_relative_to(ROOT.resolve())
+        ):
             raise ValueError(f"recovery source is not a regular file: {relative}")
         if _hash(source) != str(row.get("sha256", "")):
             raise ValueError(f"recovery source changed after baseline manifest: {relative}")
@@ -143,22 +199,44 @@ def _verify_restored_sources(restore_root: Path, rows: list[dict[str, str]]) -> 
             raise ValueError(f"restored source hash mismatch: {relative}")
 
 
+def _python_runtime() -> Path:
+    # Keep the venv's entry path: resolving its symlink would select the base
+    # interpreter and lose the locked environment's installed packages.
+    python = Path(sys.executable)
+    probe = subprocess.run(
+        [str(python), "-m", "pytest", "--version"],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if probe.returncode != 0:
+        raise ValueError("run recovery packaging with the locked Python environment containing pytest")
+    return python
+
+
 def _restore_drill(
     *,
     bundle_path: Path,
     source_snapshot: Path,
     rows: list[dict[str, str]],
     branch: str,
+    expected_head: str,
 ) -> dict[str, object]:
+    python = _python_runtime()
     with tempfile.TemporaryDirectory(prefix="thewiz-current-restore-") as directory:
         restore_root = Path(directory) / "repo"
         bundle_verify = _run("git", "bundle", "verify", str(bundle_path))
         _run("git", "clone", "--quiet", "--branch", branch, str(bundle_path), str(restore_root))
+        restored_head = _run("git", "rev-parse", "HEAD", cwd=restore_root).stdout.strip()
+        if restored_head != expected_head:
+            raise ValueError("restored Git head differs from checkpoint head")
         with tarfile.open(source_snapshot, "r:gz") as archive:
             archive.extractall(restore_root, filter="data")
         _verify_restored_sources(restore_root, rows)
         compile_result = _run(
-            str(ROOT / ".venv312" / "bin" / "python"),
+            str(python),
             "-m",
             "compileall",
             "-q",
@@ -168,7 +246,7 @@ def _restore_drill(
         env = dict(os.environ)
         env["PYTHONPATH"] = "src"
         smoke = _run(
-            str(ROOT / ".venv312" / "bin" / "python"),
+            str(python),
             "-m",
             "pytest",
             "-q",
@@ -179,6 +257,7 @@ def _restore_drill(
         return {
             "status": "PASS",
             "bundle_verified": True,
+            "restored_git_head": restored_head,
             "source_files_verified": len(rows),
             "compileall_passed": compile_result.returncode == 0,
             "smoke_tests": list(SMOKE_TESTS),
@@ -226,6 +305,7 @@ def build_checkpoint(destination: Path) -> Path:
             source_snapshot=source_snapshot,
             rows=rows,
             branch=branch,
+            expected_head=head,
         )
         restore_path = staging / "restore_drill.json"
         restore_path.write_text(json.dumps(restore, indent=2, sort_keys=True) + "\n", encoding="utf-8")

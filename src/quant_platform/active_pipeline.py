@@ -227,8 +227,7 @@ CANONICAL_COMMANDS = [
         "PYTHONPATH=src python -m quant_platform.cli "
         "build-current-wizard-hyperliquid-evidence-command-center"
     ),
-    "python scripts/build_corrective_checkpoint.py",
-    "python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery",
+    "python scripts/ops/nightly_savepoint.py --status",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-research-pack",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-mode-matrix-capture-queue",
     "PYTHONPATH=src python -m quant_platform.cli build-wizard-pair-settings-capture-template",
