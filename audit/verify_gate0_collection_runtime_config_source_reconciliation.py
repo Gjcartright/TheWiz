@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTED_COMMIT = "0b60eadf4f6a8d92cf9653c952f184aa3ea97146"
+QUEUE_COMMIT = "692a1a108e3ae3d77657297459a46313f24cd137"
 SAVEPOINT = Path("/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime")
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_COLLECTION_RUNTIME_CONFIG_SOURCE_RECONCILIATION_2026-09-30.json"
@@ -29,9 +30,9 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def selected_bytes(relative: str) -> bytes:
+def selected_bytes(relative: str, commit: str = SELECTED_COMMIT) -> bytes:
     return subprocess.run(
-        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        ["git", "show", f"{commit}:{relative}"],
         cwd=ROOT,
         capture_output=True,
         check=True,
@@ -50,6 +51,11 @@ def selected_exists(relative: str) -> bool:
 def main() -> None:
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", QUEUE_COMMIT, "HEAD"],
         cwd=ROOT,
         check=True,
     )
@@ -93,10 +99,10 @@ def main() -> None:
     if len(missing_paths) != 118:
         raise ValueError("historical test scope no longer matches selected commit")
 
-    if sha256(QUEUE.read_bytes()) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix(), QUEUE_COMMIT)
+    if sha256(queue_bytes) != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed")
     queue = {row["relative_path"]: row for row in rows}
