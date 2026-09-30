@@ -37,6 +37,10 @@ log(Y_t) = alpha + beta_y_on_x * log(X_t) + e_t
 e_t      = log(Y_t) - alpha - beta_y_on_x * log(X_t)
 ```
 
+Engle-Granger and ECM results must bind this orientation to the same complete,
+ordered paired sample. A coefficient or residual from another sample is not
+interchangeable with the relationship under evaluation.
+
 The replay execution spread omits the constant:
 
 ```text
@@ -156,4 +160,9 @@ The companion `reports/audits/2026-08-20_v2_math_diagnostic_comparison.csv`
 provides the direct old-local vs corrected-local vs Crypto Wizards comparison for
 orientation, all seven modes, ECM, sizing, performance, costs, and learning labels.
 
-The machine-readable authority receipt is `reports/audits/2026-08-20_v2_math_diagnostic_authority.json`. Its release decision, not a dashboard score or an old report, controls whether the corrected lineage may move forward.
+The machine-readable historical authority receipt is
+`reports/audits/2026-08-20_v2_math_diagnostic_authority.json`. It records
+`BLOCKED_PENDING_CONTROLLED_REGENERATION` and is retained as fail-closed Phase 00
+evidence. Current Math V2 consumers separately require the source- and
+report-bound marker at `reports/active/math_v2_acceptance.json`; neither receipt
+alone grants strategy, training, paper, or live authority.

@@ -17,6 +17,8 @@ Crypto Wizards discovery
 
 Crypto Wizards is discovery-only. A Wizard Sharpe ratio, return, exact mode, chart, or conditional probability can nominate a hypothesis but cannot vote toward acceptance, become a training label, or authorize a trade.
 
+The seven exact-mode names identify local specialist lanes; they do not certify parity with the corresponding Wizard formulas.
+
 ## Exact-Mode Teachers
 
 Every council context requires one proposal from each specialist:

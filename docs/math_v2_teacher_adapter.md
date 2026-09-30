@@ -2,7 +2,7 @@
 
 ## Implemented
 
-The active backtest path now uses `math-v2.1-y-on-x` and provides:
+The active backtest path uses `math-v2.3-venue-clock-execution` and provides:
 
 - interval-aware annualization for 1m, 5m, 15m, 1h, 4h, and 1d;
 - blocked Sharpe when interval evidence is unknown or irregular;
@@ -25,8 +25,11 @@ PYTHONPATH=src .venv312/bin/python -m quant_platform.orchestration.dynamic_cli -
 ```
 
 The generated marker is machine-authored at
-`reports/active/math_v2_acceptance.json`. It is accepted only when every
-controlled invariant passes.
+`reports/active/math_v2_acceptance.json`. The current source declares 15
+reconciliation and 8 statistical checks. A consumer accepts the marker only
+when all checks pass and its version, source hashes, check identities, and
+report hashes match the loaded implementation and adjacent acceptance reports.
+Changing a bound source requires a new marker and reports.
 
 ## Authority Boundary
 
@@ -71,8 +74,8 @@ Their schemas are written to:
 - `reports/orchestration/teacher_council/critic_input_schema.csv`
 
 For each context, the adapter requires exactly seven unique exact-mode rows
-and six unique critic rows. The venue must be Hyperliquid, math must be
-`math-v2.1-y-on-x`, timestamps must be point-in-time confirmed, and every row must have
+and six unique critic rows. The venue must be Hyperliquid, math must match
+`MATH_VERSION` (`math-v2.3-venue-clock-execution`), timestamps must be point-in-time confirmed, and every row must have
 an evidence path. Wizard rows cannot be converted into local votes.
 
 An incomplete or invalid context emits no events. The adapter also clears old
@@ -84,11 +87,11 @@ Run the complete boundary with:
 PYTHONPATH=src .venv312/bin/python -m quant_platform.orchestration.dynamic_cli --stage teacher_council
 ```
 
-The current production-repo run passes the 16 core Math V2 checks and then
-materializes five complete contexts: 35 teacher proposals and 30 critic
-assessments. Current decisions remain blocked by thin L2 calibration, weak
-trade counts, nonpositive out-of-sample lower bounds, and dependency/regime
-warnings. Ranked repairs are written to
+An earlier production-repo evidence run materialized five complete contexts:
+35 teacher proposals and 30 critic assessments. Its decisions were blocked by
+thin L2 calibration, weak trade counts, nonpositive out-of-sample lower bounds,
+and dependency/regime warnings. A fresh marker and teacher materialization are
+required to assess the current source. Ranked repairs are written to
 `reports/orchestration/teacher_council/teacher_evidence_next_actions.csv`.
 
 ## Remaining Statistical Work

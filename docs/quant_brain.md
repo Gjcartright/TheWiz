@@ -41,8 +41,8 @@
 - Required tests: granger_incremental_value;lead_lag_stability
 
 ## ecm_strength
-- Measures: Magnitude and reliability of error correction.
-- Why it exists: How forcefully the pair corrects deviations.
+- Measures: Share of the two ECM adjustment coefficients that are significant at 5% and have the expected correction signs.
+- Why it exists: Summarizes expected-direction correction support across the two legs; it does not measure coefficient magnitude.
 - How it may create edge: Rank mean-reversion candidates and holding period confidence.
 - When it fails: High in-sample strength can be overfit or stale.
 - Research role: ranking
