@@ -1,6 +1,6 @@
 # Collection release source reconciliation
 
-**Status:** source-custody review only. No collection release code was copied into the active checkout, and no scheduler, provider, order, or trading action was run.
+**Gate 0 source decision:** retain the exact 34-file package as a dependency-blocked, unselected candidate. No collection release code was copied into the active checkout, and no scheduler, provider, order, or trading action was run. Exact path hashes, Mac savepoint custody, import edges, and test receipts are checked by `audit/GATE0_COLLECTION_RELEASE_DECISION_2026-09-30.json`.
 
 The dated four-root reconciliation lists **34 Python files** under `src/quant_platform/orchestration/collection_release/`. All 34 are absent from the active checkout and have matching SHA-256 values in the LocalRuntime and recovery copies. Eight are in-package test files containing 89 `test_` method definitions. Matching bytes corroborate this historical package candidate; they do not establish current integration or release authority.
 
