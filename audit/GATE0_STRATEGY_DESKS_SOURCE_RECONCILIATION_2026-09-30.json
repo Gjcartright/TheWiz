@@ -1,0 +1,442 @@
+{
+  "authority_claims": {
+    "capital_authority_granted": false,
+    "desk_profiles_adopted": false,
+    "order_submission_granted": false,
+    "paper_trading_authorized": false,
+    "provider_called": false,
+    "source_ported_in_evidence_commit": false
+  },
+  "base_active_head": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "cohort_findings": [
+    "Three RL modules need coordinated fail-closed repair; legacy callers lack calendar-equity stream and must remain unqualified.",
+    "All 12 desk source modules are runtime-only without active importer; profile/risk/runtime require absent institutional_risk.",
+    "Dynamic and copula paths depend on static_desk internals; research profile archive remains unadopted."
+  ],
+  "method": "SHA-256 exact bytes and union queue freeze; active direct-reference scan; manual import/contract review. No providers or source execution.",
+  "paths": [
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "b34bb2250a7f8d573524f7d1754745774b535b43e097b2e54ffff7d80152001a",
+      "path": "src/quant_platform/copula_desk/__init__.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Runtime-only unadopted research module with no active importer.",
+      "recommendation": "REVIEWED_UNADOPTED_DESK_NO_PORT",
+      "recovery_sha256_at_freeze": "b34bb2250a7f8d573524f7d1754745774b535b43e097b2e54ffff7d80152001a",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "5a72e617de7f9eabbdfdc9f46cc51f3036185494c4bc2879b5a0bd6f4299f72c",
+      "path": "src/quant_platform/copula_desk/signal_path.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Offline research signals depend on static desk cohort or active math/economic helpers; no active importer or direct component tests.",
+      "recommendation": "OFFLINE_COMPONENT_SELECTIVE_PORT_LATER",
+      "recovery_sha256_at_freeze": "5a72e617de7f9eabbdfdc9f46cc51f3036185494c4bc2879b5a0bd6f4299f72c",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "8e40bee7dba39f99023a715682a2fb3558f532f1de845bc921ce3a1662e7f0ac",
+      "path": "src/quant_platform/dynamic_desk/__init__.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Runtime-only unadopted research module with no active importer.",
+      "recommendation": "REVIEWED_UNADOPTED_DESK_NO_PORT",
+      "recovery_sha256_at_freeze": "8e40bee7dba39f99023a715682a2fb3558f532f1de845bc921ce3a1662e7f0ac",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "0c07a027e8c882f863213d0753cafd1b618a29130fcc2bcee864dec0c9e62ed1",
+      "path": "src/quant_platform/dynamic_desk/signal_path.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Offline research signals depend on static desk cohort or active math/economic helpers; no active importer or direct component tests.",
+      "recommendation": "OFFLINE_COMPONENT_SELECTIVE_PORT_LATER",
+      "recovery_sha256_at_freeze": "0c07a027e8c882f863213d0753cafd1b618a29130fcc2bcee864dec0c9e62ed1",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 3,
+      "active_direct_reference_paths": [
+        "src/quant_platform/rl/__init__.py",
+        "tests/test_base_rl_lane.py",
+        "tests/test_udemy_research.py"
+      ],
+      "active_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb",
+      "forensic_variant_sha256": [
+        "d441889749b201b44c2ad9f546275239eab8755c6013783c6aeb320f7cee3acc"
+      ],
+      "local_runtime_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb",
+      "path": "src/quant_platform/rl/base_rl_lane.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb"
+    },
+    {
+      "active_direct_reference_count": 7,
+      "active_direct_reference_paths": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/rl/__init__.py",
+        "src/quant_platform/rl/base_rl_lane.py",
+        "src/quant_platform/rl/brain_cycle.py",
+        "src/quant_platform/three_brain_system.py",
+        "tests/test_rl_brain_contract.py",
+        "tests/test_three_brain_system.py"
+      ],
+      "active_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2",
+      "forensic_variant_sha256": [
+        "5717ae0abcd7bb584d8417f6f6b8be7576bb96711a08bd1556042a9d65f4c45e"
+      ],
+      "local_runtime_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2",
+      "path": "src/quant_platform/rl/brain_contract.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2"
+    },
+    {
+      "active_direct_reference_count": 2,
+      "active_direct_reference_paths": [
+        "src/quant_platform/rl/__init__.py",
+        "tests/test_orchestration_rl.py"
+      ],
+      "active_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d",
+      "forensic_variant_sha256": [
+        "02f633736bc8181023a0940b705b9df14bee76f422d6327ca8d418d21633c379"
+      ],
+      "local_runtime_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d",
+      "path": "src/quant_platform/rl/quantization.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d"
+    },
+    {
+      "active_direct_reference_count": 5,
+      "active_direct_reference_paths": [
+        "src/quant_platform/orchestration/corrective_registered_learning.py",
+        "src/quant_platform/rl/rl_backtest.py",
+        "src/quant_platform/rl/rl_learning_agent.py",
+        "tests/test_corrective_registered_learning.py",
+        "tests/test_orchestration_rl.py"
+      ],
+      "active_sha256": "3fdd1b8f26486d6cc38f7a0b4fd96ba9f99c35dad1da6dd8341874dbe4dc17b1",
+      "forensic_variant_sha256": [
+        "12be6924963b5a5934f33425f955436839a248fcf0e42a72f5b33fc743eff21a"
+      ],
+      "local_runtime_sha256": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "path": "src/quant_platform/rl/rl_acceptance.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Preserved exact four-row identity/calendar-equity validation prevents active trade-sequence false qualification.",
+      "recommendation": "COORDINATED_SELECTIVE_REPAIR_CANDIDATE",
+      "recovery_sha256_at_freeze": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "savepoint_project_sha256": "3fdd1b8f26486d6cc38f7a0b4fd96ba9f99c35dad1da6dd8341874dbe4dc17b1"
+    },
+    {
+      "active_direct_reference_count": 8,
+      "active_direct_reference_paths": [
+        "src/quant_platform/orchestration/corrective_registered_learning.py",
+        "src/quant_platform/orchestration/nodes.py",
+        "src/quant_platform/rl/__init__.py",
+        "src/quant_platform/rl/base_rl_lane.py",
+        "src/quant_platform/rl/evaluate_policy.py",
+        "src/quant_platform/rl/rl_learning_agent.py",
+        "src/quant_platform/rl/train_ppo.py",
+        "tests/test_orchestration_rl.py"
+      ],
+      "active_sha256": "6d9e8414df8aeb0ee639f67f12c4f0891c0038bfbef618d6270608dd05a1206f",
+      "forensic_variant_sha256": [
+        "ead88db6ee183d07807b9f24dc25fb3740cf25f966f638cb25b3c61a76759d52"
+      ],
+      "local_runtime_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "path": "src/quant_platform/rl/rl_backtest.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Preserved return extractor retains invalid/missing observations as NaN; active zero-fills.",
+      "recommendation": "COORDINATED_SELECTIVE_REPAIR_CANDIDATE",
+      "recovery_sha256_at_freeze": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "savepoint_project_sha256": "6d9e8414df8aeb0ee639f67f12c4f0891c0038bfbef618d6270608dd05a1206f"
+    },
+    {
+      "active_direct_reference_count": 3,
+      "active_direct_reference_paths": [
+        "src/quant_platform/orchestration/nodes.py",
+        "src/quant_platform/rl/__init__.py",
+        "tests/test_orchestration_rl.py"
+      ],
+      "active_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589",
+      "forensic_variant_sha256": [
+        "6c19d2bf17be4299ae96dd1f5f47497a12dc574e3b2a64154cf5e508ca914bf9"
+      ],
+      "local_runtime_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589",
+      "path": "src/quant_platform/rl/rl_idea_engine.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589"
+    },
+    {
+      "active_direct_reference_count": 8,
+      "active_direct_reference_paths": [
+        "src/quant_platform/orchestration/corrective_registered_learning.py",
+        "src/quant_platform/orchestration/nodes.py",
+        "src/quant_platform/rl/__init__.py",
+        "src/quant_platform/rl/base_rl_lane.py",
+        "src/quant_platform/rl/brain_cycle.py",
+        "src/quant_platform/rl/rl_backtest.py",
+        "tests/test_corrective_registered_learning.py",
+        "tests/test_orchestration_rl.py"
+      ],
+      "active_sha256": "2220c6984d0eb4b3d0497733f54ddb44f86d38b310e70f5adca7bc9b36cc8c89",
+      "forensic_variant_sha256": [
+        "7fc8760edce6b8930d4132dccd8e44bd4c6d6ee1e84e8dbd13a0ad3b894375ea"
+      ],
+      "local_runtime_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "path": "src/quant_platform/rl/rl_learning_agent.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Preserved extractor and policy gate require valid observations and qualified finite calendar metrics; active does not.",
+      "recommendation": "COORDINATED_SELECTIVE_REPAIR_CANDIDATE",
+      "recovery_sha256_at_freeze": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "savepoint_project_sha256": "2220c6984d0eb4b3d0497733f54ddb44f86d38b310e70f5adca7bc9b36cc8c89"
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68",
+      "forensic_variant_sha256": [
+        "83e259440a0514b8d741b516d62598762ab1f0d03e56e0588264ec6382514d9d"
+      ],
+      "local_runtime_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68",
+      "path": "src/quant_platform/rl/rl_strategy_selector.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68"
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "2ab3bc126cec458bfd45729e5760acb683cccdafcbb97189372a9b39b8f5b7b2",
+      "path": "src/quant_platform/static_desk/__init__.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Runtime-only unadopted research module with no active importer.",
+      "recommendation": "REVIEWED_UNADOPTED_DESK_NO_PORT",
+      "recovery_sha256_at_freeze": "2ab3bc126cec458bfd45729e5760acb683cccdafcbb97189372a9b39b8f5b7b2",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "55d27f42ccb2048d1a213a5e3280b8d658b3b5c61eee46d6c11d6000f457d13d",
+      "path": "src/quant_platform/static_desk/accounting.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Runtime-only unadopted research module with no active importer.",
+      "recommendation": "REVIEWED_UNADOPTED_DESK_NO_PORT",
+      "recovery_sha256_at_freeze": "55d27f42ccb2048d1a213a5e3280b8d658b3b5c61eee46d6c11d6000f457d13d",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "dbfba1e9592cda0beca03ff78fa3bb5cf53f96e0ecd337e3e0bc6eb18371fd99",
+      "path": "src/quant_platform/static_desk/controls.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Runtime-only unadopted research module with no active importer.",
+      "recommendation": "REVIEWED_UNADOPTED_DESK_NO_PORT",
+      "recovery_sha256_at_freeze": "dbfba1e9592cda0beca03ff78fa3bb5cf53f96e0ecd337e3e0bc6eb18371fd99",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "9e6c4616e3f21f63270938ab4c9561fda7b695a62a5bca811b892c4db2bf058e",
+      "path": "src/quant_platform/static_desk/profile.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Imports absent institutional_risk and unadopted runtime.",
+      "recommendation": "REVIEWED_BLOCKED_DEPENDENCY_NO_PORT",
+      "recovery_sha256_at_freeze": "9e6c4616e3f21f63270938ab4c9561fda7b695a62a5bca811b892c4db2bf058e",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "301e826b34aa93358ef97e83fc0f85d1006453eec1dc68a734874478788f8c47",
+      "path": "src/quant_platform/static_desk/profile_data.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Depends on unadopted profile; research inputs deny paper/execution eligibility.",
+      "recommendation": "REVIEWED_BLOCKED_DEPENDENCY_NO_PORT",
+      "recovery_sha256_at_freeze": "301e826b34aa93358ef97e83fc0f85d1006453eec1dc68a734874478788f8c47",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "a1f89a747f617cd67051c342edee3f43e6fdd69475b2e882294de5ed4855137c",
+      "path": "src/quant_platform/static_desk/risk_link.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Imports absent institutional_risk with no active risk binding.",
+      "recommendation": "REVIEWED_BLOCKED_DEPENDENCY_NO_PORT",
+      "recovery_sha256_at_freeze": "a1f89a747f617cd67051c342edee3f43e6fdd69475b2e882294de5ed4855137c",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "32f216dae847e0a3c7d08c26c47e11ec0281ac70c25d82ccafd277d365f1b1dc",
+      "path": "src/quant_platform/static_desk/runtime.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Imports absent institutional_risk and all three unadopted desks.",
+      "recommendation": "REVIEWED_BLOCKED_DEPENDENCY_NO_PORT",
+      "recovery_sha256_at_freeze": "32f216dae847e0a3c7d08c26c47e11ec0281ac70c25d82ccafd277d365f1b1dc",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "f17d9ff4445d85ca327b08e0f7554fb821c5809ea4ebc190484f2c7d2b7f51b6",
+      "path": "src/quant_platform/static_desk/signal_path.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Offline research signals depend on static desk cohort or active math/economic helpers; no active importer or direct component tests.",
+      "recommendation": "OFFLINE_COMPONENT_SELECTIVE_PORT_LATER",
+      "recovery_sha256_at_freeze": "f17d9ff4445d85ca327b08e0f7554fb821c5809ea4ebc190484f2c7d2b7f51b6",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "forensic_variant_sha256": [
+        "7a5f4c0120779f28ac1ee9d4d62ad4388370ba93926b44b04b3ca8567eea7f23"
+      ],
+      "local_runtime_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "path": "tests/test_rl_brain_contract.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Active equals LocalRuntime; older forensic variant retained without port.",
+      "recommendation": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "recovery_sha256_at_freeze": null,
+      "savepoint_project_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd"
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": "efba8cf0be0c34d4e404c712a6fdd9f3557c3e80d24d5efacd3e5ebb97d70550",
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "efba8cf0be0c34d4e404c712a6fdd9f3557c3e80d24d5efacd3e5ebb97d70550",
+      "path": "tests/test_static_desk_ecm_repairs.py",
+      "queue_custody_status_at_base": "REVIEWED_EXACT_RUNTIME_ECM_TEST_PORT",
+      "reason": "Already exact-ported from LocalRuntime.",
+      "recommendation": "ALREADY_SELECTED_EXACT_PORT",
+      "recovery_sha256_at_freeze": "efba8cf0be0c34d4e404c712a6fdd9f3557c3e80d24d5efacd3e5ebb97d70550",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "ad30b6cfd356222f8f0d3d3acfb3e817e525db77ebf0cb4e8ad8583c7423dac1",
+      "path": "tests/test_static_desk_learning_consumer.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "AST-isolated RL learning consumer checks no zero-fill and qualified metrics.",
+      "recommendation": "SELECTIVE_TEST_PORT_WITH_RL_REPAIR",
+      "recovery_sha256_at_freeze": "ad30b6cfd356222f8f0d3d3acfb3e817e525db77ebf0cb4e8ad8583c7423dac1",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "ba9deef828a99f1e4d13b7316b586c56c12a5fd9922b56ce9d2893b4e1f8be01",
+      "path": "tests/test_static_desk_learning_repairs.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Pure acceptance checks calendar equity, identities and comparison.",
+      "recommendation": "SELECTIVE_TEST_PORT_WITH_RL_REPAIR",
+      "recovery_sha256_at_freeze": "ba9deef828a99f1e4d13b7316b586c56c12a5fd9922b56ce9d2893b4e1f8be01",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "c04d54d9f6ed5542668138b9862557dcab0cb50e35d1740aa5dedf6659ff1b74",
+      "path": "tests/test_static_desk_math_adapter.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Imports absent quant_platform.tooling.math_validation.",
+      "recommendation": "MISSING_DEPENDENCY_NO_PORT",
+      "recovery_sha256_at_freeze": "c04d54d9f6ed5542668138b9862557dcab0cb50e35d1740aa5dedf6659ff1b74",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "f3e8d14d1cc6fa2ea8aa24f3824d0cb4d1ed2e721f137c6c6d7ea37979ea1b04",
+      "path": "tests/test_static_desk_rl_consumer_repairs.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "AST-isolated backtest/acceptance checks no zero-fill and legacy unqualification.",
+      "recommendation": "SELECTIVE_TEST_PORT_WITH_RL_REPAIR",
+      "recovery_sha256_at_freeze": "f3e8d14d1cc6fa2ea8aa24f3824d0cb4d1ed2e721f137c6c6d7ea37979ea1b04",
+      "savepoint_project_sha256": null
+    },
+    {
+      "active_direct_reference_count": 0,
+      "active_direct_reference_paths": [],
+      "active_sha256": null,
+      "forensic_variant_sha256": [],
+      "local_runtime_sha256": "7d3e7e527e445898a3b5fdd91e25cc07579b2bee53e6047d85bf94c3268d838c",
+      "path": "tests/test_static_desk_signal_repairs.py",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "reason": "Tests active economic_contract/backtest, not preserved desk modules.",
+      "recommendation": "SELECTIVE_TEST_PORT_SEPARATE",
+      "recovery_sha256_at_freeze": "7d3e7e527e445898a3b5fdd91e25cc07579b2bee53e6047d85bf94c3268d838c",
+      "savepoint_project_sha256": null
+    }
+  ],
+  "roots": {
+    "active": "isolated clone of Expansion HEAD",
+    "local_runtime": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+    "savepoint_project": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/project"
+  },
+  "schema_version": "thewiz.gate0.strategy_desks_source_reconciliation.v1",
+  "scope": {
+    "direct_test_paths": 7,
+    "queue_paths_total": 27,
+    "source_paths": 20
+  }
+}
