@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pandas as pd
+import pytest
 
 from quant_platform.orchestration.student_readiness import (
     STUDENT_TRAINING_COLUMNS,
@@ -13,8 +14,7 @@ from quant_platform.orchestration.student_readiness import (
 from quant_platform.orchestration.teacher_contracts import ExactMode
 from quant_platform.statistics.math_v2 import MATH_VERSION
 
-
-NOW = datetime(2026, 8, 6, 18, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 6, 18, tzinfo=UTC)
 
 
 def _dataset() -> pd.DataFrame:
@@ -44,13 +44,16 @@ def _dataset() -> pd.DataFrame:
                 "hold_bars": 5,
                 "exit_reason": "mean_reversion",
                 "action_propensity": 0.5,
+                "propensity_source": "logged_behavior_policy",
+                "behavior_policy_exploratory": True,
                 "evidence_path": f"reports/trades/{index}.csv",
             }
         )
-    return pd.DataFrame(rows, columns=STUDENT_TRAINING_COLUMNS)
+    return pd.DataFrame(rows)
 
 
 def test_valid_student_dataset_passes_supervised_and_bandit_checks():
+    assert set(STUDENT_TRAINING_COLUMNS).issubset(_dataset().columns)
     audit = audit_student_training_dataset(
         _dataset(),
         policy=StudentReadinessPolicy(min_rows=7, min_pairs=3, min_timeframes=2, min_rows_per_mode=1, max_pair_share=0.5, max_mode_share=0.2),
@@ -92,10 +95,92 @@ def test_deterministic_propensity_is_logged_but_not_bandit_ready():
     assert "deterministic_behavior_policy_has_no_counterfactual_support" in blockers
 
 
+def test_missing_behavior_policy_evidence_blocks_bandit_only():
+    dataset = _dataset().drop(columns=["propensity_source", "behavior_policy_exploratory"])
+    audit = audit_student_training_dataset(
+        dataset,
+        policy=StudentReadinessPolicy(
+            min_rows=7, min_pairs=3, min_timeframes=2, min_rows_per_mode=1, max_pair_share=0.5, max_mode_share=0.2
+        ),
+    )
+
+    blocked = audit[audit["status"].eq("BLOCKED")]
+    assert blocked["scope"].eq("contextual_bandit").all()
+    assert set(blocked["blocker"]) == {
+        "synthetic_or_missing_propensity_lineage",
+        "deterministic_behavior_policy_has_no_counterfactual_support",
+    }
+
+
+def test_duplicate_training_event_and_ambiguous_provenance_are_blocked():
+    dataset = _dataset()
+    dataset.loc[1, "training_event_id"] = dataset.loc[0, "training_event_id"]
+    dataset["uses_wizard_as_label"] = "unknown"
+    audit = audit_student_training_dataset(
+        dataset,
+        policy=StudentReadinessPolicy(
+            min_rows=7, min_pairs=3, min_timeframes=2, min_rows_per_mode=1, max_pair_share=0.5, max_mode_share=0.2
+        ),
+    )
+
+    blockers = set(audit.loc[audit["status"].eq("BLOCKED"), "blocker"])
+    assert "duplicate_training_event_id" in blockers
+    assert "unknown_provenance_flag" in blockers
+
+
+def test_integer_feature_timestamps_are_not_treated_as_real_observations():
+    dataset = _dataset()
+    dataset["feature_timestamp"] = range(len(dataset))
+    audit = audit_student_training_dataset(
+        dataset,
+        policy=StudentReadinessPolicy(
+            min_rows=7, min_pairs=3, min_timeframes=2, min_rows_per_mode=1, max_pair_share=0.5, max_mode_share=0.2
+        ),
+    )
+
+    assert "future_leakage_or_invalid_timestamp" in set(
+        audit.loc[audit["status"].eq("BLOCKED"), "blocker"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("column", "value", "blocker"),
+    [
+        ("good_trade", 0.5, "invalid_binary_trade_label"),
+        ("profit_after_cost", float("inf"), "missing_after_cost_label"),
+        ("max_adverse_excursion", float("nan"), "invalid_excursion_label"),
+        ("hold_bars", 1.5, "invalid_holding_bar_label"),
+        ("uses_dashboard_hindsight", "unknown", "unknown_provenance_flag"),
+        ("training_eligible", "unknown", "rows_marked_research_only"),
+    ],
+)
+def test_invalid_training_labels_or_provenance_fail_closed(column, value, blocker):
+    dataset = _dataset()
+    if column == "training_eligible":
+        dataset[column] = True
+    dataset[column] = dataset[column].astype(object)
+    dataset.loc[0, column] = value
+    audit = audit_student_training_dataset(
+        dataset,
+        policy=StudentReadinessPolicy(
+            min_rows=7, min_pairs=3, min_timeframes=2, min_rows_per_mode=1, max_pair_share=0.5, max_mode_share=0.2
+        ),
+    )
+    assert blocker in set(audit.loc[audit["status"].eq("BLOCKED"), "blocker"])
+
+
+def test_duplicate_columns_are_rejected_before_row_audit():
+    dataset = _dataset()
+    dataset.columns = [*dataset.columns[:-1], dataset.columns[0]]
+    audit = audit_student_training_dataset(dataset)
+    assert audit.loc[0, "blocker"] == "invalid_student_column_schema"
+
+
 def test_inverse_frequency_weights_control_effective_mode_concentration():
     dataset = pd.concat([_dataset(), pd.concat([_dataset().iloc[[0]]] * 20, ignore_index=True)], ignore_index=True)
     counts = dataset["exact_mode"].value_counts()
     dataset["sample_weight"] = dataset["exact_mode"].map(lambda value: 1.0 / counts[value])
+    dataset["training_event_id"] = [f"weighted-event-{index}" for index in range(len(dataset))]
 
     audit = audit_student_training_dataset(
         dataset,

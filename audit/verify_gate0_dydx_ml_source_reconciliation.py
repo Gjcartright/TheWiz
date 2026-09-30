@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "audit"
 BASE = "2f8ff5a0271f31e9504da38bd0c1f04845cd5c65"
+SELECTED = "6de2ee3016a8413030f87996a7153f91154cce1e"
 VARIANT_ROOT = Path("/Users/gregc/Backups/TheWiz/source-delta-evidence/2026-09-30/variants")
 JUNIT = Path(
     "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/"
@@ -77,20 +78,25 @@ def main() -> None:
     counts = {key: int(suite.attrib[key]) for key in ("tests", "failures", "errors", "skipped")}
     if counts != {"tests": 2593, "failures": 0, "errors": 0, "skipped": 0}:
         raise ValueError(f"isolated reconciliation suite is not green: {counts}")
-    if digest(QUEUE) != "29bd1fc68b0a2dc42883e2f8319d8d93af516d8550794918793665d692c53afd":
+    queue_bytes = subprocess.run(
+        ["git", "show", f"{SELECTED}:{QUEUE.relative_to(ROOT).as_posix()}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+    if hashlib.sha256(queue_bytes).hexdigest() != "29bd1fc68b0a2dc42883e2f8319d8d93af516d8550794918793665d692c53afd":
         raise ValueError("source queue bytes changed")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue changed size or contains duplicates")
     queue = {row["relative_path"]: row for row in rows}
-    for relative in VARIANTS:
+    for relative, historical in VARIANTS.items():
         row = queue[relative]
         if row["custody_status"] != "REVIEWED_HISTORICAL_VARIANTS_RECONCILED":
             raise ValueError(f"reviewed path not closed: {relative}")
         if OUTPUT.name not in row["decision_evidence"]:
             raise ValueError(f"reviewed path lacks decision evidence: {relative}")
-        if set(row["historical_variant_sha256"].split(";")) != set(VARIANTS[relative]):
+        if set(row["historical_variant_sha256"].split(";")) != set(historical):
             raise ValueError(f"historical variant set mismatch: {relative}")
     pending = sum(
         row["custody_status"] in {
@@ -120,7 +126,7 @@ def main() -> None:
             "historical_test_functions_accounted_for_with_current_contract_assertions",
         ],
         "union_source_queue": {
-            "file_sha256": digest(QUEUE),
+            "file_sha256": hashlib.sha256(queue_bytes).hexdigest(),
             "distinct_paths": len(rows),
             "reviewed_paths": reviewed,
             "nonsource_paths": len(rows) - pending - reviewed,

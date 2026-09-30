@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -20,8 +20,7 @@ from quant_platform.orchestration.teacher_contracts import (
 from quant_platform.orchestration.teacher_council import arbitrate_teacher_council
 from quant_platform.statistics.math_v2 import MATH_VERSION
 
-
-NOW = datetime(2026, 8, 6, 18, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 6, 18, tzinfo=UTC)
 
 
 def _context() -> CouncilContext:
@@ -117,6 +116,16 @@ def test_complete_math_v2_council_can_only_authorize_shadow_test():
     assert decision.action == "short_x_long_y"
     assert decision.selected_mode in set(ExactMode)
     assert decision.promotion_allowed is False
+    assert decision.execution_allowed is False
+
+
+def test_previous_math_version_requires_new_evidence_after_repair():
+    proposals = tuple(_proposal(mode, math_version="math-v2.1-y-on-x") for mode in ExactMode)
+    decision = arbitrate_teacher_council(
+        context=_context(), proposals=proposals, assessments=_critics(), now=NOW
+    )
+    assert decision.status == "BLOCKED"
+    assert "math_v2_required" in decision.blocker_codes
     assert decision.execution_allowed is False
 
 
