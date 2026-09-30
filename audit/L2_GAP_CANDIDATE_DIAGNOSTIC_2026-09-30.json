@@ -1,0 +1,22 @@
+{
+  "active_policy_has_gap_field": false,
+  "authority": "DISPOSABLE_SYNTHETIC_FILE_PUBLICATION_NO_EXTERNAL_OR_ORDER",
+  "baseline_data_evidence_failed_on_publication_authority": 1,
+  "baseline_junit_path": "/Users/gregc/Backups/TheWiz/l2-gap-diagnostics/2026-09-30/l2-gap-junit.xml",
+  "baseline_junit_sha256": "d7ea0da9d7390143186fe5e21f5baba2a832fbc4eab6f7df10415927e1451796",
+  "baseline_policy_validation_passed": 1,
+  "candidate_source_test_and_restored_harness_sha256": {
+    "config/acceptance_policy_manifest.json": "65d88e28ee4f1201cea95a0777afd5aebcd26b2dd638764a2393f5ab17e4d923",
+    "src/quant_platform/orchestration/corrective_acceptance_policy_validation.py": "e887549d64db2fdac8c8df5efc52ae8977929bd4789975ab9f581f2742df1497",
+    "src/quant_platform/orchestration/corrective_data_evidence.py": "1af658bd376d50f44f1440d0f991f2f02001a47715823a44bb48075e89bf928f",
+    "tests/conftest.py": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b",
+    "tests/test_corrective_acceptance_policy_validation.py": "84c18c0f46988b893e4017584fb3cd7a8a219e39edc9c6a9ae2ae74a43e68ee7",
+    "tests/test_corrective_data_evidence.py": "d4af0529fbcc84e5f3e78567fbc579d6c363a51b55443419c8aaeadb44a2b8ec"
+  },
+  "interpretation": "The candidate's bounded-gap policy and one data-evidence case pass when the disposable pytest harness supplies its synthetic file-publication authority. The unchanged baseline test fails before its assertion. Active-source policy, evidence logic, validator, and tests need a coordinated review before any port.",
+  "runtime_maximum_strict_l2_gap_minutes": 15,
+  "schema_version": "thewiz.gate0.l2_gap_candidate_diagnostic.v1",
+  "synthetic_authority_data_evidence_passed": 1,
+  "synthetic_authority_junit_path": "/Users/gregc/Backups/TheWiz/l2-gap-diagnostics/2026-09-30/l2-gap-with-synthetic-authority-junit.xml",
+  "synthetic_authority_junit_sha256": "3321deecc61b2a46500dc52ac194bfd7b9c5c2f7655a661433f30f38208f201d"
+}
