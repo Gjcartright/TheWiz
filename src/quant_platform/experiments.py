@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import atomic_write_csv
-
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from math import isfinite, isinf
 from pathlib import Path
-from typing import Iterable
 
+import numpy as np
 import pandas as pd
 
 from quant_platform.ablations import write_ablation_report
@@ -17,6 +16,7 @@ from quant_platform.backtest import (
     backtest_two_leg_spread,
 )
 from quant_platform.feature_engine import FeatureEngine
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv
 from quant_platform.regimes import regime_pair_strategy_report
 from quant_platform.strategies import STRATEGIES, STRATEGY_REQUIRED_COLUMNS, StrategySpec
 from quant_platform.zscore_utils import coalesce_zscore
@@ -42,31 +42,67 @@ class AcceptanceGate:
     required_cost_buckets: tuple[str, ...] = ("base", "stress")
     required_regime: str = "ALL"
     require_positive_expectancy: bool = True
+    require_positive_expectancy_lower_bound: bool = True
+    require_flat_end_state: bool = True
+    require_finite_profit_factor: bool = True
+    max_reconciliation_error: float = 1e-10
     require_two_leg_backtests: bool = True
     require_two_leg_execution_inputs: bool = True
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.max_reconciliation_error) or self.max_reconciliation_error < 0:
+            raise ValueError("max_reconciliation_error must be finite and nonnegative")
 
     def evaluate(self, result: BacktestResult) -> tuple[bool, str]:
         failures: list[str] = []
         if result.trades < self.min_trades:
             failures.append(f"trades<{self.min_trades}")
-        if not isfinite(result.profit_factor) and not isinf(result.profit_factor):
-            failures.append("profit_factor_invalid")
+        if not isfinite(result.profit_factor):
+            if self.require_finite_profit_factor:
+                failures.append("profit_factor_nonfinite")
+            elif not isinf(result.profit_factor) or result.profit_factor < 0:
+                failures.append("profit_factor_invalid")
         elif result.profit_factor < self.min_profit_factor:
             failures.append(f"profit_factor<{self.min_profit_factor}")
-        if not isfinite(result.sharpe):
+        if not isfinite(result.sharpe) or result.sharpe_status != "valid":
             failures.append("sharpe_invalid_or_unknown_interval")
         elif result.sharpe < self.min_sharpe:
             failures.append(f"sharpe<{self.min_sharpe}")
-        if result.max_drawdown > self.max_drawdown:
+        if not isfinite(result.max_drawdown) or result.max_drawdown < 0:
+            failures.append("max_drawdown_invalid")
+        elif result.max_drawdown > self.max_drawdown:
             failures.append(f"max_drawdown>{self.max_drawdown}")
-        if self.require_positive_expectancy and result.expectancy <= 0:
+        if self.require_positive_expectancy and (
+            not isfinite(result.expectancy) or result.expectancy <= 0
+        ):
             failures.append("expectancy<=0")
+        if self.require_positive_expectancy_lower_bound and (
+            result.expectancy_lower_95 is None
+            or not isfinite(result.expectancy_lower_95)
+            or result.expectancy_lower_95 <= 0
+        ):
+            failures.append("expectancy_lower_95<=0_or_missing")
+        if self.require_flat_end_state and result.open_trades:
+            failures.append("open_trades_at_end")
+        if (
+            not isfinite(result.reconciliation_error)
+            or abs(result.reconciliation_error) > self.max_reconciliation_error
+        ):
+            failures.append(f"reconciliation_error>{self.max_reconciliation_error}")
         if failures:
             return False, ";".join(failures)
         return True, "passed"
 
     def evaluate_strategy(self, rows: pd.DataFrame) -> dict[str, object]:
         evaluated = rows[rows["status"] == "evaluated"].copy()
+        reported_eligible = evaluated["eligible"].map(_explicit_true)
+        verified_eligible = (
+            evaluated.apply(lambda row: _verified_acceptance_row(row, self), axis=1)
+            if not evaluated.empty
+            else pd.Series(False, index=evaluated.index, dtype=bool)
+        )
+        unverified_eligible_runs = int((reported_eligible & ~verified_eligible).sum())
+        evaluated["eligible"] = verified_eligible
         deployable_scope = evaluated[
             (evaluated["regime"] == self.required_regime)
             & (evaluated["cost_bucket"].isin(self.required_cost_buckets))
@@ -87,6 +123,8 @@ class AcceptanceGate:
         failures: list[str] = []
         if evaluated.empty:
             failures.append("no_evaluated_runs")
+        if unverified_eligible_runs:
+            failures.append(f"unverified_eligible_runs:{unverified_eligible_runs}")
         if pairs_tested < self.min_pairs:
             failures.append(f"pairs_tested<{self.min_pairs}")
         if passing_pairs < self.min_pairs:
@@ -153,7 +191,7 @@ class AcceptanceGate:
         worst_drawdown = (
             float(deployable_scope["max_drawdown"].max()) if not deployable_scope.empty else 0.0
         )
-        total_trades = int(deployable_scope["trades"].sum()) if not deployable_scope.empty else 0
+        total_trades = _independent_trade_count(deployable_scope, self.required_cost_buckets)
 
         preferred_failures: list[str] = []
         if not production_eligible:
@@ -174,7 +212,7 @@ class AcceptanceGate:
             "preferred_reason": "passed"
             if not preferred_failures
             else ";".join(preferred_failures),
-            "evaluated_runs": int(len(evaluated)),
+            "evaluated_runs": len(evaluated),
             "passing_runs": int(evaluated["eligible"].sum()) if not evaluated.empty else 0,
             "pairs_tested": pairs_tested,
             "passing_pairs": passing_pairs,
@@ -191,6 +229,36 @@ class AcceptanceGate:
             "median_sharpe": median_sharpe,
             "worst_drawdown": worst_drawdown,
         }
+
+
+def _verified_acceptance_row(row: pd.Series, gate: AcceptanceGate) -> bool:
+    """Recheck claimed run eligibility from the recorded backtest fields."""
+
+    if not _explicit_true(row.get("eligible")):
+        return False
+    required = (
+        "trades", "profit_factor", "expectancy", "sharpe", "max_drawdown",
+        "sharpe_status", "open_trades", "reconciliation_error", "expectancy_lower_95",
+    )
+    try:
+        if any(field not in row or pd.isna(row[field]) for field in required):
+            return False
+        result = BacktestResult(
+            trades=int(row["trades"]),
+            profit_factor=float(row["profit_factor"]),
+            expectancy=float(row["expectancy"]),
+            sharpe=float(row["sharpe"]),
+            max_drawdown=float(row["max_drawdown"]),
+            win_rate=float(row.get("win_rate", 0.0)),
+            total_return=float(row.get("total_return", 0.0)),
+            sharpe_status=str(row["sharpe_status"]),
+            open_trades=int(row["open_trades"]),
+            reconciliation_error=float(row["reconciliation_error"]),
+            expectancy_lower_95=float(row["expectancy_lower_95"]),
+        )
+        return gate.evaluate(result)[0]
+    except (TypeError, ValueError, OverflowError):
+        return False
 
 
 @dataclass(frozen=True)
@@ -226,7 +294,7 @@ class ElasticResearchGate:
             pair_costs = set(pair_frame["cost_bucket"])
             if not required_costs.issubset(pair_costs):
                 continue
-            trades = int(pd.to_numeric(pair_frame["trades"], errors="coerce").fillna(0).sum())
+            trades = _independent_pair_trade_count(pair_frame, self.required_cost_buckets)
             median_profit_factor = float(
                 pd.to_numeric(pair_frame["profit_factor"], errors="coerce").median()
             )
@@ -509,6 +577,10 @@ class ExperimentResult:
     max_drawdown: float = 0.0
     win_rate: float = 0.0
     total_return: float = 0.0
+    open_trades: int = 0
+    sharpe_status: str = "blocked"
+    reconciliation_error: float = 0.0
+    expectancy_lower_95: float | None = None
     observations: int = 0
     gross_return: float = 0.0
     total_fees: float = 0.0
@@ -590,6 +662,37 @@ def _pairs_missing_cost_buckets(
     return missing
 
 
+def _independent_pair_trade_count(
+    pair_rows: pd.DataFrame, required_cost_buckets: tuple[str, ...]
+) -> int:
+    """Use the lowest required cost-bucket count as a conservative trade proxy."""
+
+    if pair_rows.empty or not {"cost_bucket", "trades"}.issubset(pair_rows.columns):
+        return 0
+    counts: list[int] = []
+    for bucket in required_cost_buckets:
+        bucket_rows = pair_rows[pair_rows["cost_bucket"].astype(str).eq(bucket)]
+        if bucket_rows.empty:
+            return 0
+        counts.append(int(pd.to_numeric(bucket_rows["trades"], errors="coerce").fillna(0).max()))
+    return min(counts) if counts else 0
+
+
+def _independent_trade_count(
+    scope: pd.DataFrame, required_cost_buckets: tuple[str, ...]
+) -> int:
+    if scope.empty or "pair" not in scope.columns:
+        return 0
+    return sum(
+        _independent_pair_trade_count(pair_rows, required_cost_buckets)
+        for _, pair_rows in scope.groupby("pair", sort=False)
+    )
+
+
+def _explicit_true(value: object) -> bool:
+    return isinstance(value, (bool, np.bool_)) and bool(value)
+
+
 def _complete_two_leg_execution_input_scope(scope: pd.DataFrame) -> pd.DataFrame:
     if scope.empty:
         return scope
@@ -597,7 +700,9 @@ def _complete_two_leg_execution_input_scope(scope: pd.DataFrame) -> pd.DataFrame
     for column in TWO_LEG_EXECUTION_INPUT_FLAGS:
         if column not in complete.columns:
             complete[column] = False
-    mask = complete.loc[:, TWO_LEG_EXECUTION_INPUT_FLAGS].fillna(False).astype(bool).all(axis=1)
+    mask = complete.loc[:, TWO_LEG_EXECUTION_INPUT_FLAGS].apply(
+        lambda column: column.map(_explicit_true)
+    ).all(axis=1)
     return complete[mask]
 
 
@@ -613,7 +718,7 @@ def _pairs_missing_two_leg_execution_inputs(scope: pd.DataFrame) -> list[str]:
         pair_missing = [
             column.replace("has_", "")
             for column in TWO_LEG_EXECUTION_INPUT_FLAGS
-            if not bool(pair_rows[column].fillna(False).astype(bool).all())
+            if not bool(pair_rows[column].map(_explicit_true).all())
         ]
         if pair_missing:
             missing.append(f"{pair}[{'+'.join(pair_missing)}]")
@@ -733,6 +838,10 @@ class ExperimentHarness:
             max_drawdown=result.max_drawdown,
             win_rate=result.win_rate,
             total_return=result.total_return,
+            open_trades=result.open_trades,
+            sharpe_status=result.sharpe_status,
+            reconciliation_error=result.reconciliation_error,
+            expectancy_lower_95=result.expectancy_lower_95,
             gross_return=result.gross_return,
             total_fees=result.total_fees,
             total_slippage=result.total_slippage,
