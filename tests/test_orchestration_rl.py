@@ -635,6 +635,44 @@ def test_rl_policy_calibration_does_not_use_realized_hold_duration():
     assert short_policy["target_hold_bars_by_timeframe"]["1d"] == 3
 
 
+def test_rl_simulation_strength_scaling_does_not_use_evaluation_future():
+    calibration = pd.DataFrame({"entry_abs_zscore": [1.0, 2.0, 3.0, 4.0]})
+    policy = _build_policy(calibration)
+    prefix = pd.DataFrame(
+        {
+            "trade_id": ["T1", "T2"],
+            "profit_after_cost": [0.02, 0.03],
+            "entry_abs_zscore": [3.0, 4.0],
+            "trade_bars": [10, 10],
+            "timeframe": ["1h", "1h"],
+        }
+    )
+    extended = pd.concat(
+        [
+            prefix,
+            pd.DataFrame(
+                {
+                    "trade_id": ["FUTURE"],
+                    "profit_after_cost": [0.01],
+                    "entry_abs_zscore": [1000.0],
+                    "trade_bars": [10],
+                    "timeframe": ["1h"],
+                }
+            ),
+        ],
+        ignore_index=True,
+    )
+
+    prefix_result = simulate_strategy_returns(prefix, policy)["frame"]
+    extended_result = simulate_strategy_returns(extended, policy)["frame"].iloc[:2]
+
+    pd.testing.assert_series_equal(
+        prefix_result["proposed_hold_bars"],
+        extended_result["proposed_hold_bars"],
+    )
+    assert prefix_result["zscore_strength_cap"].eq(policy["zscore_strength_cap"]).all()
+
+
 def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign_flip():
     frame = pd.DataFrame(
         [
