@@ -1,0 +1,33 @@
+{
+  "active_sha256": "1cdfa36db1a21a1a525dab0c4f8e486b8b9248c7306fd2fa3aeb846fec163e22",
+  "decision": "REVIEWED_ACTIVE_RETAIN_HISTORICAL_NO_PORT",
+  "historical_variants": [
+    {
+      "copy_roots": "forensic_a;visual_recovery;workspace_outer",
+      "relative_path": ".gitignore",
+      "sha256": "3da3b072e4fa50524936a52692b191d986d31050f2c4fe1a05dae9d18260e16b",
+      "stored_as": "variants/3da3b072e4fa50524936a52692b191d986d31050f2c4fe1a05dae9d18260e16b"
+    },
+    {
+      "copy_roots": "forensic_b",
+      "relative_path": ".gitignore",
+      "sha256": "8990aa900988cd65b9ce0dac05761928fe223d8d3251b50a7252b8f8086c1ffd",
+      "stored_as": "variants/8990aa900988cd65b9ce0dac05761928fe223d8d3251b50a7252b8f8086c1ffd"
+    }
+  ],
+  "ignored_probes": {
+    "._garbage.py": "._*",
+    ".runtime_control/example": ".runtime_control/",
+    ".runtime_locks/example": ".runtime_locks/",
+    ".runtime_logs/example": ".runtime_logs/",
+    "pytest-of-1/foo": "pytest-of-*/"
+  },
+  "included_probes": {
+    "reports/supreme_team/2026-08-20_v2_corrective_roadmap.md": "!reports/supreme_team/2026-08-20_v2_corrective_roadmap.md",
+    "reports/supreme_team/2026-08-20_v2_corrective_work_items.csv": "!reports/supreme_team/2026-08-20_v2_corrective_work_items.csv",
+    "reports/supreme_team/2026-08-20_v2_definition_of_done.csv": "!reports/supreme_team/2026-08-20_v2_definition_of_done.csv"
+  },
+  "review_note": "Both preserved variants omit runtime-control ignores and the corrective-plan exception. The forensic_b variant alone adds build/ and dist/ ignores; those optional generated-output patterns do not justify replacing the active policy.",
+  "schema_version": "thewiz.gate0.gitignore_decision.v1",
+  "variant_manifest_sha256": "00b5987281dd1cb5ffeaaee5dc29cca2183cbce7a67bf73ae8e23cfd69379fd4"
+}
