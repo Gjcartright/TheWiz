@@ -108,11 +108,42 @@ def test_actual_dominating_fence_call_certifies_reviewed_sink(tmp_path: Path) ->
     assert rows[0]["blocker"] == ""
 
 
+def test_canonical_binance_function_call_requires_pair_adapter_fence(tmp_path: Path) -> None:
+    source = tmp_path / "src" / "quant_platform" / "binance_testnet.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def _gate00g_binance_pair_order_call(client, intent, config):\n"
+        "    return _CANONICAL_BINANCE_PLACE_ORDER(client, intent, config)\n",
+        encoding="utf-8",
+    )
+    rows = financial_effect_surface_rows(tmp_path)
+    assert len(rows) == 1
+    assert rows[0]["migration_state"] == "UNMIGRATED"
+    assert rows[0]["blocker"] == "financial_effect_fence_evidence_missing_or_late"
+
+    source.write_text(
+        "def _gate00g_binance_pair_order_call(client, intent, config):\n"
+        "    canonical = _require_gate00g_binance_pair_adapter(client)\n"
+        "    return _CANONICAL_BINANCE_PLACE_ORDER(canonical, intent, config)\n",
+        encoding="utf-8",
+    )
+    rows = financial_effect_surface_rows(tmp_path)
+    assert len(rows) == 1
+    assert rows[0]["migration_state"] == "MIGRATED"
+    assert rows[0]["blocker"] == ""
+
+
 def test_current_tree_financial_effect_inventory_is_fully_fenced() -> None:
     root = Path(__file__).resolve().parents[1]
     rows = financial_effect_surface_rows(root)
 
-    assert len(rows) == 19
+    assert len(rows) == 18
+    assert any(
+        row["source_path"] == "src/quant_platform/binance_testnet.py"
+        and row["function"] == "_gate00g_binance_pair_order_call"
+        and row["method"] == "place_order"
+        for row in rows
+    )
     assert unfenced_financial_effect_surface_ids(root) == []
     assert {str(row["effect_kind"]) for row in rows} == {
         "cancel",

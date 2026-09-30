@@ -37,6 +37,12 @@ FINANCIAL_EFFECT_METHODS = frozenset(
     }
 )
 
+# Canonical function calls that dispatch an order without attribute syntax
+# still belong in the source-derived financial-effect inventory.
+DIRECT_FINANCIAL_FUNCTION_NAMES = {
+    "_CANONICAL_BINANCE_PLACE_ORDER": "place_order",
+}
+
 
 @dataclass(frozen=True)
 class ReviewedFinancialSurface:
@@ -49,7 +55,7 @@ REVIEWED_FINANCIAL_SURFACES: dict[
 ] = {
     (
         "src/quant_platform/binance_testnet.py",
-        "execute_binance_testnet_pair",
+        "_gate00g_binance_pair_order_call",
         "place_order",
     ): ReviewedFinancialSurface(
         "canonical_adapter_delegation",
@@ -199,6 +205,10 @@ class _FinancialEffectVisitor(ast.NodeVisitor):
         if isinstance(node.func, ast.Attribute):
             method = node.func.attr
             if method in FINANCIAL_EFFECT_METHODS:
+                self._append(node, method)
+        elif isinstance(node.func, ast.Name):
+            method = DIRECT_FINANCIAL_FUNCTION_NAMES.get(node.func.id)
+            if method is not None:
                 self._append(node, method)
         self.generic_visit(node)
 
