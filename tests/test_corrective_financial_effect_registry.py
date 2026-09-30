@@ -26,6 +26,18 @@ def test_unknown_financial_effect_surface_fails_closed(tmp_path: Path) -> None:
     assert rows[0]["blocker"] == "financial_effect_surface_not_reviewed"
 
 
+def test_appledouble_sidecar_is_not_scanned_as_source(tmp_path: Path) -> None:
+    source = tmp_path / "src" / "quant_platform" / "new_venue.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("def submit(exchange):\n    return exchange.create_order({})\n")
+    source.with_name("._new_venue.py").write_bytes(b"\x00\x05\x16\x07Mac OS X")
+
+    rows = financial_effect_surface_rows(tmp_path)
+
+    assert len(rows) == 1
+    assert rows[0]["source_path"] == "src/quant_platform/new_venue.py"
+
+
 def test_reviewed_surface_without_fence_evidence_fails_closed(
     tmp_path: Path,
 ) -> None:

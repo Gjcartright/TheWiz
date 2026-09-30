@@ -1,0 +1,22 @@
+{
+  "active_head": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+  "canonical_candidate": "/Volumes/Expansion/Crypto Wizard",
+  "category_counts": {
+    "documentation": 4,
+    "historical_evidence": 133,
+    "source_or_dependency": 319,
+    "test": 97
+  },
+  "decision_counts": {
+    "ANCESTOR_VERSION_RETAIN_NO_PORT": 190,
+    "RETAIN_ARCHIVE_NOT_CANONICAL_SOURCE": 133,
+    "SEMANTIC_REVIEW_REQUIRED_NO_PORT": 230
+  },
+  "historical_ancestor": "56a19218414173d687d57f4eaf0e2abd321b15df",
+  "meaning": "Hash identity is custody evidence; semantic review remains open for non-ancestor source and test variants.",
+  "original_drift_rows": 856,
+  "schema_version": "thewiz.gate0.source_delta.v1",
+  "source_scan": "audit/SECOND_PASS_SAME_PATH_DRIFT_2026-09-29.csv",
+  "unique_path_hash_variants": 553,
+  "unique_paths": 427
+}

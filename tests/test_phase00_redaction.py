@@ -237,6 +237,8 @@ def test_orchestration_has_no_unreviewed_raw_exception_string_surfaces() -> None
     violations: list[str] = []
 
     for path in sorted(source_root.glob("*.py")):
+        if path.name.startswith("._"):
+            continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
         class Visitor(ast.NodeVisitor):

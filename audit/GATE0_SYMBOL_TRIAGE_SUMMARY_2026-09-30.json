@@ -1,0 +1,11 @@
+{
+  "historical_only_by_root": {
+    "forensic_a": 5,
+    "forensic_b": 46,
+    "source_candidate": 6
+  },
+  "limitation": "Top-level AST names do not compare bodies, imports, nested functions, behavior, or safety. Every flagged variant remains review-required.",
+  "python_variants_parsed": 213,
+  "schema_version": "thewiz.gate0.symbol_triage.v1",
+  "variants_with_historical_only_top_level_symbols": 57
+}

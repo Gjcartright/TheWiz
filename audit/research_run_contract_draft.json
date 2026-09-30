@@ -1,0 +1,167 @@
+{
+  "schema_version": "thewiz.research_run_contract.draft.v1",
+  "run_id": "WIZ-PAIRS-ARCHIVE-2026-09-28-DRAFT-01",
+  "status": "DRAFT_BLOCKED",
+  "created_at_utc": "2026-09-28T21:41:52Z",
+  "purpose": "Prepare a reproducible, research-only point-in-time pairs evaluation of the retained multi-asset capture archive.",
+  "not_authorized": [
+    "new collection",
+    "external market or vendor requests",
+    "credential access",
+    "model training or promotion",
+    "paper trading",
+    "testnet orders",
+    "live orders"
+  ],
+  "source_snapshot": {
+    "repository": "https://github.com/Gjcartright/TheWiz",
+    "branch": "codex/wiz-v3-source-reconciliation",
+    "base_commit": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+    "working_changes_committed": false,
+    "working_changes_staged": true,
+    "runtime_snapshot_provenance": "unversioned; do not mix into source checkout"
+  },
+  "data": {
+    "archive_root": "/Users/gregc/TheWiz-LocalRuntime/data/research/multi_asset_captures",
+    "archive_mutability": "READ_ONLY",
+    "capture_count": 160,
+    "first_capture": {
+      "capture_id": "universe-20260920T101647Z",
+      "receipt_sha256": "2af46691f9f1c316841aaa9e21a9ead32394509a44964fb32d35687c78243659",
+      "observed_at_utc": "2026-09-20T10:16:47.799178+00:00"
+    },
+    "terminal_capture": {
+      "capture_id": "universe-20260927T101733Z",
+      "receipt_sha256": "31e3582fd34ec4b2616780a024c8f74bf5e12b263239bb6b186bf0db71931233",
+      "observed_at_utc": "2026-09-27T10:17:33.823020+00:00",
+      "asset_count": 25,
+      "candidate_pair_count": 300
+    },
+    "chain_and_raw_hash_verification": {
+      "last_audit_result": "PASS",
+      "receipts_verified": 160,
+      "raw_hashes_verified": true,
+      "verified_at_utc": "2026-09-28T21:42:54Z",
+      "terminal_age_minutes_at_verification": 2125.2510189,
+      "terminal_stale_at_verification": false,
+      "verifier_command": "PYTHONPATH=src python -m quant_platform.orchestration.multi_asset_capture_verify --root /Users/gregc/TheWiz-LocalRuntime",
+      "must_reverify_before_analysis": true
+    },
+    "coverage_caveats": {
+      "schedule_manifest": "MISSING",
+      "schedule_grid": "inferred, not authoritative",
+      "inferred_slots": 168,
+      "unique_slots_present": 158,
+      "missing_slots": 10,
+      "duplicate_slots": 1,
+      "out_of_window_receipts": 1,
+      "continuity_claim_allowed": false,
+      "point_in_time_universe_lifecycle_contract": "NOT_APPROVED"
+    }
+  },
+  "bound_source_contracts": [
+    {
+      "path": "config/acceptance_policy_manifest.json",
+      "sha256": "08b028ae4ce3188868a3009d3d556c3df61b6dcd47370c10d83a4d3102e6fb31",
+      "policy_version": "2026-08-09.1"
+    },
+    {
+      "path": "config/research.yaml",
+      "sha256": "d4878f44e5415344eaa2f3dd6c98d39572733f0dc8c2596631e3ef1ba62d6f21"
+    },
+    {
+      "path": "config/wizard_discovery_policy.json",
+      "sha256": "a586d1a4f36143042fbf26194611f07dc7672fff8ffe72a5c8411c3f5ebaec5f"
+    },
+    {
+      "path": "config/hyperliquid_perp_cost_profile.json",
+      "sha256": "ba197519b985373738d204eeb79b8b6a624738843f8d3a53d88916b166595cea"
+    }
+  ],
+  "acceptance_gates": {
+    "interim_rule": "For any acceptance or promotion claim, require both threshold sets until an owner-approved stage resolver exists; report each set separately for non-promoting research diagnostics.",
+    "policy_resolver": "MISSING; owner decision required before any threshold change",
+    "manifest_gates": {
+      "walkforward_folds": 5,
+      "minimum_positive_folds": 3,
+      "minimum_completed_trades": 10,
+      "minimum_profit_factor": 1.1,
+      "maximum_drawdown": 0.5,
+      "false_discovery_rate_maximum": 0.1,
+      "required_cost_buckets": ["base", "stress"],
+      "required_regime": "ALL",
+      "minimum_independent_supporting_clusters": 3,
+      "regime_parameter_and_concentration_checks_required": true
+    },
+    "research_yaml_targets": {
+      "minimum_completed_trades": 100,
+      "target_profit_factor": 1.8,
+      "target_sharpe": 1.2,
+      "maximum_drawdown": 0.15,
+      "minimum_distinct_pairs": 2
+    }
+  },
+  "methodology": {
+    "formula_implementation": null,
+    "formula_sha256": null,
+    "formula_status": "NOT_SELECTED_OR_APPROVED",
+    "candidate_offline_package": "/Users/gregc/TheWiz-LocalRuntime/work/offline_post_collection_preparation",
+    "candidate_package_provenance": "unversioned runtime snapshot; descriptive calculations exist but are not approved for this run",
+    "pair_orientation_and_hedge_ratio_contract": "UNRESOLVED",
+    "spread_and_zscore_lookback_contract": "UNRESOLVED",
+    "train_test_embargo_and_selection_contract": "UNRESOLVED",
+    "candle_correction_and_supersession_policy": "MISSING",
+    "future_data_and_survivorship_controls": "must be specified and hash-bound before analysis"
+  },
+  "costs": {
+    "status": "BLOCKED",
+    "profile_id": "hyperliquid_perp_base_tier_taker_v1",
+    "pinned_profile_date": "2026-08-05",
+    "pinned_profile_age_days_at_audit": 54,
+    "pinned_taker_fee_bps": 4.5,
+    "pinned_maker_fee_bps": 1.5,
+    "account_specific_fee_status": "NOT_CAPTURED",
+    "manifest_maximum_fee_age_days": 30,
+    "newer_generic_fee_reference": "2026-09-16; not account-specific, stale-cache response, no explicit effective date, production_equivalent=false",
+    "l2_calibration": {
+      "date": "2026-09-16",
+      "assets": ["BTC", "ETH"],
+      "samples_per_asset": 12,
+      "spacing_seconds": 600,
+      "span_minutes": 110,
+      "production_equivalent": false,
+      "coverage_of_terminal_universe": "2 of 25 assets"
+    },
+    "funding_coverage": "NOT_BOUND_TO_RUN",
+    "pair_cost_manifest": "MISSING",
+    "required_components": [
+      "fees",
+      "slippage",
+      "funding",
+      "partial_fill",
+      "execution_risk"
+    ],
+    "required_stress_expectancy": "positive"
+  },
+  "required_before_unblocking": [
+    "Select and approve exact formula and implementation hash, including pair orientation, hedge ratio, spread, z-score, and timing rules.",
+    "Resolve or formally preserve the both-required relationship between the acceptance manifest and research.yaml targets.",
+    "Approve current fee evidence and a run-bound pair-cost manifest; obtain required funding coverage and pair/universe L2 evidence.",
+    "Approve the point-in-time universe lifecycle and candle correction/supersession policy.",
+    "Reverify the full receipt chain and raw hashes in read-only mode immediately before analysis.",
+    "Define output location outside the immutable archive and record the exact code/config/data hashes in the run receipt."
+  ],
+  "approvals": {
+    "research_policy_owner": null,
+    "formula_owner": null,
+    "cost_evidence_owner": null,
+    "data_correction_policy_owner": null,
+    "status": "PENDING"
+  },
+  "execution_gate": {
+    "pair_analysis_allowed": false,
+    "reason": "formula, correction policy, cost coverage, and acceptance-gate interpretation are not owner-approved and run-bound",
+    "next_permitted_action": "owner review of this draft and missing inputs; after resolution, descriptive point-in-time research only",
+    "trading_authority": false
+  }
+}

@@ -97,7 +97,8 @@ def build_acceptance_policy_receipt(
         "source_contracts_match": not blockers,
         "status": "PASS" if not blockers else "BLOCKED",
         "blockers": blockers,
-        "promotion_authority": not blockers,
+        # Matching policy source hashes proves file identity, not candidate performance.
+        "promotion_authority": False,
         "testnet_order_authority": False,
         "live_trading_authorized": False,
     }

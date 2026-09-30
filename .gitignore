@@ -10,6 +10,7 @@ __pycache__/
 .runtime_agents/
 .runtime_logs/
 .runtime_locks/
+.runtime_control/
 .DS_Store
 ._*
 pytest-of-*/

@@ -256,6 +256,8 @@ def financial_effect_surface_rows(root: Path) -> list[dict[str, object]]:
         return []
     surfaces: list[FinancialEffectSurface] = []
     for path in sorted(source_root.rglob("*.py")):
+        if path.name.startswith("._"):
+            continue
         relative = path.relative_to(root).as_posix()
         try:
             source = path.read_text(encoding="utf-8")

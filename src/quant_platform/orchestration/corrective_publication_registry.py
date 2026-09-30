@@ -274,6 +274,9 @@ def publication_surface_rows(root: Path) -> list[dict[str, object]]:
         return []
     surfaces: list[PublicationSurface] = []
     for path in sorted(source_root.rglob("*.py")):
+        # AppleDouble metadata files on mounted macOS volumes are not Python source.
+        if path.name.startswith("._"):
+            continue
         try:
             source = path.read_text(encoding="utf-8")
             tree = ast.parse(source, filename=str(path))

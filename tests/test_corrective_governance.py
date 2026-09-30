@@ -10,6 +10,7 @@ import pytest
 
 from quant_platform.orchestration.corrective_governance import (
     GovernanceError,
+    build_acceptance_policy_receipt,
     build_corrective_governance,
     content_identity,
     semantic_hypothesis_id,
@@ -67,6 +68,16 @@ def test_governance_materializes_policy_tamper_holdout_and_ledger(tmp_path):
     assert len(tamper) > 30
     assert tamper["identity_changed"].all()
     assert not tamper["promotion_authority_inherited"].any()
+
+
+def test_policy_integrity_receipt_does_not_grant_candidate_promotion(tmp_path):
+    root = _root(tmp_path)
+    receipt = build_acceptance_policy_receipt(root=root)
+    assert receipt["status"] == "PASS"
+    assert receipt["source_contracts_match"] is True
+    assert receipt["promotion_authority"] is False
+    assert receipt["testnet_order_authority"] is False
+    assert receipt["live_trading_authorized"] is False
 
 
 def test_semantic_identity_ignores_display_and_run_renames():
