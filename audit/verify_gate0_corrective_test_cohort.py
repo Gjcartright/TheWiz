@@ -138,11 +138,17 @@ def verify() -> dict[str, int]:
             assert record["comparison_diffs"]["forensic_b"] == _diff(active, historical, "forensic_b")
 
         source = record["primary_source_contract"]
-        selected_source = ROOT / source["relative_path"]
+        # The report describes the source contract at its frozen base commit.
+        # Later reviewed ports may change the active file without changing this
+        # historical comparison.
+        try:
+            selected_source = _git_bytes(base, source["relative_path"])
+        except subprocess.CalledProcessError:
+            selected_source = None
         runtime_source = Path("/Users/gregc/TheWiz-LocalRuntime") / source["relative_path"]
-        assert selected_source.is_file() == source["active_exists"]
+        assert (selected_source is not None) == source["active_exists"]
         assert runtime_source.is_file() == source["runtime_exists"]
-        assert (_sha(selected_source.read_bytes()) if selected_source.is_file() else "") == source["active_sha256"]
+        assert (_sha(selected_source) if selected_source is not None else "") == source["active_sha256"]
         assert _sha(runtime_source.read_bytes()) == source["runtime_sha256"]
         for key in (
             "active_sha256",
