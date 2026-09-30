@@ -1,0 +1,1142 @@
+{
+  "authority": "Evidence and candidate only. No Expansion source or shared queue mutation; no providers or orders run.",
+  "base_commit": "9b7fabfd5133904451199219cce53111f14de7cb",
+  "extended_manifest_path": "/Volumes/Expansion/Crypto Wizard/audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv",
+  "four_root_freeze_path": "audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+  "paths": [
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a",
+      "decision": "SELECTIVE_PORT_READY",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_archive.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "root_label": "forensic_b",
+          "sha256": "d82565e326aa2a2fca6c01f1d62d3bd74b6df0ea434149109a71137a26bbc663",
+          "size_bytes": 18294
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "root_label": "source_candidate",
+          "sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a",
+          "size_bytes": 18438
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "root_label": "visual_recovery",
+          "sha256": "f708378abd9569ae0ccb948d8fec9617b370f4762a9d4669eda9cb201ad183d0",
+          "size_bytes": 18227
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+          "sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a"
+        }
+      },
+      "historical_distinct_sha256": [
+        "d82565e326aa2a2fca6c01f1d62d3bd74b6df0ea434149109a71137a26bbc663",
+        "f708378abd9569ae0ccb948d8fec9617b370f4762a9d4669eda9cb201ad183d0"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+      "role": "Archive copy and receipts",
+      "semantic_rationale": "Visual and forensic copies use direct writes and os.replace; active has staged atomic promotion. Forensic_b alone adds strict_bool to both copy preflight gates. Port that parser only; keep active copy and receipt machinery.",
+      "source_candidate_sha256": "3a237cb5bf0d333bed82ec0afa283ada2f3e5d6882d0d404570ffe7561a0668a",
+      "working_vs_runtime": "SAME"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py"
+      ],
+      "active_sha256": "0a255f48be7f9472767a5fc235ffd8ac2340cb2bc23af743e0cfe7c10cb8ff04",
+      "decision": "DEFER_COHERENT_SCHEDULER_PORT",
+      "direct_test_import_consumers": [
+        "tests/test_corrective_daily_scheduler.py",
+        "tests/test_current_wizard_hyperliquid_daily_runner.py",
+        "tests/test_current_wizard_hyperliquid_handoff.py",
+        "tests/test_current_wizard_ou_optimal_overlay.py",
+        "tests/test_phase00_scheduler_supervisor.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "root_label": "forensic_b",
+          "sha256": "f694eac80a6167e4e555446ad75873fa438d448fa3e689d0520890c95bce9977",
+          "size_bytes": 24202
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "root_label": "source_candidate",
+          "sha256": "074a0c18ff528974bdeb5784b26fc4e6329fe95101acc5961b0e7620b279ac80",
+          "size_bytes": 24543
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "root_label": "visual_recovery",
+          "sha256": "59e50230bd43a9a42e98e09127e85b42e84a9a90290bf19da24fcac80b8e360c",
+          "size_bytes": 24097
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "sha256": "074a0c18ff528974bdeb5784b26fc4e6329fe95101acc5961b0e7620b279ac80"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "sha256": "074a0c18ff528974bdeb5784b26fc4e6329fe95101acc5961b0e7620b279ac80"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+          "sha256": "0a255f48be7f9472767a5fc235ffd8ac2340cb2bc23af743e0cfe7c10cb8ff04"
+        }
+      },
+      "historical_distinct_sha256": [
+        "59e50230bd43a9a42e98e09127e85b42e84a9a90290bf19da24fcac80b8e360c",
+        "f694eac80a6167e4e555446ad75873fa438d448fa3e689d0520890c95bce9977"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_cadence.py",
+      "role": "Daily stage cadence",
+      "semantic_rationale": "Runtime reorders Hyperliquid inventory before Wizard refresh accounting to preserve immutable input ancestry. Forensic_b tightens persisted authority booleans. Review cadence with runner and refresh contracts together; visual copy loses active atomic writes.",
+      "source_candidate_sha256": "074a0c18ff528974bdeb5784b26fc4e6329fe95101acc5961b0e7620b279ac80",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d",
+      "decision": "SELECTIVE_PORT_READY",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_completion_audit.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "root_label": "forensic_b",
+          "sha256": "db8d5cd842667d75b2c730b11ac1ed0597dc38c6d3ed51933b25f2b0e98442ee",
+          "size_bytes": 27423
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "root_label": "source_candidate",
+          "sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d",
+          "size_bytes": 27283
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "root_label": "visual_recovery",
+          "sha256": "7041fa0880ac1eadc695773209d71c995196cc044c83943b87cdfb6c56129c33",
+          "size_bytes": 27357
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+          "sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d"
+        }
+      },
+      "historical_distinct_sha256": [
+        "7041fa0880ac1eadc695773209d71c995196cc044c83943b87cdfb6c56129c33",
+        "db8d5cd842667d75b2c730b11ac1ed0597dc38c6d3ed51933b25f2b0e98442ee"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_completion_audit.py",
+      "role": "Objective completion proof",
+      "semantic_rationale": "Visual and forensic copies pin older v1 hard-coded modes. Active v2 uses canonical economic modes. Forensic_b alone parses sweep_complete strictly; port that gate without reverting mode contract.",
+      "source_candidate_sha256": "f88f6e52ffa887d527b033b42c126560197396daae287f42bc128e19c9b0e37d",
+      "working_vs_runtime": "SAME"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "85fabe0d72826de1168fc7b1e8d0ca7e7921ccaef49aba391ed527d8ac102528",
+      "decision": "DEFER_PREPARED_STAGE",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "root_label": "forensic_b",
+          "sha256": "cca3a679bf6381ff79cbcff393fb53df10b8a5fcab5b9fec21aa3f88de469b8e",
+          "size_bytes": 21026
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "root_label": "source_candidate",
+          "sha256": "14e961837eac53fcbc4feddb3430274b8be50dc7718fc36081bcbeb0e58297cd",
+          "size_bytes": 43544
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "root_label": "visual_recovery",
+          "sha256": "cca3a679bf6381ff79cbcff393fb53df10b8a5fcab5b9fec21aa3f88de469b8e",
+          "size_bytes": 21026
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "sha256": "14e961837eac53fcbc4feddb3430274b8be50dc7718fc36081bcbeb0e58297cd"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "sha256": "14e961837eac53fcbc4feddb3430274b8be50dc7718fc36081bcbeb0e58297cd"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+          "sha256": "85fabe0d72826de1168fc7b1e8d0ca7e7921ccaef49aba391ed527d8ac102528"
+        }
+      },
+      "historical_distinct_sha256": [
+        "cca3a679bf6381ff79cbcff393fb53df10b8a5fcab5b9fec21aa3f88de469b8e"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_concentration.py",
+      "role": "Concentration analysis",
+      "semantic_rationale": "Runtime adds prepared input capture, lease, source revalidation, and publish path. Visual/forensic copy is otherwise active logic without atomic output writes. Reconcile runtime stage as a coherent producer/consumer change.",
+      "source_candidate_sha256": "14e961837eac53fcbc4feddb3430274b8be50dc7718fc36081bcbeb0e58297cd",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "fec643b2eedf87b31bbd72771c553a9f271196e253ab56fd62052bea4725facd",
+      "decision": "DEFER_EFFECT_COST_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "root_label": "forensic_a",
+          "sha256": "ccad6a4eb9c41754e478e9cd5465c9c9c559c1071eefb3df950bdd8bcaea9d40",
+          "size_bytes": 37171
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "root_label": "forensic_b",
+          "sha256": "017e4b900234d70d07845ac89236039fbd16a96b3ed1b3553caa5cda668f38a7",
+          "size_bytes": 37238
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "root_label": "source_candidate",
+          "sha256": "e81e682dd626d1edef9210405b4e746afed9eb1555376990bcefe46773c805ec",
+          "size_bytes": 77989
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "root_label": "visual_recovery",
+          "sha256": "ccad6a4eb9c41754e478e9cd5465c9c9c559c1071eefb3df950bdd8bcaea9d40",
+          "size_bytes": 37171
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "root_label": "workspace_outer",
+          "sha256": "ccad6a4eb9c41754e478e9cd5465c9c9c559c1071eefb3df950bdd8bcaea9d40",
+          "size_bytes": 37171
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "sha256": "e81e682dd626d1edef9210405b4e746afed9eb1555376990bcefe46773c805ec"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "sha256": "e81e682dd626d1edef9210405b4e746afed9eb1555376990bcefe46773c805ec"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+          "sha256": "fec643b2eedf87b31bbd72771c553a9f271196e253ab56fd62052bea4725facd"
+        }
+      },
+      "historical_distinct_sha256": [
+        "017e4b900234d70d07845ac89236039fbd16a96b3ed1b3553caa5cda668f38a7",
+        "ccad6a4eb9c41754e478e9cd5465c9c9c559c1071eefb3df950bdd8bcaea9d40"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py",
+      "role": "Funding, liquidity and observed costs",
+      "semantic_rationale": "Runtime adds prepared cost acquisition, bounded funding, cache and effect/lease accounting. Forensic_b tightens fetch_complete and eligibility booleans; visual copies lose immutable snapshots, atomic publication, and exception redaction. Review budgets and provider authority before a selective port.",
+      "source_candidate_sha256": "e81e682dd626d1edef9210405b4e746afed9eb1555376990bcefe46773c805ec",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py"
+      ],
+      "active_sha256": "0b7f4a4dc4539c03d17210aa048230cd701bd8b5cd90879311703102e9957bfb",
+      "decision": "DEFER_EFFECT_SCHEDULER",
+      "direct_test_import_consumers": [
+        "tests/test_corrective_daily_scheduler.py",
+        "tests/test_current_wizard_hyperliquid_daily_runner.py",
+        "tests/test_phase00_scheduler_supervisor.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "root_label": "forensic_b",
+          "sha256": "3c8135bf64ac05eb95bc65e43b77ca10c5f7c9fec01a58e36f30f29fe563c4c7",
+          "size_bytes": 46010
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "root_label": "source_candidate",
+          "sha256": "2939e1dfc1b2fce05510c67cbaf6a653d9b39f43715a53a1526405460fed1981",
+          "size_bytes": 97301
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "root_label": "visual_recovery",
+          "sha256": "05ff4d3a9dd971374e2c0797d614d297a441f25c849111ce6e9a5b72f8fe9013",
+          "size_bytes": 47602
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "sha256": "2939e1dfc1b2fce05510c67cbaf6a653d9b39f43715a53a1526405460fed1981"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "sha256": "9918cdc6345a55aed91b19d31ce194c31120b7018f49221e77d325ed1f392e96"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+          "sha256": "0b7f4a4dc4539c03d17210aa048230cd701bd8b5cd90879311703102e9957bfb"
+        }
+      },
+      "historical_distinct_sha256": [
+        "05ff4d3a9dd971374e2c0797d614d297a441f25c849111ce6e9a5b72f8fe9013",
+        "3c8135bf64ac05eb95bc65e43b77ca10c5f7c9fec01a58e36f30f29fe563c4c7"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+      "role": "Daily orchestration and external-effect supervision",
+      "semantic_rationale": "Visual/forensic runner uses subprocess execution and older credential flow, missing active bound provider context, credit proof, and Hyperliquid inventory evidence. Runtime adds reserved effects, request budgets, snapshot contract, keychain selector, and precollection handoff. Source_candidate is a separate intermediate hash without runtime Keychain support. Require coherent closure and dry-run tests.",
+      "source_candidate_sha256": "2939e1dfc1b2fce05510c67cbaf6a653d9b39f43715a53a1526405460fed1981",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_l2_scheduler.py"
+      ],
+      "active_sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3",
+      "decision": "RETAIN_ACTIVE_NO_PORT",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_evidence_command_center.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "root_label": "forensic_a",
+          "sha256": "28161a404dd0bbdd61aa1c099779e3f875d7e58c19377e12f8743389c45b9381",
+          "size_bytes": 34954
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "root_label": "forensic_b",
+          "sha256": "28161a404dd0bbdd61aa1c099779e3f875d7e58c19377e12f8743389c45b9381",
+          "size_bytes": 34954
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "root_label": "source_candidate",
+          "sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3",
+          "size_bytes": 35074
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "root_label": "visual_recovery",
+          "sha256": "28161a404dd0bbdd61aa1c099779e3f875d7e58c19377e12f8743389c45b9381",
+          "size_bytes": 34954
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "root_label": "workspace_outer",
+          "sha256": "28161a404dd0bbdd61aa1c099779e3f875d7e58c19377e12f8743389c45b9381",
+          "size_bytes": 34954
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+          "sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3"
+        }
+      },
+      "historical_distinct_sha256": [
+        "28161a404dd0bbdd61aa1c099779e3f875d7e58c19377e12f8743389c45b9381"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_evidence_command_center.py",
+      "role": "Evidence dashboard command center",
+      "semantic_rationale": "Historical copies differ from active only by replacing staged file promotion with plain Path.replace. Active publication protection is retained.",
+      "source_candidate_sha256": "5babf2daecb550809c9802b65b3aad13b856ff616da9ae64288a32c78e2e11c3",
+      "working_vs_runtime": "SAME"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "8731eab72e9489a01d0c0c1357359a53c973251d46f9dcb1ba444616309756c7",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "root_label": "forensic_a",
+          "sha256": "dbba2e4f0bff1d145776bf85e161acd44ec83c60e0633d85762d83804f1797fc",
+          "size_bytes": 43263
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "root_label": "forensic_b",
+          "sha256": "d8a8a4ae4e2d4a5cdef40905922dab31e91e37d6613ca4d95297cf6d4fe1ec8c",
+          "size_bytes": 43263
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "root_label": "source_candidate",
+          "sha256": "b2c27b1a03db035e59b22611a3240926ba700b2f66d6625742880b8b08820b21",
+          "size_bytes": 76552
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "root_label": "visual_recovery",
+          "sha256": "dbba2e4f0bff1d145776bf85e161acd44ec83c60e0633d85762d83804f1797fc",
+          "size_bytes": 43263
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "root_label": "workspace_outer",
+          "sha256": "dbba2e4f0bff1d145776bf85e161acd44ec83c60e0633d85762d83804f1797fc",
+          "size_bytes": 43263
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "sha256": "b2c27b1a03db035e59b22611a3240926ba700b2f66d6625742880b8b08820b21"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "sha256": "b2c27b1a03db035e59b22611a3240926ba700b2f66d6625742880b8b08820b21"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+          "sha256": "8731eab72e9489a01d0c0c1357359a53c973251d46f9dcb1ba444616309756c7"
+        }
+      },
+      "historical_distinct_sha256": [
+        "d8a8a4ae4e2d4a5cdef40905922dab31e91e37d6613ca4d95297cf6d4fe1ec8c",
+        "dbba2e4f0bff1d145776bf85e161acd44ec83c60e0633d85762d83804f1797fc"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_failure_attribution.py",
+      "role": "Failure attribution and routing",
+      "semantic_rationale": "Runtime adds prepared attribution/routing, leases and revalidation. Forensic_b maps persisted eligibility and authority columns through a boolean parser; visual copy lacks atomic output publication. Review parser and stage contract separately.",
+      "source_candidate_sha256": "b2c27b1a03db035e59b22611a3240926ba700b2f66d6625742880b8b08820b21",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_sha256": "4211e54df3b1711c139b207bd00ba3f6e226227667dd1e0a5ac9780df0902803",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "root_label": "forensic_b",
+          "sha256": "f65945b9543b0f0dc10537f4f14e5be83730957d56077ed2ba6e649c72a72b16",
+          "size_bytes": 34313
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "root_label": "source_candidate",
+          "sha256": "d11435266ec5238f978d0592c7b0ae041d92a471c63ed83d2d0d176c27662a4c",
+          "size_bytes": 60201
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "root_label": "visual_recovery",
+          "sha256": "5505896b7692cebf0022802a54633a5fe6810f7b96b4b40af69dfc688f9559ae",
+          "size_bytes": 34227
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "sha256": "d11435266ec5238f978d0592c7b0ae041d92a471c63ed83d2d0d176c27662a4c"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "sha256": "d11435266ec5238f978d0592c7b0ae041d92a471c63ed83d2d0d176c27662a4c"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+          "sha256": "4211e54df3b1711c139b207bd00ba3f6e226227667dd1e0a5ac9780df0902803"
+        }
+      },
+      "historical_distinct_sha256": [
+        "5505896b7692cebf0022802a54633a5fe6810f7b96b4b40af69dfc688f9559ae",
+        "f65945b9543b0f0dc10537f4f14e5be83730957d56077ed2ba6e649c72a72b16"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_handoff.py",
+      "role": "Wizard-to-Hyperliquid handoff",
+      "semantic_rationale": "Active v2 binds canonical economic modes and scanner overlays, immutable inputs, and atomic outputs. Visual v1 lacks that contract. Forensic_b tightens pilot and row-level authority booleans. Runtime adds prepared handoff, captured refresh, leases and publication. No whole-file port.",
+      "source_candidate_sha256": "d11435266ec5238f978d0592c7b0ae041d92a471c63ed83d2d0d176c27662a4c",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "c29fca8d47ed09552bfcd50ccfc611ca90336a265f0784cf3a518b451f52244e",
+      "decision": "DEFER_PREPARED_STAGE",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "root_label": "forensic_b",
+          "sha256": "fb789993a69945c942b1d63103dcc1eee454fc73b9b0a66b73a7e3fa3e2d35a7",
+          "size_bytes": 20479
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "root_label": "source_candidate",
+          "sha256": "f729aae1b94e29dbbc8e1a97a98a3ad955acc1e25efb89e14569a32e3b18386c",
+          "size_bytes": 42379
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "root_label": "visual_recovery",
+          "sha256": "fb789993a69945c942b1d63103dcc1eee454fc73b9b0a66b73a7e3fa3e2d35a7",
+          "size_bytes": 20479
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "sha256": "f729aae1b94e29dbbc8e1a97a98a3ad955acc1e25efb89e14569a32e3b18386c"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "sha256": "f729aae1b94e29dbbc8e1a97a98a3ad955acc1e25efb89e14569a32e3b18386c"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+          "sha256": "c29fca8d47ed09552bfcd50ccfc611ca90336a265f0784cf3a518b451f52244e"
+        }
+      },
+      "historical_distinct_sha256": [
+        "fb789993a69945c942b1d63103dcc1eee454fc73b9b0a66b73a7e3fa3e2d35a7"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_learning.py",
+      "role": "Teacher/student learning ledger",
+      "semantic_rationale": "Runtime adds prepared ledger capture, lease and source revalidation. Historical visual/forensic code matches active calculations but writes ledgers and manifests directly. Retain active atomic outputs pending coherent runtime stage review.",
+      "source_candidate_sha256": "f729aae1b94e29dbbc8e1a97a98a3ad955acc1e25efb89e14569a32e3b18386c",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "2d249659415b58b12260175154c792e35c81a0019cdfe9a50593a892345cba21",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "root_label": "forensic_b",
+          "sha256": "6d8d9df871bd6413edec428269beffe9fbd16fd6dad4be10060a86fe73feaaae",
+          "size_bytes": 30611
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "root_label": "source_candidate",
+          "sha256": "9afce6017c3956568b3ae8d575024c1e8b4faa148f8a272459a356dc8563ffe6",
+          "size_bytes": 79806
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "root_label": "visual_recovery",
+          "sha256": "f75ef133e98b034e76ffa32d4d99fbed547029e98c6cd767fa0ce10c888d9041",
+          "size_bytes": 30611
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "sha256": "9afce6017c3956568b3ae8d575024c1e8b4faa148f8a272459a356dc8563ffe6"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "sha256": "9afce6017c3956568b3ae8d575024c1e8b4faa148f8a272459a356dc8563ffe6"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+          "sha256": "2d249659415b58b12260175154c792e35c81a0019cdfe9a50593a892345cba21"
+        }
+      },
+      "historical_distinct_sha256": [
+        "6d8d9df871bd6413edec428269beffe9fbd16fd6dad4be10060a86fe73feaaae",
+        "f75ef133e98b034e76ffa32d4d99fbed547029e98c6cd767fa0ce10c888d9041"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_leverage.py",
+      "role": "Leverage scenario research",
+      "semantic_rationale": "Runtime adds prepared strict market/scenario evidence and lease revalidation. Forensic_b parses acceptance/testnet/live booleans; visual copy uses direct snapshot copies and writes. Keep active 1x research boundary; review flags and runtime stage separately.",
+      "source_candidate_sha256": "9afce6017c3956568b3ae8d575024c1e8b4faa148f8a272459a356dc8563ffe6",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py"
+      ],
+      "active_sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59",
+      "decision": "RETAIN_ACTIVE_NO_PORT",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_math_comparison.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "root_label": "forensic_a",
+          "sha256": "b63154d952f59c9f2a87b4f13fc8f97250c572213c9995ba903d9032e6c9068f",
+          "size_bytes": 9976
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "root_label": "forensic_b",
+          "sha256": "b63154d952f59c9f2a87b4f13fc8f97250c572213c9995ba903d9032e6c9068f",
+          "size_bytes": 9976
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "root_label": "source_candidate",
+          "sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59",
+          "size_bytes": 17244
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "root_label": "visual_recovery",
+          "sha256": "b63154d952f59c9f2a87b4f13fc8f97250c572213c9995ba903d9032e6c9068f",
+          "size_bytes": 9976
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "root_label": "workspace_outer",
+          "sha256": "b63154d952f59c9f2a87b4f13fc8f97250c572213c9995ba903d9032e6c9068f",
+          "size_bytes": 9976
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+          "sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59"
+        }
+      },
+      "historical_distinct_sha256": [
+        "b63154d952f59c9f2a87b4f13fc8f97250c572213c9995ba903d9032e6c9068f"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+      "role": "Historical math comparison",
+      "semantic_rationale": "Active adds frozen-input math reevaluation, Y-on-X metrics, pair/mode impact, and atomic audit outputs. Historical copy lacks those capabilities. Runtime and source_candidate equal active.",
+      "source_candidate_sha256": "61fbf6f444d7c56018e48147e795f4a4a9c7250102ba33fd53941998ff2a2a59",
+      "working_vs_runtime": "SAME"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "a2b5fc4272b74d6016a13ce5cdcbe028608fee8bda3a87831a762b1c7b79f7d2",
+      "decision": "DEFER_MATH_AND_PREPARED_STAGE",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "root_label": "forensic_b",
+          "sha256": "22a2a757d4e08d100ba4bc58028e0ed0fb7f32ed2a7ac910b6ed0860cfb5906f",
+          "size_bytes": 19308
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "root_label": "source_candidate",
+          "sha256": "09bc33013a63cc83f95daf5111230a399d60302c5557cec26d70dd00221144b4",
+          "size_bytes": 38640
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "root_label": "visual_recovery",
+          "sha256": "db1eea477d796c10197610fa0fd60bc76a5bf2e3737f66fcec63b51985dfdc64",
+          "size_bytes": 18848
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "sha256": "09bc33013a63cc83f95daf5111230a399d60302c5557cec26d70dd00221144b4"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "sha256": "09bc33013a63cc83f95daf5111230a399d60302c5557cec26d70dd00221144b4"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+          "sha256": "a2b5fc4272b74d6016a13ce5cdcbe028608fee8bda3a87831a762b1c7b79f7d2"
+        }
+      },
+      "historical_distinct_sha256": [
+        "22a2a757d4e08d100ba4bc58028e0ed0fb7f32ed2a7ac910b6ed0860cfb5906f",
+        "db1eea477d796c10197610fa0fd60bc76a5bf2e3737f66fcec63b51985dfdc64"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+      "role": "Observed-cost research replay",
+      "semantic_rationale": "Runtime adds prepared captured inputs and lease revalidation. Forensic_b has an alternate full-history/flat-holdout signal and strict eligibility parsing; active uses prior_history seed and current math contract. A signal change changes research results and requires independent mathematical validation. Visual copy loses redaction and immutable inputs.",
+      "source_candidate_sha256": "09bc33013a63cc83f95daf5111230a399d60302c5557cec26d70dd00221144b4",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "d0b2573e3e49e53c75aa1dad998c84671ff1da2c6b5300bd11bf686faf14e66f",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "root_label": "forensic_b",
+          "sha256": "97862ce6e79983d0abb26455c15510656fdb4793fe6e4477b765869a4fa5abd2",
+          "size_bytes": 16671
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "root_label": "source_candidate",
+          "sha256": "89f050941b8a6a4f06c31a41fa0e974ae355c9a843fc8415bafbf74a612f9a2f",
+          "size_bytes": 40250
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "root_label": "visual_recovery",
+          "sha256": "1e8498dfeda760761a7a3db8134918d59a978819a348b667d147f0a674519684",
+          "size_bytes": 16605
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "sha256": "89f050941b8a6a4f06c31a41fa0e974ae355c9a843fc8415bafbf74a612f9a2f"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "sha256": "89f050941b8a6a4f06c31a41fa0e974ae355c9a843fc8415bafbf74a612f9a2f"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+          "sha256": "d0b2573e3e49e53c75aa1dad998c84671ff1da2c6b5300bd11bf686faf14e66f"
+        }
+      },
+      "historical_distinct_sha256": [
+        "1e8498dfeda760761a7a3db8134918d59a978819a348b667d147f0a674519684",
+        "97862ce6e79983d0abb26455c15510656fdb4793fe6e4477b765869a4fa5abd2"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+      "role": "Regime attribution",
+      "semantic_rationale": "Runtime adds prepared input capture, lease and source validation. Forensic_b parses future-data and live-authority booleans; visual copy loses atomic writes, immutable inputs, and exception redaction.",
+      "source_candidate_sha256": "89f050941b8a6a4f06c31a41fa0e974ae355c9a843fc8415bafbf74a612f9a2f",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_math_comparison.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_regimes.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py"
+      ],
+      "active_sha256": "a90af31eceafef9a02f46b07e93e1f4142556140cbdbdf56e3d168756486efb8",
+      "decision": "DEFER_MATH_PROVIDER_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "root_label": "forensic_a",
+          "sha256": "6f654eb7580b3d9ac5dcf42f5110e2b1ad61dc8745def385e7dab4a9128bc700",
+          "size_bytes": 62788
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "root_label": "forensic_b",
+          "sha256": "e8c15e314ed1032669616c1983d750ceae8bd94b3ce1e6cae9639aa6eda8266f",
+          "size_bytes": 63989
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "root_label": "source_candidate",
+          "sha256": "36473978e4aeb4b46ced4959721038e3d3dacbffd0e74eaaa655d60f83d7aad3",
+          "size_bytes": 163807
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "root_label": "visual_recovery",
+          "sha256": "6f654eb7580b3d9ac5dcf42f5110e2b1ad61dc8745def385e7dab4a9128bc700",
+          "size_bytes": 62788
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "root_label": "workspace_outer",
+          "sha256": "6f654eb7580b3d9ac5dcf42f5110e2b1ad61dc8745def385e7dab4a9128bc700",
+          "size_bytes": 62788
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "sha256": "36473978e4aeb4b46ced4959721038e3d3dacbffd0e74eaaa655d60f83d7aad3"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "sha256": "36473978e4aeb4b46ced4959721038e3d3dacbffd0e74eaaa655d60f83d7aad3"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+          "sha256": "a90af31eceafef9a02f46b07e93e1f4142556140cbdbdf56e3d168756486efb8"
+        }
+      },
+      "historical_distinct_sha256": [
+        "6f654eb7580b3d9ac5dcf42f5110e2b1ad61dc8745def385e7dab4a9128bc700",
+        "e8c15e314ed1032669616c1983d750ceae8bd94b3ce1e6cae9639aa6eda8266f"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py",
+      "role": "Point-in-time history and canonical replay",
+      "semantic_rationale": "Active v2 enforces canonical Y-on-X contract, train-only fit, blocked nonpositive hedge, and atomic reports. Visual v1 predates those controls. Forensic_b proposes full-history/flat-holdout signals and strict rank/authority parsing. Runtime v3 adds captured history, prepared replay, response identity and leases. Port only as a tested math/provider cohort.",
+      "source_candidate_sha256": "36473978e4aeb4b46ced4959721038e3d3dacbffd0e74eaaa655d60f83d7aad3",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "063aab5994aa0ff81a919c87ccf0ed3e9f395b984d977efc01decffee1f857ff",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "root_label": "forensic_b",
+          "sha256": "b770346dc8ea81247de5b9b0857d9678a604f905d9cf05912d55a07b143d9a81",
+          "size_bytes": 24085
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "root_label": "source_candidate",
+          "sha256": "5f487cccae70a62b7422f33b8a04b0ef5aa5f586f46e9c6c033e18e06e050554",
+          "size_bytes": 50799
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "root_label": "visual_recovery",
+          "sha256": "2e4985134b44d73d818646589f5a65e410e031969864d05648358a197d2ecf19",
+          "size_bytes": 24023
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "sha256": "5f487cccae70a62b7422f33b8a04b0ef5aa5f586f46e9c6c033e18e06e050554"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "sha256": "5f487cccae70a62b7422f33b8a04b0ef5aa5f586f46e9c6c033e18e06e050554"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+          "sha256": "063aab5994aa0ff81a919c87ccf0ed3e9f395b984d977efc01decffee1f857ff"
+        }
+      },
+      "historical_distinct_sha256": [
+        "2e4985134b44d73d818646589f5a65e410e031969864d05648358a197d2ecf19",
+        "b770346dc8ea81247de5b9b0857d9678a604f905d9cf05912d55a07b143d9a81"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_robustness.py",
+      "role": "Robustness and sensitivity",
+      "semantic_rationale": "Runtime adds prepared input capture, strict accounting and lease revalidation. Forensic_b parses future-fit and live-authority columns; visual copy loses immutable inputs, atomic outputs, and redaction.",
+      "source_candidate_sha256": "5f487cccae70a62b7422f33b8a04b0ef5aa5f586f46e9c6c033e18e06e050554",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_archive.py",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py"
+      ],
+      "active_sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028",
+      "decision": "SELECTIVE_PORT_READY",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_archive.py",
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "root_label": "forensic_a",
+          "sha256": "ea44a5db59458f4fa1460c5bba7e6828f1f874bbb9aea3c32b1b5aab020e873f",
+          "size_bytes": 20111
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "root_label": "forensic_b",
+          "sha256": "7280665d61c1314e55b8a06dd1f210a89d6ca3d759f64a53a59a32ef73ed270e",
+          "size_bytes": 20243
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "root_label": "source_candidate",
+          "sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028",
+          "size_bytes": 20292
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "root_label": "visual_recovery",
+          "sha256": "ea44a5db59458f4fa1460c5bba7e6828f1f874bbb9aea3c32b1b5aab020e873f",
+          "size_bytes": 20111
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "root_label": "workspace_outer",
+          "sha256": "ea44a5db59458f4fa1460c5bba7e6828f1f874bbb9aea3c32b1b5aab020e873f",
+          "size_bytes": 20111
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+          "sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028"
+        }
+      },
+      "historical_distinct_sha256": [
+        "7280665d61c1314e55b8a06dd1f210a89d6ca3d759f64a53a59a32ef73ed270e",
+        "ea44a5db59458f4fa1460c5bba7e6828f1f874bbb9aea3c32b1b5aab020e873f"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_storage.py",
+      "role": "Read-only storage reclamation plan",
+      "semantic_rationale": "Visual and forensic copies write output directly; active uses atomic writes. Forensic_b alone parses persisted candidate, hash, move, delete, authority and destination booleans strictly. Port those parser calls only.",
+      "source_candidate_sha256": "8f2746e256178e038d64f6a289cc0d524a4f579751a525eb8f58201360977028",
+      "working_vs_runtime": "SAME"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "00c04bd67c86f437fd9499bca391c13d29c99e404d5c2d7417ded3d4598bdaa8",
+      "decision": "DEFER_PREPARED_STAGE",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "root_label": "forensic_a",
+          "sha256": "4974c0aaa689d77aa08484834ab34f8b165f3392bcc2afc0e46e279eca02b603",
+          "size_bytes": 26937
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "root_label": "forensic_b",
+          "sha256": "4974c0aaa689d77aa08484834ab34f8b165f3392bcc2afc0e46e279eca02b603",
+          "size_bytes": 26937
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "root_label": "source_candidate",
+          "sha256": "593445e745c82710665181b0ab109394b915937989eea54230d8f649c5447f62",
+          "size_bytes": 66319
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "root_label": "visual_recovery",
+          "sha256": "4974c0aaa689d77aa08484834ab34f8b165f3392bcc2afc0e46e279eca02b603",
+          "size_bytes": 26937
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "root_label": "workspace_outer",
+          "sha256": "4974c0aaa689d77aa08484834ab34f8b165f3392bcc2afc0e46e279eca02b603",
+          "size_bytes": 26937
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "sha256": "593445e745c82710665181b0ab109394b915937989eea54230d8f649c5447f62"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "sha256": "593445e745c82710665181b0ab109394b915937989eea54230d8f649c5447f62"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+          "sha256": "00c04bd67c86f437fd9499bca391c13d29c99e404d5c2d7417ded3d4598bdaa8"
+        }
+      },
+      "historical_distinct_sha256": [
+        "4974c0aaa689d77aa08484834ab34f8b165f3392bcc2afc0e46e279eca02b603"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_validation.py",
+      "role": "End-to-end chain validation",
+      "semantic_rationale": "Runtime adds prepared artifact custody, strict counts and lease revalidation. Historical copy otherwise removes active immutable snapshots and atomic outputs. Stage contract needs integration review.",
+      "source_candidate_sha256": "593445e745c82710665181b0ab109394b915937989eea54230d8f649c5447f62",
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "active_import_consumers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_registered_rerun_executor.py"
+      ],
+      "active_sha256": "07fe0fe5ff96a827076c076966bf504ddb9198c0b8aedb2f6b3e4542a4f5d9d4",
+      "decision": "DEFER_PREPARED_AND_BOOLEAN",
+      "direct_test_import_consumers": [
+        "tests/test_current_wizard_hyperliquid_handoff.py"
+      ],
+      "extended_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "root_label": "forensic_a",
+          "sha256": "a76319c5ccccaf6ce90c2aec4e66e9c8c8015aff451c73d07dbd24e26877bebd",
+          "size_bytes": 26706
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "root_label": "forensic_b",
+          "sha256": "25abf440318e9eb9860bc8b308d177d5dfc43f799e6fe1891fec89d09b69c8b6",
+          "size_bytes": 26772
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "root_label": "source_candidate",
+          "sha256": "8ddb2dc98bec8a5fa46b3282b35e495540fda68bcebd1d516029a851852bad2c",
+          "size_bytes": 47297
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "root_label": "visual_recovery",
+          "sha256": "a76319c5ccccaf6ce90c2aec4e66e9c8c8015aff451c73d07dbd24e26877bebd",
+          "size_bytes": 26706
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "root_label": "workspace_outer",
+          "sha256": "a76319c5ccccaf6ce90c2aec4e66e9c8c8015aff451c73d07dbd24e26877bebd",
+          "size_bytes": 26706
+        }
+      ],
+      "four_root_copies": {
+        "recovery": {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "sha256": "8ddb2dc98bec8a5fa46b3282b35e495540fda68bcebd1d516029a851852bad2c"
+        },
+        "runtime": {
+          "absolute_path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "sha256": "8ddb2dc98bec8a5fa46b3282b35e495540fda68bcebd1d516029a851852bad2c"
+        },
+        "working": {
+          "absolute_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/current-wizard-hl-KAIDul/repo/src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+          "sha256": "07fe0fe5ff96a827076c076966bf504ddb9198c0b8aedb2f6b3e4542a4f5d9d4"
+        }
+      },
+      "historical_distinct_sha256": [
+        "25abf440318e9eb9860bc8b308d177d5dfc43f799e6fe1891fec89d09b69c8b6",
+        "a76319c5ccccaf6ce90c2aec4e66e9c8c8015aff451c73d07dbd24e26877bebd"
+      ],
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_walkforward.py",
+      "role": "Five-fold walk-forward",
+      "semantic_rationale": "Runtime adds prepared input capture, source freshness and M8 execution evidence. Forensic_b parses fit/test, live and primary-candidate booleans; visual copy loses immutable inputs, atomic writes, and redaction. Runtime schema v2 needs compatible consumers.",
+      "source_candidate_sha256": "8ddb2dc98bec8a5fa46b3282b35e495540fda68bcebd1d516029a851852bad2c",
+      "working_vs_runtime": "CHANGED"
+    }
+  ],
+  "queue_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "schema_version": "gate0.current_wizard_hyperliquid_cohort.v1",
+  "scope": "Exactly the 19 still-pending current_wizard_hyperliquid_* orchestration paths in the frozen Gate 0 union queue; source only.",
+  "source_fix_branch": "codex/current-hl-strict-bools",
+  "source_fix_candidate_commit": "4ce1d79379bca9c4233244e51484faa1d716f76b",
+  "source_fix_focused_test_result": "10 passed in 2.17s; no provider calls"
+}
