@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from quant_platform.research_paper_reproduction import (
+    build_causal_pair_frame,
     build_one_sided_stability_diagnostics,
     build_panel_residual_dataset,
     estimate_gph_fractional_d,
@@ -93,6 +94,71 @@ def test_fractional_estimator_separates_white_noise_from_integrated_series():
 
     assert -0.5 < white_d < 0.5
     assert integrated_d > white_d + 0.5
+
+
+def test_causal_pair_frame_uses_canonical_y_on_x_orientation():
+    rng = np.random.default_rng(19)
+    index = pd.date_range("2024-01-01", periods=260, freq="D", tz="UTC")
+    log_x = 4.0 + np.cumsum(rng.normal(0.0005, 0.01, len(index)))
+    residual = rng.normal(0.0, 0.002, len(index))
+    log_y = 0.35 + 1.7 * log_x + residual
+    close = pd.DataFrame(
+        {
+            "X": np.exp(log_x),
+            "Y": np.exp(log_y),
+        },
+        index=index,
+    )
+
+    frame = build_causal_pair_frame(
+        close,
+        "X",
+        "Y",
+        hedge_window=90,
+        zscore_window=40,
+    )
+
+    assert np.isclose(frame["beta"].median(), 1.7, atol=0.08)
+    expected_spread = log_y[-1] - 0.35 - 1.7 * log_x[-1]
+    assert np.isclose(frame["spread"].iloc[-1], expected_spread, atol=0.02)
+    assert frame["spread"].std() < 0.01
+    beta = frame["beta"].iloc[-1]
+    target_position = close.index.get_loc(frame.index[-1])
+    prior_x = pd.Series(log_x, index=index).iloc[target_position - 90:target_position]
+    prior_y = pd.Series(log_y, index=index).iloc[target_position - 90:target_position]
+    oracle_beta = prior_y.cov(prior_x) / prior_x.var()
+    assert np.isclose(beta, oracle_beta)
+
+    contemporaneous_shock = close.copy()
+    contemporaneous_shock.loc[frame.index[-1], "X"] *= np.exp(5.0)
+    contemporaneous_shock.loc[frame.index[-1], "Y"] *= np.exp(-4.0)
+    shocked_frame = build_causal_pair_frame(
+        contemporaneous_shock,
+        "X",
+        "Y",
+        hedge_window=90,
+        zscore_window=40,
+    )
+    assert np.isclose(shocked_frame.loc[frame.index[-1], "beta"], beta)
+    assert not np.isclose(shocked_frame.loc[frame.index[-1], "spread"], frame["spread"].iloc[-1])
+
+    expected_pair_return = ((log_y[-1] - log_y[-2]) - beta * (log_x[-1] - log_x[-2])) / (
+        1.0 + abs(beta)
+    )
+    assert np.isclose(frame["pair_return"].iloc[-1], expected_pair_return)
+
+    prefix = build_causal_pair_frame(
+        close.iloc[:-1],
+        "X",
+        "Y",
+        hedge_window=90,
+        zscore_window=40,
+    )
+    pd.testing.assert_series_equal(
+        frame.loc[prefix.index[-1]],
+        prefix.iloc[-1],
+        check_names=False,
+    )
 
 
 def test_stability_and_no_trade_bands_remain_research_only():
