@@ -1,0 +1,16 @@
+{
+  "four_root_only": 633,
+  "four_root_review_paths": 718,
+  "meaning": "Custody and queue counts only; semantic decisions and ports remain open.",
+  "overlap_paths": 85,
+  "same_path_only": 93,
+  "same_path_review_paths": 178,
+  "same_path_review_variants": 230,
+  "schema_version": "thewiz.gate0.union_source_queue.v1",
+  "snapshot_date": "2026-09-30",
+  "source_registers": [
+    "GATE0_SOURCE_DELTA_REGISTER_2026-09-30.csv",
+    "evidence_freeze_2026-09-29/source_reconciliation.csv"
+  ],
+  "union_review_paths": 811
+}
