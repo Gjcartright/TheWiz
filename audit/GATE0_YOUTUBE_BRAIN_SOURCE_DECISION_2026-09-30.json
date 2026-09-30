@@ -1,0 +1,39 @@
+{
+  "decision": "SELECTIVE_NATIVE_AND_FORMULA_READINESS_PORT_RETAIN_ATOMIC_PUBLICATION",
+  "decision_rationale": "The forensic_b variant distinguishes native claims plus formula evidence from external priors and incomplete native extraction, but both historical variants publish directly. The selected source now carries the narrow readiness rules while retaining atomic CSV/Parquet publication. No whole-file historical port or trading authority is granted.",
+  "external_effects_or_orders_executed": false,
+  "four_root_freeze_sha256": {
+    "recovery_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+    "runtime_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+    "working_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a"
+  },
+  "path": "src/quant_platform/youtube_brain.py",
+  "preserved_copies": [
+    {
+      "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/youtube_brain.py",
+      "root": "forensic_b",
+      "sha256": "0501afad9d86cc33c318c2ca84083477c15609efd9b4f5641c8e4c946fa1d4a1"
+    },
+    {
+      "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/youtube_brain.py",
+      "root": "source_candidate",
+      "sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a"
+    },
+    {
+      "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/youtube_brain.py",
+      "root": "visual_recovery",
+      "sha256": "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9"
+    }
+  ],
+  "queue_historical_variant_sha256": [
+    "0501afad9d86cc33c318c2ca84083477c15609efd9b4f5641c8e4c946fa1d4a1",
+    "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9"
+  ],
+  "repaired_commit": "ac28775",
+  "review_commit": "5fe8f5e",
+  "schema_version": "thewiz.gate0.youtube_brain_source_decision.v1",
+  "selected_after_sha256": "ba6c1ae5aeecc840708e863d984ce1387383fc3852e4b2d5dcd9ffb1109e83a6",
+  "selected_before_sha256": "e4fabd1ff966fcbb30a7607d659a3e007b989cc36e6879e1506b42e20228b98a",
+  "selected_focused_tests": "7 passed in tests/test_youtube_brain.py at ac28775",
+  "selected_test_after_sha256": "5279f76adae52a5c25200a893f5f02222cef2d0cdd7c04928c89b8630d43e468"
+}
