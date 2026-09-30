@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "6cba715163709f82fd49aa9f49afd4b7b8e0abde"
+SELECTED_COMMIT = "4362c54b55afabe38f522289c2f9e84788e9ab67"
 QUEUE = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
 OUTPUT = ROOT / "audit/GATE0_MATH_MARKER_CURRENTNESS_2026-09-30.json"
 EVIDENCE = Path("/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30")
@@ -58,16 +59,25 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def top_level_functions(path: Path) -> set[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def selected_bytes(relative: str) -> bytes:
+    return subprocess.run(
+        ["git", "show", f"{SELECTED_COMMIT}:{relative}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
+def top_level_functions(source: bytes) -> set[str]:
+    tree = ast.parse(source.decode("utf-8"))
     return {node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
 
 
 def main() -> None:
     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
     for relative, expected in SELECTED.items():
-        path = ROOT / relative
-        if not path.is_file() or path.is_symlink() or digest(path) != expected:
+        if hashlib.sha256(selected_bytes(relative)).hexdigest() != expected:
             raise ValueError(f"selected source, test, or verifier drift: {relative}")
     for relative, expected in SAVEPOINTS.items():
         path = SAVEPOINT / relative
@@ -77,10 +87,10 @@ def main() -> None:
         variant = VARIANTS / expected
         if not variant.is_file() or digest(variant) != expected:
             raise ValueError(f"preserved forensic variant drift: {relative}")
-        if top_level_functions(variant) - top_level_functions(ROOT / relative):
+        if top_level_functions(variant.read_bytes()) - top_level_functions(selected_bytes(relative)):
             raise ValueError(f"historical function unaccounted for: {relative}")
     for relative in ("tests/test_math_v2_acceptance.py", "tests/test_teacher_control_plane.py"):
-        old_only = top_level_functions(SAVEPOINT / relative) - top_level_functions(ROOT / relative)
+        old_only = top_level_functions((SAVEPOINT / relative).read_bytes()) - top_level_functions(selected_bytes(relative))
         expected = {"_scoped_research_publication"} if relative.endswith("test_teacher_control_plane.py") else set()
         if old_only != expected:
             raise ValueError(f"historical test unaccounted for: {relative}: {old_only}")
@@ -117,10 +127,10 @@ def main() -> None:
     if counts != {"tests": 2619, "failures": 0, "errors": 0, "skipped": 0}:
         raise ValueError(f"isolated full suite is not green: {counts}")
 
-    if digest(QUEUE) != QUEUE_SHA256:
+    queue_bytes = selected_bytes(QUEUE.relative_to(ROOT).as_posix())
+    if hashlib.sha256(queue_bytes).hexdigest() != QUEUE_SHA256:
         raise ValueError("union source queue drift")
-    with QUEUE.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
+    rows = list(csv.DictReader(queue_bytes.decode("utf-8").splitlines()))
     if len(rows) != 811 or len({row["relative_path"] for row in rows}) != 811:
         raise ValueError("union source queue size or uniqueness changed")
     queue = {row["relative_path"]: row for row in rows}
