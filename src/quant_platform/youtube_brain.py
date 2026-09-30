@@ -208,10 +208,12 @@ def build_youtube_brain(*, root: Path = ROOT) -> CommandResult:
 
     native_claims = _claim_rows(rows)
     external_claims = _external_research_prior_claims(root)
-    native_evidence_ready = not native_claims.empty
+    native_evidence_ready = not native_claims.empty and not formulas.empty
     brain_status = (
         "native_research_ready"
         if native_evidence_ready
+        else "blocked_native_formulas_missing"
+        if not native_claims.empty
         else "blocked_external_priors_only"
         if not external_claims.empty
         else "blocked_no_claims"
@@ -520,6 +522,8 @@ def build_youtube_brain_dashboard(*, root: Path = ROOT) -> CommandResult:
         if native_evidence_ready
         else "blocked_brain_not_built"
         if brain.empty
+        else "blocked_native_formulas_missing"
+        if _first(brain, "status", "") == "blocked_native_formulas_missing"
         else "blocked_external_priors_only"
         if _first(brain, "status", "") == "blocked_external_priors_only"
         else "blocked_no_native_evidence"

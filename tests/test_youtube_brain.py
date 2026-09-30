@@ -186,6 +186,21 @@ def test_youtube_brain_without_claims_stays_blocked(tmp_path):
     assert dashboard_status.iloc[0]["status"] == "blocked_no_native_evidence"
 
 
+def test_youtube_native_claims_without_formulas_do_not_mark_research_ready(tmp_path):
+    _write_audit(tmp_path)
+    result = build_youtube_brain(root=tmp_path)
+    status = pd.read_csv(result.paths["brain_status"])
+
+    assert status.iloc[0]["native_channel_claims"] > 0
+    assert status.iloc[0]["formulas"] == 0
+    assert not bool(status.iloc[0]["native_evidence_ready"])
+    assert status.iloc[0]["status"] == "blocked_native_formulas_missing"
+
+    dashboard = build_youtube_brain_dashboard(root=tmp_path)
+    dashboard_status = pd.read_csv(dashboard.paths["youtube_brain_status"])
+    assert dashboard_status.iloc[0]["status"] == "blocked_native_formulas_missing"
+
+
 def test_incremental_collection_detects_new_and_changed_videos(tmp_path):
     first = _write_catalog(
         tmp_path / "catalog-1.json",
