@@ -1,0 +1,34 @@
+{
+  "credential_readiness": false,
+  "csv_inventory_as_of": "2026-06-26",
+  "csv_original_columns_preserved": [
+    "workspace_path",
+    "is_git_repo",
+    "env_local_present",
+    "notes"
+  ],
+  "decision": "HISTORICAL_WORKSPACE_CLAIMS_DATED_AND_VALIDATOR_OUTPUT_ISOLATED",
+  "historical_plan_commit": "c0f7f5c3d1aaa707f1f7b61bdf0444cd2bf93f65",
+  "legacy_mount_retirement_receipt_sha256": "f6251237f5581bd885fe4f289bdb838177970124c91a6d6fb3a2cbc7f57444d4",
+  "live_trading_authorized": false,
+  "operator_source_checkout": "/Volumes/Expansion/Crypto Wizard",
+  "research_acceptance": "BLOCKED",
+  "schema_version": "thewiz.gate0.workspace_alignment_repair.v1",
+  "selected_commit": "80cc6220899209ba05db1bf8abe20971f8944444",
+  "selected_file_sha256": {
+    "docs/workspace_alignment_plan.md": "45f8881aec6e052b97ef8683ce36b5977104b494e053084c8e389d9a465e040b",
+    "reports/workspace_alignment_status.md": "560f13533743b7d0c18fc45a0290a44ae44c78e898942f79a492d4a2b32a1ccd",
+    "scripts/ops/validate_workspace.sh": "e81e620eff8fb974c128c0ddc66360a3bd9f0bbc8b1c2ba6b8c20f9149243f05",
+    "work/legacy_workspace_inventory.csv": "d44adb1a808abf77e5c83fde8183ceed7eced54f4aa61b24f7586a82a2e1b8be"
+  },
+  "testnet_order_authority": false,
+  "validator_probe": {
+    "commit": "80cc6220899209ba05db1bf8abe20971f8944444",
+    "generated_report_git_ignored": true,
+    "generated_report_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/integrated-1c12ac6/repo/reports/active/workspace_alignment_status.md",
+    "generated_report_sha256": "49cc40a0291a255a55210e9e7c5f7dc5dfbd92eaf796d7a63954aaafc51eac4b",
+    "log_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/integrated-1c12ac6/validator-80cc622.log",
+    "log_sha256": "afd796e712f959453e6ffcc416f6c8d8082d946cb53ec3b349380d408eff4f20",
+    "tracked_worktree_clean_after_probe": true
+  }
+}
