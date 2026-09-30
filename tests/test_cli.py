@@ -6024,6 +6024,12 @@ def test_learning_dashboard_metric_rejects_nontrue_modeling_flag():
     assert cli._learning_dashboard_metric(frame).endswith("ready_for_modeling=False")
 
 
+def test_learning_dashboard_gate_rejects_false_string():
+    gates = pd.DataFrame([{"gate": "learning_event_store", "ready": "False"}]).set_index("gate")
+
+    assert cli._gate_ready_from_index(gates, "learning_event_store") is False
+
+
 def test_priority_readiness_blocks_record_only_dydx_adapter(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: object())

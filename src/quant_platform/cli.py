@@ -9721,7 +9721,7 @@ def _all_gates_ready(gates: pd.DataFrame, gate_names: list[str]) -> bool:
 def _gate_ready_from_index(gates: pd.DataFrame, gate: str) -> bool:
     if gates.empty or gate not in gates.index or "ready" not in gates.columns:
         return False
-    return bool(gates.loc[gate, "ready"])
+    return strict_bool(gates.loc[gate, "ready"])
 
 
 def _gate_value(gates: pd.DataFrame, gate: str, column: str) -> str:
