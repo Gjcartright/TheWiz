@@ -1,0 +1,1 @@
+{"broad_suite": {"failed_preexisting": 1, "passed": 3131}, "exact_test_only_ports": 12, "partial_test_only_ports": 1, "paths": 13, "provider_calls_made": false, "report_sha256": "607e76272ea5b7da7a545a8a0bb2b198852de07aec676b2f214009bbdfc818a3", "status": "PASS"}

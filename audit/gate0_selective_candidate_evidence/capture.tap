@@ -1,0 +1,112 @@
+TAP version 13
+# Subtest: sensitive input type password uses existing redaction
+ok 1 - sensitive input type password uses existing redaction
+  ---
+  duration_ms: 2.404208
+  type: 'test'
+  ...
+# Subtest: sensitive input type email uses existing redaction
+ok 2 - sensitive input type email uses existing redaction
+  ---
+  duration_ms: 0.391333
+  type: 'test'
+  ...
+# Subtest: sensitive input type hidden uses existing redaction
+ok 3 - sensitive input type hidden uses existing redaction
+  ---
+  duration_ms: 0.2805
+  type: 'test'
+  ...
+# Subtest: sensitive autocomplete current-password uses existing redaction
+ok 4 - sensitive autocomplete current-password uses existing redaction
+  ---
+  duration_ms: 0.388041
+  type: 'test'
+  ...
+# Subtest: sensitive autocomplete new-password uses existing redaction
+ok 5 - sensitive autocomplete new-password uses existing redaction
+  ---
+  duration_ms: 0.955833
+  type: 'test'
+  ...
+# Subtest: sensitive autocomplete one-time-code uses existing redaction
+ok 6 - sensitive autocomplete one-time-code uses existing redaction
+  ---
+  duration_ms: 0.509708
+  type: 'test'
+  ...
+# Subtest: ordinary text input applies existing [REDACTED_EMAIL] rule
+ok 7 - ordinary text input applies existing [REDACTED_EMAIL] rule
+  ---
+  duration_ms: 0.452459
+  type: 'test'
+  ...
+# Subtest: ordinary text input applies existing [REDACTED_TOKEN] rule
+ok 8 - ordinary text input applies existing [REDACTED_TOKEN] rule
+  ---
+  duration_ms: 0.337334
+  type: 'test'
+  ...
+# Subtest: ordinary text input applies existing [REDACTED_PRIVATE_VALUE] rule
+ok 9 - ordinary text input applies existing [REDACTED_PRIVATE_VALUE] rule
+  ---
+  duration_ms: 0.604
+  type: 'test'
+  ...
+# Subtest: scientific input 0 is preserved
+ok 10 - scientific input 0 is preserved
+  ---
+  duration_ms: 0.545875
+  type: 'test'
+  ...
+# Subtest: scientific input -2.5 is preserved
+ok 11 - scientific input -2.5 is preserved
+  ---
+  duration_ms: 0.792791
+  type: 'test'
+  ...
+# Subtest: scientific input 1e-5 is preserved
+ok 12 - scientific input 1e-5 is preserved
+  ---
+  duration_ms: 1.106208
+  type: 'test'
+  ...
+# Subtest: scientific input false is preserved
+ok 13 - scientific input false is preserved
+  ---
+  duration_ms: 0.271667
+  type: 'test'
+  ...
+# Subtest: scientific input BTCUSDT is preserved
+ok 14 - scientific input BTCUSDT is preserved
+  ---
+  duration_ms: 0.260834
+  type: 'test'
+  ...
+# Subtest: scientific input u1_given_u2 is preserved
+ok 15 - scientific input u1_given_u2 is preserved
+  ---
+  duration_ms: 0.24775
+  type: 'test'
+  ...
+# Subtest: input order, scientific metadata, selection and source DOM remain unchanged
+ok 16 - input order, scientific metadata, selection and source DOM remain unchanged
+  ---
+  duration_ms: 0.300166
+  type: 'test'
+  ...
+# Subtest: only the projection runs, without a browser, network or download API
+ok 17 - only the projection runs, without a browser, network or download API
+  ---
+  duration_ms: 0.329333
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48.285917
