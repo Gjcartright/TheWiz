@@ -1,0 +1,123 @@
+{
+  "clone_head": "14dc97e22cfa298b6d058e7b493c0ccd4aab8d61",
+  "created_at_utc": "2026-09-30T19:45:37.899534+00:00",
+  "files": {
+    "config/personal_self_directed_declaration.example.json": {
+      "active_exists": false,
+      "active_policy_sha256": {
+        "config/acceptance_policy_manifest.json": "65d88e28ee4f1201cea95a0777afd5aebcd26b2dd638764a2393f5ab17e4d923",
+        "config/live_canary_policy.json": "c18217234f76382b2f2a1bac74a96c50627489435567a1023d38c46f78778ba6",
+        "config/phase00_external_effect_policy.json": "b312dd2ce4cd08a8bc85130dc1fb41d4595e5527c42cb52d89dcf85bed635b5a"
+      },
+      "copies_match": true,
+      "decision": "REVIEWED_UNADOPTED_PERSONAL_LANE_EXAMPLE_NO_PORT",
+      "frozen_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 13,
+      "mac_savepoint_sha256": "2377db99128cc2f4ab53d9cabc8dbd3f9400a54322b875e75895bdfbc51ac331",
+      "preserved_consumer": "src/quant_platform/orchestration/personal_trader_graph.py",
+      "preserved_consumer_sha256": "ab8f6b20a9e18b5b42cb3d103b3977565031c18f91197b5f46d83ebcc9fb1696",
+      "rationale": "Placeholder declaration for preserved personal-trader graph v3. Active source has no declaration model or path consumer, and preserved graph accepts an optional declaration path without loading this example. Current order authority is governed separately by active live-canary/external-effect/acceptance policies. Copying the example would not adopt or qualify the lane.",
+      "recovery_local_runtime_sha256": "2377db99128cc2f4ab53d9cabc8dbd3f9400a54322b875e75895bdfbc51ac331",
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/personal_self_directed_declaration.example.json",
+      "runtime_sha256": "2377db99128cc2f4ab53d9cabc8dbd3f9400a54322b875e75895bdfbc51ac331",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    "config/risk_desk_visual_reviews.csv": {
+      "active_exists": false,
+      "authority_values": [
+        [
+          "False",
+          "False"
+        ]
+      ],
+      "copies_match": true,
+      "decision": "REVIEWED_EVIDENCE_BLOCKED_RISK_DESK_VISUAL_NO_PORT",
+      "evidence_paths": [
+        {
+          "expected_sha256": "81fa0b8a3051165e34627c0de7c6eba71a2f266a0ab7b192b71561e86ffeda29",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_p28JpBi55Ko_000339_81fa0b8a3051165e.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "0ad5e00ea6d988458547785fe1758140e31d208724fcdc0cd55ca1424d71df3b",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_p28JpBi55Ko_000344_0ad5e00ea6d98845.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "f1b0f4d65e28ce0ecc352cf26701ce5706611c05b7366896a14d3b5947f14a61",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_p28JpBi55Ko_001216_f1b0f4d65e28ce0e.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "81be9af83906f4c844912151bd7549dcde57ff7ce3109fee279ed08cc479bd09",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_U2CxilKFue4_000403_81be9af83906f4c8.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "81be9af83906f4c844912151bd7549dcde57ff7ce3109fee279ed08cc479bd09",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_U2CxilKFue4_000403_81be9af83906f4c8.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "81be9af83906f4c844912151bd7549dcde57ff7ce3109fee279ed08cc479bd09",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_U2CxilKFue4_000403_81be9af83906f4c8.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "4f4e73c032fef55302009060abe1a4e916c0abe5341850d2fa39c878df32d8a2",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_U2CxilKFue4_000606_4f4e73c032fef553.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "443b48c82e9a5b9cdce315abaa0758eefb6111f0b63d3a9ed4a77451ddd16637",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_X12EXCTre5Y_001809_443b48c82e9a5b9c.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        },
+        {
+          "expected_sha256": "8dbdf4ca9cc4226137f6a9ae464c36cf3f82ed9e12bf360f8b5ff454fe5ee0c1",
+          "path": "data/processed/risk_desk/visual_evidence/youtube_WbgglcXfEzA_002407_8dbdf4ca9cc42261.jpg",
+          "present_in_active_clone": false,
+          "present_in_mac_savepoint": false,
+          "present_in_runtime": false
+        }
+      ],
+      "frozen_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 20,
+      "mac_savepoint_sha256": "548e39bd37a34939a81cd06aa7d77d3ebdc23a384601ce21cac27532a0d3450c",
+      "preserved_consumer": "src/quant_platform/math_desk/risk_census.py",
+      "preserved_consumer_sha256": "d0cb8e0a7bc56696c81e7a624923794fedd08ad740d3ce8d956c11528db3efdc",
+      "rationale": "Nine machine-only annotations deny scientific and promotion authority, but the active checkout has no direct consumer. The sole preserved risk-census parser and full-video rescrub script are outside active source; the Math Desk group remains dependency/evidence blocked. None of the nine declared image paths exists at its registered location in LocalRuntime, the Mac savepoint, or active checkout, so current binding cannot be verified by copying this CSV.",
+      "recovery_local_runtime_sha256": "548e39bd37a34939a81cd06aa7d77d3ebdc23a384601ce21cac27532a0d3450c",
+      "review_statuses": [
+        "machine_visual_reviewed"
+      ],
+      "reviewer_types": [
+        "machine"
+      ],
+      "row_count": 9,
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/risk_desk_visual_reviews.csv",
+      "runtime_sha256": "548e39bd37a34939a81cd06aa7d77d3ebdc23a384601ce21cac27532a0d3450c",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    }
+  },
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/final-config-review-xIwurI/repo",
+  "schema_version": "thewiz.gate0.final_config_review.v1",
+  "scope": "Read-only source/evidence review. No private credentials inspected, provider calls made, Expansion/shared queue edits, or tests run.",
+  "source_changes": 0
+}
