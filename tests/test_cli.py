@@ -3094,10 +3094,12 @@ def test_dydx_execution_checklist_loads_credentials_from_env_local(tmp_path, mon
     monkeypatch.delenv("DYDX_TESTNET_PRIVATE_KEY", raising=False)
     monkeypatch.delenv("DYDX_TESTNET_SUBMIT_ORDERS", raising=False)
 
-    (tmp_path / ".env.local").write_text(
+    env_file = tmp_path / ".env.local"
+    env_file.write_text(
         "DYDX_TESTNET_WALLET_ADDRESS=wallet_from_file\nDYDX_TESTNET_PRIVATE_KEY=private_from_file\n",
         encoding="utf-8",
     )
+    env_file.chmod(0o600)
 
     frame = dydx_execution_checklist_report()
     rows = frame.set_index("step")
