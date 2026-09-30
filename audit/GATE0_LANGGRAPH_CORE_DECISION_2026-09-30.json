@@ -1,0 +1,35 @@
+{
+  "custody": {
+    "docs/langgraph_agent_workflow.md": {
+      "active_sha256": "aaf54f9ba6667e0565036a5b124ed6cd5c98f47fb8be353d9d74eb53a0982f97",
+      "runtime_sha256": "8c9dacd3aabc896bfc3882c52599adf80e65ae7bca24e7c763f6dbacfe7f8c58",
+      "saved_project_sha256": "186a480223e84fdc952b8f8f3fd767c6fce3fa0e0a8116a89fa79c074e657c1e"
+    },
+    "src/quant_platform/orchestration/langgraph_workflow.py": {
+      "active_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+      "historical_variant_sha256": "ea43d042cf6cec5238d241c885db9f813db9e287167ce5080ddfd5a9e08bde78",
+      "runtime_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+      "saved_project_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c"
+    },
+    "src/quant_platform/orchestration/orchestrator_assistant.py": {
+      "active_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+      "historical_variant_sha256": "673f8f1bd8cd72beabdab753bf2cefb2e07da36422e69f1d7a4c014a99971e30",
+      "runtime_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+      "saved_project_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c"
+    }
+  },
+  "decision": "RETAIN_ACTIVE_SCOPED_DRY_RUN_AND_ATOMIC_GRAPH_PUBLICATION",
+  "diagnostic_commit": "9099a2d39322ed4125b7801e8a072a87db270035",
+  "diagnostic_receipt_path": "/Users/gregc/Backups/TheWiz/gate0-checkpoints/9099a2d39322ed4125b7801e8a072a87db270035/LANGGRAPH_DRY_RUN_RECEIPT.json",
+  "diagnostic_receipt_sha256": "c68deebebd60b7cb51d44bd1bd7060b34f8c41d56bad6922cb773f4183b0ef81",
+  "dry_run_graph_blockers": 0,
+  "dry_run_stages": 25,
+  "focused_tests_passed": 4,
+  "interpretation": "Retain the current guide and active/runtime-identical graph and assistant source. Their preserved forensic variants replace governed atomic writes with direct writes and rely on an absent strict_bool helper. The exact committed restore produced seven reports for 25 dry-run stages, eight lanes, and eight edges; bare CLI report publication failed closed without a session. Four focused tests passed. This verifies the scoped diagnostic route only.",
+  "open_contracts": [
+    "nodes.py candidate adds two unselected Wizard validation stages",
+    "historical strict_bool flag coercion needs separate typed-input review",
+    "dry-run evidence does not authorize stage actions or trading"
+  ],
+  "schema_version": "thewiz.gate0.langgraph_core_decision.v1"
+}
