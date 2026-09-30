@@ -46,9 +46,11 @@ def verify() -> dict[str, int]:
         row["relative_path"]
         for row in _rows(_git_bytes(base, "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"))
     }
+    expanded_queue = ROOT / "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv"
+    assert Path(report["expanded_union_queue_path"]).name == expanded_queue.name
     expanded = {
         row["relative_path"]: row
-        for row in _rows(Path(report["expanded_union_queue_path"]).read_bytes())
+        for row in _rows(expanded_queue.read_bytes())
     }
     expected = {path for path in expanded.keys() - old if path.startswith(PREFIX)}
     records = report["paths"]
@@ -111,6 +113,10 @@ def verify() -> dict[str, int]:
             "proposed_decision_evidence",
         ):
             assert proposal[path][field] == record[field]
+        assert queue["custody_status"] == proposal[path]["proposed_custody_status"]
+        assert proposal[path]["proposed_decision_rationale"] in queue["decision_rationale"]
+        for evidence in proposal[path]["proposed_decision_evidence"].split(";"):
+            assert evidence in queue["decision_evidence"].split("; ")
     return {"paths": len(records), "verified_copies": copies}
 
 
