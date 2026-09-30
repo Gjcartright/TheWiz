@@ -1,0 +1,1506 @@
+{
+  "canonical_head_before_fix": "932108584a4ec4b5c9c5260fd310adb499e6600b",
+  "manifests": {
+    "extended": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/extended_manifest_snapshot.csv",
+      "sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918"
+    },
+    "four_root": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/four_root_file_manifest_snapshot.csv",
+      "sha256": "a0fc9ecc843f79dacc994b46e04bc3a23cf81c12ae7254121b59ec165fb65b2c"
+    }
+  },
+  "method": "static_source_and_manifest_inspection; no imports, providers, credentials, or tests executed for evidence",
+  "out_of_scope_context": [
+    {
+      "note": "Already reviewed; runtime version imports runtime-only dydx_public_endpoints, active version does not.",
+      "path": "src/quant_platform/dydx_candles.py",
+      "queue_status": "REVIEWED_HISTORICAL_VARIANTS_RECONCILED"
+    },
+    {
+      "note": "Active sibling has no union-queue row; excluded from this pending-source decision.",
+      "path": "src/quant_platform/dydx_immediate_submission_adapter.py",
+      "queue_status": null
+    },
+    {
+      "note": "Already reviewed and deferred because its imported module is missing in active.",
+      "path": "tests/test_dydx_public_mainnet.py",
+      "queue_status": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT"
+    }
+  ],
+  "pending_test_rows": [
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "working_git",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "recovery_project",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "local_runtime",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "mac_savepoint",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "source_candidate",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "forensic_a",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "forensic_b",
+          "sha256": "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "visual_recovery",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "frozen_manifest_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root": "workspace_outer",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700"
+        },
+        {
+          "roots": [
+            "forensic_a",
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate",
+            "visual_recovery",
+            "working_git",
+            "workspace_outer"
+          ],
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        }
+      ],
+      "linked_source": [
+        "src/quant_platform/hyperliquid.py"
+      ],
+      "queue_historical_copy_roots": [
+        "forensic_b"
+      ],
+      "queue_historical_variant_count": 1,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700"
+        ],
+        "recovery": null,
+        "runtime": null,
+        "working": null
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "reason": "Imports orchestration contract, which names Hyperliquid research as an acceptance input; no direct pending-source import.",
+      "relative_path": "tests/test_canonical_wizard_hyperliquid_contract.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "2e62201280336c042d8eb1e46901a428d19dcb3e1bce323c222902d43202e0ed",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "working_git",
+          "sha256": "2e62201280336c042d8eb1e46901a428d19dcb3e1bce323c222902d43202e0ed"
+        },
+        {
+          "frozen_manifest_sha256": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "recovery_project",
+          "sha256": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5"
+        },
+        {
+          "frozen_manifest_sha256": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "local_runtime",
+          "sha256": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "mac_savepoint",
+          "sha256": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1"
+        },
+        {
+          "frozen_manifest_sha256": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "source_candidate",
+          "sha256": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5"
+        },
+        {
+          "frozen_manifest_sha256": "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "forensic_b",
+          "sha256": "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6"
+        },
+        {
+          "frozen_manifest_sha256": "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_current_wizard_hyperliquid_daily_runner.py",
+          "root": "visual_recovery",
+          "sha256": "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint"
+          ],
+          "sha256": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1"
+        },
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "2e62201280336c042d8eb1e46901a428d19dcb3e1bce323c222902d43202e0ed"
+        },
+        {
+          "roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "sha256": "3955e7517125849c35b4e7804048c869aaf2a985da22acab3278c73e4930ffa6"
+        },
+        {
+          "roots": [
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5"
+        }
+      ],
+      "linked_source": [],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "914b5eb6c198c6f18163c354e4fb1787ad312e3bc072f5f6d4bedc442c730ee5",
+        "runtime": "0f5e0db7853ec1d2efb151f52322f757b9c430808036c7694b78ed3dd2d88ea1",
+        "working": "2e62201280336c042d8eb1e46901a428d19dcb3e1bce323c222902d43202e0ed"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Imports daily-runner orchestration and effect modules; no direct pending-source import.",
+      "relative_path": "tests/test_current_wizard_hyperliquid_daily_runner.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "72e7598b1dd1ce8840ecdeddc8d8c8c6e55ec8aa76038081bc4052c81ba8d2b7",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "working_git",
+          "sha256": "72e7598b1dd1ce8840ecdeddc8d8c8c6e55ec8aa76038081bc4052c81ba8d2b7"
+        },
+        {
+          "frozen_manifest_sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "recovery_project",
+          "sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353"
+        },
+        {
+          "frozen_manifest_sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "local_runtime",
+          "sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "mac_savepoint",
+          "sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353"
+        },
+        {
+          "frozen_manifest_sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "source_candidate",
+          "sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353"
+        },
+        {
+          "frozen_manifest_sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "forensic_a",
+          "sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295"
+        },
+        {
+          "frozen_manifest_sha256": "4540a665f8e4a233a9a41b837cd39593af0aa543ce134adcc7d6e6761b272044",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "forensic_b",
+          "sha256": "4540a665f8e4a233a9a41b837cd39593af0aa543ce134adcc7d6e6761b272044"
+        },
+        {
+          "frozen_manifest_sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "visual_recovery",
+          "sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295"
+        },
+        {
+          "frozen_manifest_sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_current_wizard_hyperliquid_handoff.py",
+          "root": "workspace_outer",
+          "sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353"
+        },
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "4540a665f8e4a233a9a41b837cd39593af0aa543ce134adcc7d6e6761b272044"
+        },
+        {
+          "roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "sha256": "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295"
+        },
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "72e7598b1dd1ce8840ecdeddc8d8c8c6e55ec8aa76038081bc4052c81ba8d2b7"
+        }
+      ],
+      "linked_source": [],
+      "queue_historical_copy_roots": [
+        "forensic_a",
+        "forensic_b",
+        "visual_recovery",
+        "workspace_outer"
+      ],
+      "queue_historical_variant_count": 2,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "4540a665f8e4a233a9a41b837cd39593af0aa543ce134adcc7d6e6761b272044",
+          "5c757bac58d4f59abc934a747478b01e1326e5ab086d5f1708180f1dfc581295"
+        ],
+        "recovery": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353",
+        "runtime": "29f8bc76870555f7d4904ad41c7e0e262b366b31447bc11d33bdf9a70af75353",
+        "working": "72e7598b1dd1ce8840ecdeddc8d8c8c6e55ec8aa76038081bc4052c81ba8d2b7"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Imports handoff orchestration modules; no direct pending-source import.",
+      "relative_path": "tests/test_current_wizard_hyperliquid_handoff.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "working_git",
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "frozen_manifest_sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "recovery_project",
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "frozen_manifest_sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "local_runtime",
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "mac_savepoint",
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "frozen_manifest_sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "source_candidate",
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "frozen_manifest_sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "forensic_a",
+          "sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        },
+        {
+          "frozen_manifest_sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "forensic_b",
+          "sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        },
+        {
+          "frozen_manifest_sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "visual_recovery",
+          "sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        },
+        {
+          "frozen_manifest_sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_current_wizard_hyperliquid_math_comparison.py",
+          "root": "workspace_outer",
+          "sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "sha256": "6e5c3b773124226da2ca16dda83c1b4a5d723b80acd1b96c087e850e83c65349"
+        },
+        {
+          "roots": [
+            "forensic_a",
+            "forensic_b",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "sha256": "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        }
+      ],
+      "linked_source": [],
+      "queue_historical_copy_roots": [
+        "forensic_a",
+        "forensic_b",
+        "visual_recovery",
+        "workspace_outer"
+      ],
+      "queue_historical_variant_count": 1,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "d4b28a2f03d1ee1ab1ca1a6d49023f2d592a77dc8a43dd6e0edf24ffa2b652bd"
+        ],
+        "recovery": null,
+        "runtime": null,
+        "working": null
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "reason": "Imports math-comparison orchestration module; no direct pending-source import.",
+      "relative_path": "tests/test_current_wizard_hyperliquid_math_comparison.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "working_git",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "frozen_manifest_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "recovery_project",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "frozen_manifest_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "local_runtime",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "mac_savepoint",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "frozen_manifest_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "source_candidate",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "frozen_manifest_sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "forensic_a",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        },
+        {
+          "frozen_manifest_sha256": "f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "forensic_b",
+          "sha256": "f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b"
+        },
+        {
+          "frozen_manifest_sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "visual_recovery",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        },
+        {
+          "frozen_manifest_sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root": "workspace_outer",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b"
+        }
+      ],
+      "linked_source": [],
+      "queue_historical_copy_roots": [
+        "forensic_a",
+        "forensic_b",
+        "visual_recovery",
+        "workspace_outer"
+      ],
+      "queue_historical_variant_count": 2,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082",
+          "f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b"
+        ],
+        "recovery": null,
+        "runtime": null,
+        "working": null
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "reason": "Imports exhaustive replay orchestration modules; no direct pending-source import.",
+      "relative_path": "tests/test_exhaustive_wizard_hyperliquid_replay.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "20566317f90aafd44810459524a664d12a11b810096a7d258b583a9933645881",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_hyperliquid.py",
+          "root": "working_git",
+          "sha256": "20566317f90aafd44810459524a664d12a11b810096a7d258b583a9933645881"
+        },
+        {
+          "frozen_manifest_sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_hyperliquid.py",
+          "root": "recovery_project",
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        },
+        {
+          "frozen_manifest_sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_hyperliquid.py",
+          "root": "local_runtime",
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_hyperliquid.py",
+          "root": "mac_savepoint",
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        },
+        {
+          "frozen_manifest_sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_hyperliquid.py",
+          "root": "source_candidate",
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        },
+        {
+          "frozen_manifest_sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_hyperliquid.py",
+          "root": "forensic_a",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        },
+        {
+          "frozen_manifest_sha256": "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_hyperliquid.py",
+          "root": "forensic_b",
+          "sha256": "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4"
+        },
+        {
+          "frozen_manifest_sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_hyperliquid.py",
+          "root": "visual_recovery",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        },
+        {
+          "frozen_manifest_sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_hyperliquid.py",
+          "root": "workspace_outer",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        }
+      ],
+      "decision": "PRESERVE_WHOLE_TEST_NO_PORT; ADD_FOCUSED_ACTIVE_REGRESSION",
+      "direct_pending_source_imports": [
+        "quant_platform.hyperliquid"
+      ],
+      "distinct_variants": [
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "20566317f90aafd44810459524a664d12a11b810096a7d258b583a9933645881"
+        },
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4"
+        },
+        {
+          "roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        }
+      ],
+      "linked_source": [
+        "src/quant_platform/hyperliquid.py"
+      ],
+      "queue_historical_copy_roots": [
+        "forensic_a",
+        "forensic_b",
+        "visual_recovery",
+        "workspace_outer"
+      ],
+      "queue_historical_variant_count": 2,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4",
+          "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        ],
+        "recovery": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+        "runtime": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+        "working": "20566317f90aafd44810459524a664d12a11b810096a7d258b583a9933645881"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Directly imports active Hyperliquid research module; runtime test file targets additional runtime signatures and behavior. Existing offline market-context test is the focused place for the narrow authority assertion.",
+      "relative_path": "tests/test_hyperliquid.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "5d8457b67ddf1b1d7eaaae2157f17125856c901b75fa56eec0db71c2fa2daba7",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_hyperliquid_testnet.py",
+          "root": "working_git",
+          "sha256": "5d8457b67ddf1b1d7eaaae2157f17125856c901b75fa56eec0db71c2fa2daba7"
+        },
+        {
+          "frozen_manifest_sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_hyperliquid_testnet.py",
+          "root": "recovery_project",
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde"
+        },
+        {
+          "frozen_manifest_sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_hyperliquid_testnet.py",
+          "root": "local_runtime",
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_hyperliquid_testnet.py",
+          "root": "mac_savepoint",
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde"
+        },
+        {
+          "frozen_manifest_sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_hyperliquid_testnet.py",
+          "root": "source_candidate",
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde"
+        },
+        {
+          "frozen_manifest_sha256": "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_hyperliquid_testnet.py",
+          "root": "forensic_b",
+          "sha256": "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456"
+        },
+        {
+          "frozen_manifest_sha256": "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_hyperliquid_testnet.py",
+          "root": "visual_recovery",
+          "sha256": "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT",
+      "direct_pending_source_imports": [
+        "quant_platform.hyperliquid_testnet"
+      ],
+      "distinct_variants": [
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "5d8457b67ddf1b1d7eaaae2157f17125856c901b75fa56eec0db71c2fa2daba7"
+        },
+        {
+          "roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "sha256": "a263be3a091115d60abdd32a65143012be9989af24922a69f7b1735a4aaca456"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde"
+        }
+      ],
+      "linked_source": [
+        "src/quant_platform/hyperliquid_testnet.py"
+      ],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+        "runtime": "d5a66d6d07e7e032e93d3d05f863b280280083fa301fe868245ac3fffcd3dcde",
+        "working": "5d8457b67ddf1b1d7eaaae2157f17125856c901b75fa56eec0db71c2fa2daba7"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Directly imports testnet adapter; runtime tests depend on the stronger executor and gateway contracts absent from active source.",
+      "relative_path": "tests/test_hyperliquid_testnet.py"
+    },
+    {
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/tests/test_phase00_hyperliquid_network_authority.py",
+          "root": "working_git",
+          "sha256": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9"
+        },
+        {
+          "frozen_manifest_sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/tests/test_phase00_hyperliquid_network_authority.py",
+          "root": "recovery_project",
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        },
+        {
+          "frozen_manifest_sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/tests/test_phase00_hyperliquid_network_authority.py",
+          "root": "local_runtime",
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/tests/test_phase00_hyperliquid_network_authority.py",
+          "root": "mac_savepoint",
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        },
+        {
+          "frozen_manifest_sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_hyperliquid_network_authority.py",
+          "root": "source_candidate",
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        }
+      ],
+      "decision": "DEFER_ADJACENT_NO_PORT",
+      "direct_pending_source_imports": [],
+      "distinct_variants": [
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        }
+      ],
+      "linked_source": [
+        "src/quant_platform/hyperliquid.py",
+        "src/quant_platform/hyperliquid_testnet.py"
+      ],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+        "runtime": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+        "working": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Imports corrective network/effect modules, not the two top-level provider modules directly; reconcile with network authority family.",
+      "relative_path": "tests/test_phase00_hyperliquid_network_authority.py"
+    }
+  ],
+  "queue_snapshot": {
+    "note": "Queue changed during parallel Gate 0 work; selected rows retained PRESERVED_REVIEW_REQUIRED_NO_PORT.",
+    "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/queue_snapshot.csv",
+    "sha256": "53ee32c17fba8e8769a47ee26bb662d07c96a4895b06026924b1af3a6f4a3d0f",
+    "sha256_at_initial_selection": "6b7bdeee1624962834ce2646c85662b81f12677bab0224a8c4b43b28869ae0fd"
+  },
+  "root_paths": {
+    "forensic_a": "/Volumes/Expansion/TheWizForensic-20260819",
+    "forensic_b": "/Volumes/Expansion/TheWizForensic-20260819b",
+    "local_runtime": "/Users/gregc/TheWiz-LocalRuntime",
+    "mac_savepoint": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+    "recovery_project": "/Volumes/Expansion/TheWiz-Workspace/project",
+    "source_candidate": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate",
+    "visual_recovery": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working",
+    "working_git": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo",
+    "workspace_outer": "/Volumes/Expansion/TheWiz-Workspace"
+  },
+  "schema": "gate0.top_level_provider_adapter_review.v1",
+  "source_rows": [
+    {
+      "active_static_import_consumers": [],
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/dydx_public_endpoints.py",
+          "root": "recovery_project",
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        },
+        {
+          "frozen_manifest_sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/dydx_public_endpoints.py",
+          "root": "local_runtime",
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/src/quant_platform/dydx_public_endpoints.py",
+          "root": "mac_savepoint",
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        },
+        {
+          "frozen_manifest_sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/dydx_public_endpoints.py",
+          "root": "source_candidate",
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT",
+      "distinct_variants": [
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        }
+      ],
+      "effect_safety": [
+        "Pure URL policy; no transport or account effect in this file.",
+        "Runtime policy restricts dYdX public GET URLs to canonical mainnet HTTPS and allowlisted v4 paths."
+      ],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+        "runtime": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+        "working": null
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "reason": "Runtime-only HTTPS and endpoint policy has no active module or direct active consumer. Runtime dydx_candles.py and cli.py import it, while current active counterparts do not. Port requires coordinated public-data route integration and its deferred runtime-only test.",
+      "relative_path": "src/quant_platform/dydx_public_endpoints.py",
+      "safe_narrow_fix": null
+    },
+    {
+      "active_static_import_consumers": [],
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "working_git",
+          "sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+        },
+        {
+          "frozen_manifest_sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "recovery_project",
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "frozen_manifest_sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "local_runtime",
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "mac_savepoint",
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "frozen_manifest_sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "source_candidate",
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "frozen_manifest_sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "forensic_b",
+          "sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+        },
+        {
+          "frozen_manifest_sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/dydx_record_only_adapter.py",
+          "root": "visual_recovery",
+          "sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT",
+      "distinct_variants": [
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "roots": [
+            "forensic_b",
+            "visual_recovery",
+            "working_git"
+          ],
+          "sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+        }
+      ],
+      "effect_safety": [
+        "Active instance records a paper intent and returns paper_recorded_not_submitted without network calls.",
+        "Runtime adds source/type attestation on import; this cannot be copied alone."
+      ],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+        "runtime": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+        "working": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Active adapter is record-only and has no exchange submission. Runtime adds canonical adapter type registration, which depends on _register_canonical_adapter_type absent from active execution.py.",
+      "relative_path": "src/quant_platform/dydx_record_only_adapter.py",
+      "safe_narrow_fix": null
+    },
+    {
+      "active_static_import_consumers": [],
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "working_git",
+          "sha256": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9"
+        },
+        {
+          "frozen_manifest_sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "recovery_project",
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "frozen_manifest_sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "local_runtime",
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "mac_savepoint",
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "frozen_manifest_sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "source_candidate",
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "frozen_manifest_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "forensic_b",
+          "sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+        },
+        {
+          "frozen_manifest_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/dydx_sdk_order_adapter.py",
+          "root": "visual_recovery",
+          "sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT",
+      "distinct_variants": [
+        {
+          "roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9"
+        }
+      ],
+      "effect_safety": [
+        "Runtime _require_runtime_effect_binding checks exact intent/config/spec types, consumed payload hash, route label, canonical fields, paper mode, submit flag, and reduce-only close.",
+        "Runtime _active_market_payload requires exact ACTIVE ticker and finite positive oracle price before dispatch.",
+        "Frozen forensic/visual adapter variant is a separate older hash omitted by queue historical_variant_count."
+      ],
+      "queue_historical_copy_roots": [],
+      "queue_historical_variant_count": 0,
+      "queue_sha256_at_freeze": {
+        "historical": [],
+        "recovery": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+        "runtime": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+        "working": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Runtime contains a coupled Gate 00G sink binding, active-market metadata validation, and canonical registration. Active execution.py lacks the registration helper, so a wholesale file port would fail import; the active network/effect boundary needs coordinated review.",
+      "relative_path": "src/quant_platform/dydx_sdk_order_adapter.py",
+      "safe_narrow_fix": null
+    },
+    {
+      "active_static_import_consumers": [
+        {
+          "kind": "from",
+          "line": 157,
+          "path": "src/quant_platform/cli.py"
+        },
+        {
+          "kind": "from",
+          "line": 15,
+          "path": "src/quant_platform/orchestration/corrective_l2_scheduler.py"
+        },
+        {
+          "kind": "from",
+          "line": 16,
+          "path": "src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py"
+        },
+        {
+          "kind": "from",
+          "line": 31,
+          "path": "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py"
+        },
+        {
+          "kind": "from",
+          "line": 16,
+          "path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_cost_evidence.py"
+        },
+        {
+          "kind": "from",
+          "line": 19,
+          "path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_replay.py"
+        },
+        {
+          "kind": "from",
+          "line": 17,
+          "path": "src/quant_platform/orchestration/hyperliquid_research_cycle.py"
+        },
+        {
+          "kind": "from",
+          "line": 20,
+          "path": "src/quant_platform/orchestration/hyperliquid_research_validation.py"
+        },
+        {
+          "kind": "from",
+          "line": 23,
+          "path": "src/quant_platform/orchestration/nodes.py"
+        }
+      ],
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/src/quant_platform/hyperliquid.py",
+          "root": "working_git",
+          "sha256": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e"
+        },
+        {
+          "frozen_manifest_sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/hyperliquid.py",
+          "root": "recovery_project",
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        },
+        {
+          "frozen_manifest_sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/hyperliquid.py",
+          "root": "local_runtime",
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/src/quant_platform/hyperliquid.py",
+          "root": "mac_savepoint",
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        },
+        {
+          "frozen_manifest_sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/hyperliquid.py",
+          "root": "source_candidate",
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        },
+        {
+          "frozen_manifest_sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819/src/quant_platform/hyperliquid.py",
+          "root": "forensic_a",
+          "sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        },
+        {
+          "frozen_manifest_sha256": "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/hyperliquid.py",
+          "root": "forensic_b",
+          "sha256": "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef"
+        },
+        {
+          "frozen_manifest_sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/hyperliquid.py",
+          "root": "visual_recovery",
+          "sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        },
+        {
+          "frozen_manifest_sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/src/quant_platform/hyperliquid.py",
+          "root": "workspace_outer",
+          "sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT_WITH_NARROW_FIX",
+      "distinct_variants": [
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef"
+        },
+        {
+          "roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        },
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        }
+      ],
+      "effect_safety": [
+        "Active research market-context row sets execution_authority from tradable, despite a research-only note; active_pipeline.py and cli.py read execution_authority downstream.",
+        "Runtime sets execution_authority=False for this research snapshot.",
+        "Runtime funding retries obey a cooperative deadline and provider Retry-After; runtime worker capture binds publication and external-effect limits.",
+        "Active gateway requires transport callback, so runtime calls with timeout_seconds cannot be copied directly."
+      ],
+      "queue_historical_copy_roots": [
+        "forensic_a",
+        "forensic_b",
+        "visual_recovery",
+        "workspace_outer"
+      ],
+      "queue_historical_variant_count": 2,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef",
+          "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        ],
+        "recovery": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+        "runtime": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+        "working": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Runtime adds bounded funding fetch/retry behavior, safe immutable snapshot paths, publication worker captures and authority-free market context; it also calls an older gateway signature using timeout_seconds while active corrective_hyperliquid_network.py requires a transport callback. Whole-file port is incompatible and changes many public and storage contracts.",
+      "relative_path": "src/quant_platform/hyperliquid.py",
+      "safe_narrow_fix": "Set the active research snapshot execution_authority field to False and assert this for a tradable market in the existing offline test."
+    },
+    {
+      "active_static_import_consumers": [
+        {
+          "kind": "from",
+          "line": 171,
+          "path": "src/quant_platform/cli.py"
+        },
+        {
+          "kind": "from",
+          "line": 1889,
+          "path": "src/quant_platform/execution.py"
+        },
+        {
+          "kind": "from",
+          "line": 19,
+          "path": "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py"
+        },
+        {
+          "kind": "from",
+          "line": 20,
+          "path": "src/quant_platform/orchestration/corrective_testnet_pair_execution.py"
+        },
+        {
+          "kind": "from",
+          "line": 21,
+          "path": "src/quant_platform/orchestration/hyperliquid_learning_and_risk.py"
+        },
+        {
+          "kind": "from",
+          "line": 25,
+          "path": "src/quant_platform/orchestration/hyperliquid_research_cycle.py"
+        },
+        {
+          "kind": "from",
+          "line": 15,
+          "path": "src/quant_platform/orchestration/hyperliquid_testnet_lifecycle_evidence.py"
+        }
+      ],
+      "additional_frozen_sha256_absent_from_queue_hash_fields": [
+        "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95"
+      ],
+      "all_frozen_copy_hashes_match_manifest": true,
+      "copies": [
+        {
+          "frozen_manifest_sha256": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/provider-adapters-review-P2MYfK/repo/src/quant_platform/hyperliquid_testnet.py",
+          "root": "working_git",
+          "sha256": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f"
+        },
+        {
+          "frozen_manifest_sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/hyperliquid_testnet.py",
+          "root": "recovery_project",
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        },
+        {
+          "frozen_manifest_sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/TheWiz-LocalRuntime/src/quant_platform/hyperliquid_testnet.py",
+          "root": "local_runtime",
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        },
+        {
+          "frozen_manifest_sha256": null,
+          "matches_frozen_manifest": null,
+          "path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime/src/quant_platform/hyperliquid_testnet.py",
+          "root": "mac_savepoint",
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        },
+        {
+          "frozen_manifest_sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/hyperliquid_testnet.py",
+          "root": "source_candidate",
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        },
+        {
+          "frozen_manifest_sha256": "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0",
+          "matches_frozen_manifest": true,
+          "path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/hyperliquid_testnet.py",
+          "root": "forensic_b",
+          "sha256": "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+        },
+        {
+          "frozen_manifest_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95",
+          "matches_frozen_manifest": true,
+          "path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/hyperliquid_testnet.py",
+          "root": "visual_recovery",
+          "sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95"
+        }
+      ],
+      "decision": "PRESERVE_NO_PORT",
+      "distinct_variants": [
+        {
+          "roots": [
+            "visual_recovery"
+          ],
+          "sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95"
+        },
+        {
+          "roots": [
+            "working_git"
+          ],
+          "sha256": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f"
+        },
+        {
+          "roots": [
+            "forensic_b"
+          ],
+          "sha256": "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+        },
+        {
+          "roots": [
+            "local_runtime",
+            "mac_savepoint",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        }
+      ],
+      "effect_safety": [
+        "Active _require_hyperliquid_pair_executor enforces exact type, but does not reject callable instance method shadowing.",
+        "Runtime method-intact check and class-bound submit close that dispatch bypass.",
+        "Frozen forensic_b and visual_recovery copies are different older hashes; queue historical field lists only forensic_b."
+      ],
+      "queue_historical_copy_roots": [
+        "forensic_b"
+      ],
+      "queue_historical_variant_count": 1,
+      "queue_sha256_at_freeze": {
+        "historical": [
+          "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+        ],
+        "recovery": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+        "runtime": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+        "working": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f"
+      },
+      "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "reason": "Runtime adds canonical adapter registration, rejects method-shadowed executor instances, and dispatches via class-bound submit_pair. Active execution.py lacks registration helper; runtime info calls use timeout_seconds rather than active gateway transport callback. Full port requires coordinated effect and execution integration.",
+      "relative_path": "src/quant_platform/hyperliquid_testnet.py",
+      "safe_narrow_fix": null
+    }
+  ]
+}

@@ -1,0 +1,546 @@
+{
+  "all_omitted_copies_match_frozen_and_current_sha256": true,
+  "canonical_base_head": "932108584a4ec4b5c9c5260fd310adb499e6600b",
+  "combined_review_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-providers-P7zRoZ/repo/audit/GATE0_TOP_LEVEL_PROVIDER_SOURCE_REVIEW_2026-09-30.json",
+  "combined_review_sha256": "fae7db7c1929914c44a7bbb876f13cc89d023fba4a236108d4bf8f81d2e364ff",
+  "current_working_queue_read_only_path": "/Volumes/Expansion/Crypto Wizard/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "current_working_queue_snapshot_sha256": "38c92c2363febe074fa43d6a57557e68d30f28f54ea9b0f5262eb4db4d6ebc90",
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-providers-P7zRoZ/repo",
+  "method": "Read-only byte hashing, AST/diff inspection and static anchor verification; no provider calls, imports, credential reads, queue edits or tests.",
+  "omitted_variant_count": 9,
+  "queue_metadata_correction_instruction": "For each relative_path replace only historical_variant_count, historical_variant_sha256 and historical_copy_roots with queue_metadata_replacement; preserve all other columns until the parent records its review decision.",
+  "rows": [
+    {
+      "active_equals_runtime": false,
+      "active_selected_sha256": "5a9d0c035d498e04769a556690f37826899445d45f9ddaf90800de3d160132bc",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 7,
+        "removed_from_active_or_runtime": 129
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 13,
+        "removed_from_active_or_runtime": 116
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/crypto_wizards_history.py",
+          "current_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1",
+          "frozen_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/crypto_wizards_history.py",
+          "current_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1",
+          "frozen_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1",
+      "queue_metadata_old": {
+        "historical_copy_roots": "",
+        "historical_variant_count": "0",
+        "historical_variant_sha256": ""
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/crypto_wizards_history.py",
+      "runtime_selected_sha256": "e888e6f3c12e6ef5cb3d172d02723a0e36eaa883108fbf92da3e29a1f5d2ab2b",
+      "safety_consequence_and_no_port_rationale": "Selecting this variant would permit official API calls without the current reserved effect/credit gate and weaken evidence writes.",
+      "semantic_differences": [
+        "The variant removes fetch_crypto_wizards_json and endpoint_contract validation; _get_json and _post_json call requests directly.",
+        "It removes _run_governed_wizard_request, current_external_effect_session, run_authorized_credit_call, credit costing, and result_recorder plumbing. Active uses reserved effect authority; runtime also uses an exact_http_request descriptor.",
+        "JSON history outputs use Path.write_text rather than current atomic_write_text."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "run_authorized_credit_call(",
+          "active_line": 1043,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "fetch_crypto_wizards_json(",
+          "active_line": 916,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "atomic_write_text(",
+          "active_line": 586,
+          "variant_fragment": ".write_text(",
+          "variant_line": 576
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": false,
+      "active_selected_sha256": "cbad3408b43ded3e00d1b2b833d919cccf67e0e194da029cde964ca21d447edc",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 2,
+        "removed_from_active_or_runtime": 4
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 36,
+        "removed_from_active_or_runtime": 147
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/crypto_wizards_scanner.py",
+          "current_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f",
+          "frozen_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/crypto_wizards_scanner.py",
+          "current_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f",
+          "frozen_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f",
+      "queue_metadata_old": {
+        "historical_copy_roots": "",
+        "historical_variant_count": "0",
+        "historical_variant_sha256": ""
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/crypto_wizards_scanner.py",
+      "runtime_selected_sha256": "8fdf434d91e551b85755193a8eb7e83e80a153736af246f5786342d1fbd45fab",
+      "safety_consequence_and_no_port_rationale": "No missing parser logic is recovered; replacing active would weaken report publication and would not supply the runtime risk-field fixes.",
+      "semantic_differences": [
+        "The variant preserves the active parser and CSV field contract but writes scanner rows and field dictionary with direct DataFrame.to_csv instead of atomic_write_csv. Runtime additionally adds volatility_x/volatility_y and risk-cell offset handling."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "atomic_write_csv(",
+          "active_line": 264,
+          "variant_fragment": ".to_csv(",
+          "variant_line": 262
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": false,
+      "active_selected_sha256": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 24,
+        "removed_from_active_or_runtime": 245
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 31,
+        "removed_from_active_or_runtime": 379
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/dydx_sdk_order_adapter.py",
+          "current_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "frozen_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/dydx_sdk_order_adapter.py",
+          "current_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "frozen_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71",
+      "queue_metadata_old": {
+        "historical_copy_roots": "",
+        "historical_variant_count": "0",
+        "historical_variant_sha256": ""
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/dydx_sdk_order_adapter.py",
+      "runtime_selected_sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+      "safety_consequence_and_no_port_rationale": "A direct order submission path would bypass Gate 00G authorization and could repeat a non-reduce-only submission.",
+      "semantic_differences": [
+        "The variant removes gate00g_order_authority_enforced and the injected CorrectiveOrderAuthority.",
+        "It removes consumed OrderEffectSpec checks and claim_effect_dispatch before node.place_order / node.close_position; it also continues attempt-loop submission after an unconfirmed non-reduce-only fill, unlike active.",
+        "Runtime adds stricter exact effect binding and canonical adapter registration, so the variant is behind both selected implementations."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "gate00g_order_authority_enforced = True",
+          "active_line": 66,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "claim_effect_dispatch(",
+          "active_line": 377,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "atomic_write_csv(",
+          "active_line": 314,
+          "variant_fragment": ".to_csv(",
+          "variant_line": 199
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": false,
+      "active_selected_sha256": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 56,
+        "removed_from_active_or_runtime": 559
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 59,
+        "removed_from_active_or_runtime": 609
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/hyperliquid_testnet.py",
+          "current_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95",
+          "frozen_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95;7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/hyperliquid_testnet.py",
+      "runtime_selected_sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+      "safety_consequence_and_no_port_rationale": "Selecting this variant would reopen ungoverned testnet order, account mutation and credential-read paths.",
+      "semantic_differences": [
+        "The variant removes Gate 00G consumed pair/order authorization and exact claim checks around bulk orders, setup, recovery cancel and close.",
+        "It reads the agent key through a direct keychain reader rather than read_authorized_keychain_credential, and the pair adapter directly calls self.executor.submit_pair.",
+        "Runtime adds a method-shadow denial/class-bound submit on top of active effect controls; this variant has neither."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "read_authorized_keychain_credential(",
+          "active_line": 188,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "gate00g_order_authority_enforced = True",
+          "active_line": 269,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "atomic_write_text(",
+          "active_line": 1646,
+          "variant_fragment": ".write_text(",
+          "variant_line": 842
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": true,
+      "active_selected_sha256": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 18,
+        "removed_from_active_or_runtime": 20
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 18,
+        "removed_from_active_or_runtime": 20
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_control_plane.py",
+          "current_sha256": "44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc",
+          "frozen_sha256": "44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45;44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/wizard_control_plane.py",
+      "runtime_selected_sha256": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676",
+      "safety_consequence_and_no_port_rationale": "The omitted variant supplies no missing readiness guard and weakens control-plane report publication; the other historical Boolean change requires its own qualification.",
+      "semantic_differences": [
+        "The omitted visual variant retains active ranking/readiness tests (aside from UTC spelling and lint comments), but changes control summary and CSV publication from atomic_write_text/atomic_write_csv to direct write_text/to_csv.",
+        "The separately queued forensic_b variant changes Boolean interpretation via strict_bool and _truthy while also reverting atomic publication; that Boolean change is absent from this omitted visual variant. Active and runtime bytes match."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "atomic_write_text(",
+          "active_line": 319,
+          "variant_fragment": ".write_text(",
+          "variant_line": 313
+        },
+        {
+          "active_fragment": "atomic_write_csv(",
+          "active_line": 916,
+          "variant_fragment": ".to_csv(",
+          "variant_line": 914
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": false,
+      "active_selected_sha256": "d9118a8c11ae186cb5b608febe1bcd5f1f959ab472e11795352891d9d95c62fe",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 3,
+        "removed_from_active_or_runtime": 47
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 61,
+        "removed_from_active_or_runtime": 189
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_evidence.py",
+          "current_sha256": "cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4",
+          "frozen_sha256": "cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251;cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/wizard_evidence.py",
+      "runtime_selected_sha256": "1f3aab9af2849bbff20988734222bc8e1811fdeef6c93812ce36ebcb7273324e",
+      "safety_consequence_and_no_port_rationale": "A directionally inconsistent Wizard capture could be treated as eligible evidence and its reports would be less crash-safe.",
+      "semantic_differences": [
+        "The variant deletes _backtest_settings_status checks that compare long/short entry positions with tail_actions and action_for_threshold_operator; *_tail_position_contract_mismatch blockers are no longer produced.",
+        "It also replaces atomic CSV/text publication with direct writes. Runtime has additional v2 settings/config-hash validation, so the variant is behind both active and runtime."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "tail_actions(",
+          "active_line": 3136,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "tail_position_contract_mismatch",
+          "active_line": 3164,
+          "variant_fragment": null,
+          "variant_line": null
+        },
+        {
+          "active_fragment": "atomic_write_csv(",
+          "active_line": 3976,
+          "variant_fragment": ".to_csv(",
+          "variant_line": 3932
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": true,
+      "active_selected_sha256": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 2,
+        "removed_from_active_or_runtime": 6
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 2,
+        "removed_from_active_or_runtime": 6
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_hyperliquid_bridge.py",
+          "current_sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607",
+          "frozen_sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607;d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/wizard_hyperliquid_bridge.py",
+      "runtime_selected_sha256": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778",
+      "safety_consequence_and_no_port_rationale": "The omitted variant has no independent safety-positive bridge change and weakens evidence publication.",
+      "semantic_differences": [
+        "The omitted visual variant keeps the active bridge selection logic but replaces atomic CSV/text writes with direct to_csv/write_text.",
+        "The separately queued forensic_b variant also changes control-ready and eligibility Boolean parsing through strict_bool/_truthy; that change is absent from the omitted visual copy. Active and runtime bytes match."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "atomic_write_csv(",
+          "active_line": 824,
+          "variant_fragment": ".to_csv(",
+          "variant_line": 820
+        },
+        {
+          "active_fragment": "atomic_write_text(",
+          "active_line": 829,
+          "variant_fragment": ".write_text(",
+          "variant_line": 825
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": true,
+      "active_selected_sha256": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 5,
+        "removed_from_active_or_runtime": 13
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 5,
+        "removed_from_active_or_runtime": 13
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_hyperliquid_mode_proof.py",
+          "current_sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23",
+          "frozen_sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23;b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/wizard_hyperliquid_mode_proof.py",
+      "runtime_selected_sha256": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8",
+      "safety_consequence_and_no_port_rationale": "A dry-run proof path would unnecessarily read credential material and publication custody would weaken.",
+      "semantic_differences": [
+        "The variant resolves CRYPTO_WIZARDS_API_KEY from the environment even when execute is false; active/runtime only look it up on an execute path.",
+        "It replaces atomic_write_csv/text and promote_staged_file with direct to_csv/write_text and Path.replace for proof artifacts.",
+        "The separately queued forensic_b copy also changes formula Boolean parsing with strict_bool; that change is absent from this visual copy. Active and runtime bytes match."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "if execute else \"\"",
+          "active_line": 673,
+          "variant_fragment": "api_key or os.getenv(",
+          "variant_line": 666
+        },
+        {
+          "active_fragment": "promote_staged_file(",
+          "active_line": 2999,
+          "variant_fragment": ".replace(path)",
+          "variant_line": 2991
+        },
+        {
+          "active_fragment": "atomic_write_text(",
+          "active_line": 3004,
+          "variant_fragment": ".write_text(",
+          "variant_line": 2996
+        }
+      ]
+    },
+    {
+      "active_equals_runtime": true,
+      "active_selected_sha256": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055",
+      "byte_diff_omitted_vs_active": {
+        "added_in_variant": 2,
+        "removed_from_active_or_runtime": 6
+      },
+      "byte_diff_omitted_vs_runtime": {
+        "added_in_variant": 2,
+        "removed_from_active_or_runtime": 6
+      },
+      "decision": "NO_PORT_OMITTED_VARIANT",
+      "omitted_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_ou_comparator_activation.py",
+          "current_sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8",
+          "frozen_sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8",
+          "root": "visual_recovery"
+        }
+      ],
+      "omitted_variant_sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8",
+      "queue_metadata_old": {
+        "historical_copy_roots": "forensic_b",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8;be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+      },
+      "queue_status_unchanged_until_parent_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/wizard_ou_comparator_activation.py",
+      "runtime_selected_sha256": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055",
+      "safety_consequence_and_no_port_rationale": "Immutable activation evidence could be partially written or race with another writer; the variant supplies no missing activation gate.",
+      "semantic_differences": [
+        "The visual variant replaces promote_staged_file with temporary.replace and atomic_write_bytes with direct path.write_bytes for immutable OU v3 artifacts.",
+        "Activation decision logic otherwise matches selected active/runtime; the queued forensic_b variant is a separate strict-Boolean/older-write variant."
+      ],
+      "static_anchor_checks": [
+        {
+          "active_fragment": "promote_staged_file(",
+          "active_line": 597,
+          "variant_fragment": ".replace(path)",
+          "variant_line": 593
+        },
+        {
+          "active_fragment": "atomic_write_bytes(",
+          "active_line": 606,
+          "variant_fragment": ".write_bytes(",
+          "variant_line": 602
+        }
+      ]
+    }
+  ],
+  "schema_version": "gate0.top_level_unlisted_variants_supplement.v1"
+}
