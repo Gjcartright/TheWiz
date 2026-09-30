@@ -11,10 +11,22 @@ from quant_platform.v2_run import (
     publish_v2_run_status,
     validate_v2_run,
 )
+from quant_platform import v2_run
 from quant_platform.wizard_policy import DEFAULT_WIZARD_DISCOVERY_POLICY
 
 NOW = datetime(2026, 8, 7, 18, 0, tzinfo=timezone.utc)
 CANDIDATE_SET_ID = "whlset_fixture_current"
+
+
+def test_blocked_v2_manifest_string_false_does_not_claim_readiness(tmp_path):
+    blocked = v2_run._control_plane_blockers(
+        tmp_path, {"status": "BLOCKED", "research_ready": "False"}, run_id="test-run"
+    )
+    assert "v2_manifest_research_status_inconsistent" not in blocked
+    claimed = v2_run._control_plane_blockers(
+        tmp_path, {"status": "BLOCKED", "research_ready": "True"}, run_id="test-run"
+    )
+    assert "v2_manifest_research_status_inconsistent" in claimed
 
 
 def _write_ready_sources(root) -> None:

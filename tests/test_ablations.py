@@ -44,6 +44,21 @@ def test_ablation_report_detects_incremental_value():
     assert report["conclusion"].iloc[0] == "adds_value"
 
 
+def test_ablation_report_does_not_count_string_false_as_eligible():
+    tested = result_row(2, "ZScore + ECM", 2.0, 1.4, 0.08)
+    baseline = result_row(1, "Classic ZScore Mean Reversion", 1.5, 1.0, 0.12)
+    tested["eligible"] = "False"
+    baseline["eligible"] = "True"
+
+    report = ablation_report(
+        pd.DataFrame([tested, baseline]),
+        (AblationSpec("ecm_vs_z", 2, 1, "ecm", "test"),),
+    )
+
+    assert report["tested_eligible_runs"].iloc[0] == 0
+    assert report["baseline_eligible_runs"].iloc[0] == 1
+
+
 def test_ablation_report_detects_harmful_component():
     results = pd.DataFrame(
         [
@@ -83,4 +98,3 @@ def test_experiment_report_bundle_includes_ablation_report(tmp_path):
     assert "ablation" in paths
     written = pd.read_csv(paths["ablation"])
     assert "incremental_score" in written.columns
-

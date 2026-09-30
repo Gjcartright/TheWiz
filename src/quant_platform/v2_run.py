@@ -19,6 +19,7 @@ from quant_platform.orchestration.corrective_runtime import (
     promote_staged_file,
 )
 from quant_platform.wizard_policy import load_wizard_discovery_policy
+from quant_platform.runtime_types import strict_bool
 
 ROOT = Path(__file__).resolve().parents[2]
 V2_RUN_SCHEMA_VERSION = "the_wizard_v2_run.v1"
@@ -355,7 +356,7 @@ def _control_plane_blockers(
             blockers.append("v2_authority_research_readiness_mismatch")
 
     ready_status = manifest.get("status") == "READY_FOR_RESEARCH"
-    if bool(manifest.get("research_ready")) != ready_status:
+    if strict_bool(manifest.get("research_ready")) != ready_status:
         blockers.append("v2_manifest_research_status_inconsistent")
     for field in ("paper_ready", "live_ready", "execution_allowed"):
         if _truthy(manifest.get(field, False)) or _truthy(authority.get(field, False)):
@@ -427,7 +428,7 @@ def publish_v2_run_status(*, root: Path = ROOT, run_id: str) -> CommandResult:
         "candidate_set_id": _text(manifest.get("candidate_set_id", "")),
         "status": _text(manifest.get("status", "INVALID")) if sealed else "INVALID",
         "sealed": sealed,
-        "research_ready": bool(completed and authority.get("research_ready", False)),
+        "research_ready": bool(completed and strict_bool(authority.get("research_ready", False))),
         "paper_ready": False,
         "live_ready": False,
         "execution_allowed": False,

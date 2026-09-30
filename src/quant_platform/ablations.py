@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+from quant_platform.runtime_types import strict_bool
 
 from dataclasses import dataclass
 from math import isinf
@@ -107,8 +108,8 @@ def ablation_report(
                     "drawdown_delta": drawdown_delta,
                     "win_rate_delta": win_rate_delta,
                     "trade_delta": trade_delta,
-                    "tested_eligible": bool(row["eligible_tested"]),
-                    "baseline_eligible": bool(row["eligible_baseline"]),
+                    "tested_eligible": strict_bool(row["eligible_tested"]),
+                    "baseline_eligible": strict_bool(row["eligible_baseline"]),
                 }
             )
         comparison = pd.DataFrame(comparison_rows)
@@ -193,4 +194,3 @@ def write_ablation_report(
     output.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_csv(ablation_report(results, specs), output, index=False)
     return output
-
