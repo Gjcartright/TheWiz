@@ -734,6 +734,33 @@ def test_refresh_hyperliquid_execution_compatibility_table_marks_testnet_perp_pa
     assert "missing_hyperliquid_testnet_perp:BOGUS" in blocked["mirror_blocker"]
 
 
+def test_hyperliquid_market_inventory_rejects_string_false_tradability(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame([
+        {"asset": "BTC", "asset_index": 3, "universe_name": "BTC", "tradable_perp": "False"},
+        {"asset": "ETH", "asset_index": 4, "universe_name": "ETH", "tradable_perp": "True"},
+        {"asset": "DOGE", "asset_index": 5, "universe_name": "DOGE", "tradable_perp": "unknown"},
+    ]).to_csv(active / "hyperliquid_testnet_market_inventory.csv", index=False)
+
+    market_index, _ = execution_module._hyperliquid_market_indexes(root=tmp_path)
+
+    assert set(market_index) == {"ETH"}
+
+
+def test_hyperliquid_shortlist_rejects_string_false_mirrorability(tmp_path):
+    active = tmp_path / "reports" / "active"
+    active.mkdir(parents=True)
+    pd.DataFrame([
+        {"pair": "BTC-USD-HYPE-USD", "mirrorable_for_paper": "False"},
+        {"pair": "ETH-USD-SOL-USD", "mirrorable_for_paper": "unknown"},
+    ]).to_csv(active / "hyperliquid_execution_market_compatibility.csv", index=False)
+
+    shortlist = refresh_hyperliquid_testnet_candidate_shortlist(root=tmp_path)
+
+    assert shortlist.empty
+
+
 def test_refresh_hyperliquid_testnet_candidate_shortlist_uses_supported_pairs_only(tmp_path, monkeypatch):
     monkeypatch.setattr("quant_platform.execution.ROOT", tmp_path)
     active = tmp_path / "reports" / "active"
