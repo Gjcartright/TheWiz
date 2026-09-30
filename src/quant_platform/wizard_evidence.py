@@ -2219,9 +2219,19 @@ def _exploratory_cost_sensitivity_rows(
     return rows
 
 
-def _bars_per_day(interval: str) -> int:
+def _bars_per_day(interval: str) -> float:
+    exact = interval.strip().replace(" ", "")
+    if exact == "1M":
+        return 12.0 / 365.0
     normalized = interval.strip().lower().replace(" ", "")
     mapping = {
+        "monthly": 12.0 / 365.0,
+        "1month": 12.0 / 365.0,
+        "1m": 1440,
+        "1min": 1440,
+        "1mins": 1440,
+        "1minute": 1440,
+        "1minutes": 1440,
         "daily": 1,
         "1d": 1,
         "1day": 1,
@@ -3891,7 +3901,12 @@ def _canonical_pair_key(asset_x: str, asset_y: str, pair: str = "") -> str:
 
 def _wizard_setup_identity(pair: str, interval: str, period: int | None, exact_mode: str) -> str:
     pair_key = _canonical_pair(pair).replace("/", "|")
-    interval_key = _canonical_interval(str(interval or "")).strip().lower().replace(" ", "_")
+    canonical_interval = _canonical_interval(str(interval or "")).strip().replace(" ", "_")
+    interval_key = (
+        canonical_interval
+        if canonical_interval.endswith("M") and canonical_interval[:-1].isdigit()
+        else canonical_interval.lower()
+    )
     period_key = str(period if period is not None else "")
     mode_key = str(exact_mode or "").strip().lower().replace(" ", "_").replace("/", "_")
     return f"{pair_key}|{interval_key}|{period_key}|{mode_key}".strip("|")

@@ -9,6 +9,8 @@ from quant_platform.wizard_evidence import (
     DISCOVERY_MIN_RETURNS_TOTAL,
     DISCOVERY_MIN_SHARPE,
     WIZARD_PAIR_SETTINGS_CAPTURE_TEMPLATE_COLUMNS,
+    _bars_per_day,
+    _wizard_setup_identity,
     build_wizard_diagnostic_confirmation,
     build_wizard_discovery_triage,
     build_wizard_evidence,
@@ -32,6 +34,19 @@ def test_exact_mode_id_mapping_round_trips():
     assert mode_from_ids(3, 1) == "Static (Spread)"
     assert mode_from_ids(1, 3) == "Copula"
     assert ids_from_exact_mode("OU (ZScoreR)") == (2, 2)
+
+
+def test_cost_sensitivity_bars_per_day_preserves_monthly_vs_minute():
+    assert _bars_per_day("1m") == 1440.0
+    assert _bars_per_day("1M") == 12.0 / 365.0
+    assert _bars_per_day("monthly") == 12.0 / 365.0
+
+
+def test_wizard_setup_identity_preserves_monthly_vs_minute():
+    minute = _wizard_setup_identity("BTC/ETH", "1m", 100, "Copula")
+    monthly = _wizard_setup_identity("BTC/ETH", "1M", 100, "Copula")
+
+    assert minute != monthly
 
 
 def test_scanner_evidence_preserves_stationarity_signal_liquidity_and_risk_fields(tmp_path):
