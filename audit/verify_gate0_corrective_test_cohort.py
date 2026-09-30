@@ -83,6 +83,10 @@ def verify() -> dict[str, int]:
     proposal = {
         row["relative_path"]: row for row in csv.DictReader(PROPOSAL.open(newline=""))
     }
+    current_queue = {
+        row["relative_path"]: row
+        for row in _rows((ROOT / report["queue_path"]).read_bytes())
+    }
     assert set(proposal) == set(queue)
 
     present_copies = 0
@@ -149,6 +153,11 @@ def verify() -> dict[str, int]:
             "proposed_decision_evidence",
         ):
             assert proposal[path][key] == record[key]
+        current = current_queue[path]
+        assert current["custody_status"] == proposal[path]["proposed_custody_status"]
+        assert proposal[path]["proposed_decision_rationale"] in current["decision_rationale"]
+        for evidence in proposal[path]["proposed_decision_evidence"].split(";"):
+            assert evidence in current["decision_evidence"].split("; ")
     return {"paths": len(records), "verified_present_copies": present_copies}
 
 
