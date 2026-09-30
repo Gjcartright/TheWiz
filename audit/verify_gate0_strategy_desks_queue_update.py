@@ -32,6 +32,15 @@ EXPECTED_QUEUE_STATES = {
     "PENDING_BLOCKED": 5,
     "PENDING_DEFERRED": 3,
 }
+RESIDUAL_DESK_PATHS = {
+    "src/quant_platform/copula_desk/signal_path.py",
+    "src/quant_platform/dynamic_desk/signal_path.py",
+    "src/quant_platform/static_desk/profile.py",
+    "src/quant_platform/static_desk/profile_data.py",
+    "src/quant_platform/static_desk/risk_link.py",
+    "src/quant_platform/static_desk/runtime.py",
+    "src/quant_platform/static_desk/signal_path.py",
+}
 
 
 def sha256(path: Path) -> str:
@@ -102,6 +111,10 @@ def main() -> int:
         current_queue = {row["relative_path"]: row for row in csv.DictReader(handle)}
     with (AUDIT / "GATE0_RL_THREE_PATH_UNION_QUEUE_ADDITION_PROPOSAL_2026-09-30.csv").open(newline="") as handle:
         three_path_proposals = {row["relative_path"]: row for row in csv.DictReader(handle)}
+    with (AUDIT / "GATE0_NINE_RESIDUAL_QUEUE_PROPOSAL_2026-09-30.csv").open(newline="") as handle:
+        residual_proposals = {row["relative_path"]: row for row in csv.DictReader(handle)}
+    if RESIDUAL_DESK_PATHS != RESIDUAL_DESK_PATHS & residual_proposals.keys():
+        errors.append("residual_desk_proposal_membership_mismatch")
     for item in rows:
         path = item["relative_path"]
         queued = current_queue.get(path)
@@ -113,9 +126,15 @@ def main() -> int:
             # The later tooling review already resolved this blocked test as
             # an exact active-math contract mismatch with no port.
             expected_status = "REVIEWED_MATH_TOOL_CONTRACT_MISMATCH_NO_PORT"
+        if path in RESIDUAL_DESK_PATHS:
+            expected_status = residual_proposals[path]["proposed_custody_status"]
         if queued["custody_status"] != expected_status:
             errors.append(f"current_queue_status_mismatch:{path}")
-        expected_rationale = three_path_proposals[path]["decision_rationale"] if path in three_path_proposals else item["decision_rationale"]
+        expected_rationale = (
+            residual_proposals[path]["proposed_decision_rationale"] if path in RESIDUAL_DESK_PATHS
+            else three_path_proposals[path]["decision_rationale"] if path in three_path_proposals
+            else item["decision_rationale"]
+        )
         if expected_rationale not in queued["decision_rationale"]:
             errors.append(f"current_queue_rationale_missing:{path}")
         if TABLE.relative_to(ROOT).as_posix() not in queued["decision_evidence"].split("; "):
