@@ -1,0 +1,424 @@
+{
+  "active_source_commit": "8a00bf88f40fc214005195bc6d730c8ea4dfe208",
+  "as_of_date": "2026-09-30",
+  "authority_granted_by_report": {
+    "live_or_order_authority": false,
+    "paper_or_testnet_authority": false,
+    "promotion_authority": false,
+    "training_authority": false
+  },
+  "decisions": [
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/math_desk/m5_exhaustive.py": false,
+        "src/quant_platform/math_desk/risk_census.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "excluded_not_applicable_rows": 11,
+        "rows": 11,
+        "user_decision_rows": 11
+      },
+      "decision": "REVIEWED_USER_EXCLUSIONS_PRESERVE_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "5000787676c6441f8118fb65698163d3873a01fb7c225b78355ca8452b0137e5"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/math_desk/m5_exhaustive.py": true,
+        "src/quant_platform/math_desk/risk_census.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "Eleven user exclusions are preserved as source decisions, but the active checkout has no math_desk readers; copying this file alone would not enforce an active retrieval boundary.",
+      "recorded_authority_fields": {
+        "active_retrieval_authority": false,
+        "decision_authority_values": [
+          "user"
+        ]
+      },
+      "relative_path": "config/math_desk_source_exclusions.csv"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/math_desk/m5_visual.py": false,
+        "tests/test_math_desk_m5_visual.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "evidence_paths_present_active": 0,
+        "evidence_paths_present_forensic_b": 0,
+        "evidence_paths_present_local_runtime": 0,
+        "rows": 129,
+        "unique_evidence_paths": 80
+      },
+      "decision": "REVIEWED_HISTORICAL_MACHINE_REVIEWS_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "dac0a64ccda046c3d441f1c8239f6fed308b08dc83cbbf257a738b2c1811121c"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/math_desk/m5_visual.py": true,
+        "tests/test_math_desk_m5_visual.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "Machine visual review rows remain historical; the active visual-review producer is absent and none of their referenced image files is present in the checked active, LocalRuntime, or forensic_b roots.",
+      "recorded_authority_fields": {
+        "reviewer_types": [
+          "machine"
+        ],
+        "scientific_completion_claim": false
+      },
+      "relative_path": "config/math_desk_visual_equation_reviews.csv"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "tests/test_research_assertion_contracts.py": false,
+        "tests/test_research_assertion_gate_adapter.py": false,
+        "tests/test_research_assertion_isolation.py": false,
+        "tests/test_research_assertion_ledger.py": false,
+        "tests/test_research_assertion_migration.py": false,
+        "tests/test_research_assertion_projection.py": false,
+        "tests/test_research_assertion_resilience.py": false,
+        "tests/test_research_assertion_semantic_review.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "attack_rows": 48,
+        "planned_not_executed_rows": 6,
+        "referenced_test_paths_absent_active": 48,
+        "unique_referenced_test_paths": 8
+      },
+      "decision": "REVIEWED_ABSENT_ASSERTION_SUITE_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "998ad96981e2bdb7c72ee59f6e6d032123966fc40038ef80ca303ad738629cac"
+      },
+      "local_runtime_consumer_paths": {
+        "tests/test_research_assertion_contracts.py": true,
+        "tests/test_research_assertion_gate_adapter.py": false,
+        "tests/test_research_assertion_isolation.py": true,
+        "tests/test_research_assertion_ledger.py": false,
+        "tests/test_research_assertion_migration.py": false,
+        "tests/test_research_assertion_projection.py": false,
+        "tests/test_research_assertion_resilience.py": false,
+        "tests/test_research_assertion_semantic_review.py": false
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "All proposed pytest paths are absent from the active checkout, so the manifest is a preserved LocalRuntime plan rather than active test coverage.",
+      "recorded_authority_fields": {
+        "active_test_coverage_claim": false,
+        "authority_values": [
+          "research_only"
+        ]
+      },
+      "relative_path": "config/research_assertion_attack_manifest.csv"
+    },
+    {
+      "active": {
+        "exists": true,
+        "sha256": "1a9c4c1d9aadcf07dff55b84d69c326b7195eaa5c2ba9460b7cd10cad48d4678"
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/orchestration/versioned_learning_comparison.py": true,
+        "src/quant_platform/research_paper_reviews.py": true,
+        "tests/test_research_paper_reviews.py": true
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "active_papers": 23,
+        "active_test_expected_papers": 23,
+        "forensic_b_added_paper_ids": [
+          "paper_0ae72e06af64426d",
+          "paper_c85290be1e415ed1"
+        ],
+        "forensic_b_modified_shared_paper_ids": [],
+        "forensic_b_papers": 25,
+        "forensic_b_removed_paper_ids": []
+      },
+      "decision": "REVIEWED_ACTIVE_RETAIN_FORENSIC_NO_PORT",
+      "forensic_b": {
+        "exists": true,
+        "path": "config/research_paper_assessments.yaml",
+        "sha256": "8ed4f963f5d4ae848102fbac25b32b2f56596245022485d32d2db6bec3546302"
+      },
+      "local_runtime": {
+        "exists": true,
+        "sha256": "1a9c4c1d9aadcf07dff55b84d69c326b7195eaa5c2ba9460b7cd10cad48d4678"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/orchestration/versioned_learning_comparison.py": true,
+        "src/quant_platform/research_paper_reviews.py": true,
+        "tests/test_research_paper_reviews.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "The forensic variant appends two paper assessments but no revisions to the active 23. The active builder requires exact assessment/inventory ID equality and the active test fixture asserts 23; porting only this YAML would break that contract. The additional forensic paper intake needs its own source and inventory review.",
+      "recorded_authority_fields": {
+        "active_review_authority": "research_only",
+        "forensic_b_review_authority": "research_only",
+        "paper_assessment_promotion_authority": false
+      },
+      "relative_path": "config/research_paper_assessments.yaml"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/research_rag/__main__.py": false,
+        "src/quant_platform/research_rag/client.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "index_path": "data/processed/research_rag/20260910/research.sqlite3",
+        "index_present_active": false,
+        "index_present_local_runtime": false,
+        "sources_manifest_present_active": false,
+        "sources_manifest_present_local_runtime": true
+      },
+      "decision": "REVIEWED_STALE_RAG_RUNTIME_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "a656e47d895e5514b2be0d625181d38db43f4e706c599f936ffeaa199e7f0854"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/research_rag/__main__.py": true,
+        "src/quant_platform/research_rag/client.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "The active checkout lacks the research_rag package; the LocalRuntime read-only pilot points to a missing index and cannot become active by copying its config.",
+      "recorded_authority_fields": {
+        "answer_mode": "extractive",
+        "external_generator_connected": false,
+        "integration_status": "LOCAL_READ_ONLY_RESEARCH_PILOT",
+        "live_trading_authorized": false,
+        "source_adoption": false
+      },
+      "relative_path": "config/research_rag.json"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/research_rag/__main__.py": false,
+        "src/quant_platform/research_rag/corpus.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "corpus_entries": 18,
+        "declared_omissions": 4,
+        "entry_roots_absent_host": 18,
+        "entry_roots_present_host": 0,
+        "exclude_patterns": 18
+      },
+      "decision": "REVIEWED_STALE_RAG_SOURCES_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "15c55ccdcc428aa5674a371cc6742796431a876001bc949a393e69b347df5346"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/research_rag/__main__.py": true,
+        "src/quant_platform/research_rag/corpus.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "All corpus entry roots are absent on this host and the active corpus reader is absent. Retain declared exclusions and omissions as historical pilot scope, without adopting the tags or source claims.",
+      "recorded_authority_fields": {
+        "scope": "Read-only retained papers/books, captions/transcripts, native claims, corrections and research-node/backlog documentation. Local references only; Phase00 paths, excluded sources, raw PDF/audio/video processing, credentials, operational evidence generation and automatic adoption are excluded. Node and five-strategy tags are coarse shared discovery labels, not accepted node knowledge, exact strategy applicability or active OU adoption.",
+        "source_adoption": false
+      },
+      "relative_path": "config/research_rag_sources.json"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "scripts/research_rag.py": false,
+        "scripts/thewiz_tools.py": false,
+        "src/quant_platform/tooling/runtime.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "absolute_pinned_paths": 9,
+        "existing_pinned_paths": [
+          "matlab_root"
+        ],
+        "missing_pinned_paths": [
+          "adapter_acceptance_receipt",
+          "previous_adapter_acceptance_receipt",
+          "project_python",
+          "project_pin_file",
+          "mlflow_python",
+          "matlab_python",
+          "browser_path",
+          "state_root"
+        ]
+      },
+      "decision": "REVIEWED_STALE_TOOL_RUNTIME_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "1a7ab5896a3b1691d64c7cc3bd91a072c9b76aa01160d0263f5decebb3deddb4"
+      },
+      "local_runtime_consumer_paths": {
+        "scripts/research_rag.py": true,
+        "scripts/thewiz_tools.py": true,
+        "src/quant_platform/tooling/runtime.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "The active tooling reader is absent. This dated LocalRuntime declaration pins old absolute receipt, interpreter, browser, and state paths; only the MATLAB application root still exists on this host.",
+      "recorded_authority_fields": {
+        "adoption_status": "VERIFIED_RESEARCH_RUNTIME",
+        "gate_completion_claim": false,
+        "live_trading_authorized": false
+      },
+      "relative_path": "config/research_tool_runtime.json"
+    },
+    {
+      "active": {
+        "exists": false,
+        "sha256": null
+      },
+      "active_consumer_paths": {
+        "src/quant_platform/decide/__init__.py": false,
+        "src/quant_platform/decide/__main__.py": false,
+        "src/quant_platform/decide/admission.py": false,
+        "src/quant_platform/decide/contracts.py": false,
+        "src/quant_platform/decide/deep_challenge.py": false,
+        "src/quant_platform/decide/deep_contracts.py": false,
+        "src/quant_platform/decide/evidence_io.py": false,
+        "src/quant_platform/decide/evidence_payloads.py": false,
+        "src/quant_platform/decide/fast_challenge.py": false,
+        "src/quant_platform/decide/handoff.py": false,
+        "src/quant_platform/decide/pipeline.py": false,
+        "src/quant_platform/decide/proof_contracts.py": false,
+        "src/quant_platform/decide/reporting.py": false,
+        "src/quant_platform/decide/shadow.py": false,
+        "tests/test_decide_color_team_admission.py": false,
+        "tests/test_decide_color_team_architecture.py": false,
+        "tests/test_decide_color_team_integrity_regressions.py": false,
+        "tests/test_decide_color_team_isolation.py": false,
+        "tests/test_decide_color_team_trials.py": false,
+        "tests/test_decide_contracts.py": false,
+        "tests/test_decide_deep_challenge.py": false,
+        "tests/test_decide_fast_challenge.py": false,
+        "tests/test_decide_pipeline.py": false,
+        "tests/test_decide_proof_admission.py": false,
+        "tests/test_decide_shadow_handoff.py": false
+      },
+      "authority_granted_by_this_review": {
+        "live_or_order_authority": false,
+        "paper_or_testnet_authority": false,
+        "promotion_authority": false,
+        "training_authority": false
+      },
+      "counts_and_checks": {
+        "registered_paths_present_active": 0,
+        "registered_paths_present_local_runtime": 25,
+        "source_files": 14,
+        "test_files": 11
+      },
+      "decision": "REVIEWED_ABSENT_VALIDATION_SURFACE_NO_PORT",
+      "local_runtime": {
+        "exists": true,
+        "sha256": "e8776363e05c0c3e23210561341c10458b7677e07a102ac1df3b141041241c66"
+      },
+      "local_runtime_consumer_paths": {
+        "src/quant_platform/decide/__init__.py": true,
+        "src/quant_platform/decide/__main__.py": true,
+        "src/quant_platform/decide/admission.py": true,
+        "src/quant_platform/decide/contracts.py": true,
+        "src/quant_platform/decide/deep_challenge.py": true,
+        "src/quant_platform/decide/deep_contracts.py": true,
+        "src/quant_platform/decide/evidence_io.py": true,
+        "src/quant_platform/decide/evidence_payloads.py": true,
+        "src/quant_platform/decide/fast_challenge.py": true,
+        "src/quant_platform/decide/handoff.py": true,
+        "src/quant_platform/decide/pipeline.py": true,
+        "src/quant_platform/decide/proof_contracts.py": true,
+        "src/quant_platform/decide/reporting.py": true,
+        "src/quant_platform/decide/shadow.py": true,
+        "tests/test_decide_color_team_admission.py": true,
+        "tests/test_decide_color_team_architecture.py": true,
+        "tests/test_decide_color_team_integrity_regressions.py": true,
+        "tests/test_decide_color_team_isolation.py": true,
+        "tests/test_decide_color_team_trials.py": true,
+        "tests/test_decide_contracts.py": true,
+        "tests/test_decide_deep_challenge.py": true,
+        "tests/test_decide_fast_challenge.py": true,
+        "tests/test_decide_pipeline.py": true,
+        "tests/test_decide_proof_admission.py": true,
+        "tests/test_decide_shadow_handoff.py": true
+      },
+      "port_runtime_or_forensic_bytes": false,
+      "rationale": "All registered decide source and test paths exist in LocalRuntime but none exists in the active checkout; porting the registry alone would assert a nonexistent active surface.",
+      "recorded_authority_fields": {
+        "owner_node": "research_validation",
+        "promotion_authority": false,
+        "separate_decide_node": false
+      },
+      "relative_path": "config/research_validation_surface_registry.json"
+    }
+  ],
+  "expansion_checkout_edited": false,
+  "provider_calls": 0,
+  "reviewed_paths": 8,
+  "roots_checked": {
+    "forensic_b": "/Volumes/Expansion/TheWizForensic-20260819b",
+    "isolated_active_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/research-config-gate0-candidate",
+    "local_runtime_savepoint": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime"
+  },
+  "schema_version": "thewiz.gate0.research_math_desk_config_reconciliation.v1",
+  "shared_queue_edited": false,
+  "source_files_changed": 0,
+  "source_tests_run": 0
+}
