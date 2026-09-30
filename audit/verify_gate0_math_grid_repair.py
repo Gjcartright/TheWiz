@@ -14,6 +14,7 @@ AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parent
 DIAGNOSTICS = Path("/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30")
 BASE = "6ce7bc7f6e47a27f847b98ee76093efdd31bb67e"
+SELECTED_COMMIT = "4362c54b55afabe38f522289c2f9e84788e9ab67"
 SOURCE = "src/quant_platform/statistics/math_v2.py"
 TEST = "tests/test_statistics_math_v2.py"
 OUTPUT = AUDIT / "GATE0_MATH_GRID_REPAIR_2026-09-30.json"
@@ -28,11 +29,14 @@ def prior_sha(path: str) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def selected_bytes(path: str) -> bytes:
+    return subprocess.check_output(["git", "show", f"{SELECTED_COMMIT}:{path}"], cwd=ROOT)
+
+
 def main() -> None:
-    with (AUDIT / "GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv").open(
-        newline="", encoding="utf-8"
-    ) as stream:
-        queue = {row["relative_path"]: row for row in csv.DictReader(stream)}
+    subprocess.run(["git", "merge-base", "--is-ancestor", SELECTED_COMMIT, "HEAD"], cwd=ROOT, check=True)
+    queue_bytes = selected_bytes("audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv")
+    queue = {row["relative_path"]: row for row in csv.DictReader(queue_bytes.decode("utf-8").splitlines())}
     if any(queue[path]["custody_status"] != "PRESERVED_REVIEW_REQUIRED_NO_PORT" for path in (SOURCE, TEST)):
         raise ValueError("broader Math V2 review must remain pending")
     for path in (SOURCE, TEST):
@@ -73,7 +77,7 @@ def main() -> None:
         "baseline_commit": BASE,
         "source_sha256": {
             path: {
-                "baseline": prior_sha(path), "patched": sha(ROOT / path),
+                "baseline": prior_sha(path), "patched": hashlib.sha256(selected_bytes(path)).hexdigest(),
                 "runtime_candidate": queue[path]["runtime_sha256_at_freeze"],
                 "historical_variants": queue[path]["historical_variant_sha256"].split(";"),
             }
