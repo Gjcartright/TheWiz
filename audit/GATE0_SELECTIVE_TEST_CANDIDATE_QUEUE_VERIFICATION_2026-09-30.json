@@ -1,0 +1,44 @@
+{
+  "authority_granted": false,
+  "changed_fields": [
+    "custody_status",
+    "decision_rationale",
+    "decision_evidence"
+  ],
+  "changed_paths": [
+    "tests/test_capture_input_minimization.cjs",
+    "tests/test_estimator_consumer_repairs.py",
+    "tests/test_estimator_repairs.py",
+    "tests/test_experiment_regime_clock.py",
+    "tests/test_institutional_metric_integrity.py",
+    "tests/test_ledger_clock_consumer.py",
+    "tests/test_legacy_pipeline_quarantine.py",
+    "tests/test_performance_input_repairs.py",
+    "tests/test_phase00_expansion_interfaces.py",
+    "tests/test_protective_exits.py",
+    "tests/test_protective_numeric_domain.py",
+    "tests/test_runtime_types.py",
+    "tests/test_teacher_numeric_repairs.py"
+  ],
+  "exact_ports": 12,
+  "expansion_files_edited": false,
+  "partial_ports_with_blocked_remainder": 1,
+  "pre_apply_queue_sha256": "a4e1afe755532f8e1e872da634b71de5e04534d3ea76e0777cd1732e9c2ccc21",
+  "schema_version": "gate0.selective_test_candidate_queue_apply.v1",
+  "script_sha256": "78379e76aa028c124933a9ab6a9312cb7dce7af264352adc4d07dbe4d3e143d9",
+  "selected_pre_apply_commit": "2968ac3d3ffeb418b82c4e860ed6397d867ee90b",
+  "status": "PASS",
+  "updated_queue_sha256": "b8632f932d42b8006523894f4bb77779cc2e24c2d633438b5d95fc155283b6ff",
+  "verify_result": {
+    "authority_granted": false,
+    "changed_paths": 0,
+    "exact_ports": 12,
+    "mode": "verify",
+    "partial_ports_with_blocked_remainder": 1,
+    "qualified_paths": 13,
+    "queue_sha256": "b8632f932d42b8006523894f4bb77779cc2e24c2d633438b5d95fc155283b6ff",
+    "report_sha256": "607e76272ea5b7da7a545a8a0bb2b198852de07aec676b2f214009bbdfc818a3",
+    "selected_pre_apply_commit": "2968ac3d3ffeb418b82c4e860ed6397d867ee90b",
+    "status": "PASS"
+  }
+}
