@@ -1,0 +1,465 @@
+{
+  "base_commit": "99df4d1f3b3f34a6c6c50c2d111a2344c05c6a61",
+  "external_effects_or_orders_executed": false,
+  "inputs_sha256": {
+    "audit/GATE0_EXTENDED_VARIANT_GAP_2026-09-30.json": "843abe2a6f4c2234ee1acad4d78c53e13e4ebbc9ef375a402dc6ef1daf136383",
+    "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "6e0beb2f87635f5e7af344519a333ef06b9da8c5ace6175e911380b79791b9b5",
+    "audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "isolated_safety_repair": "strictly_parse_five_persisted_hyperliquid_manifest_readiness_gates",
+  "newly_discovered_variant_shas": 10,
+  "queue_edited": false,
+  "reviewed_historical_variant_shas": 19,
+  "reviewed_paths": 10,
+  "rows": [
+    {
+      "current_selected_sha256": "96fd525b863e95aabbac646d5bec7154659f320071d46c72114eb99e90e2fb84",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "6692c8fd2fb78db887929aecd04a62e800250c94e8fe2ebf6506e69e079d36cd",
+        "runtime_sha256": "6692c8fd2fb78db887929aecd04a62e800250c94e8fe2ebf6506e69e079d36cd",
+        "working_sha256": "96fd525b863e95aabbac646d5bec7154659f320071d46c72114eb99e90e2fb84"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes overlay CSV and manifest evidence, bypassing governed atomic publication. Older forensic copy also parses ledger flags with _truthy. Ledger flags are constructed as booleans in this builder, while both frozen copies lose governed publication. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_ou_optimal_overlay.py",
+      "selected_active_at_base_sha256": "96fd525b863e95aabbac646d5bec7154659f320071d46c72114eb99e90e2fb84",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_ou_optimal_overlay.py",
+              "root": "visual_recovery",
+              "sha256": "54d447b81d1efbc30890fa52e4c02cd8b01281aa81b8ac84aa390190c6a917db"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes overlay CSV and manifest evidence, bypassing governed atomic publication.",
+          "sha256": "54d447b81d1efbc30890fa52e4c02cd8b01281aa81b8ac84aa390190c6a917db"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_ou_optimal_overlay.py",
+              "root": "forensic_b",
+              "sha256": "78d16d582c669dd5bcbddc42d580ac3e6765dadc5266488bd7929c35dfa067b8"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy also parses ledger flags with _truthy. Ledger flags are constructed as booleans in this builder, while both frozen copies lose governed publication.",
+          "sha256": "78d16d582c669dd5bcbddc42d580ac3e6765dadc5266488bd7929c35dfa067b8"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "f8b3287aa0a48de3e469a8f3d2a53efcc893e20e6d8cd43879d3465bb2d80870",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "f8b3287aa0a48de3e469a8f3d2a53efcc893e20e6d8cd43879d3465bb2d80870",
+        "runtime_sha256": "f8b3287aa0a48de3e469a8f3d2a53efcc893e20e6d8cd43879d3465bb2d80870",
+        "working_sha256": "f8b3287aa0a48de3e469a8f3d2a53efcc893e20e6d8cd43879d3465bb2d80870"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes validation manifest and Markdown, allowing partial public evidence on interruption. Older forensic copy parses completion and live-authority fields with strict_bool, which can avoid false-string acceptance; it also directly writes output. Leave boolean parsing as a separate scoped follow-up. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+      "selected_active_at_base_sha256": "f8b3287aa0a48de3e469a8f3d2a53efcc893e20e6d8cd43879d3465bb2d80870",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+              "root": "visual_recovery",
+              "sha256": "7fbbe428d6cc25c4253406613887e62f69760d6a8268de6117c0a44913b1d7ef"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes validation manifest and Markdown, allowing partial public evidence on interruption.",
+          "sha256": "7fbbe428d6cc25c4253406613887e62f69760d6a8268de6117c0a44913b1d7ef"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_validation.py",
+              "root": "forensic_b",
+              "sha256": "d7a4bfdbbddc720c11b3d216cdcded64bbb380afd52d4b82d5efbad51c5778e5"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy parses completion and live-authority fields with strict_bool, which can avoid false-string acceptance; it also directly writes output. Leave boolean parsing as a separate scoped follow-up.",
+          "sha256": "d7a4bfdbbddc720c11b3d216cdcded64bbb380afd52d4b82d5efbad51c5778e5"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "83af240de9f36e61421cf9a4f095b20110e8b4f0a270e53f15d0dbc66ce63aab",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "83af240de9f36e61421cf9a4f095b20110e8b4f0a270e53f15d0dbc66ce63aab",
+        "runtime_sha256": "83af240de9f36e61421cf9a4f095b20110e8b4f0a270e53f15d0dbc66ce63aab",
+        "working_sha256": "83af240de9f36e61421cf9a4f095b20110e8b4f0a270e53f15d0dbc66ce63aab"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy replaces governed CSV/JSON promotion and atomic Markdown with direct writes. Older forensic copy additionally parses family, preflight and authority flags strictly, but retains direct publication regressions; these are lower-authority research summaries. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_research_cycle.py",
+      "selected_active_at_base_sha256": "83af240de9f36e61421cf9a4f095b20110e8b4f0a270e53f15d0dbc66ce63aab",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_research_cycle.py",
+              "root": "visual_recovery",
+              "sha256": "2ca7b94edb7c03d67bf9f64ed26cc39ffe588fc125800270d007d594eb3f71e8"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy replaces governed CSV/JSON promotion and atomic Markdown with direct writes.",
+          "sha256": "2ca7b94edb7c03d67bf9f64ed26cc39ffe588fc125800270d007d594eb3f71e8"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_research_cycle.py",
+              "root": "forensic_b",
+              "sha256": "f75b18f03f14ec732f8814cce7094e7685f807e638044d91ae6f263ac4875b7d"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy additionally parses family, preflight and authority flags strictly, but retains direct publication regressions; these are lower-authority research summaries.",
+          "sha256": "f75b18f03f14ec732f8814cce7094e7685f807e638044d91ae6f263ac4875b7d"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "b7447a22b9e9287b8aec645e3bbe2f13d3dcf03122f45c6d3863e4e34f20c2d8",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "b4cb3dc7d88dc9a9e50166dc71eec14170e0003a7211f456caf59c2e9588d3e4",
+        "runtime_sha256": "b4cb3dc7d88dc9a9e50166dc71eec14170e0003a7211f456caf59c2e9588d3e4",
+        "working_sha256": "b4cb3dc7d88dc9a9e50166dc71eec14170e0003a7211f456caf59c2e9588d3e4"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes canonical manifest, candidate, validation and authority artifacts. Older forensic copy also strictly parses persisted manifest gates. The isolated 2fc9b43 repair ports only those authority flags and retains governed publication; raw False strings otherwise reached research/paper/live readiness. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_STRICT_GATE_REPAIR_REMAINDER_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_run_manifest.py",
+      "selected_active_at_base_sha256": "b4cb3dc7d88dc9a9e50166dc71eec14170e0003a7211f456caf59c2e9588d3e4",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_run_manifest.py",
+              "root": "forensic_b",
+              "sha256": "8c86176880e644a9368d17ed3f9c90aceb72a2737dbb8e33e7cd99eeb84ade27"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy also strictly parses persisted manifest gates. The isolated 2fc9b43 repair ports only those authority flags and retains governed publication; raw False strings otherwise reached research/paper/live readiness.",
+          "sha256": "8c86176880e644a9368d17ed3f9c90aceb72a2737dbb8e33e7cd99eeb84ade27"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_run_manifest.py",
+              "root": "visual_recovery",
+              "sha256": "c9258508ba2d64b4eb33bb6bd6f81fa61ced50569e912fd9d2117764298e6f79"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes canonical manifest, candidate, validation and authority artifacts.",
+          "sha256": "c9258508ba2d64b4eb33bb6bd6f81fa61ced50569e912fd9d2117764298e6f79"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "ab2b604a575eeefd97012f95cefb2664fae41e72654467ecef029c757a8e7ef6",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "6c73e79122f3c06ed13cb85857344d056a069f76343c048eff6d0632640dc689",
+        "runtime_sha256": "6c73e79122f3c06ed13cb85857344d056a069f76343c048eff6d0632640dc689",
+        "working_sha256": "ab2b604a575eeefd97012f95cefb2664fae41e72654467ecef029c757a8e7ef6"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual/forensic copy bypasses authorized Hyperliquid testnet info effect recording and directly replaces lifecycle evidence files. Same SHA is present in visual_recovery and forensic_b; no separate older variant exists. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_testnet_lifecycle_evidence.py",
+      "selected_active_at_base_sha256": "ab2b604a575eeefd97012f95cefb2664fae41e72654467ecef029c757a8e7ef6",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_testnet_lifecycle_evidence.py",
+              "root": "visual_recovery",
+              "sha256": "c83bb706ada322d7ece8bd4d111d05139be59566dc268dc9393992c0fef59001"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_testnet_lifecycle_evidence.py",
+              "root": "forensic_b",
+              "sha256": "c83bb706ada322d7ece8bd4d111d05139be59566dc268dc9393992c0fef59001"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual/forensic copy bypasses authorized Hyperliquid testnet info effect recording and directly replaces lifecycle evidence files.",
+          "sha256": "c83bb706ada322d7ece8bd4d111d05139be59566dc268dc9393992c0fef59001"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+        "runtime_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+        "working_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_HISTORICAL_NO_PORT",
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy writes agent lane, edge, state and Markdown files directly instead of using governed atomic publication. Older forensic copy additionally parses persisted graph state booleans strictly; useful only as a separate tested state-routing change, while its direct publication remains unsafe. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_HISTORICAL_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/langgraph_workflow.py",
+      "selected_active_at_base_sha256": "a39a92f57aeffd0edcf3dcfa7229a48a58b68dbf826227f76d5943c77ceef85c",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/langgraph_workflow.py",
+              "root": "visual_recovery",
+              "sha256": "0b87827dc6fe85d1bd9aa4efe8ed8c0274dc8fc403debcf9e64dd76d2e350db8"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy writes agent lane, edge, state and Markdown files directly instead of using governed atomic publication.",
+          "sha256": "0b87827dc6fe85d1bd9aa4efe8ed8c0274dc8fc403debcf9e64dd76d2e350db8"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/langgraph_workflow.py",
+              "root": "forensic_b",
+              "sha256": "ea43d042cf6cec5238d241c885db9f813db9e287167ce5080ddfd5a9e08bde78"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy additionally parses persisted graph state booleans strictly; useful only as a separate tested state-routing change, while its direct publication remains unsafe.",
+          "sha256": "ea43d042cf6cec5238d241c885db9f813db9e287167ce5080ddfd5a9e08bde78"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "94a7325f4ed842f2fcf47567f9a79f7e1526ed3d3062fb3ea85e23b53758897c",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "94a7325f4ed842f2fcf47567f9a79f7e1526ed3d3062fb3ea85e23b53758897c",
+        "runtime_sha256": "09b05dca77d91c41f2d78cce07f1c3c676bb2afb83093be8ad615650bcad1b3d",
+        "working_sha256": "94a7325f4ed842f2fcf47567f9a79f7e1526ed3d3062fb3ea85e23b53758897c"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes the agent registry, next-action queue and Markdown. Older forensic copy additionally parses persisted RL acceptance with _boolish; direct publication still weakens agent evidence integrity. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/mini_agents.py",
+      "selected_active_at_base_sha256": "94a7325f4ed842f2fcf47567f9a79f7e1526ed3d3062fb3ea85e23b53758897c",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/mini_agents.py",
+              "root": "forensic_b",
+              "sha256": "7f9c01ec44ba3e1f005241e7cddecd296373deb30b8ffbf25873f3d52ae8cda4"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy additionally parses persisted RL acceptance with _boolish; direct publication still weakens agent evidence integrity.",
+          "sha256": "7f9c01ec44ba3e1f005241e7cddecd296373deb30b8ffbf25873f3d52ae8cda4"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/mini_agents.py",
+              "root": "visual_recovery",
+              "sha256": "d063a3180f4e9a600cc51027d82c5db0dc0a3a16a76b14674cb18322035c2fb1"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes the agent registry, next-action queue and Markdown.",
+          "sha256": "d063a3180f4e9a600cc51027d82c5db0dc0a3a16a76b14674cb18322035c2fb1"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "ce147c8c3aad5a21d27c0f93ba70c9ceb5da10a4e36ea06525bb9521e77e0ca5",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "ce147c8c3aad5a21d27c0f93ba70c9ceb5da10a4e36ea06525bb9521e77e0ca5",
+        "runtime_sha256": "81f25d20cff59a6ada863362cd4907f5d93e9772e2f344da43bf8477aaffd4b7",
+        "working_sha256": "ce147c8c3aad5a21d27c0f93ba70c9ceb5da10a4e36ea06525bb9521e77e0ca5"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_ACTIVE_STAGE_MAP_RETAIN_WIZARD_CANDIDATE_NO_PORT",
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy logs raw exception text and adds YouTube research to the broad RL group; current YouTube config enables live refresh, so RL runs could trigger network collection unexpectedly. Older forensic copy also adds YouTube to RL and raw error text; its strict bool readiness parsing and report-only fetch override do not justify whole-file import. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_STAGE_MAP_RETAIN_WIZARD_CANDIDATE_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/nodes.py",
+      "selected_active_at_base_sha256": "ce147c8c3aad5a21d27c0f93ba70c9ceb5da10a4e36ea06525bb9521e77e0ca5",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/nodes.py",
+              "root": "forensic_b",
+              "sha256": "4eb064001bf1c011bdf6666f4d74153bdcf990f60bc4f61c02e869270e35f1ff"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy also adds YouTube to RL and raw error text; its strict bool readiness parsing and report-only fetch override do not justify whole-file import.",
+          "sha256": "4eb064001bf1c011bdf6666f4d74153bdcf990f60bc4f61c02e869270e35f1ff"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/nodes.py",
+              "root": "visual_recovery",
+              "sha256": "8d67327bd433cd72fd99ea04f8b571b4f447ec61f0512976b9ffcd29b35d231c"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy logs raw exception text and adds YouTube research to the broad RL group; current YouTube config enables live refresh, so RL runs could trigger network collection unexpectedly.",
+          "sha256": "8d67327bd433cd72fd99ea04f8b571b4f447ec61f0512976b9ffcd29b35d231c"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+        "runtime_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+        "working_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_HISTORICAL_NO_PORT",
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes task CSV, JSONL memory and reasoning artifacts, losing governed atomic append and publication. Older forensic copy additionally parses outcome and promotion flags strictly, but keeps direct task and memory publication. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_HISTORICAL_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/orchestrator_assistant.py",
+      "selected_active_at_base_sha256": "61f0efabc4d2f3c625583161ef8342be20088548813d7bd1d3748c80765d737c",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/orchestrator_assistant.py",
+              "root": "visual_recovery",
+              "sha256": "65f8de54cb0713c8fb8e625c69f796def074a14d95013156c7192cb0496f1605"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes task CSV, JSONL memory and reasoning artifacts, losing governed atomic append and publication.",
+          "sha256": "65f8de54cb0713c8fb8e625c69f796def074a14d95013156c7192cb0496f1605"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/orchestrator_assistant.py",
+              "root": "forensic_b",
+              "sha256": "673f8f1bd8cd72beabdab753bf2cefb2e07da36422e69f1d7a4c014a99971e30"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy additionally parses outcome and promotion flags strictly, but keeps direct task and memory publication.",
+          "sha256": "673f8f1bd8cd72beabdab753bf2cefb2e07da36422e69f1d7a4c014a99971e30"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "429cf657b430c7a0589cb26beaa95c4e62d75b545183970768386b85215660f2",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "429cf657b430c7a0589cb26beaa95c4e62d75b545183970768386b85215660f2",
+        "runtime_sha256": "429cf657b430c7a0589cb26beaa95c4e62d75b545183970768386b85215660f2",
+        "working_sha256": "429cf657b430c7a0589cb26beaa95c4e62d75b545183970768386b85215660f2"
+      },
+      "prior_custody_status_snapshot": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "recommended_decision_evidence_append": "audit/GATE0_OTHER_ORCHESTRATION_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Reviewed all frozen source variants: Visual copy directly writes scoreboard CSV and Markdown, risking partial dashboard research evidence. Older forensic copy additionally parses Sharpe and RL acceptance flags strictly; retain this as a separate dashboard repair idea, not a whole-file port. Keep selected source and variant SHA/root custody; port only the isolated strict manifest-gate repair where applicable.",
+      "recommended_queue_status": "REVIEWED_OTHER_ORCHESTRATION_EXTENDED_VARIANTS_NO_PORT",
+      "relative_path": "src/quant_platform/orchestration/specialist_scoreboard.py",
+      "selected_active_at_base_sha256": "429cf657b430c7a0589cb26beaa95c4e62d75b545183970768386b85215660f2",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_WHOLE_FILE_PORT",
+      "variants": [
+        {
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/specialist_scoreboard.py",
+              "root": "visual_recovery",
+              "sha256": "0aa15764fb9fdfd9360508194ae6c9bc135948ba7e04c0c7ea8cf0b24f4a2224"
+            }
+          ],
+          "newly_discovered": true,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Visual copy directly writes scoreboard CSV and Markdown, risking partial dashboard research evidence.",
+          "sha256": "0aa15764fb9fdfd9360508194ae6c9bc135948ba7e04c0c7ea8cf0b24f4a2224"
+        },
+        {
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/specialist_scoreboard.py",
+              "root": "forensic_b",
+              "sha256": "527041a5c7a55e2cd9c976f3e9d58a9709b8bc1ced3c967e1106601b3517544e"
+            }
+          ],
+          "newly_discovered": false,
+          "review_decision": "NO_WHOLE_FILE_PORT",
+          "semantic_difference": "Older forensic copy additionally parses Sharpe and RL acceptance flags strictly; retain this as a separate dashboard repair idea, not a whole-file port.",
+          "sha256": "527041a5c7a55e2cd9c976f3e9d58a9709b8bc1ced3c967e1106601b3517544e"
+        }
+      ]
+    }
+  ],
+  "schema_version": "thewiz.gate0.other_orchestration_extended_variant_reconciliation.v1",
+  "selected_source_repair_commit": "2fc9b433af2b3b9f8effffb8f9d997525c2dc2e0",
+  "selected_source_repair_path": "src/quant_platform/orchestration/hyperliquid_run_manifest.py",
+  "selected_source_repair_sha256": "b7447a22b9e9287b8aec645e3bbe2f13d3dcf03122f45c6d3863e4e34f20c2d8",
+  "selected_source_repair_test_sha256": "ff0f6278bf4eacd5dbffe9f709d52d8f6f2b52e2aa390697e29b131e91f3c641",
+  "whole_file_ports": 0
+}
