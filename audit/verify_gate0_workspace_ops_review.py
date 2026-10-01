@@ -75,11 +75,18 @@ def main() -> None:
         path = SAVEPOINT / relative
         if not path.is_file() or sha256(path.read_bytes()) != source[key]["sha256"]:
             raise ValueError(f"historical workspace source drift: {relative}")
-    for key in ("forensic_validate", "external_mount_agent_plist", "external_mount_agent_script", "installed_nightly_script"):
+    for key in ("forensic_validate", "external_mount_agent_plist", "external_mount_agent_script"):
         item = source[key]
         path = Path(item["path"])
         if not path.is_file() or sha256(path.read_bytes()) != item["sha256"]:
             raise ValueError(f"workspace source custody drift: {key}")
+    # The review records the installed script's historical Sep 30 bytes. The
+    # active installation may be repaired later, but must match current source.
+    installed = Path(source["installed_nightly_script"]["path"])
+    active_source = ROOT / "scripts/ops/nightly_savepoint.py"
+    if (not installed.is_file()
+            or sha256(installed.read_bytes()) != sha256(active_source.read_bytes())):
+        raise ValueError("current nightly save point source/install drift")
     if (retired["decision"] != "OBSOLETE_ENCRYPTED_MOUNT_AGENT_DISABLED_REVERSIBLY"
             or not retired["after"]["disabled"]
             or not retired["after"]["service_unloaded"]
