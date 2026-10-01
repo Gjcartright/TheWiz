@@ -45,6 +45,8 @@ SENSITIVE_NAME = re.compile(
     r"(^|/)(\.env($|\.)|[^/]*(secret|credential|token)[^/]*|[^/]*\.(pem|key|p12|pfx)$)",
     re.IGNORECASE,
 )
+# Reviewed test source about a retired credential path; its filename is not a secret.
+REVIEWED_SENSITIVE_NAMES = frozenset({"tests/test_wizard_curl_credential_handoff.py"})
 DATE_NAME = re.compile(r"\d{4}-\d{2}-\d{2}$")
 MANIFEST_NAME = "SAVEPOINT_MANIFEST.json"
 RECEIPT_NAME = "SAVEPOINT_RECEIPT.json"
@@ -108,7 +110,11 @@ def rsync(source: Path, target: Path, previous: Path | None = None) -> None:
     for pattern in EXCLUDES:
         args.extend(("--exclude", pattern))
     args.extend((str(source) + "/", str(target) + "/"))
-    command(*args)
+    result = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                            text=True, errors="replace", check=False)
+    if result.returncode:
+        detail = result.stderr.strip()[-4000:] or "no stderr was emitted"
+        raise RuntimeError(f"rsync exited {result.returncode} copying {source} to {target}: {detail}")
 
 
 def prepare_expansion(today: str) -> tuple[Path, dict]:
@@ -122,12 +128,11 @@ def prepare_expansion(today: str) -> tuple[Path, dict]:
         return final, manifest
     temporary = Path(tempfile.mkdtemp(prefix=".building-", dir=root))
     try:
-        previous = previous_snapshot(root, today)
         for label, source in (("project", PROJECT), ("local_runtime", RUNTIME)):
             destination = temporary / label
             destination.mkdir()
-            prior = previous / label if previous is not None else None
-            rsync(source, destination, prior if prior and prior.exists() else None)
+            # Expansion is ExFAT and cannot hard-link unchanged files to a prior save point.
+            rsync(source, destination)
         manifest = file_manifest(temporary)
         write_json(temporary / MANIFEST_NAME, manifest)
         write_json(temporary / RECEIPT_NAME, {"date": today, "destination": "Expansion",
@@ -174,7 +179,8 @@ def github_paths(snapshot_project: Path) -> list[str]:
     for name in paths:
         if Path(name).is_absolute() or ".." in Path(name).parts:
             raise RuntimeError("Unsafe GitHub mirror path")
-        if name != ".env.example" and SENSITIVE_NAME.search(name):
+        if (name != ".env.example" and name not in REVIEWED_SENSITIVE_NAMES
+                and SENSITIVE_NAME.search(name)):
             raise RuntimeError("Sensitive-looking GitHub mirror path: " + name)
         path = snapshot_project / name
         if path.is_symlink() or (path.exists() and not path.is_file()):
