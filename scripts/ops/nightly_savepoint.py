@@ -47,6 +47,9 @@ SENSITIVE_NAME = re.compile(
 )
 # Reviewed test source about a retired credential path; its filename is not a secret.
 REVIEWED_SENSITIVE_NAMES = frozenset({"tests/test_wizard_curl_credential_handoff.py"})
+# Research PDFs are kept in the two local save points. Some publisher records
+# restrict redistribution, so do not copy any paper PDF into Git history.
+LOCAL_ONLY_PAPER_PREFIX = "audit/quantopian_papers/"
 DATE_NAME = re.compile(r"\d{4}-\d{2}-\d{2}$")
 MANIFEST_NAME = "SAVEPOINT_MANIFEST.json"
 RECEIPT_NAME = "SAVEPOINT_RECEIPT.json"
@@ -176,16 +179,21 @@ def git(*args: str, cwd: Path, capture: bool = False) -> bytes:
 def github_paths(snapshot_project: Path) -> list[str]:
     raw = git("ls-files", "-co", "--exclude-standard", "-z", cwd=snapshot_project, capture=True)
     paths = sorted({os.fsdecode(item) for item in raw.split(b"\0") if item})
+    selected = []
     for name in paths:
         if Path(name).is_absolute() or ".." in Path(name).parts:
             raise RuntimeError("Unsafe GitHub mirror path")
+        if name.startswith(LOCAL_ONLY_PAPER_PREFIX) and name.lower().endswith(".pdf"):
+            continue
         if (name != ".env.example" and name not in REVIEWED_SENSITIVE_NAMES
                 and SENSITIVE_NAME.search(name)):
             raise RuntimeError("Sensitive-looking GitHub mirror path: " + name)
         path = snapshot_project / name
         if path.is_symlink() or (path.exists() and not path.is_file()):
             raise RuntimeError("Unsupported GitHub mirror entry: " + name)
-    return [name for name in paths if (snapshot_project / name).is_file()]
+        if path.is_file():
+            selected.append(name)
+    return selected
 
 
 def secret_scan(path: Path) -> None:
