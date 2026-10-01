@@ -1,0 +1,40 @@
+{
+  "started_utc": "2026-09-30T01:04:00.575930+00:00",
+  "finished_utc": "2026-09-30T01:08:13.972206+00:00",
+  "roots": {
+    "working_git": "/Volumes/Expansion/Crypto Wizard",
+    "recovery_project": "/Volumes/Expansion/TheWiz-Workspace/project",
+    "local_runtime": "/Users/gregc/TheWiz-LocalRuntime",
+    "wizard_papers": "/Volumes/Expansion/Wizard Papers"
+  },
+  "counts": {
+    "working_git": 1929,
+    "recovery_project": 2861,
+    "local_runtime": 8040,
+    "wizard_papers": 59
+  },
+  "errors": [],
+  "excluded_dirs": [
+    ".cache",
+    ".codex",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".runtime-candidates",
+    ".runtime_control",
+    ".venv",
+    ".venv*",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "venv"
+  ],
+  "excluded_name_rule": "AppleDouble, .DS_Store, .env*, and names suggestive of secrets/credentials; working output directory excluded; symlinks excluded",
+  "scope": "read-only source/evidence hash snapshot; no Git object integrity claim",
+  "environment_rows_excluded_after_hash": {
+    "recovery_project": 22017
+  },
+  "filtered_at_utc": "2026-09-30T01:09:50.915797+00:00"
+}

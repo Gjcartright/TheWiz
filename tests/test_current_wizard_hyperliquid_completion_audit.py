@@ -49,6 +49,25 @@ def test_completion_audit_refuses_prefiltered_or_unexecuted_daily_chain(tmp_path
     assert frame.loc["no_live_trading_authorization", "status"] == "PROVEN"
 
 
+def test_completion_audit_rejects_string_false_sweep_complete(tmp_path):
+    _seed_audit_root(tmp_path, daily_complete=True, discovery_prefilter=False)
+    refresh_path = (
+        tmp_path / "reports" / "active" / "exhaustive_wizard_api_refresh_manifest.json"
+    )
+    refresh = json.loads(refresh_path.read_text(encoding="utf-8"))
+    refresh["sweep_complete"] = "False"
+    refresh_path.write_text(json.dumps(refresh), encoding="utf-8")
+
+    result = build_current_wizard_hyperliquid_completion_audit(
+        root=tmp_path,
+        now=datetime(2026, 8, 8, tzinfo=timezone.utc),
+    )
+    frame = pd.read_csv(result.paths["completion_audit"]).set_index("requirement_id")
+
+    assert result.summary["completion_claim_allowed"] is False
+    assert frame.loc["exhaustive_discovery_no_prefilter", "status"] == "UNPROVEN"
+
+
 def _seed_audit_root(
     root: Path, *, daily_complete: bool, discovery_prefilter: bool
 ) -> None:

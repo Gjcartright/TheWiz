@@ -1,0 +1,645 @@
+{
+  "active_commit": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "active_consumer_search": {
+    "matches": 0,
+    "pattern": "collection_(daily_entry|daily_finalization|discovery_stage|display_evidence|inventory_stage|observer_bridge|owner_admission|owner_binding|publication_sequence|runtime_route|stage_evidence|startup_contract|startup_preflight|system_check_stage)",
+    "roots": [
+      "src",
+      "scripts",
+      "tests",
+      "config"
+    ]
+  },
+  "family_decision": "No narrow port or repair commit. All 14 remain runtime-only, absent in active checkout, and form a dependency-incomplete collection execution/release architecture. Review a dependency-complete release with active authority and lease integration before any activation.",
+  "files": {
+    "src/quant_platform/orchestration/collection_daily_entry.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_daily_entry.py",
+          "queue_line": 529,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "1dba0fe43d5a6e6db6ae8be6e3996ac8e7b164c7c6e80ce8f93a62fce67007fe"
+        },
+        {
+          "path": "tests/test_collection_daily_route.py",
+          "queue_line": 531,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "3c17909791ce3b94214ffeea51f29ff28d8401d7001c3ee2004dceb7947bdcc8"
+        },
+        {
+          "path": "tests/test_observer_credited711.py",
+          "queue_line": 695,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "761b5a844136f4a9d5882c3379d21c53c996ec75893d37142aff361ae32e7ab6"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_daily_finalization.py",
+        "src/quant_platform/orchestration/collection_discovery_stage.py",
+        "src/quant_platform/orchestration/collection_inventory_stage.py",
+        "src/quant_platform/orchestration/collection_publication_sequence.py",
+        "src/quant_platform/orchestration/collection_stage_evidence.py",
+        "src/quant_platform/orchestration/collection_system_check_stage.py",
+        "src/quant_platform/orchestration/daily_workload_preflight.py",
+        "src/quant_platform/orchestration/discovery_accounting.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "corrective_scheduler_supervisor.supervise_collection_scheduler_run",
+        "current_wizard_hyperliquid_costs.prepare_current_wizard_hyperliquid_cost_evidence",
+        "current_wizard_hyperliquid_costs.materialize_prepared_current_wizard_hyperliquid_cost_evidence",
+        "current_wizard_hyperliquid_replay.prepare_current_wizard_hyperliquid_history",
+        "current_wizard_hyperliquid_replay.materialize_prepared_current_wizard_hyperliquid_history",
+        "current_wizard_hyperliquid_daily_runner._validate_live_as_of",
+        "current_wizard_hyperliquid_daily_runner._stage_effect_accounting",
+        "current_wizard_hyperliquid_daily_runner._hyperliquid_stage_external_context"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_runtime_route.py",
+        "src/quant_platform/orchestration/corrective_runtime.py"
+      ],
+      "queue_line": 206,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Missing eight imported modules, including publication sequence, stage evidence, workload preflight, and discovery accounting. Active supervisor lacks supervise_collection_scheduler_run; active daily runner lacks several collection-facing helpers. This module would select and execute provider stages.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "b0760a00b3e361bffa11199251a86e9724b13f20b48d09dd1a019773c2455bdd",
+      "safety_positive_property": "fixed stage map, no user-selected producer plugin, no direct order path",
+      "savepoint_sha256": "b0760a00b3e361bffa11199251a86e9724b13f20b48d09dd1a019773c2455bdd",
+      "surface": "execution_dispatcher"
+    },
+    "src/quant_platform/orchestration/collection_daily_finalization.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_daily_finalization.py",
+          "queue_line": 530,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "3d883f7afbac4cabda2c8d78e40720b741a75748f119ca15cff0b7d0eabd6845"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/precollection_campaign_io.py",
+        "src/quant_platform/orchestration/precollection_monitor.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "current_wizard_hyperliquid_daily_runner.daily_pipeline_output_paths"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py",
+        "src/quant_platform/orchestration/collection_observer_bridge.py"
+      ],
+      "queue_line": 207,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent precollection_campaign_io and precollection_monitor; active daily runner lacks daily_pipeline_output_paths. Writes eight final report/monitor targets under exact lease.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "55365c998e3ac68620cb30d565e133346777779458a57860fb0970598aa70835",
+      "safety_positive_property": "frozen final bytes and exact publication targets",
+      "savepoint_sha256": "55365c998e3ac68620cb30d565e133346777779458a57860fb0970598aa70835",
+      "surface": "publication"
+    },
+    "src/quant_platform/orchestration/collection_discovery_stage.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_discovery_stage.py",
+          "queue_line": 534,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "bf7d0bae245b86530933fc256e878d340b8a09d96cc2251320874b6054fa202a"
+        }
+      ],
+      "missing_active_import_paths": [],
+      "missing_active_symbols_or_seams": [
+        "crypto_wizards_sweep.wizard_discovery_output_paths"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py"
+      ],
+      "queue_line": 208,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Active crypto_wizards_sweep lacks wizard_discovery_output_paths. The stage enters a delegated crypto_wizards issuer session and executes an authorized external sweep; runtime-only issuer/lease architecture is required.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "6e4042474299c52f9afb7cfdec67945aac8dabddeb7b144a400ecd00dace50a8",
+      "safety_positive_property": "freezes 30 cells, credit envelope and exact targets before provider session",
+      "savepoint_sha256": "6e4042474299c52f9afb7cfdec67945aac8dabddeb7b144a400ecd00dace50a8",
+      "surface": "provider_effect"
+    },
+    "src/quant_platform/orchestration/collection_display_evidence.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_display_evidence.py",
+          "queue_line": 535,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "6f01960a387a7f86e1b164a7264a3a92f4c151f0813b36a8413e0b50731c4410"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/current_wizard_collection_display.py"
+      ],
+      "missing_active_symbols_or_seams": [],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_stage_evidence.py"
+      ],
+      "queue_line": 209,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent current_wizard_collection_display and is called by runtime-only collection_stage_evidence. Its exact 12-output chain reconstruction has no active display contract to validate.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "28326a04c610697e1d5f2197e1db9764d0727bd4dfffeddd8015ed7011fa97b3",
+      "safety_positive_property": "read-only reconstruction of 12 display outputs from completed chain",
+      "savepoint_sha256": "28326a04c610697e1d5f2197e1db9764d0727bd4dfffeddd8015ed7011fa97b3",
+      "surface": "read_only_validator"
+    },
+    "src/quant_platform/orchestration/collection_inventory_stage.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_inventory_dependency.py",
+          "queue_line": 542,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "be161fcf16e55d39333770daba4dc183fce2b396785f8f6f00b8f03bc526b48a"
+        },
+        {
+          "path": "tests/test_collection_inventory_stage.py",
+          "queue_line": 544,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "04b71adb9e8071b84f815e4b81735a9c2e140acb61114d188ee439dbd0f0d63e"
+        }
+      ],
+      "missing_active_import_paths": [],
+      "missing_active_symbols_or_seams": [
+        "execution.hyperliquid_inventory_output_paths"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py"
+      ],
+      "queue_line": 210,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Active execution lacks hyperliquid_inventory_output_paths. The stage enters a delegated hyperliquid_public issuer session and executes an external inventory refresh; runtime-only issuer/lease architecture is required.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "7fdb75f0a8545e3a0092b001c18a42f9d8e65a986b06bc0b80af13907e689082",
+      "safety_positive_property": "freezes two-request, zero-credit Testnet inventory target set",
+      "savepoint_sha256": "7fdb75f0a8545e3a0092b001c18a42f9d8e65a986b06bc0b80af13907e689082",
+      "surface": "provider_effect"
+    },
+    "src/quant_platform/orchestration/collection_observer_bridge.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/collection_observer_negative_support.py",
+          "queue_line": 493,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "6802fa078e6016b087502826fc4b0efe5f447a7813d2e99da6b3fd68813e1c44"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_daily_finalization.py",
+        "src/quant_platform/orchestration/precollection_campaign_io.py",
+        "src/quant_platform/orchestration/precollection_monitor.py",
+        "src/quant_platform/orchestration/precollection_observer.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "current_wizard_hyperliquid_daily_runner.daily_pipeline_output_paths"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/precollection_observer_io.py"
+      ],
+      "queue_line": 211,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent collection_daily_finalization, precollection_campaign_io, precollection_monitor, and precollection_observer. Preserved docstring explicitly requires collection-only reader/evaluator wiring, absent active.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "6f6ed3b41ba79d9ea441e83484234ec70ce6c8f77528914ec2a7098076515d47",
+      "safety_positive_property": "read-only authenticated report bridge with exact publication checks",
+      "savepoint_sha256": "6f6ed3b41ba79d9ea441e83484234ec70ce6c8f77528914ec2a7098076515d47",
+      "surface": "observer_reader"
+    },
+    "src/quant_platform/orchestration/collection_owner_admission.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_sequence_supervisor.py",
+          "queue_line": 566,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "96f43f487632c31a8e71ea74022e2661328fa8feb243443a091198da43984b9c"
+        },
+        {
+          "path": "tests/test_observer_credited711.py",
+          "queue_line": 695,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "761b5a844136f4a9d5882c3379d21c53c996ec75893d37142aff361ae32e7ab6"
+        },
+        {
+          "path": "tests/test_owner_admission666.py",
+          "queue_line": 698,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "daeabf4b4a0c37a2d8701a14cb7abc8866a8c640f71c73e17a05c13023e8d17f"
+        },
+        {
+          "path": "tests/test_released_admission681.py",
+          "queue_line": 753,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "9b4ce63266eba0298f20efd98be8cf201e0a330e9599c8cc55e33febd71a8d98"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_admission_barrier.py",
+        "src/quant_platform/orchestration/collection_owner_binding.py",
+        "src/quant_platform/orchestration/collection_release/owner_release_inputs.py",
+        "src/quant_platform/orchestration/collection_release/release_evidence.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "corrective_daily_scheduler._evaluate_active_campaign_admission"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+      ],
+      "queue_line": 212,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent collection_admission_barrier, collection_owner_binding, and collection_release owner/evidence modules. Active corrective_daily_scheduler lacks _evaluate_active_campaign_admission; cannot accept release evidence standalone.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "f8f4f09b364ba501c8e0c774ac0511b633d22479c65e73f237808f6d56ffa820",
+      "safety_positive_property": "binds released owner inputs before admission",
+      "savepoint_sha256": "f8f4f09b364ba501c8e0c774ac0511b633d22479c65e73f237808f6d56ffa820",
+      "surface": "admission"
+    },
+    "src/quant_platform/orchestration/collection_owner_binding.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_owner665.py",
+          "queue_line": 554,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "bdf335c8529933a638be41ebbc8f817ffd8df341c19e935d0af4759a19316031"
+        },
+        {
+          "path": "tests/test_observation_handoff670.py",
+          "queue_line": 694,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "7151ca7398c596e511b06a9760ce2d5c9338197a63208dcc9ce2e2762975ea85"
+        },
+        {
+          "path": "tests/test_owner_admission666.py",
+          "queue_line": 698,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "daeabf4b4a0c37a2d8701a14cb7abc8866a8c640f71c73e17a05c13023e8d17f"
+        },
+        {
+          "path": "tests/test_owner_release668.py",
+          "queue_line": 699,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "330c0943f4bb79421c100a9e633970056d67a5d8b55236e2b3c1e53b461064ab"
+        },
+        {
+          "path": "tests/test_owner_release_inputs669.py",
+          "queue_line": 700,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "9bae8353be5b391e96bc47f04b1a0eac25cb684dc84a3e10997ebaa89a9a6a8a"
+        },
+        {
+          "path": "tests/test_owner_workload680.py",
+          "queue_line": 701,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "b24cecd14e6a17c7b3fbdfbf42549ed197cc375620acb08e6f9b6254a02cab83"
+        },
+        {
+          "path": "tests/test_preowner_inputs673.py",
+          "queue_line": 740,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "f322c214238dd9cf2caf37fb68afe029a7ab3e7aa42e96f7b5fb1a47022f45f9"
+        },
+        {
+          "path": "tests/test_released_admission681.py",
+          "queue_line": 753,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "9b4ce63266eba0298f20efd98be8cf201e0a330e9599c8cc55e33febd71a8d98"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_admission_barrier.py",
+        "src/quant_platform/orchestration/collection_publication_sequence.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "effect_authority.EffectAuthority.authority_key_id"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_owner_admission.py",
+        "src/quant_platform/orchestration/collection_release/owner_release_inputs.py",
+        "src/quant_platform/orchestration/collection_release/owner_release_reader.py",
+        "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+      ],
+      "queue_line": 213,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent collection_admission_barrier and collection_publication_sequence. It binds to preserved v6 authority identity fields unavailable in active v2 authority.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "ce06e10905e2d3d5908315deee400f69d052ed32f5574d656d5081dee1641428",
+      "safety_positive_property": "checks v6 authority and owner identity at observation",
+      "savepoint_sha256": "ce06e10905e2d3d5908315deee400f69d052ed32f5574d656d5081dee1641428",
+      "surface": "owner_capability"
+    },
+    "src/quant_platform/orchestration/collection_publication_sequence.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_daily_finalization.py",
+          "queue_line": 530,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "3d883f7afbac4cabda2c8d78e40720b741a75748f119ca15cff0b7d0eabd6845"
+        },
+        {
+          "path": "tests/test_collection_owner665.py",
+          "queue_line": 554,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "bdf335c8529933a638be41ebbc8f817ffd8df341c19e935d0af4759a19316031"
+        },
+        {
+          "path": "tests/test_collection_publication_sequence.py",
+          "queue_line": 557,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "7e492759065eb773af44fc442fbab0ab7dee2a7701a4aeaebd4a65b0075ee8b5"
+        },
+        {
+          "path": "tests/test_observation_handoff670.py",
+          "queue_line": 694,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "7151ca7398c596e511b06a9760ce2d5c9338197a63208dcc9ce2e2762975ea85"
+        },
+        {
+          "path": "tests/test_owner_release668.py",
+          "queue_line": 699,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "330c0943f4bb79421c100a9e633970056d67a5d8b55236e2b3c1e53b461064ab"
+        },
+        {
+          "path": "tests/test_owner_release_inputs669.py",
+          "queue_line": 700,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "9bae8353be5b391e96bc47f04b1a0eac25cb684dc84a3e10997ebaa89a9a6a8a"
+        },
+        {
+          "path": "tests/test_owner_workload680.py",
+          "queue_line": 701,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "b24cecd14e6a17c7b3fbdfbf42549ed197cc375620acb08e6f9b6254a02cab83"
+        },
+        {
+          "path": "tests/test_preowner_inputs673.py",
+          "queue_line": 740,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "f322c214238dd9cf2caf37fb68afe029a7ab3e7aa42e96f7b5fb1a47022f45f9"
+        }
+      ],
+      "missing_active_import_paths": [],
+      "missing_active_symbols_or_seams": [
+        "corrective_scheduler_lock._PublicationLeaseActivation",
+        "corrective_scheduler_lock._CURRENT_PUBLICATION_LEASE_ACTIVATION",
+        "corrective_scheduler_lock._drain_publication_lease_workers",
+        "corrective_scheduler_lock._governed_evidence_lock(_collection_sequence=...)"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py",
+        "src/quant_platform/orchestration/collection_owner_binding.py",
+        "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+      ],
+      "queue_line": 214,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Mutates an exact publication lease under one lock and relies on runtime-only private lock activation/drain APIs and _collection_sequence mode, absent active. Porting alone changes publication authority lifetime.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "d04e1ec9d68503e00985e1b35f25a604041fd497645b46eb7d05676a7222130f",
+      "safety_positive_property": "keeps exact stage leases under one lock and drains workers",
+      "savepoint_sha256": "d04e1ec9d68503e00985e1b35f25a604041fd497645b46eb7d05676a7222130f",
+      "surface": "publication_lock"
+    },
+    "src/quant_platform/orchestration/collection_runtime_route.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_campaign_identity.py",
+          "queue_line": 520,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "509a71a6c0fbbb7cc1c2c46ff411c2c371b04a2207d4ea5a59306b34e442d1c3"
+        },
+        {
+          "path": "tests/test_collection_observer_route.py",
+          "queue_line": 552,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "f54c42504ff81209a44ae2ebeadd93e8b022da2974c8d9bb07c7705c4c736aab"
+        },
+        {
+          "path": "tests/test_collection_runtime_route.py",
+          "queue_line": 564,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "a9d79637cd5be399b9e3939051c837b4d15203446d3e594b5cdb75aa6e72aa8d"
+        },
+        {
+          "path": "tests/test_collection_startup_preflight.py",
+          "queue_line": 570,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "113522efa9e15c1ffea2d481f041f7ce8f6a603690e1c758fc71d751e37fdd5e"
+        }
+      ],
+      "missing_active_import_paths": [],
+      "missing_active_symbols_or_seams": [],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_release/runtime_binding.py",
+        "src/quant_platform/orchestration/collection_startup_preflight.py",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+        "src/quant_platform/orchestration/corrective_scheduler_bootstrap.py",
+        "src/quant_platform/orchestration/precollection_observer_io.py"
+      ],
+      "queue_line": 249,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Render-only alternate LaunchAgent contract points at missing collection_daily_entry. Active bootstrap has no collection-only-v1 route handling; companion runtime binding/startup preflight are absent.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "db1da1136b1ebb60d632620c8dec6f57b770061d5ed8f563b88dc138f286eb2e",
+      "safety_positive_property": "only renders a proposed LaunchAgent payload; no install",
+      "savepoint_sha256": "db1da1136b1ebb60d632620c8dec6f57b770061d5ed8f563b88dc138f286eb2e",
+      "surface": "launch_route_renderer"
+    },
+    "src/quant_platform/orchestration/collection_stage_evidence.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_handoff_semantics.py",
+          "queue_line": 540,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "8d9dfcf4d67cb5547a860e79d92b011161acb21f3d9599f8713b90310d7eb505"
+        },
+        {
+          "path": "tests/test_collection_stage_evidence.py",
+          "queue_line": 568,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "8608733fcc058faa7b2f254ab919d6cd9feb4027c3d14a317b007b1a62c86b60"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_display_evidence.py",
+        "src/quant_platform/orchestration/precollection_campaign_io.py"
+      ],
+      "missing_active_symbols_or_seams": [],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py"
+      ],
+      "queue_line": 250,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent precollection_campaign_io and collection_display_evidence; creates immutable semantic receipt outputs under a lease. Is invoked by missing collection daily entry.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "3096dd27480d5dbe3f347bd72a6088909c89c642f1248a5dd1de025f784730f1",
+      "safety_positive_property": "captures source bytes and emits semantic receipt last",
+      "savepoint_sha256": "3096dd27480d5dbe3f347bd72a6088909c89c642f1248a5dd1de025f784730f1",
+      "surface": "publication"
+    },
+    "src/quant_platform/orchestration/collection_startup_contract.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_startup_contract.py",
+          "queue_line": 569,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "563db209bdb40a77d91f1d7f00f3f4a0a8a5772ae10491cf2d5600e332c025a7"
+        },
+        {
+          "path": "tests/test_collection_startup_verify.py",
+          "queue_line": 571,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "33023519ff01c83148038dfeeb2f4851e05ab779cabeb09fac248fbf8d77f511"
+        }
+      ],
+      "missing_active_import_paths": [],
+      "missing_active_symbols_or_seams": [],
+      "preserved_runtime_consumer_paths": [
+        "scripts/collection_startup_verify.py"
+      ],
+      "queue_line": 251,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Standard-library-only receipt verifier but no active consumer; companion scripts/collection_startup_verify.py and complete collection release package are runtime-only. Receipt explicitly does not authenticate runtime installation, test validity, or launch readiness.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "62ec8b2069e9422f325dd20791b78af7327ad8c13c0f8ddc45a888b4ad633001",
+      "safety_positive_property": "offline receipt parser/validator with false authority flags",
+      "savepoint_sha256": "62ec8b2069e9422f325dd20791b78af7327ad8c13c0f8ddc45a888b4ad633001",
+      "surface": "offline_receipt"
+    },
+    "src/quant_platform/orchestration/collection_startup_preflight.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_startup_preflight.py",
+          "queue_line": 570,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "113522efa9e15c1ffea2d481f041f7ce8f6a603690e1c758fc71d751e37fdd5e"
+        },
+        {
+          "path": "tests/test_owner_admission666.py",
+          "queue_line": 698,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "daeabf4b4a0c37a2d8701a14cb7abc8866a8c640f71c73e17a05c13023e8d17f"
+        },
+        {
+          "path": "tests/test_released_admission681.py",
+          "queue_line": 753,
+          "queue_status": "REVIEWED_EFFECT_V6_DEPENDENCY_NO_PORT",
+          "sha256": "9b4ce63266eba0298f20efd98be8cf201e0a330e9599c8cc55e33febd71a8d98"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/collection_runtime_route.py",
+        "src/quant_platform/orchestration/precollection_admission.py",
+        "src/quant_platform/orchestration/precollection_campaign_io.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "corrective_daily_scheduler.current_daily_campaign_identity",
+        "effect_authority.load_effect_authority_secret",
+        "effect_authority.EffectAuthority.non_file_semantic_snapshot",
+        "effect_authority.EffectAuthority.read_only_run_population",
+        "effect_authority.EffectAuthority.authority_key_id"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+      ],
+      "queue_line": 252,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent collection_runtime_route, precollection_admission, and precollection_campaign_io. Active daily scheduler lacks current_daily_campaign_identity and active v2 EffectAuthority lacks load_effect_authority_secret, non_file_semantic_snapshot, read_only_run_population, authority_key_id.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "666867fb1da8e0708b1d8fba71907bf24d25595b010c57afadfafa583bf1cdcb",
+      "safety_positive_property": "checks maintenance, campaign, runtime and authority inputs before mutation",
+      "savepoint_sha256": "666867fb1da8e0708b1d8fba71907bf24d25595b010c57afadfafa583bf1cdcb",
+      "surface": "startup_reader"
+    },
+    "src/quant_platform/orchestration/collection_system_check_stage.py": {
+      "active_checkout": "absent",
+      "direct_pending_tests": [
+        {
+          "path": "tests/test_collection_daily_entry.py",
+          "queue_line": 529,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "1dba0fe43d5a6e6db6ae8be6e3996ac8e7b164c7c6e80ce8f93a62fce67007fe"
+        },
+        {
+          "path": "tests/test_collection_observer_process.py",
+          "queue_line": 551,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "86c66cb0f7a16776dc1dfede9f23003cc42ec6ed3dc3789d626632c33db1516f"
+        },
+        {
+          "path": "tests/test_collection_system_check_stage.py",
+          "queue_line": 573,
+          "queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "sha256": "abc5b17179e4b91805c18baf74b0278e62656ce61ad0f70a6f61590be295660d"
+        }
+      ],
+      "missing_active_import_paths": [
+        "src/quant_platform/orchestration/daily_workload_preflight.py",
+        "src/quant_platform/orchestration/precollection_campaign_io.py"
+      ],
+      "missing_active_symbols_or_seams": [
+        "active_pipeline._system_check_frame"
+      ],
+      "preserved_runtime_consumer_paths": [
+        "src/quant_platform/orchestration/collection_daily_entry.py"
+      ],
+      "queue_line": 253,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "Requires absent daily_workload_preflight and precollection_campaign_io; active active_pipeline lacks _system_check_frame. Publishes two diagnostic outputs under a collection lease.",
+      "recommended_decision": "no_port_defer",
+      "recommended_status": "REVIEWED_DEPENDENCY_BLOCKED_COLLECTION_FAMILY_NO_PORT",
+      "runtime_sha256": "24870ebc9e568a330d6f20748d6b2033198678867146f854f15a4e91419bc7a1",
+      "safety_positive_property": "captures diagnostic inputs, checks identity, and uses exact targets",
+      "savepoint_sha256": "24870ebc9e568a330d6f20748d6b2033198678867146f854f15a4e91419bc7a1",
+      "surface": "publication"
+    }
+  },
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/collection-family-review-TXMdgD/repo",
+  "prior_release_package_evidence": "audit/GATE0_COLLECTION_RELEASE_DECISION_2026-09-30.json",
+  "queue_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/collection-family-review-TXMdgD/repo/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "queue_sha256": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+  "review_date": "2026-09-30",
+  "runtime_root": "/Users/gregc/TheWiz-LocalRuntime",
+  "savepoint_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+  "schema_version": "thewiz.gate0.collection_family_review.v1",
+  "static_method": "AST import/path/symbol review; no imports of candidate modules, no provider calls, no collection execution, no tests"
+}

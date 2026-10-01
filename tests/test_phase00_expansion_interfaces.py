@@ -67,6 +67,18 @@ HASH_B = "b" * 64
 HASH_C = "c" * 64
 NOW = datetime(2026, 8, 21, 12, tzinfo=UTC)
 
+WP028_CANONICAL_NODE_IDS: tuple[str, ...] = ()
+WP028_M7_GATE_IDS: tuple[str, ...] = ()
+WP028_STRUCTURAL_GAP = "holdout_contamination_has_no_canonical_formula_node_or_m7_gate"
+WP028_ZERO_AUTHORITY = {
+    "promotion_authority": False,
+    "paper_trading_authority": False,
+    "testnet_authority": False,
+    "live_authority": False,
+    "execution_authority": False,
+    "order_authority": False,
+}
+
 
 def _instrument(
     *,
@@ -755,3 +767,56 @@ def test_held_out_receipts_reject_overlap_and_invalid_time_boundary() -> None:
     payload["dimension_receipt_id"] = ""
     with pytest.raises(ValidationError, match="must follow training window"):
         HeldOutDimensionReceipt.model_validate(payload)
+
+
+def test_wp028_holdout_contamination_requires_new_interval() -> None:
+    contaminated_pair = _held_out_dimension(HeldOutDimension.PAIR).model_dump()
+    contaminated_pair["held_out_members"] = contaminated_pair["training_members"]
+    contaminated_pair["dimension_receipt_id"] = ""
+    with pytest.raises(ValidationError, match="must be disjoint"):
+        HeldOutDimensionReceipt.model_validate(contaminated_pair)
+
+    reused_time = _held_out_dimension(HeldOutDimension.TIME).model_dump()
+    reused_time["held_out_start"] = reused_time["training_end"]
+    reused_time["dimension_receipt_id"] = ""
+    with pytest.raises(ValidationError, match="must follow training window"):
+        HeldOutDimensionReceipt.model_validate(reused_time)
+
+    new_interval = _held_out_dimension(HeldOutDimension.TIME).model_copy(
+        update={
+            "split_snapshot_hash": HASH_A,
+            "training_members": ("train_time_replacement",),
+            "held_out_members": ("untouched_time_replacement",),
+            "training_end": NOW + timedelta(days=10),
+            "held_out_start": NOW + timedelta(days=11),
+            "evaluated_at": NOW + timedelta(days=12),
+            "dimension_receipt_id": "",
+        }
+    )
+    new_interval = HeldOutDimensionReceipt.model_validate(
+        new_interval.model_dump(exclude={"dimension_receipt_id"})
+    )
+    dimensions = tuple(
+        new_interval if dimension is HeldOutDimension.TIME else _held_out_dimension(dimension)
+        for dimension in HeldOutDimension
+    )
+    replacement = CompleteHeldOutValidationReceipt(
+        validation_run_id="validation-new-untouched-interval",
+        model_or_strategy_id="ou-v2",
+        source_dataset_id="dataset_v2",
+        source_label_lane=EvidenceLane.BACKTEST,
+        dimensions=dimensions,
+        created_at=NOW + timedelta(days=13),
+    )
+
+    assert WP028_CANONICAL_NODE_IDS == ()
+    assert WP028_M7_GATE_IDS == ()
+    assert WP028_STRUCTURAL_GAP == (
+        "holdout_contamination_has_no_canonical_formula_node_or_m7_gate"
+    )
+    assert all(value is False for value in WP028_ZERO_AUTHORITY.values())
+    assert set(WP028_ZERO_AUTHORITY).isdisjoint(CompleteHeldOutValidationReceipt.model_fields)
+    assert new_interval.training_end < new_interval.held_out_start
+    assert set(new_interval.training_members).isdisjoint(new_interval.held_out_members)
+    assert replacement.validation_run_id == "validation-new-untouched-interval"
+    assert replacement.validation_receipt_id.startswith("complete_held_out_validation_")

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import exp, isfinite
+from math import exp, isclose, isfinite
 from typing import Mapping
 
 import pandas as pd
@@ -22,6 +22,34 @@ def bounded_score(value: float, low: float, high: float, invert: bool = False) -
     score = 100.0 * (value - low) / (high - low)
     score = clamp(score)
     return 100.0 - score if invert else score
+
+
+def _trusted_metric(row: Mapping[str, object], name: str) -> float | None:
+    """Return a finite canonical metric unless its provenance is research-only."""
+
+    if name not in row:
+        return None
+    source = str(row.get(f"{name}_feature_source", "") or "").strip().lower()
+    if "research_proxy_" in source or "full_sample" in source or "hindsight" in source:
+        return None
+    try:
+        value = float(row[name])
+    except (TypeError, ValueError):
+        return None
+    if not isfinite(value):
+        return None
+
+    proxy_name = f"research_proxy_{name}"
+    if proxy_name in row and source in {"", name}:
+        try:
+            proxy_value = float(row[proxy_name])
+        except (TypeError, ValueError):
+            proxy_value = float("nan")
+        if isfinite(proxy_value) and isclose(
+            value, proxy_value, rel_tol=1e-12, abs_tol=0.0
+        ):
+            return None
+    return value
 
 
 @dataclass(frozen=True)
@@ -48,7 +76,7 @@ class FeatureEngine:
         }
 
     def score_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Append explainable 0-100 scores used by composite strategy families."""
+        """Derive strategy scores; retain supplied score claims for review only."""
         enriched = frame.copy()
         score_rows: list[dict[str, float]] = []
         for _, row in enriched.iterrows():
@@ -57,10 +85,12 @@ class FeatureEngine:
         if score_rows:
             score_frame = pd.DataFrame(score_rows, index=enriched.index)
             for column in score_frame.columns:
-                if column not in enriched.columns:
-                    enriched[column] = score_frame[column]
-            if "composite_score" not in enriched.columns:
-                enriched["composite_score"] = score_frame.mean(axis=1)
+                if column in enriched.columns and f"reported_{column}" not in enriched.columns:
+                    enriched[f"reported_{column}"] = enriched[column]
+                enriched[column] = score_frame[column]
+            if "composite_score" in enriched.columns and "reported_composite_score" not in enriched.columns:
+                enriched["reported_composite_score"] = enriched["composite_score"]
+            enriched["composite_score"] = score_frame.mean(axis=1)
         return enriched
 
     def cointegration_score(self, row: Mapping[str, float]) -> ScoreResult:
@@ -87,9 +117,19 @@ class FeatureEngine:
         return ScoreResult("Copula Dislocation Score", clamp(score), "Rewards calibrated conditional probability distortion and relevant tail dependence.")
 
     def tail_risk_score(self, row: Mapping[str, float]) -> ScoreResult:
-        cvar = abs(float(row.get("cvar", 0.10)))
-        var = abs(float(row.get("var", 0.06)))
-        drawdown = abs(float(row.get("drawdown", 0.20)))
+        trusted = {
+            name: _trusted_metric(row, name) for name in ("cvar", "var", "drawdown")
+        }
+        if any(value is None for value in trusted.values()):
+            return ScoreResult(
+                "Tail Risk Score",
+                0.0,
+                "Unavailable: canonical point-in-time CVaR, VaR, and drawdown"
+                " with non-proxy provenance are required.",
+            )
+        cvar = abs(float(trusted["cvar"]))
+        var = abs(float(trusted["var"]))
+        drawdown = abs(float(trusted["drawdown"]))
         score = 0.4 * bounded_score(cvar, 0.20, 0.01) + 0.25 * bounded_score(var, 0.12, 0.005) + 0.35 * bounded_score(drawdown, 0.20, 0.01)
         return ScoreResult("Tail Risk Score", clamp(score), "Higher score means lower expected tail loss and drawdown pressure.")
 
@@ -103,9 +143,17 @@ class FeatureEngine:
 
     def backtest_quality_score(self, row: Mapping[str, float]) -> ScoreResult:
         pf = float(row.get("profit_factor", 1.0))
-        sharpe = float(row.get("sharpe", 0.0))
+        sharpe = _trusted_metric(row, "sharpe")
         trades = float(row.get("completed_trades", 0.0))
-        dd = abs(float(row.get("drawdown", 0.20)))
+        drawdown = _trusted_metric(row, "drawdown")
+        if sharpe is None or drawdown is None:
+            return ScoreResult(
+                "Backtest Quality Score",
+                0.0,
+                "Unavailable: canonical point-in-time Sharpe and drawdown with"
+                " non-proxy provenance are required.",
+            )
+        dd = abs(drawdown)
         score = (
             0.35 * bounded_score(pf, 1.0, 2.2)
             + 0.30 * bounded_score(sharpe, 0.0, 2.5)

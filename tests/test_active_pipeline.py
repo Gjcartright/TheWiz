@@ -51,6 +51,13 @@ from quant_platform.active_pipeline import (
 from quant_platform.experiments import PairDataset
 
 
+def test_canonical_recovery_command_uses_current_savepoint_receipt():
+    commands = active_pipeline_module.CANONICAL_COMMANDS
+    assert "python scripts/ops/nightly_savepoint.py --status" in commands
+    assert not any("build_current_recovery_checkpoint.py" in command for command in commands)
+    assert (Path(__file__).resolve().parents[1] / "scripts/ops/nightly_savepoint.py").is_file()
+
+
 def test_trade_gate_diagnostics_are_scoped_to_selected_model_only():
     summary = pd.DataFrame(
         [

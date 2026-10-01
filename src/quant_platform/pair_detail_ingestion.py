@@ -3,6 +3,7 @@ from __future__ import annotations
 from quant_platform.orchestration.corrective_runtime import promote_staged_file
 
 from quant_platform.orchestration.corrective_runtime import atomic_write_csv
+from quant_platform.runtime_types import strict_bool
 
 import json
 import re
@@ -427,10 +428,10 @@ def snapshot_from_payload(payload: Any) -> PairDetailSnapshot:
         var_sim=_safe_float(normalized.get("var_sim")),
         cvar_sim=_safe_float(normalized.get("cvar_sim")),
         x_weighting=_safe_float(normalized.get("x_weighting")),
-        ecm_x_available=bool(normalized.get("ecm_x_available", normalized.get("ecm_x") is not None)),
-        ecm_y_available=bool(normalized.get("ecm_y_available", normalized.get("ecm_y") is not None)),
-        ecm_strength_available=bool(normalized.get("ecm_strength_available", normalized.get("ecm_strength") is not None)),
-        ecm_deviation_override_available=bool(normalized.get("ecm_deviation_override_available", False)),
+        ecm_x_available=strict_bool(normalized.get("ecm_x_available", normalized.get("ecm_x") is not None)),
+        ecm_y_available=strict_bool(normalized.get("ecm_y_available", normalized.get("ecm_y") is not None)),
+        ecm_strength_available=strict_bool(normalized.get("ecm_strength_available", normalized.get("ecm_strength") is not None)),
+        ecm_deviation_override_available=strict_bool(normalized.get("ecm_deviation_override_available", False)),
         source_url=normalized.get("source_url"),
     )
 
@@ -504,7 +505,7 @@ def datasets_from_pair_detail_snapshots(input_dir: str | Path, *, require_resear
         usable_paths = {
             Path(str(row["path"]))
             for row in pair_detail_quality_report(root)
-            if bool(row.get("research_usable"))
+            if strict_bool(row.get("research_usable"))
             and "placeholder_execution_assumptions" not in str(row.get("quality_blockers") or "")
         }
     for path in sorted(root.glob("*.json")):
@@ -1260,9 +1261,9 @@ def _best_capture_candidate(rows: list[dict[str, object]]) -> dict[str, object]:
 
     def score(row: dict[str, object]) -> tuple[int, int, int, int]:
         return (
-            int(bool(row.get("two_leg_execution_ready"))),
-            int(bool(row.get("ecm_history_ready"))),
-            int(bool(row.get("experiment_ready"))),
+            int(strict_bool(row.get("two_leg_execution_ready"))),
+            int(strict_bool(row.get("ecm_history_ready"))),
+            int(strict_bool(row.get("experiment_ready"))),
             int(row.get("row_count", 0) or 0),
         )
 

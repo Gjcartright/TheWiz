@@ -8,12 +8,15 @@ import pytest
 from quant_platform.backtest import (
     CostModel,
     FundingPolicy,
+    RebalancePolicy,
     backtest_two_leg_spread,
+    backtest_two_leg_spread_with_ledger,
     max_drawdown,
 )
 from quant_platform.performance_math import (
     MATH_VERSION,
     calculate_annualized_sharpe,
+    normalize_interval,
     resolve_annualization,
 )
 from quant_platform.trade_ledger import build_trade_ledger
@@ -35,6 +38,42 @@ def test_annualization_infers_regular_five_minute_timestamps():
     result = resolve_annualization(timestamps=timestamps)
     assert result.interval == "5m"
     assert result.periods_per_year == 105120
+
+
+@pytest.mark.parametrize(
+    ("interval", "expected_periods"),
+    [
+        ("3m", 175_200.0),
+        ("30m", 17_520.0),
+        ("2h", 4_380.0),
+        ("4h", 2_190.0),
+        ("8h", 1_095.0),
+        ("12h", 730.0),
+        ("3d", 365.0 / 3.0),
+        ("1w", 365.0 / 7.0),
+        ("1M", 12.0),
+    ],
+)
+def test_annualization_supports_declared_hyperliquid_timeframes(interval, expected_periods):
+    result = resolve_annualization(interval=interval)
+
+    assert result.status == "valid"
+    assert result.periods_per_year == pytest.approx(expected_periods)
+
+
+def test_monthly_and_minute_labels_remain_distinct():
+    assert normalize_interval("1M") == "1M"
+    assert normalize_interval("1month") == "1M"
+    assert normalize_interval("1m") == "1m"
+    monthly = calculate_annualized_sharpe(
+        pd.Series([0.01, -0.005, 0.007]), interval="1M"
+    )
+    minute = calculate_annualized_sharpe(
+        pd.Series([0.01, -0.005, 0.007]), interval="1m"
+    )
+
+    assert monthly.periods_per_year == 12.0
+    assert minute.periods_per_year == 525_600.0
 
 
 def test_sharpe_uses_sample_standard_deviation_and_blocks_one_observation():
@@ -127,3 +166,62 @@ def test_two_leg_backtest_ignores_beta_and_declares_funding_policy():
     assert low.funding_policy == "signed_realized"
     assert low.math_version == MATH_VERSION
     assert low.sharpe_status == "valid"
+
+
+def test_two_leg_backtest_fixed_units_holds_quantities_and_records_events():
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.date_range("2026-01-01", periods=5, freq="1h", tz="UTC"),
+            "price_x": [100.0, 100.0, 110.0, 120.0, 120.0],
+            "price_y": [50.0, 50.0, 50.0, 50.0, 50.0],
+            "hedge_ratio": [1.0, 1.0, 1.4, 1.8, 1.8],
+            "hedge_ratio_kind": ["quantity_units"] * 5,
+        }
+    )
+    signal = pd.Series([0.0, 1.0, 1.0, 1.0, 0.0])
+    fixed_model = CostModel(
+        funding_bps_per_day=0.0,
+        execution_risk_bps=0.0,
+        partial_fill_probability=0.0,
+        rebalance_policy=RebalancePolicy.FIXED_UNITS_UNTIL_EXIT.value,
+    )
+    target_model = CostModel(
+        funding_bps_per_day=0.0,
+        execution_risk_bps=0.0,
+        partial_fill_probability=0.0,
+        rebalance_policy=RebalancePolicy.TARGET_WEIGHTS_EVERY_BAR.value,
+    )
+
+    fixed, ledger = backtest_two_leg_spread_with_ledger(frame, signal, fixed_model)
+    target, target_ledger = backtest_two_leg_spread_with_ledger(frame, signal, target_model)
+
+    bars = ledger.bar_ledger
+    assert fixed.rebalance_policy == RebalancePolicy.FIXED_UNITS_UNTIL_EXIT.value
+    assert bars["rebalance_event"].tolist() == ["hold", "entry", "hold", "hold", "exit"]
+    assert bars.loc[1:3, "quantity_x_after_rebalance"].nunique() == 1
+    assert bars.loc[1:3, "quantity_y_after_rebalance"].nunique() == 1
+    assert bars.loc[2:3, ["turnover_x", "turnover_y"]].to_numpy().sum() == pytest.approx(0.0)
+    assert target_ledger.bar_ledger.loc[
+        2:3, ["turnover_x", "turnover_y"]
+    ].to_numpy().sum() > 0.0
+    assert "target_update" in set(target_ledger.bar_ledger["rebalance_event"])
+    assert fixed.total_fees != pytest.approx(target.total_fees)
+    assert fixed.reconciliation_error < 1e-12
+
+
+def test_two_leg_backtest_still_rejects_unknown_rebalance_policy():
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.date_range("2026-01-01", periods=4, freq="1h", tz="UTC"),
+            "price_x": [100.0, 101.0, 102.0, 103.0],
+            "price_y": [50.0, 50.5, 50.0, 51.0],
+            "hedge_ratio": [1.0] * 4,
+        }
+    )
+
+    with pytest.raises(ValueError, match="unsupported rebalance policy"):
+        backtest_two_leg_spread(
+            frame,
+            pd.Series([0.0, 1.0, 1.0, 0.0]),
+            CostModel(rebalance_policy="unknown_policy"),
+        )

@@ -497,14 +497,25 @@ def _in_process_stage_timeout(
     if prior_timer != (0.0, 0.0):
         raise RuntimeError("daily_in_process_timeout_already_active")
     prior_handler = signal.getsignal(signal.SIGALRM)
+    expired = False
+
+    class _DeadlineExpired(BaseException):
+        """Keep the timer signal out of ordinary stage exception handlers."""
 
     def expire(_signum: int, _frame: object) -> None:
-        raise subprocess.TimeoutExpired(command, timeout)
+        nonlocal expired
+        expired = True
+        raise _DeadlineExpired()
 
     signal.signal(signal.SIGALRM, expire)
     signal.setitimer(signal.ITIMER_REAL, timeout)
     try:
-        yield
+        try:
+            yield
+        except _DeadlineExpired:
+            raise subprocess.TimeoutExpired(command, timeout) from None
+        if expired:
+            raise subprocess.TimeoutExpired(command, timeout)
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, prior_handler)

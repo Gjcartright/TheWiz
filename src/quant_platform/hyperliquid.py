@@ -698,7 +698,7 @@ def normalize_hyperliquid_market_context(
                 "source_system": "hyperliquid_public_api",
                 "source_status": "captured",
                 "source_role": "market_data_funding_context",
-                "execution_authority": tradable,
+                "execution_authority": False,
                 "promotion_allowed": False,
                 "venue_lane": "hyperliquid_research_candidate",
                 "liquidity_bucket": _liquidity_bucket(volume_24h),

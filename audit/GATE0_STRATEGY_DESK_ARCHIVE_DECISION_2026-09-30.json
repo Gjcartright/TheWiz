@@ -1,0 +1,77 @@
+{
+  "decision": "REVIEWED_UNADOPTED_STRATEGY_DESK_ARCHIVE_NO_PORT",
+  "index_document_kind": "non_executable_desk_organization",
+  "index_runtime_consumer": null,
+  "interpretation": "Retain all 13 exact files as preserved, unadopted research and archive records. Profile numbers are scenario inputs, not active risk or trading policy. Five profile manifests bind to exact profile bytes; both retired OU records retain terminal failure and no authority. Review against current data, math, risk, and execution contracts before any later adoption.",
+  "organized_exact_modes": 7,
+  "path_sha256": {
+    "config/strategy_desk_index.json": "7d439f05902f19c500f701f5ca9675bc5269d72e6b31493e880f88b3510f17ad",
+    "config/strategy_desk_reviews/ou_spread_retired_20260909.json": "754f7e837a923be10b9b7c6d305d7e928371f8a9825a03696f30d94cdab21a38",
+    "config/strategy_desk_reviews/ou_zscore_retired_20260909.json": "62cc78fa22d66ead5d6255be5d66d006514cfcd98d3dee7c19c8cc4b2a62f7a7",
+    "config/strategy_desks/copula_research_20260909.json": "08330e8e464370d015dc1e5cf16a9b64530a30369f66568408992172fc2aecc4",
+    "config/strategy_desks/copula_research_20260909.manifest.json": "562e79728911fb40aa74b4052526930afe38be87f7db3b3fd3008b4e80468319",
+    "config/strategy_desks/dynamic_spread_research_20260909.json": "6629eaeca248c7aaf7172d7c1f32b78b3518f7d3bad752d8b964dc2acd5c3e52",
+    "config/strategy_desks/dynamic_spread_research_20260909.manifest.json": "0348219f641cd0606b0b6b98c1c94092aba63a6e9a29f3aa96b1438d29a82b90",
+    "config/strategy_desks/dynamic_zscore_research_20260909.json": "f4e144d3848b9ed1634f02df4c6b15067da8cfcb8964492768e45b0b138122b9",
+    "config/strategy_desks/dynamic_zscore_research_20260909.manifest.json": "cfb12b665b769f0947c10e5406e223e192cd6ca4a53219e83a360b6cce9f62eb",
+    "config/strategy_desks/static_spread_research_20260909.json": "812d1520eb326b433f9866d908abde8e7474f57f65351d06a171a7d24138a200",
+    "config/strategy_desks/static_spread_research_20260909.manifest.json": "5463b2f80f0a1f29dbcedee95721eefe3f4b5ca54b33cf056c230c9425a43fd6",
+    "config/strategy_desks/static_zscore_research_20260909.json": "8fba23446679afd625e887c4bd7f778ab89ff746fa24fa3cf3d8ed85e4560d4d",
+    "config/strategy_desks/static_zscore_research_20260909.manifest.json": "9fb875da16f63b6fe4ca39db427ac9643b7f7caf00e8e8afe7795aa7d7641bcf"
+  },
+  "research_profiles": [
+    {
+      "desk_id": "wizard_fidelity.copula",
+      "manifest_path": "config/strategy_desks/copula_research_20260909.manifest.json",
+      "path": "config/strategy_desks/copula_research_20260909.json",
+      "profile_id": "copula.ada-algo.daily.research.20260909.v1",
+      "profile_sha256": "08330e8e464370d015dc1e5cf16a9b64530a30369f66568408992172fc2aecc4",
+      "scope": "offline_research_scenario"
+    },
+    {
+      "desk_id": "wizard_fidelity.dynamic.spread",
+      "manifest_path": "config/strategy_desks/dynamic_spread_research_20260909.manifest.json",
+      "path": "config/strategy_desks/dynamic_spread_research_20260909.json",
+      "profile_id": "dynamic-spread.ada-algo.daily.research.20260909.v1",
+      "profile_sha256": "6629eaeca248c7aaf7172d7c1f32b78b3518f7d3bad752d8b964dc2acd5c3e52",
+      "scope": "offline_research_scenario"
+    },
+    {
+      "desk_id": "wizard_fidelity.dynamic.zscorer",
+      "manifest_path": "config/strategy_desks/dynamic_zscore_research_20260909.manifest.json",
+      "path": "config/strategy_desks/dynamic_zscore_research_20260909.json",
+      "profile_id": "dynamic-zscore.ada-algo.daily.research.20260909.v1",
+      "profile_sha256": "f4e144d3848b9ed1634f02df4c6b15067da8cfcb8964492768e45b0b138122b9",
+      "scope": "offline_research_scenario"
+    },
+    {
+      "desk_id": "wizard_fidelity.static.spread",
+      "manifest_path": "config/strategy_desks/static_spread_research_20260909.manifest.json",
+      "path": "config/strategy_desks/static_spread_research_20260909.json",
+      "profile_id": "static-spread.ada-algo.daily.research.20260909.v1",
+      "profile_sha256": "812d1520eb326b433f9866d908abde8e7474f57f65351d06a171a7d24138a200",
+      "scope": "offline_research_scenario"
+    },
+    {
+      "desk_id": "wizard_fidelity.static.zscorer",
+      "manifest_path": "config/strategy_desks/static_zscore_research_20260909.manifest.json",
+      "path": "config/strategy_desks/static_zscore_research_20260909.json",
+      "profile_id": "static-zscore.ada-algo.daily.research.20260909.v1",
+      "profile_sha256": "8fba23446679afd625e887c4bd7f778ab89ff746fa24fa3cf3d8ed85e4560d4d",
+      "scope": "offline_research_scenario"
+    }
+  ],
+  "retired_ou_reviews": [
+    {
+      "path": "config/strategy_desk_reviews/ou_spread_retired_20260909.json",
+      "review_id": "ou-spread.retired-review.20260909.v1",
+      "terminal_status": "CLOSED_TERMINAL_FAILURE"
+    },
+    {
+      "path": "config/strategy_desk_reviews/ou_zscore_retired_20260909.json",
+      "review_id": "ou-zscore.retired-review.20260909.v1",
+      "terminal_status": "CLOSED_TERMINAL_FAILURE"
+    }
+  ],
+  "schema_version": "thewiz.gate0.strategy_desk_archive_decision.v1"
+}

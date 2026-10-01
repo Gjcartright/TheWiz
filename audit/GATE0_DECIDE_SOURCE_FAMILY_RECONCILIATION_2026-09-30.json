@@ -1,0 +1,892 @@
+{
+  "active_consumer_and_dependency_checks": {
+    "active_direct_consumer_paths": [],
+    "active_source_paths_present": 0,
+    "active_test_paths_present": 0,
+    "effect_authority_active_exists": true,
+    "math_desk_parent_resolver_active_exists": {
+      "m4": false,
+      "m6": false,
+      "m7": false,
+      "m8": false
+    },
+    "registry_active_exists": false,
+    "registry_local_runtime_sha256": "e8776363e05c0c3e23210561341c10458b7677e07a102ac1df3b141041241c66",
+    "registry_path": "config/research_validation_surface_registry.json",
+    "research_trial_registry_active_exists": false
+  },
+  "active_source_commit": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "as_of_date": "2026-09-30",
+  "decision": "PRESERVE_COHORT_NO_PORT",
+  "direct_test_decisions": [
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "3a2b6ef098026c75c12dc35fdc01621747b9bfecaa2b04db00c91536fa7232af",
+      "quant_platform_imports": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "3a2b6ef098026c75c12dc35fdc01621747b9bfecaa2b04db00c91536fa7232af",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_color_team_admission.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "a5b4d67830bb1b63475085de6869d6fd30eb7034bc88003a1cd44a49a6d795c4",
+      "quant_platform_imports": [
+        "quant_platform.decide",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "a5b4d67830bb1b63475085de6869d6fd30eb7034bc88003a1cd44a49a6d795c4",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_color_team_architecture.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "d9d12f707b9ae21871eaabe5709a834502b86e08b3d4dfa6dadaddf492fd2c75",
+      "quant_platform_imports": [
+        "quant_platform.decide",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ],
+      "queue_recovery_sha256_at_freeze": "d9d12f707b9ae21871eaabe5709a834502b86e08b3d4dfa6dadaddf492fd2c75",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_color_team_integrity_regressions.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "e323146101f6e96734ae3115eb0c33b2477057b73121be859010ad73fe399115",
+      "quant_platform_imports": [
+        "quant_platform.decide",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "queue_recovery_sha256_at_freeze": "e323146101f6e96734ae3115eb0c33b2477057b73121be859010ad73fe399115",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_color_team_isolation.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_challenge",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.decide.shadow",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "496857e69754cb84e3088f337c71819bf3ff013a312d6fc104c9aa4ea20c938a",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_challenge",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.decide.shadow",
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_recovery_sha256_at_freeze": "496857e69754cb84e3088f337c71819bf3ff013a312d6fc104c9aa4ea20c938a",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_color_team_trials.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": true,
+      "local_runtime_sha256": "09e6b6aa360a206f20ec0532e161d883882da8a655e891647995b5885de7bf0a",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "09e6b6aa360a206f20ec0532e161d883882da8a655e891647995b5885de7bf0a",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_contracts.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.deep_challenge",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "3da64a5ec9783ce311fe9acecb67b90723761b8b66bac0f775125c831470627b",
+      "quant_platform_imports": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.deep_challenge",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_recovery_sha256_at_freeze": "3da64a5ec9783ce311fe9acecb67b90723761b8b66bac0f775125c831470627b",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_deep_challenge.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "f86cb5c445fd8322e560ec30af936b627569cfa5cb132788450c7f781c0fa1e3",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge"
+      ],
+      "queue_recovery_sha256_at_freeze": "f86cb5c445fd8322e560ec30af936b627569cfa5cb132788450c7f781c0fa1e3",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_fast_challenge.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.pipeline"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "862fd6ade04c1ce41ea4648680ef303d12f4a934fca04d05f475bbafd89507d4",
+      "quant_platform_imports": [
+        "quant_platform.decide.pipeline"
+      ],
+      "queue_recovery_sha256_at_freeze": "862fd6ade04c1ce41ea4648680ef303d12f4a934fca04d05f475bbafd89507d4",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_pipeline.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "18c47404a6057b9130bf29125bb883e055dd9c69bc84d59bc0162e40665e899c",
+      "quant_platform_imports": [
+        "quant_platform.decide.admission",
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "18c47404a6057b9130bf29125bb883e055dd9c69bc84d59bc0162e40665e899c",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_proof_admission.py"
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.shadow"
+      ],
+      "active_exists": false,
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "1ca88ec74429af2218ade99db8c944df28d9c2bb6bd092b4979efee13554f90f",
+      "quant_platform_imports": [
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.shadow"
+      ],
+      "queue_recovery_sha256_at_freeze": "1ca88ec74429af2218ade99db8c944df28d9c2bb6bd092b4979efee13554f90f",
+      "queue_status": "REVIEWED_DECIDE_DIRECT_TEST_DEFERRED_NO_PORT",
+      "reason": "Direct test of an unported package; retain with the preserved dependency cohort. It is not current active test coverage.",
+      "recommendation": "NO_PORT",
+      "relative_path": "tests/test_decide_shadow_handoff.py"
+    }
+  ],
+  "expansion_checkout_edited": false,
+  "partial_ports_selected": [],
+  "port_prerequisites": [
+    "review and select coherent Math Desk M4-M8 source/evidence cohort",
+    "review research_trial_registry.py and direct tests",
+    "review ownership registry and source/runtime fingerprint contract",
+    "reconcile active orchestration and publication authority interfaces",
+    "run targeted tests in isolated candidate after an authorized coherent port"
+  ],
+  "preserved_pipeline": {
+    "actions": [
+      "audit",
+      "validate"
+    ],
+    "authority_literal": "research_validation_evidence_only_no_downstream_effect",
+    "capital_effect": false,
+    "current_generation_effect": false,
+    "downstream_effect": false,
+    "entrypoint": "python -m quant_platform.decide",
+    "exact_current_parent_stages": [
+      "M4",
+      "M6",
+      "M7",
+      "M8"
+    ],
+    "execution_effect": false,
+    "fingerprint_inputs": [
+      "src/quant_platform source population",
+      "config/research_validation_surface_registry.json",
+      "pyproject.toml",
+      "uv.lock",
+      "installed distributions and runtime"
+    ],
+    "historical_outputs_current_authority": false,
+    "live_effect": false,
+    "n_plus_one_handoff_only": true,
+    "publication_scope": "research",
+    "publication_target_roots": [
+      "reports/snapshots/decide",
+      "reports/snapshots/research_validation"
+    ]
+  },
+  "provider_calls": 0,
+  "roots_checked": {
+    "isolated_active_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/decide-gate0-candidate",
+    "local_runtime_savepoint": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime"
+  },
+  "schema_version": "thewiz.gate0.decide_source_family_review.v1",
+  "scope": {
+    "direct_test_paths": 11,
+    "source_paths": 14
+  },
+  "shared_queue_edited": false,
+  "source_decisions": [
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_color_team_isolation.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "39995ae14d2870c87c5ea1e3e68587d75565a4d760e456712227b6d4553b04d9",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline"
+      ],
+      "queue_recovery_sha256_at_freeze": "39995ae14d2870c87c5ea1e3e68587d75565a4d760e456712227b6d4553b04d9",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Eagerly exports fast challenge, handoff, and pipeline; no active caller or independent package boundary.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/__init__.py",
+      "runtime_source_importers": [],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.handoff",
+        "quant_platform.decide.pipeline"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.pipeline"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.pipeline"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "6575b39e0cea2b2d6d991eee726e44981a761f697a8184d59a0cd550bf1f3daa",
+      "quant_platform_imports": [
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.pipeline",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "queue_recovery_sha256_at_freeze": "6575b39e0cea2b2d6d991eee726e44981a761f697a8184d59a0cd550bf1f3daa",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Research-only audit/validate CLI depends on the unpublished ownership registry and exact-current Math Desk parent lane.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/__main__.py",
+      "runtime_source_importers": [],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.pipeline",
+        "quant_platform.orchestration.effect_authority"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_admission.py",
+        "tests/test_decide_deep_challenge.py",
+        "tests/test_decide_proof_admission.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "fc2e946655019ce296fdfed18f125c6b2c1d53dad2b6b41e7aa33cacb55e3b52",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "fc2e946655019ce296fdfed18f125c6b2c1d53dad2b6b41e7aa33cacb55e3b52",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Proof admission binds canonical M4/M6/M7/M8 receipts and imports evidence_payloads, which requires the absent trial registry.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/admission.py",
+      "runtime_source_importers": [],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts"
+      ]
+    },
+    {
+      "active_absent_import_modules": [],
+      "active_absent_top_level_import_modules": [],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_admission.py",
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_contracts.py",
+        "tests/test_decide_fast_challenge.py",
+        "tests/test_decide_proof_admission.py"
+      ],
+      "future_selective_reuse_candidate": true,
+      "local_runtime_sha256": "a4fdaeb18f6c20567080d6c775cbd2995008c52b71742b6f72cc1b9fbbd6219a",
+      "quant_platform_imports": [],
+      "queue_recovery_sha256_at_freeze": "a4fdaeb18f6c20567080d6c775cbd2995008c52b71742b6f72cc1b9fbbd6219a",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Core blocker-only models are a future selective reuse candidate, but this exact package has no active consumer and its initializer eagerly binds the larger lane.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/contracts.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/__init__.py",
+        "src/quant_platform/decide/admission.py",
+        "src/quant_platform/decide/deep_challenge.py",
+        "src/quant_platform/decide/deep_contracts.py",
+        "src/quant_platform/decide/evidence_io.py",
+        "src/quant_platform/decide/evidence_payloads.py",
+        "src/quant_platform/decide/fast_challenge.py",
+        "src/quant_platform/decide/handoff.py",
+        "src/quant_platform/decide/pipeline.py",
+        "src/quant_platform/decide/proof_contracts.py",
+        "src/quant_platform/decide/reporting.py",
+        "src/quant_platform/decide/shadow.py"
+      ],
+      "top_level_quant_platform_imports": []
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_deep_challenge.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "52af46264a1901795b3cac91ba2f96e151a7b0911d142a37f84c245c6a29f7be",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_recovery_sha256_at_freeze": "52af46264a1901795b3cac91ba2f96e151a7b0911d142a37f84c245c6a29f7be",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Trial registration dependency is absent active; deep comparison also binds proof and shadow cohort semantics.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/deep_challenge.py",
+      "runtime_source_importers": [],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.research_trial_registry"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_deep_challenge.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "93e8d89279bd038b0f4c0fdb8063fb5937aa7d6fc01d86aeb22003d6d1cdacee",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_recovery_sha256_at_freeze": "93e8d89279bd038b0f4c0fdb8063fb5937aa7d6fc01d86aeb22003d6d1cdacee",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Top-level research_trial_registry import is absent active; contracts are coupled to deep trial and proof identities.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/deep_contracts.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/deep_challenge.py",
+        "src/quant_platform/decide/evidence_payloads.py",
+        "src/quant_platform/decide/shadow.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.research_trial_registry"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_admission.py",
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_color_team_isolation.py",
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_proof_admission.py"
+      ],
+      "future_selective_reuse_candidate": true,
+      "local_runtime_sha256": "5190c417389171ae4794ca452063b50748aff576f518f5fbfef0badf34da78ff",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "5190c417389171ae4794ca452063b50748aff576f518f5fbfef0badf34da78ff",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Artifact validators are a future selective reuse candidate, but exact bytes require the absent package contract and no active caller exists.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/evidence_io.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/admission.py",
+        "src/quant_platform/decide/deep_challenge.py",
+        "src/quant_platform/decide/fast_challenge.py",
+        "src/quant_platform/decide/pipeline.py",
+        "src/quant_platform/decide/shadow.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.decide.shadow",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_admission.py",
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_proof_admission.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "de0149f24401e5b6468ff42e35b1d6f4c9b9fa4832a7a1daa32daee7afb77e55",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.decide.shadow",
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_recovery_sha256_at_freeze": "de0149f24401e5b6468ff42e35b1d6f4c9b9fa4832a7a1daa32daee7afb77e55",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Top-level deep_contracts and research_trial_registry imports are absent active; payload IDs must travel with their verifier cohort.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/evidence_payloads.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/admission.py",
+        "src/quant_platform/decide/deep_challenge.py",
+        "src/quant_platform/decide/shadow.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.research_trial_registry"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.reporting"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.reporting"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_fast_challenge.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "97cda45be03f7b4ff2c49870b1b9de6a759654544f542d05dcea98e1517fbbfa",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.reporting",
+        "quant_platform.economic_contract",
+        "quant_platform.orchestration.contracts",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.runtime_types"
+      ],
+      "queue_recovery_sha256_at_freeze": "97cda45be03f7b4ff2c49870b1b9de6a759654544f542d05dcea98e1517fbbfa",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Fingerprinting requires config/research_validation_surface_registry.json, already reviewed as no-port; no active caller exists.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/fast_challenge.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/__init__.py",
+        "src/quant_platform/decide/__main__.py",
+        "src/quant_platform/decide/pipeline.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.reporting",
+        "quant_platform.economic_contract",
+        "quant_platform.orchestration.contracts",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.runtime_types"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.pipeline"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_shadow_handoff.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "b7e1608c61ebf981ba50aceec316e96e02e07935ae6654bc9f3d692e80d3ed82",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.pipeline",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ],
+      "queue_recovery_sha256_at_freeze": "b7e1608c61ebf981ba50aceec316e96e02e07935ae6654bc9f3d692e80d3ed82",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "N+1 proposal binding depends on published exact-current research-validation snapshots and cannot alter the current generation.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/handoff.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/__init__.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.math_desk.m4",
+        "quant_platform.math_desk.m6",
+        "quant_platform.math_desk.m7",
+        "quant_platform.math_desk.m8"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.proof_contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_pipeline.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "7d5fe3114365152b69b25919258b8840b935c7f8a9213eac97b1f1c9bda0b377",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.math_desk.m4",
+        "quant_platform.math_desk.m6",
+        "quant_platform.math_desk.m7",
+        "quant_platform.math_desk.m8",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ],
+      "queue_recovery_sha256_at_freeze": "7d5fe3114365152b69b25919258b8840b935c7f8a9213eac97b1f1c9bda0b377",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Exact-current parent resolution imports Math Desk M4/M6/M7/M8, whose active sources are absent and Gate 0 review is no-port.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/pipeline.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/__init__.py",
+        "src/quant_platform/decide/__main__.py",
+        "src/quant_platform/decide/handoff.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.fast_challenge",
+        "quant_platform.decide.proof_contracts",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_admission.py",
+        "tests/test_decide_color_team_architecture.py",
+        "tests/test_decide_color_team_integrity_regressions.py",
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_deep_challenge.py",
+        "tests/test_decide_proof_admission.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "cda686bc5a9b9bd8ba3c19937c98dcf12543400dd48e2476aa72c1fad2d757ca",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.orchestration.contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "cda686bc5a9b9bd8ba3c19937c98dcf12543400dd48e2476aa72c1fad2d757ca",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Proof models bind candidate and Math Desk receipt semantics; no active admission consumer exists.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/proof_contracts.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/admission.py",
+        "src/quant_platform/decide/deep_challenge.py",
+        "src/quant_platform/decide/deep_contracts.py",
+        "src/quant_platform/decide/evidence_payloads.py",
+        "src/quant_platform/decide/pipeline.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.economic_contract",
+        "quant_platform.orchestration.contracts"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [],
+      "future_selective_reuse_candidate": true,
+      "local_runtime_sha256": "88de246e8ef605d4bb0a35cd96e53c24e02ffe97f6872eceab13b275529fa7cc",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts"
+      ],
+      "queue_recovery_sha256_at_freeze": "88de246e8ef605d4bb0a35cd96e53c24e02ffe97f6872eceab13b275529fa7cc",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Markdown formatting is a future selective reuse candidate, but it needs decide contracts and has no active caller.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/reporting.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/fast_challenge.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts"
+      ]
+    },
+    {
+      "active_absent_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads"
+      ],
+      "active_absent_top_level_import_modules": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads"
+      ],
+      "active_exists": false,
+      "direct_test_importers": [
+        "tests/test_decide_color_team_trials.py",
+        "tests/test_decide_shadow_handoff.py"
+      ],
+      "future_selective_reuse_candidate": false,
+      "local_runtime_sha256": "a8d4c97b06c84630f882c9523aadf40450ebb5984acc5de46598225b9981e832",
+      "quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads"
+      ],
+      "queue_recovery_sha256_at_freeze": "a8d4c97b06c84630f882c9523aadf40450ebb5984acc5de46598225b9981e832",
+      "queue_status": "REVIEWED_DECIDE_DEPENDENCY_COHORT_NO_PORT",
+      "reason": "Shadow evaluation depends on deep contracts and trial registry; preserved outcomes remain prospective and unattested.",
+      "recommendation": "NO_PORT",
+      "relative_path": "src/quant_platform/decide/shadow.py",
+      "runtime_source_importers": [
+        "src/quant_platform/decide/evidence_payloads.py"
+      ],
+      "top_level_quant_platform_imports": [
+        "quant_platform.decide.contracts",
+        "quant_platform.decide.deep_contracts",
+        "quant_platform.decide.evidence_io",
+        "quant_platform.decide.evidence_payloads"
+      ]
+    }
+  ],
+  "source_files_changed": 0,
+  "source_tests_run": 0
+}

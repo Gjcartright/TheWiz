@@ -1,0 +1,1407 @@
+{
+  "no_authority_claim": "Evidence review and proposed queue status only; no source/test bytes changed, provider call, promotion, testnet order, or live trading authorization.",
+  "queue_action_counts": {
+    "already-reviewed": 3,
+    "update": 44
+  },
+  "recommendation_counts": {
+    "dependency-blocked": 0,
+    "no-port": 47,
+    "selective-port candidate": 0
+  },
+  "rows": [
+    {
+      "authority_granted": false,
+      "category": "config",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 5,
+      "forensic_b_sha256": "45c32dfe8207e277a0e449511a994b727ab5d08c14c0df7976aee9ed5bae66db",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "45c32dfe8207e277a0e449511a994b727ab5d08c14c0df7976aee9ed5bae66db",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "config/corrective_artifact_retention.json",
+      "selected_active_sha256": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected policy reduces scheduler log limit and requires 14-day retention, mode 0600, no symlinks, and no secret content; historical policy omits these runtime log guards.",
+      "static_config_references": [
+        "src/quant_platform/orchestration/corrective_artifact_retention.py",
+        "src/quant_platform/orchestration/corrective_scheduler_runtime_readiness.py",
+        "tests/test_corrective_artifact_retention.py",
+        "tests/test_corrective_scheduler_runtime_readiness.py",
+        "tests/test_phase00_supreme_diagnostics.py"
+      ],
+      "visual_recovery_sha256": "45c32dfe8207e277a0e449511a994b727ab5d08c14c0df7976aee9ed5bae66db"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 16,
+      "diff_selected_added_lines": 86,
+      "forensic_b_sha256": "69c55df1ae16bc77249825efff92c998465d048074aa7393f9785da0bda02794",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "69c55df1ae16bc77249825efff92c998465d048074aa7393f9785da0bda02794",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/api_extraction.py",
+      "selected_active_sha256": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected official Wizard API requests pass through governed fetch and exact catalog validation; historical code calls requests directly. Selected archive/CSV writes are atomic.",
+      "static_source_importers": [
+        "scripts/run_crypto_wizards_post_contract_probe.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/crypto_wizards_history.py",
+        "src/quant_platform/crypto_wizards_sweep.py",
+        "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_holdout.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py",
+        "src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+        "src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+        "src/quant_platform/wizard_hyperliquid_mode_proof.py"
+      ],
+      "visual_recovery_sha256": "69c55df1ae16bc77249825efff92c998465d048074aa7393f9785da0bda02794"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 8,
+      "diff_selected_added_lines": 9,
+      "forensic_b_sha256": "766f5a63c5f58a08a8e114b4cb7e5f42ab40264b9d01c60896951e8270db89b1",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "766f5a63c5f58a08a8e114b4cb7e5f42ab40264b9d01c60896951e8270db89b1",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/binance_spot.py",
+      "selected_active_sha256": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected persisted candle, report, and CSV outputs use governed atomic writers; historical writes can publish partial files.",
+      "static_source_importers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "766f5a63c5f58a08a8e114b4cb7e5f42ab40264b9d01c60896951e8270db89b1"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 27,
+      "forensic_b_sha256": "a60692c62534cf8fd05a41477b2abaa36b22a775af5770629daad8ec173d45a4",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "a60692c62534cf8fd05a41477b2abaa36b22a775af5770629daad8ec173d45a4",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/crypto_wizards_catalog.py",
+      "selected_active_sha256": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected catalog adds exact official-origin method/path credit contract; historical catalog lacks this validation.",
+      "static_source_importers": [
+        "src/quant_platform/api_extraction.py",
+        "src/quant_platform/cli.py",
+        "src/quant_platform/crypto_wizards_history.py",
+        "src/quant_platform/crypto_wizards_sweep.py",
+        "src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py"
+      ],
+      "visual_recovery_sha256": "a60692c62534cf8fd05a41477b2abaa36b22a775af5770629daad8ec173d45a4"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 33,
+      "diff_selected_added_lines": 101,
+      "forensic_b_sha256": "e5828aec6d760222af6e792d62b29f491b57df56411f507254925939b420d4e4",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "e5828aec6d760222af6e792d62b29f491b57df56411f507254925939b420d4e4",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/fixture_ingestion.py",
+      "selected_active_sha256": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected fixture normalization requires an explicit valid hedge ratio and derives the canonical y-on-x log spread with provenance; historical code imputes a ratio and uses an unoriented raw-price spread.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/crypto_wizards_scanner.py",
+        "src/quant_platform/pair_detail_ingestion.py"
+      ],
+      "visual_recovery_sha256": "e5828aec6d760222af6e792d62b29f491b57df56411f507254925939b420d4e4"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 60,
+      "diff_selected_added_lines": 236,
+      "forensic_b_sha256": "68bd25d8c6966f9b66d898e12cfa089b50f5beab34997b0fe77bf5f789fba7de",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "68bd25d8c6966f9b66d898e12cfa089b50f5beab34997b0fe77bf5f789fba7de",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/research_extract_ccxt.py",
+      "selected_active_sha256": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected CCXT extraction requires an injected evidence runtime, accepted capture receipts, bounded source parsing, and all-source acceptance before marking processed; historical code directly invokes CCXT and marks sources processed.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "68bd25d8c6966f9b66d898e12cfa089b50f5beab34997b0fe77bf5f789fba7de"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 6,
+      "diff_selected_added_lines": 6,
+      "forensic_b_sha256": "e564c0edf094177d4be4431b5bbc00a228c8b3ee63411c8471d36e9b521df0a2",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "e564c0edf094177d4be4431b5bbc00a228c8b3ee63411c8471d36e9b521df0a2",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/research_extract_youtube.py",
+      "selected_active_sha256": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected normalized research CSV outputs use atomic publication; historical direct CSV writes can publish partial files.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/youtube_brain.py"
+      ],
+      "visual_recovery_sha256": "e564c0edf094177d4be4431b5bbc00a228c8b3ee63411c8471d36e9b521df0a2"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 3,
+      "forensic_b_sha256": "06763a4184749cba3db413b598fa534ee87ff85f420e22c452e475034a7162ce",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "06763a4184749cba3db413b598fa534ee87ff85f420e22c452e475034a7162ce",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/research_extraction.py",
+      "selected_active_sha256": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected normalized research output uses atomic CSV publication; historical direct CSV write can publish a partial file.",
+      "static_source_importers": [
+        "src/quant_platform/research_extract_ccxt.py",
+        "src/quant_platform/research_extract_udemy.py",
+        "src/quant_platform/research_extract_youtube.py",
+        "src/quant_platform/research_knowledge_store.py",
+        "src/quant_platform/research_paper_reviews.py"
+      ],
+      "visual_recovery_sha256": "06763a4184749cba3db413b598fa534ee87ff85f420e22c452e475034a7162ce"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 4,
+      "diff_selected_added_lines": 8,
+      "forensic_b_sha256": "557197dffdb85bd1a4a84406a01ac8dc972af5cf812fb845fc534eed95a5add0",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "557197dffdb85bd1a4a84406a01ac8dc972af5cf812fb845fc534eed95a5add0",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/research_quantization.py",
+      "selected_active_sha256": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected ranked, summary, and notes outputs use atomic publication; historical direct writes can publish partial research artifacts.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "557197dffdb85bd1a4a84406a01ac8dc972af5cf812fb845fc534eed95a5add0"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 5,
+      "diff_selected_added_lines": 7,
+      "forensic_b_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+      "provider_calls_made_during_review": false,
+      "queue_action": "already-reviewed",
+      "queue_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/rl/brain_cycle.py",
+      "selected_active_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected candidate rollups, score reports, and trend CSVs use governed atomic publication; historical direct writes are weaker. Prior three-path RL supplement separately reviewed this exact variant.",
+      "static_source_importers": [
+        "src/quant_platform/rl/__init__.py"
+      ],
+      "visual_recovery_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 3,
+      "forensic_b_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+      "provider_calls_made_during_review": false,
+      "queue_action": "already-reviewed",
+      "queue_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/rl/features.py",
+      "selected_active_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected feature report JSON uses governed atomic publication; historical direct write is weaker. Prior three-path RL supplement separately reviewed this exact variant.",
+      "static_source_importers": [
+        "src/quant_platform/rl/pair_trading_env.py",
+        "src/quant_platform/rl/rl_backtest.py",
+        "src/quant_platform/rl/rl_idea_engine.py",
+        "src/quant_platform/rl/rl_learning_agent.py"
+      ],
+      "visual_recovery_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 5,
+      "diff_selected_added_lines": 4,
+      "forensic_b_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+      "provider_calls_made_during_review": false,
+      "queue_action": "already-reviewed",
+      "queue_custody_status": "REVIEWED_ATOMIC_PUBLICATION_RETAIN_VISUAL_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/rl/train_ppo.py",
+      "selected_active_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected dependency report uses governed atomic publication; historical direct write is weaker. Prior three-path RL supplement separately reviewed this exact variant.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 3,
+      "forensic_b_sha256": "d51a961e77c835b3c37a33ecfda2d3fb72c4a2f2eba4e630534f12b842b0ee69",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "d51a961e77c835b3c37a33ecfda2d3fb72c4a2f2eba4e630534f12b842b0ee69",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/trade_timing.py",
+      "selected_active_sha256": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected timing template uses governed atomic CSV publication; historical direct write is weaker.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "d51a961e77c835b3c37a33ecfda2d3fb72c4a2f2eba4e630534f12b842b0ee69"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 4,
+      "forensic_b_sha256": "5e30e9a7c130dd1d0fa9fb4f91bbebe48e29cff32ea5096cb26bc67e7dfec424",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "5e30e9a7c130dd1d0fa9fb4f91bbebe48e29cff32ea5096cb26bc67e7dfec424",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_credit_budget.py",
+      "selected_active_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected staged budget CSV/JSON promotion uses governed target checks; historical direct replace bypasses the shared promotion guard.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+        "src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+        "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py"
+      ],
+      "visual_recovery_sha256": "5e30e9a7c130dd1d0fa9fb4f91bbebe48e29cff32ea5096cb26bc67e7dfec424"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 3,
+      "diff_selected_added_lines": 7,
+      "forensic_b_sha256": "9b16e3e46e16ce6edfde34c07a8f2755ff0c66d4e7c5d0e6532978dcf7d3f79c",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "9b16e3e46e16ce6edfde34c07a8f2755ff0c66d4e7c5d0e6532978dcf7d3f79c",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_dynamic_comparator_activation.py",
+      "selected_active_sha256": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected comparator payload and staged files use governed atomic writes/promotion; historical direct writes and replace bypass shared guards.",
+      "static_source_importers": [
+        "src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py",
+        "src/quant_platform/wizard_hyperliquid_mode_proof.py"
+      ],
+      "visual_recovery_sha256": "9b16e3e46e16ce6edfde34c07a8f2755ff0c66d4e7c5d0e6532978dcf7d3f79c"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 7,
+      "diff_selected_added_lines": 10,
+      "forensic_b_sha256": "02f424f424e4d1f32ef26af50d2928ab260053ead9a48b2f85f8379d6e0e85f1",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "02f424f424e4d1f32ef26af50d2928ab260053ead9a48b2f85f8379d6e0e85f1",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_hourly_database.py",
+      "selected_active_sha256": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected hourly database CSV is serialized in memory and atomically published; historical writes directly to destination.",
+      "static_source_importers": [
+        "src/quant_platform/three_brain_system.py"
+      ],
+      "visual_recovery_sha256": "02f424f424e4d1f32ef26af50d2928ab260053ead9a48b2f85f8379d6e0e85f1"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 7,
+      "diff_selected_added_lines": 11,
+      "forensic_b_sha256": "9c5c3d7161ad04f24bcfa77c24750a4b86e2f7ae999658cd14b33425957fc2cf",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "9c5c3d7161ad04f24bcfa77c24750a4b86e2f7ae999658cd14b33425957fc2cf",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_local_verification.py",
+      "selected_active_sha256": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected verification uses canonical normalized two-leg weights and atomic reports; historical duplicates weight arithmetic and directly writes reports.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/orchestration/nodes.py"
+      ],
+      "visual_recovery_sha256": "9c5c3d7161ad04f24bcfa77c24750a4b86e2f7ae999658cd14b33425957fc2cf"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 6,
+      "forensic_b_sha256": "08f39f9863af4b9ff76569c566e08c7b8d09db7cc01179697d28ad8c9ed24fe4",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "08f39f9863af4b9ff76569c566e08c7b8d09db7cc01179697d28ad8c9ed24fe4",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_mode_comparison.py",
+      "selected_active_sha256": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected comparison CSV/text reports use atomic publication; historical direct writes can publish partial artifacts.",
+      "static_source_importers": [
+        "src/quant_platform/active_pipeline.py",
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "08f39f9863af4b9ff76569c566e08c7b8d09db7cc01179697d28ad8c9ed24fe4"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 22,
+      "diff_selected_added_lines": 15,
+      "forensic_b_sha256": "037ada6da2cc06c038f7a2b662b30cf8770b8c989677a1f8b56ce68c19c1b967",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "037ada6da2cc06c038f7a2b662b30cf8770b8c989677a1f8b56ce68c19c1b967",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_pair_detail_ui_bundle.py",
+      "selected_active_sha256": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected bundle uses canonical 14-mode matrix and atomic receipts; historical planned 16 cells include two unsupported pair-page modes and uses direct writes.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "037ada6da2cc06c038f7a2b662b30cf8770b8c989677a1f8b56ce68c19c1b967"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 8,
+      "diff_selected_added_lines": 12,
+      "forensic_b_sha256": "7f0ccd045dfbb04de7e424899a3a047c053110ab27c28bbf1fd3224f319d6c19",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "7f0ccd045dfbb04de7e424899a3a047c053110ab27c28bbf1fd3224f319d6c19",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/wizard_pair_matrix.py",
+      "selected_active_sha256": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected pair matrix CSV is serialized in memory and atomically published; historical writes directly to destination.",
+      "static_source_importers": [
+        "src/quant_platform/wizard_hourly_database.py"
+      ],
+      "visual_recovery_sha256": "7f0ccd045dfbb04de7e424899a3a047c053110ab27c28bbf1fd3224f319d6c19"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 9,
+      "diff_selected_added_lines": 10,
+      "forensic_b_sha256": "50c06dc0cbe3e0a194b7033dd2ee32d74809684c37e9500bbaefb495711abf9a",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "50c06dc0cbe3e0a194b7033dd2ee32d74809684c37e9500bbaefb495711abf9a",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/yahoo_crypto.py",
+      "selected_active_sha256": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected Yahoo candle and report artifacts use governed atomic writes; historical direct writes can publish partial artifacts.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "50c06dc0cbe3e0a194b7033dd2ee32d74809684c37e9500bbaefb495711abf9a"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 6,
+      "forensic_b_sha256": "522baf6aa070a99e8135f622fac9cd20df3d79033b7c06c1040348dfad645993",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "522baf6aa070a99e8135f622fac9cd20df3d79033b7c06c1040348dfad645993",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/youtube_caption_insights.py",
+      "selected_active_sha256": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected caption insight CSV/text outputs use governed atomic publication; historical direct writes are weaker.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py",
+        "src/quant_platform/youtube_brain.py",
+        "src/quant_platform/youtube_channel_research.py"
+      ],
+      "visual_recovery_sha256": "522baf6aa070a99e8135f622fac9cd20df3d79033b7c06c1040348dfad645993"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 3,
+      "diff_selected_added_lines": 7,
+      "forensic_b_sha256": "be2702cc0264e76ef670d7746a56031d9d81c8c0ad27c288811c9fc8dbf85dc2",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "be2702cc0264e76ef670d7746a56031d9d81c8c0ad27c288811c9fc8dbf85dc2",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/youtube_channel_research.py",
+      "selected_active_sha256": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected channel snapshot and CSV/text outputs use governed atomic publication; historical direct writes are weaker.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "be2702cc0264e76ef670d7746a56031d9d81c8c0ad27c288811c9fc8dbf85dc2"
+    },
+    {
+      "authority_granted": false,
+      "category": "source",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 6,
+      "forensic_b_sha256": "0ff9981b868ef60442c49a3b53599b573a06e7c3dced25456055da87c4eaeada",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "0ff9981b868ef60442c49a3b53599b573a06e7c3dced25456055da87c4eaeada",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "src/quant_platform/youtube_hypothesis_validation.py",
+      "selected_active_sha256": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected hypothesis validation CSV/text outputs use governed atomic publication; historical direct writes are weaker.",
+      "static_source_importers": [
+        "src/quant_platform/cli.py"
+      ],
+      "visual_recovery_sha256": "0ff9981b868ef60442c49a3b53599b573a06e7c3dced25456055da87c4eaeada"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 0,
+      "diff_selected_added_lines": 44,
+      "forensic_b_sha256": "30bdcdf545403b2917125528bc0ac2132f4cbb8ebcfe839c023c579118e22efb",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "30bdcdf545403b2917125528bc0ac2132f4cbb8ebcfe839c023c579118e22efb",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_api_extraction.py",
+      "selected_active_sha256": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected regression tests prove official and unknown Wizard endpoints cannot bypass governed transport; historical tests lack these cases.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 10
+      },
+      "visual_recovery_sha256": "30bdcdf545403b2917125528bc0ac2132f4cbb8ebcfe839c023c579118e22efb"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 4,
+      "diff_selected_added_lines": 14,
+      "forensic_b_sha256": "25003da774b6c8e57fb973907ca13087dc7dfede1b214c3cbf6e0d9101782734",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "0ac7162ca9f4b6e771c6bce2d20f6f3af3c2a16ccfdd398fe80e8c4123277095",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "25003da774b6c8e57fb973907ca13087dc7dfede1b214c3cbf6e0d9101782734",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_governance.py",
+      "selected_active_sha256": "b2c04d54625eebbf516908c2cfedd0f6a2661f3bd2fe1200fa41288303a12ddd",
+      "selected_matches_four_root_baseline": false,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected regression proves an acceptance policy integrity receipt grants no candidate, testnet, or live trading authority; historical test lacks that assertion.",
+      "test_function_count": {
+        "historical": 4,
+        "selected": 5
+      },
+      "visual_recovery_sha256": "25003da774b6c8e57fb973907ca13087dc7dfede1b214c3cbf6e0d9101782734"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 5,
+      "forensic_b_sha256": "128801e9837108636c25162185828fc08717dd9b237f5a915f5f829812f7f0f0",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "128801e9837108636c25162185828fc08717dd9b237f5a915f5f829812f7f0f0",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_live_canary.py",
+      "selected_active_sha256": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected test patches the active raw info client network boundary; historical patches the obsolete default client symbol.",
+      "test_function_count": {
+        "historical": 16,
+        "selected": 16
+      },
+      "visual_recovery_sha256": "128801e9837108636c25162185828fc08717dd9b237f5a915f5f829812f7f0f0"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 31,
+      "forensic_b_sha256": "e38a41d38c7f5606052d2267ec46a03f0012031e53fce4522b99c9422160b769",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "e38a41d38c7f5606052d2267ec46a03f0012031e53fce4522b99c9422160b769",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_registered_rerun.py",
+      "selected_active_sha256": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests bind credit ledger to observed before/after spend and protected snapshot permissions; historical tests omit those guards.",
+      "test_function_count": {
+        "historical": 22,
+        "selected": 22
+      },
+      "visual_recovery_sha256": "e38a41d38c7f5606052d2267ec46a03f0012031e53fce4522b99c9422160b769"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 19,
+      "forensic_b_sha256": "be1f22176ee466affcadb3d8b798ddf5d940a9c93393b457065c5a39f1983478",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "be1f22176ee466affcadb3d8b798ddf5d940a9c93393b457065c5a39f1983478",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_registered_rerun_executor.py",
+      "selected_active_sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected executor tests supply observed spend/activity rows and assert the active authority blocker; historical tests omit current evidence contract.",
+      "test_function_count": {
+        "historical": 27,
+        "selected": 27
+      },
+      "visual_recovery_sha256": "be1f22176ee466affcadb3d8b798ddf5d940a9c93393b457065c5a39f1983478"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 53,
+      "diff_selected_added_lines": 617,
+      "forensic_b_sha256": "f8660a593e24075f5697b129ccd1e9a0e5ec712607ca711617b51a79fefa325d",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "f8660a593e24075f5697b129ccd1e9a0e5ec712607ca711617b51a79fefa325d",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_scheduler_runtime_readiness.py",
+      "selected_active_sha256": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests cover exact runtime identity, bounded launchctl parsing, log mode/redaction, desired state, terminal pointers, and installer contract; historical suite lacks these safeguards.",
+      "test_function_count": {
+        "historical": 7,
+        "selected": 22
+      },
+      "visual_recovery_sha256": "f8660a593e24075f5697b129ccd1e9a0e5ec712607ca711617b51a79fefa325d"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 6,
+      "diff_selected_added_lines": 11,
+      "forensic_b_sha256": "47c5d02403090921beaba37150504d0aa71c80ad89c28814fa66d8f8845aac5c",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "47c5d02403090921beaba37150504d0aa71c80ad89c28814fa66d8f8845aac5c",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_stage4_handoff_readiness.py",
+      "selected_active_sha256": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests use context-managed CSV reads while retaining assertions; historical version leaves file handles open.",
+      "test_function_count": {
+        "historical": 26,
+        "selected": 26
+      },
+      "visual_recovery_sha256": "47c5d02403090921beaba37150504d0aa71c80ad89c28814fa66d8f8845aac5c"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 8,
+      "forensic_b_sha256": "a01b249306f577d7a13bb288c645a69b6b6bfd9e9c57f3e5b7decd1be7500028",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "a01b249306f577d7a13bb288c645a69b6b6bfd9e9c57f3e5b7decd1be7500028",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_capture_manifest.py",
+      "selected_active_sha256": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests assert no-follow symlink publication and protected source file mode; historical mocks lack no-follow contract.",
+      "test_function_count": {
+        "historical": 14,
+        "selected": 14
+      },
+      "visual_recovery_sha256": "a01b249306f577d7a13bb288c645a69b6b6bfd9e9c57f3e5b7decd1be7500028"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 11,
+      "forensic_b_sha256": "803b4a448ac64304a692cafd621f0a49d34268aece62f1844cb7acc10aff7fbc",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "803b4a448ac64304a692cafd621f0a49d34268aece62f1844cb7acc10aff7fbc",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_capture_reconciliation.py",
+      "selected_active_sha256": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests assert no-follow symlink publication and protected fixture modes; historical mocks lack these current contract checks.",
+      "test_function_count": {
+        "historical": 18,
+        "selected": 18
+      },
+      "visual_recovery_sha256": "803b4a448ac64304a692cafd621f0a49d34268aece62f1844cb7acc10aff7fbc"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 1,
+      "forensic_b_sha256": "30b4cdf3962d6901787f90ebfe762ae44817a966af35b68c6917ae3581f951d3",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "30b4cdf3962d6901787f90ebfe762ae44817a966af35b68c6917ae3581f951d3",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_ou_v4_failure_attribution.py",
+      "selected_active_sha256": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected assertion retains the same no-reuse contract without stale lint suppression; historical test adds no missing behavior.",
+      "test_function_count": {
+        "historical": 2,
+        "selected": 2
+      },
+      "visual_recovery_sha256": "30b4cdf3962d6901787f90ebfe762ae44817a966af35b68c6917ae3581f951d3"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 7,
+      "forensic_b_sha256": "3f38a13cccc8b046370173a10b13332936a93190fd65097b51b9c1d620ade223",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "3f38a13cccc8b046370173a10b13332936a93190fd65097b51b9c1d620ade223",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_ou_v4_holdout.py",
+      "selected_active_sha256": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected failure mock asserts no-follow symlink publication; historical mock accepts an obsolete signature.",
+      "test_function_count": {
+        "historical": 15,
+        "selected": 15
+      },
+      "visual_recovery_sha256": "3f38a13cccc8b046370173a10b13332936a93190fd65097b51b9c1d620ade223"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 0,
+      "diff_selected_added_lines": 1,
+      "forensic_b_sha256": "0f3ee008f8af6701d09f2197a1fac6021d131709707d306d9311a90260808e64",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "0f3ee008f8af6701d09f2197a1fac6021d131709707d306d9311a90260808e64",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_ou_v5_holdout.py",
+      "selected_active_sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected fixture explicitly sets protected mode 0600; historical fixture omits current file-permission requirement.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 8
+      },
+      "visual_recovery_sha256": "0f3ee008f8af6701d09f2197a1fac6021d131709707d306d9311a90260808e64"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 4,
+      "forensic_b_sha256": "ccab08c626bb3d1be6e1e3ae8968879799887c72437175942224e31fd0c08e82",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "ccab08c626bb3d1be6e1e3ae8968879799887c72437175942224e31fd0c08e82",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_reset_readiness.py",
+      "selected_active_sha256": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests use current .venv/python3 identity, protected snapshots, and context-managed reads; historical .venv312 path is stale.",
+      "test_function_count": {
+        "historical": 31,
+        "selected": 31
+      },
+      "visual_recovery_sha256": "ccab08c626bb3d1be6e1e3ae8968879799887c72437175942224e31fd0c08e82"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 3,
+      "diff_selected_added_lines": 5,
+      "forensic_b_sha256": "708b41f2f974580ffc3eefdde65f9321468e56267017039da8d155e278f3ba75",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "708b41f2f974580ffc3eefdde65f9321468e56267017039da8d155e278f3ba75",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_corrective_wizard_unattended_preflight.py",
+      "selected_active_sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests require exception detail redaction and current .venv/python3 path; historical tests expect leaked error text and stale runtime path.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 8
+      },
+      "visual_recovery_sha256": "708b41f2f974580ffc3eefdde65f9321468e56267017039da8d155e278f3ba75"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 8,
+      "diff_selected_added_lines": 27,
+      "forensic_b_sha256": "0d7754e592938258deeb119015642a3cb044378637ef68307324048a7fceff7e",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "ace571591f36c17ff951035ffbf1d01911dd6d850a1116c0a1fcf967b57f89bd",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "0d7754e592938258deeb119015642a3cb044378637ef68307324048a7fceff7e",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_current_wizard_hyperliquid_completion_audit.py",
+      "selected_active_sha256": "1d8ac42612a9557bd955bb23115eabad817bd3bb69f4c140d4909631c65e26ce",
+      "selected_matches_four_root_baseline": false,
+      "selected_matches_isolated_candidate": false,
+      "semantic_decision": "Selected audit fixture expects the canonical 14 pair-page mode cells; historical 16-cell expectation includes unsupported modes.",
+      "test_function_count": {
+        "historical": 2,
+        "selected": 3
+      },
+      "visual_recovery_sha256": "0d7754e592938258deeb119015642a3cb044378637ef68307324048a7fceff7e"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 1,
+      "diff_selected_added_lines": 1,
+      "forensic_b_sha256": "3ab3ca12a961e79cce2fbfdce272400e8cdc87e6574e9c20d207c31fecc77e0b",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "3ab3ca12a961e79cce2fbfdce272400e8cdc87e6574e9c20d207c31fecc77e0b",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_exhaustive_wizard_hyperliquid_learning.py",
+      "selected_active_sha256": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected test binds math-v2.1 y-on-x contract; historical test expects old math-v2 label.",
+      "test_function_count": {
+        "historical": 2,
+        "selected": 2
+      },
+      "visual_recovery_sha256": "3ab3ca12a961e79cce2fbfdce272400e8cdc87e6574e9c20d207c31fecc77e0b"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 7,
+      "diff_selected_added_lines": 41,
+      "forensic_b_sha256": "e316fbf229b415cc2f5a6fe7b7ec5814bf2aabcdb9eeea897e2b4c9e0474a71a",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "b35afd8227f4fea731bf3b5a2e87ea55734b83361d0a57c33794f199429f738b",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "e316fbf229b415cc2f5a6fe7b7ec5814bf2aabcdb9eeea897e2b4c9e0474a71a",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_fixture_ingestion.py",
+      "selected_active_sha256": "8aa632cb916b883d07d99ce69e40253ec86c2fd647090ba1464ee32f2a4b4ccb",
+      "selected_matches_four_root_baseline": false,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests require explicit hedge ratio, canonical y-on-x spread, and invalid funding clock skip; historical tests expect invented raw-price spread.",
+      "test_function_count": {
+        "historical": 6,
+        "selected": 7
+      },
+      "visual_recovery_sha256": "e316fbf229b415cc2f5a6fe7b7ec5814bf2aabcdb9eeea897e2b4c9e0474a71a"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 2,
+      "forensic_b_sha256": "852712eac034710e088503b2b118a2494c9687e96611b399c6faaa7201f677bd",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "852712eac034710e088503b2b118a2494c9687e96611b399c6faaa7201f677bd",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_v2_run.py",
+      "selected_active_sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected fixture gives source snapshot mode 0600 for active publication checks; historical fixture omits permission requirement.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 8
+      },
+      "visual_recovery_sha256": "852712eac034710e088503b2b118a2494c9687e96611b399c6faaa7201f677bd"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 2,
+      "forensic_b_sha256": "4c4e92b3ad6374ca3d182c13b8f1a664214edcd1e77f8fa03763dc0b5a9f6ed5",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "4c4e92b3ad6374ca3d182c13b8f1a664214edcd1e77f8fa03763dc0b5a9f6ed5",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_wizard_local_verification.py",
+      "selected_active_sha256": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected expected long/short positions follow canonical y-on-x orientation; historical expectations reverse legs.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 8
+      },
+      "visual_recovery_sha256": "4c4e92b3ad6374ca3d182c13b8f1a664214edcd1e77f8fa03763dc0b5a9f6ed5"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 2,
+      "forensic_b_sha256": "c981b41b924adbab42c4217d38c9c174d33e463d247c7a762444af93785da22d",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "c981b41b924adbab42c4217d38c9c174d33e463d247c7a762444af93785da22d",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_wizard_mode_comparison.py",
+      "selected_active_sha256": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected expected long/short positions follow canonical y-on-x orientation; historical expectations reverse legs.",
+      "test_function_count": {
+        "historical": 5,
+        "selected": 5
+      },
+      "visual_recovery_sha256": "c981b41b924adbab42c4217d38c9c174d33e463d247c7a762444af93785da22d"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 5,
+      "diff_selected_added_lines": 36,
+      "forensic_b_sha256": "1719c6cc3be951bf7b20694c41c21fe11d48cff425c03f27848a4250a71ff152",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "1719c6cc3be951bf7b20694c41c21fe11d48cff425c03f27848a4250a71ff152",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_wizard_pair_detail_api_pilot.py",
+      "selected_active_sha256": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected regression proves pair-detail official fetch requires reserved effect authority; historical tests lack this gate.",
+      "test_function_count": {
+        "historical": 8,
+        "selected": 9
+      },
+      "visual_recovery_sha256": "1719c6cc3be951bf7b20694c41c21fe11d48cff425c03f27848a4250a71ff152"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 11,
+      "diff_selected_added_lines": 24,
+      "forensic_b_sha256": "1a09a8e2d7689c96a402de7f861f122ad2fe48f424b2ee8fea11f751a7f84537",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "a82dba9530dddbd03b191f45dca1062a66650c58f9b7b71a3c6d759864d183ee",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "1a09a8e2d7689c96a402de7f861f122ad2fe48f424b2ee8fea11f751a7f84537",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_wizard_pair_detail_ui_bundle.py",
+      "selected_active_sha256": "27128a8c88ab41591acde3df02185f2047a7f87c26e0f79f284e3661637b3cec",
+      "selected_matches_four_root_baseline": false,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected tests assert input-value redaction and canonical 14-cell pair-page matrix; historical tests expect 16 cells and omit redaction.",
+      "test_function_count": {
+        "historical": 15,
+        "selected": 16
+      },
+      "visual_recovery_sha256": "1a09a8e2d7689c96a402de7f861f122ad2fe48f424b2ee8fea11f751a7f84537"
+    },
+    {
+      "authority_granted": false,
+      "category": "test",
+      "diff_historical_removed_lines": 2,
+      "diff_selected_added_lines": 2,
+      "forensic_b_sha256": "371c145ffe72e1ed1129c922e4b1636830193d257b5646e24aa2126d1cd16bb2",
+      "four_root_decision": "NO_PORT_NEEDED",
+      "four_root_selected_baseline_sha256": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd",
+      "four_root_working_vs_runtime": "SAME",
+      "historical_copy_roots": [
+        "forensic_b",
+        "visual_recovery"
+      ],
+      "historical_variant_sha256": "371c145ffe72e1ed1129c922e4b1636830193d257b5646e24aa2126d1cd16bb2",
+      "provider_calls_made_during_review": false,
+      "queue_action": "update",
+      "queue_custody_status": "REVIEWED_OMITTED_VARIANT_NO_PORT",
+      "recommendation": "no-port",
+      "relative_path": "tests/test_youtube_hypothesis_validation.py",
+      "selected_active_sha256": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd",
+      "selected_matches_four_root_baseline": true,
+      "selected_matches_isolated_candidate": true,
+      "semantic_decision": "Selected expected long/short positions follow canonical y-on-x orientation; historical expectations reverse legs.",
+      "test_function_count": {
+        "historical": 3,
+        "selected": 3
+      },
+      "visual_recovery_sha256": "371c145ffe72e1ed1129c922e4b1636830193d257b5646e24aa2126d1cd16bb2"
+    }
+  ],
+  "schema_version": "gate0.omitted_union.non_orchestration_reconciliation.v1",
+  "scope": {
+    "expanded_891_queue_sha256": "0e6d003cda0c4c32e875c258e911d05238a1b18a5c0dc3ad1c1df2aca98cba9a",
+    "extended_manifest_historical_rows_verified": 94,
+    "extended_manifest_sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918",
+    "four_root_source_reconciliation_sha256": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943",
+    "frozen_811_queue_sha256": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+    "isolated_candidate_head": "766e6a3aac6a5311afaea38b769af3fcdcfb42e1",
+    "new_union_paths_total": 80,
+    "orchestration_paths_excluded_for_separate_cohort": 33,
+    "paths_reviewed": 47,
+    "proposed_queue_update_path": "audit/GATE0_OMITTED_UNION_NON_ORCHESTRATION_QUEUE_UPDATE_2026-09-30.csv",
+    "queue_schema_note": "in_four_root_reconciliation is membership in four-root review-required delta, so remains False for frozen SAME/NO_PORT_NEEDED entries; frozen baseline SHA is recorded in this report only.",
+    "selected_active_head_at_review": "7eecd20d45232ce4a4658c16158efa1307318019",
+    "selection": "Expanded queue paths absent from frozen 811-row queue, excluding src/quant_platform/orchestration/; only config, non-orchestration source, and tests.",
+    "static_reference_scan_head": "766e6a3aac6a5311afaea38b769af3fcdcfb42e1"
+  }
+}

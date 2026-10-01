@@ -1,0 +1,97 @@
+{
+  "authority_claims": {
+    "capital_authority_granted": false,
+    "order_submission_granted": false,
+    "provider_called": false,
+    "registered_stage5_legacy_acceptance": false,
+    "strategy_desks_ported": false
+  },
+  "base_active_head": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "consumer_assessment": {
+    "corrective_registered_learning": "Registered Stage 5 recomputation rejects legacy evaluation, and receipt replay records the same failed runner check. No stage5 pass is fabricated.",
+    "existing_tests": "Older synthetic threshold tests now supply a qualified calendar contract; older registered learning fixtures now expect rejection pending calendar equity and identities.",
+    "rl_backtest": "Legacy return_summary calls have trade outcomes only; report remains unqualified without explicit calendar equity. Invalid or absent returns retain NaN.",
+    "rl_learning_agent": "Learning policy gate requires qualified finite calendar metrics for challenger and baseline; unqualified cycles remain blocked."
+  },
+  "decision": "SELECTIVE_FAIL_CLOSED_RL_REPAIR",
+  "prior_evidence_commit": "3701d176fccd855faf810f073e8ae5e9309a5bb7",
+  "schema_version": "thewiz.gate0.coordinated_rl_repair_evidence.v1",
+  "selected_paths": [
+    {
+      "candidate_sha256": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "path": "src/quant_platform/rl/rl_acceptance.py"
+    },
+    {
+      "candidate_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "path": "src/quant_platform/rl/rl_backtest.py"
+    },
+    {
+      "candidate_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "path": "src/quant_platform/rl/rl_learning_agent.py"
+    },
+    {
+      "candidate_sha256": "4aef39e6f73f58f1e4b9546bada60f66d8f20a527d58c6f43008781d4b75b65d",
+      "exact_local_runtime_bytes": false,
+      "local_runtime_sha256": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35",
+      "path": "src/quant_platform/orchestration/corrective_registered_learning.py"
+    },
+    {
+      "candidate_sha256": "ad30b6cfd356222f8f0d3d3acfb3e817e525db77ebf0cb4e8ad8583c7423dac1",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "ad30b6cfd356222f8f0d3d3acfb3e817e525db77ebf0cb4e8ad8583c7423dac1",
+      "path": "tests/test_static_desk_learning_consumer.py"
+    },
+    {
+      "candidate_sha256": "ba9deef828a99f1e4d13b7316b586c56c12a5fd9922b56ce9d2893b4e1f8be01",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "ba9deef828a99f1e4d13b7316b586c56c12a5fd9922b56ce9d2893b4e1f8be01",
+      "path": "tests/test_static_desk_learning_repairs.py"
+    },
+    {
+      "candidate_sha256": "f3e8d14d1cc6fa2ea8aa24f3824d0cb4d1ed2e721f137c6c6d7ea37979ea1b04",
+      "exact_local_runtime_bytes": true,
+      "local_runtime_sha256": "f3e8d14d1cc6fa2ea8aa24f3824d0cb4d1ed2e721f137c6c6d7ea37979ea1b04",
+      "path": "tests/test_static_desk_rl_consumer_repairs.py"
+    },
+    {
+      "candidate_sha256": "b2c19e2450bf57c686b62ca9b75eca8fba26ee0fbb5b74d810da43691f6d94f6",
+      "exact_local_runtime_bytes": false,
+      "local_runtime_sha256": "40ff6bf8b4c40be21b4a13e01a294eb2152ab152726f46336671c953ffe608cd",
+      "path": "tests/test_orchestration_rl.py"
+    },
+    {
+      "candidate_sha256": "e6671e76caf16775a2047733ed3312dcc8c31a4b6223446b848d3dc82c81bc53",
+      "exact_local_runtime_bytes": false,
+      "local_runtime_sha256": "cb82137857303347d89bfdf0b40caeecea57019b576de13968551d8d422220a6",
+      "path": "tests/test_corrective_registered_learning.py"
+    }
+  ],
+  "tests": {
+    "focused": {
+      "errors": 0,
+      "failures": 0,
+      "junit_path": "/tmp/strategy-desks-coordinated-rl.xml",
+      "junit_sha256": "e59b3590d2630d0d8685212a8d6c0c18552c86e608654b2662aef5fbf0ab3da9",
+      "skipped": 0,
+      "tests": 269,
+      "time_seconds": 22.029
+    },
+    "full": {
+      "errors": 0,
+      "failures": 0,
+      "junit_path": "/tmp/strategy-desks-full-suite.xml",
+      "junit_sha256": "f9d480037113a7319bf247f28232285e28cb08483d5070f1c934e27d5e962c37",
+      "skipped": 0,
+      "tests": 2792,
+      "time_seconds": 252.825
+    },
+    "full_command": "/Users/gregc/Backups/TheWiz/gate0-venv/bin/python -m pytest -q --disable-warnings --junitxml=/tmp/strategy-desks-full-suite.xml",
+    "full_output": "2792 passed, 26 warnings in 253.06s"
+  }
+}

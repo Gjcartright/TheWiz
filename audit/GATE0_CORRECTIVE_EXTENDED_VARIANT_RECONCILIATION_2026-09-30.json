@@ -1,0 +1,795 @@
+{
+  "additional_variant_paths": 26,
+  "additional_variant_sha256_count": 26,
+  "base_commit": "99df4d1f3b3f34a6c6c50c2d111a2344c05c6a61",
+  "decision": "RECONCILE_26_ADDITIONAL_CORRECTIVE_VARIANTS_NO_PORT",
+  "external_effects_or_orders_executed": false,
+  "inputs_sha256": {
+    "audit/GATE0_EXTENDED_VARIANT_GAP_2026-09-30.json": "843abe2a6f4c2234ee1acad4d78c53e13e4ebbc9ef375a402dc6ef1daf136383",
+    "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "6e0beb2f87635f5e7af344519a333ef06b9da8c5ace6175e911380b79791b9b5",
+    "audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "queue_edited": false,
+  "recommendation": "Restore each row's pre-gap reviewed status after appending this report to decision_evidence; retain selected active bytes and all historical SHA/root metadata.",
+  "rows": [
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_agent_governance.py",
+          "root": "visual_recovery",
+          "sha256": "d7e01b9e5c9bc5f69641d2c831feab5fed52c58efffec12a3cf106ea3caa12b4"
+        }
+      ],
+      "additional_variant_sha256": "d7e01b9e5c9bc5f69641d2c831feab5fed52c58efffec12a3cf106ea3caa12b4",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "6cbad4256dc9ad39355607d00a0eabff812862d8dd59ec96fe57a4f3de4d1a79",
+        "runtime_sha256": "d9671bff7c1eff0f09b48977be410907a7a5b9e9273a060611c4c5e0c50f8802",
+        "working_sha256": "6cbad4256dc9ad39355607d00a0eabff812862d8dd59ec96fe57a4f3de4d1a79"
+      },
+      "previously_recorded_variant_sha256": [
+        "466b0c40452b4dfaaed93b9c84416bb472b3e60f07649033d1bef2ebd1c981f9"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant d7e01b9e5c9bc5f69641d2c831feab5fed52c58efffec12a3cf106ea3caa12b4: Variant bypasses the governed staged publisher for agent-governance CSV and JSON; UTC alias change is equivalent. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_agent_governance.py",
+      "safety_area": "publication_authority",
+      "selected_active_sha256": "6cbad4256dc9ad39355607d00a0eabff812862d8dd59ec96fe57a4f3de4d1a79",
+      "selected_guard_anchor": "promote_staged_file(temporary, path)",
+      "semantic_difference": "Variant bypasses the governed staged publisher for agent-governance CSV and JSON; UTC alias change is equivalent.",
+      "variant_regression_anchor": "temporary.replace(path)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_canonical_status.py",
+          "root": "visual_recovery",
+          "sha256": "282719ed17ae0299ae20b47420a3aa4aec551b59126a68bf2dc7cc281928b9f3"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_canonical_status.py",
+          "root": "forensic_b",
+          "sha256": "282719ed17ae0299ae20b47420a3aa4aec551b59126a68bf2dc7cc281928b9f3"
+        }
+      ],
+      "additional_variant_sha256": "282719ed17ae0299ae20b47420a3aa4aec551b59126a68bf2dc7cc281928b9f3",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "a47f66460dec0d1a75b0aaf280982a0878c0820a1ed6d17daf80875b5e231c9e",
+        "runtime_sha256": "a47f66460dec0d1a75b0aaf280982a0878c0820a1ed6d17daf80875b5e231c9e",
+        "working_sha256": "cdced91836205239a7b679e09536615b930023ac20d7badd01129dd3fc0b9d2c"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 282719ed17ae0299ae20b47420a3aa4aec551b59126a68bf2dc7cc281928b9f3: Variant publishes status via os.replace and embeds raw Stage 4 validator exception text in blockers. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_canonical_status.py",
+      "safety_area": "publication_and_redaction",
+      "selected_active_sha256": "cdced91836205239a7b679e09536615b930023ac20d7badd01129dd3fc0b9d2c",
+      "selected_guard_anchor": "stage4_validator_failed:{safe_exception_code(exc)}",
+      "semantic_difference": "Variant publishes status via os.replace and embeds raw Stage 4 validator exception text in blockers.",
+      "variant_regression_anchor": "stage4_validator_failed:{type(exc).__name__}:{exc}"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_daily_scheduler.py",
+          "root": "visual_recovery",
+          "sha256": "66ad4c152e4f1b5d31118353fa564c62ea8244c62ad27ca717a57e5202df8301"
+        }
+      ],
+      "additional_variant_sha256": "66ad4c152e4f1b5d31118353fa564c62ea8244c62ad27ca717a57e5202df8301",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "66ac37befdcab8c988d4d712c50f8fd0c7adc28bd44970fcef481eaaf845706c",
+        "runtime_sha256": "66ac37befdcab8c988d4d712c50f8fd0c7adc28bd44970fcef481eaaf845706c",
+        "working_sha256": "0fb0350d262290289a787dc2bf708f71e2d45d70c6e12288a9ddc8ab10a8f22a"
+      },
+      "previously_recorded_variant_sha256": [
+        "37a838592d51d0edbd1d97a7723eeb68949a55e5af0905d00d5387167d344a0a"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 66ad4c152e4f1b5d31118353fa564c62ea8244c62ad27ca717a57e5202df8301: Variant removes supervised LaunchAgent provenance, terminal receipt lineage, governed lock and blocked post-run handoff; handwritten schedule can credit unproven runs. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_daily_scheduler.py",
+      "safety_area": "scheduler_authority",
+      "selected_active_sha256": "0fb0350d262290289a787dc2bf708f71e2d45d70c6e12288a9ddc8ab10a8f22a",
+      "selected_guard_anchor": "load_validated_scheduler_terminal_receipt_by_run(",
+      "semantic_difference": "Variant removes supervised LaunchAgent provenance, terminal receipt lineage, governed lock and blocked post-run handoff; handwritten schedule can credit unproven runs.",
+      "variant_regression_anchor": "def _timeout_runner("
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_governance.py",
+          "root": "visual_recovery",
+          "sha256": "183dde2e108ca404221afb9da87e6d9308fa2241fe2119684ba0f76541710c48"
+        }
+      ],
+      "additional_variant_sha256": "183dde2e108ca404221afb9da87e6d9308fa2241fe2119684ba0f76541710c48",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "6d292adf03c72518df10b0f319617babe71f25f37ed0f0358f19b2ac2281ecf3",
+        "runtime_sha256": "6d292adf03c72518df10b0f319617babe71f25f37ed0f0358f19b2ac2281ecf3",
+        "working_sha256": "6d292adf03c72518df10b0f319617babe71f25f37ed0f0358f19b2ac2281ecf3"
+      },
+      "previously_recorded_variant_sha256": [
+        "9d4f0f710c16d00b92cb08343395913ebcd62d0afd753122da320f2dda0ace52"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 183dde2e108ca404221afb9da87e6d9308fa2241fe2119684ba0f76541710c48: Variant grants promotion_authority when policy source hashes match, although that proves file identity only; also bypasses governed promotion. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_SAFER_PROMOTION_FALSE_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_governance.py",
+      "safety_area": "promotion_authority",
+      "selected_active_sha256": "908cc04f53356f7337c2f899b8be7a8e86cd1a93b166be3228170907f9fcf53b",
+      "selected_guard_anchor": "# Matching policy source hashes proves file identity, not candidate performance.",
+      "semantic_difference": "Variant grants promotion_authority when policy source hashes match, although that proves file identity only; also bypasses governed promotion.",
+      "variant_regression_anchor": "\"promotion_authority\": not blockers,"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary_execution.py",
+          "root": "visual_recovery",
+          "sha256": "1a424be2738c4d0b4384acb77e62bd3556026471c2ccc364e2cf5c953f5b14cb"
+        }
+      ],
+      "additional_variant_sha256": "1a424be2738c4d0b4384acb77e62bd3556026471c2ccc364e2cf5c953f5b14cb",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "7fb8f2780f236c657f53f91fb2b1854fab9e42d3000c06e7958b08eeee732c6c",
+        "runtime_sha256": "7fb8f2780f236c657f53f91fb2b1854fab9e42d3000c06e7958b08eeee732c6c",
+        "working_sha256": "72334851b6a3077139f23405760629d5c2558847c0033042a4b123bc19d5165f"
+      },
+      "previously_recorded_variant_sha256": [
+        "7655329cd767d1e938d21219059d42ed7408742f9d84145650f246584a987480"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 1a424be2738c4d0b4384acb77e62bd3556026471c2ccc364e2cf5c953f5b14cb: Variant removes exact consumed and claimed order authority from leverage, entry, exit, cancellation and recovery, plus authorized mainnet info access. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary_execution.py",
+      "safety_area": "live_order_authority",
+      "selected_active_sha256": "72334851b6a3077139f23405760629d5c2558847c0033042a4b123bc19d5165f",
+      "selected_guard_anchor": "require_order_authority(order_authority)",
+      "semantic_difference": "Variant removes exact consumed and claimed order authority from leverage, entry, exit, cancellation and recovery, plus authorized mainnet info access.",
+      "variant_regression_anchor": "def _default_info_client(base_url: str)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary_executor.py",
+          "root": "visual_recovery",
+          "sha256": "86fd640b26ec662cf3bd8156fb5ce8aa351e707871b478e0578d46139fb9f88c"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary_executor.py",
+          "root": "forensic_b",
+          "sha256": "86fd640b26ec662cf3bd8156fb5ce8aa351e707871b478e0578d46139fb9f88c"
+        }
+      ],
+      "additional_variant_sha256": "86fd640b26ec662cf3bd8156fb5ce8aa351e707871b478e0578d46139fb9f88c",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "00c0f1880e16dea56b19523b5112033db28ae070710f1eaad30fde1d369f840e",
+        "runtime_sha256": "00c0f1880e16dea56b19523b5112033db28ae070710f1eaad30fde1d369f840e",
+        "working_sha256": "16890a9d84cebcec6fc1b3fd6c3370cbac9950fbbb532f6446d8ac5d96059af6"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 86fd640b26ec662cf3bd8156fb5ce8aa351e707871b478e0578d46139fb9f88c: Variant reads the live Keychain secret and mainnet info without authorized credential or network effect wrappers. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary_executor.py",
+      "safety_area": "mainnet_credential_authority",
+      "selected_active_sha256": "16890a9d84cebcec6fc1b3fd6c3370cbac9950fbbb532f6446d8ac5d96059af6",
+      "selected_guard_anchor": "read_authorized_keychain_credential(",
+      "semantic_difference": "Variant reads the live Keychain secret and mainnet info without authorized credential or network effect wrappers.",
+      "variant_regression_anchor": "def read_live_agent_key_from_keychain(service: str, account: str) -> str:"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_parity_capture.py",
+          "root": "visual_recovery",
+          "sha256": "a820640b04104379f779faaf28248bc97595245630e55aa5ad39f8f960b1d783"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_parity_capture.py",
+          "root": "forensic_b",
+          "sha256": "a820640b04104379f779faaf28248bc97595245630e55aa5ad39f8f960b1d783"
+        }
+      ],
+      "additional_variant_sha256": "a820640b04104379f779faaf28248bc97595245630e55aa5ad39f8f960b1d783",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "3676d43db0c84c6eb2dba071951896c8e376f9a6f746a3258879d5e6de489500",
+        "runtime_sha256": "3676d43db0c84c6eb2dba071951896c8e376f9a6f746a3258879d5e6de489500",
+        "working_sha256": "e58658a2d0895373c5d0b5182bb441aefdc3f86fadd81df5e7fa74a36398218c"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant a820640b04104379f779faaf28248bc97595245630e55aa5ad39f8f960b1d783: Variant calls Hyperliquid info directly, loosens environment-to-endpoint matching, omits result recorder, and persists raw error strings. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_parity_capture.py",
+      "safety_area": "mainnet_info_authority",
+      "selected_active_sha256": "e58658a2d0895373c5d0b5182bb441aefdc3f86fadd81df5e7fa74a36398218c",
+      "selected_guard_anchor": "run_authorized_hyperliquid_info_call(",
+      "semantic_difference": "Variant calls Hyperliquid info directly, loosens environment-to-endpoint matching, omits result recorder, and persists raw error strings.",
+      "variant_regression_anchor": "if info_url not in {HYPERLIQUID_TESTNET_INFO_URL, HYPERLIQUID_LIVE_INFO_URL}:"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_program.py",
+          "root": "visual_recovery",
+          "sha256": "40202d140a51b9103e083933999ed57e68d08f0b5233171d21952839b04d85c5"
+        }
+      ],
+      "additional_variant_sha256": "40202d140a51b9103e083933999ed57e68d08f0b5233171d21952839b04d85c5",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "9bf6f8f3f6c216f5d930cfe34d765ac97fa0077ba3ff9d1a8c33c786b0785046",
+        "runtime_sha256": "9bf6f8f3f6c216f5d930cfe34d765ac97fa0077ba3ff9d1a8c33c786b0785046",
+        "working_sha256": "83557e34e13e0486aec24b7f90f47f3f6ae7d0f73e6dbd2e1ce294daaa75f105"
+      },
+      "previously_recorded_variant_sha256": [
+        "a59a448d3dcaf5bc3c1a5aac87ec7c4351febb519b9b9271857554ffee0e3b1a"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 40202d140a51b9103e083933999ed57e68d08f0b5233171d21952839b04d85c5: Variant writes checkpoint Markdown directly and replaces governed CSV/JSON promotion with Path.replace. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_program.py",
+      "safety_area": "publication_authority",
+      "selected_active_sha256": "83557e34e13e0486aec24b7f90f47f3f6ae7d0f73e6dbd2e1ce294daaa75f105",
+      "selected_guard_anchor": "atomic_write_text(md_path,",
+      "semantic_difference": "Variant writes checkpoint Markdown directly and replaces governed CSV/JSON promotion with Path.replace.",
+      "variant_regression_anchor": "md_path.write_text("
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_learning.py",
+          "root": "visual_recovery",
+          "sha256": "8578378273e51e5c930cf1d6a5a57b9be8e09d1605e4742de313270791d9dede"
+        }
+      ],
+      "additional_variant_sha256": "8578378273e51e5c930cf1d6a5a57b9be8e09d1605e4742de313270791d9dede",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35",
+        "runtime_sha256": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35",
+        "working_sha256": "f1b1b1c9a488eca396131ee4ec68cee59d5f7b65c516efe9c299e708c448cd35"
+      },
+      "previously_recorded_variant_sha256": [
+        "e8faa9e8abce28a1ce22ce553c76067f6423fa012dae008dd50db5412757aa0e"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 8578378273e51e5c930cf1d6a5a57b9be8e09d1605e4742de313270791d9dede: Variant trusts runner acceptance without requiring recomputed RL acceptance and persists raw validation/error text. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_learning.py",
+      "safety_area": "research_acceptance",
+      "selected_active_sha256": "4aef39e6f73f58f1e4b9546bada60f66d8f20a527d58c6f43008781d4b75b65d",
+      "selected_guard_anchor": "and _truthy(computed_rl_row.get(\"accepted\"))",
+      "semantic_difference": "Variant trusts runner acceptance without requiring recomputed RL acceptance and persists raw validation/error text.",
+      "variant_regression_anchor": "\"runner_summary_accepted\": _truthy(rl.summary.get(\"accepted\")),"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+          "root": "visual_recovery",
+          "sha256": "68beae273ba6dc697f1780deae61e1255c79f6ba28011ac0d7c085bdb336e63e"
+        }
+      ],
+      "additional_variant_sha256": "68beae273ba6dc697f1780deae61e1255c79f6ba28011ac0d7c085bdb336e63e",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "bc0d01a52db7aa847bfd6e38284fe10f5c0b92f882eb41fd3e893d03e587bc47",
+        "runtime_sha256": "bc0d01a52db7aa847bfd6e38284fe10f5c0b92f882eb41fd3e893d03e587bc47",
+        "working_sha256": "a20b38253f6d6e4a0e3735c1e4c95b7f9a66bc66fd83bbfcc93e78301ef37885"
+      },
+      "previously_recorded_variant_sha256": [
+        "263e059b0dc6897dde037688afae87285a8c0b0d19d474e997ae8883a839382b"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 68beae273ba6dc697f1780deae61e1255c79f6ba28011ac0d7c085bdb336e63e: Variant removes coded research-authority violation, uses raw errors and copy2/Path.replace rather than governed atomic file and directory publication. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RETAIN_CANDIDATE_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_rerun_executor.py",
+      "safety_area": "research_publication",
+      "selected_active_sha256": "a20b38253f6d6e4a0e3735c1e4c95b7f9a66bc66fd83bbfcc93e78301ef37885",
+      "selected_guard_anchor": "class ResearchAuthorityViolation(ValueError):",
+      "semantic_difference": "Variant removes coded research-authority violation, uses raw errors and copy2/Path.replace rather than governed atomic file and directory publication.",
+      "variant_regression_anchor": "temporary.replace(workspace)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_release_gates.py",
+          "root": "visual_recovery",
+          "sha256": "2d54020088cbdc38b8693ba957e342b42d1e6359d37d8da4120487cb78b010d1"
+        }
+      ],
+      "additional_variant_sha256": "2d54020088cbdc38b8693ba957e342b42d1e6359d37d8da4120487cb78b010d1",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "7f0fa2ddc85b458e45070d8c58dfb261cf8233d10a929ccdd72da724e980c669",
+        "runtime_sha256": "7f0fa2ddc85b458e45070d8c58dfb261cf8233d10a929ccdd72da724e980c669",
+        "working_sha256": "429197618a9c5f646f8c19d1f837eedff2907e89f02aa6396dc1d850e2852219"
+      },
+      "previously_recorded_variant_sha256": [
+        "63461d7fa93d182bf5cd5c338fb92e943ac112df1e58163fa90404f853020231"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 2d54020088cbdc38b8693ba957e342b42d1e6359d37d8da4120487cb78b010d1: Variant replaces governed archive and checkpoint publication with direct writes/rename and persists raw validation errors. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_release_gates.py",
+      "safety_area": "release_publication",
+      "selected_active_sha256": "429197618a9c5f646f8c19d1f837eedff2907e89f02aa6396dc1d850e2852219",
+      "selected_guard_anchor": "promote_staged_directory(temporary, archive_path)",
+      "semantic_difference": "Variant replaces governed archive and checkpoint publication with direct writes/rename and persists raw validation errors.",
+      "variant_regression_anchor": "temporary.rename(archive_path)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_runtime.py",
+          "root": "visual_recovery",
+          "sha256": "686a06b6916207d018f34cb9d0eef5e9e487975736266653e0f66b95d98bc5ac"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_runtime.py",
+          "root": "forensic_b",
+          "sha256": "686a06b6916207d018f34cb9d0eef5e9e487975736266653e0f66b95d98bc5ac"
+        }
+      ],
+      "additional_variant_sha256": "686a06b6916207d018f34cb9d0eef5e9e487975736266653e0f66b95d98bc5ac",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "494fcdb5b12029126382b6dfcd392b711565119a80daf3d34e2d80d2294f8936",
+        "runtime_sha256": "494fcdb5b12029126382b6dfcd392b711565119a80daf3d34e2d80d2294f8936",
+        "working_sha256": "6b1376de31b3cdf225eaee504eaad749c4b3e999a1edfc1a9576fcca62a042b9"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 686a06b6916207d018f34cb9d0eef5e9e487975736266653e0f66b95d98bc5ac: Variant lacks scheduler capability and runtime contract binding and the governed atomic writer's lease/target checks. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_runtime.py",
+      "safety_area": "runtime_publication",
+      "selected_active_sha256": "6b1376de31b3cdf225eaee504eaad749c4b3e999a1edfc1a9576fcca62a042b9",
+      "selected_guard_anchor": "class SchedulerContract:",
+      "semantic_difference": "Variant lacks scheduler capability and runtime contract binding and the governed atomic writer's lease/target checks.",
+      "variant_regression_anchor": "def _replace_existing_file_in_place("
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_scheduler_runtime_readiness.py",
+          "root": "visual_recovery",
+          "sha256": "9df1187d00958c69379e8be45d7cd7e2b9145c65825533c449e158765601a50e"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_scheduler_runtime_readiness.py",
+          "root": "forensic_b",
+          "sha256": "9df1187d00958c69379e8be45d7cd7e2b9145c65825533c449e158765601a50e"
+        }
+      ],
+      "additional_variant_sha256": "9df1187d00958c69379e8be45d7cd7e2b9145c65825533c449e158765601a50e",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "a79b3977a828302216356e026fab41b3ea88834075a8e4b044479032f65cd2b8",
+        "runtime_sha256": "a79b3977a828302216356e026fab41b3ea88834075a8e4b044479032f65cd2b8",
+        "working_sha256": "328385d6443d1b5d5a2621f8681ddc25a09a62b23ebc3658505daa2a800e1e9b"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 9df1187d00958c69379e8be45d7cd7e2b9145c65825533c449e158765601a50e: Variant omits fresh terminal PASS identity, interpreter/dependency probe and log redaction checks from readiness. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_scheduler_runtime_readiness.py",
+      "safety_area": "scheduler_readiness",
+      "selected_active_sha256": "328385d6443d1b5d5a2621f8681ddc25a09a62b23ebc3658505daa2a800e1e9b",
+      "selected_guard_anchor": "def _terminal_receipt_observation(",
+      "semantic_difference": "Variant omits fresh terminal PASS identity, interpreter/dependency probe and log redaction checks from readiness.",
+      "variant_regression_anchor": "def _log_stat(path: Path)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+          "root": "visual_recovery",
+          "sha256": "853400fcd7c67034667e4ccd66718cf427a5ccd8e121c394fd342c721c3b98f8"
+        }
+      ],
+      "additional_variant_sha256": "853400fcd7c67034667e4ccd66718cf427a5ccd8e121c394fd342c721c3b98f8",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "a658141366e164ae0fda2b5dec09a1e537b52eee53624b08f4dfd428fd773c6a",
+        "runtime_sha256": "a658141366e164ae0fda2b5dec09a1e537b52eee53624b08f4dfd428fd773c6a",
+        "working_sha256": "13f1ab46b266d3bd7a1faff74e251712a06414f974ec5e7771fdad2fc32c760b"
+      },
+      "previously_recorded_variant_sha256": [
+        "400ed29936fee0724c31aa44bd43557ed90fb3a6985e41a2792c47282b89f91b"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 853400fcd7c67034667e4ccd66718cf427a5ccd8e121c394fd342c721c3b98f8: Variant allows substitute pair executor and raw testnet info requests, and uses direct exclusive writes. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+      "safety_area": "testnet_effect_authority",
+      "selected_active_sha256": "13f1ab46b266d3bd7a1faff74e251712a06414f974ec5e7771fdad2fc32c760b",
+      "selected_guard_anchor": "def _require_gate00g_testnet_pair_executor(",
+      "semantic_difference": "Variant allows substitute pair executor and raw testnet info requests, and uses direct exclusive writes.",
+      "variant_regression_anchor": "with path.open(\"x\", encoding=\"utf-8\") as handle:"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_browser_auth.py",
+          "root": "visual_recovery",
+          "sha256": "bb95cfe0d129c36fec6e7313ffd969b301e931ba4f1b7f9aeab1ba55caa7d915"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_browser_auth.py",
+          "root": "forensic_b",
+          "sha256": "bb95cfe0d129c36fec6e7313ffd969b301e931ba4f1b7f9aeab1ba55caa7d915"
+        }
+      ],
+      "additional_variant_sha256": "bb95cfe0d129c36fec6e7313ffd969b301e931ba4f1b7f9aeab1ba55caa7d915",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "62733fadc7b5dc90492768cd574b025373fd99bf4d035a412c5d032131b5b468",
+        "runtime_sha256": "62733fadc7b5dc90492768cd574b025373fd99bf4d035a412c5d032131b5b468",
+        "working_sha256": "f1a17d291181d675ab772c0b1acb4df1419172f93f2ef6f7b1404c8bdb8117aa"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant bb95cfe0d129c36fec6e7313ffd969b301e931ba4f1b7f9aeab1ba55caa7d915: Variant drops bounded receipt age and exact independent route-kind validation and bypasses governed publication. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_NARROW_BROWSER_AUTH_GUARD_PORT_REMAINDER_DEFERRED",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_browser_auth.py",
+      "safety_area": "browser_auth_validation",
+      "selected_active_sha256": "343cdffd446b3fcd1d52ebc5328859c4a6d5f2bac9002f66c78cbfef33469020",
+      "selected_guard_anchor": "if receipt.get(\"required_route_kinds\") != list(REQUIRED_ROUTE_KINDS):",
+      "semantic_difference": "Variant drops bounded receipt age and exact independent route-kind validation and bypasses governed publication.",
+      "variant_regression_anchor": "os.replace(temporary, path)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+          "root": "visual_recovery",
+          "sha256": "5946983b4ab5a9e88eaa7895468513efb4ed0094cbaa12a1db3d4db7d49ad9ec"
+        }
+      ],
+      "additional_variant_sha256": "5946983b4ab5a9e88eaa7895468513efb4ed0094cbaa12a1db3d4db7d49ad9ec",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa",
+        "runtime_sha256": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa",
+        "working_sha256": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa"
+      },
+      "previously_recorded_variant_sha256": [
+        "0f75e57f5f6e00278d64bb6f10f51811f4c71c855c67ec24cf79ab6f7de40a71"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 5946983b4ab5a9e88eaa7895468513efb4ed0094cbaa12a1db3d4db7d49ad9ec: Variant emits a stale .venv312 command and replaces governed review artifact publication with Path.replace. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_comparator_review_control.py",
+      "safety_area": "review_publication",
+      "selected_active_sha256": "c55f9bfba01cbfc7b0cc8f2f2c8aaa4e84bf63a57f4e9ac2d2b0b97d64934faa",
+      "selected_guard_anchor": "PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli ",
+      "semantic_difference": "Variant emits a stale .venv312 command and replaces governed review artifact publication with Path.replace.",
+      "variant_regression_anchor": "PYTHONPATH=src .venv312/bin/python -m quant_platform.cli "
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py",
+          "root": "visual_recovery",
+          "sha256": "48202bc3041e2473cc228301a9cbb9a03b1e3c7e4e05aa58dd18cdf33a2df46d"
+        }
+      ],
+      "additional_variant_sha256": "48202bc3041e2473cc228301a9cbb9a03b1e3c7e4e05aa58dd18cdf33a2df46d",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a",
+        "runtime_sha256": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a",
+        "working_sha256": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a"
+      },
+      "previously_recorded_variant_sha256": [
+        "6395b2f5204e7d471a4dfb0aef584c49b7c1723fd6c63cf59324c29cb5ed3031"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 48202bc3041e2473cc228301a9cbb9a03b1e3c7e4e05aa58dd18cdf33a2df46d: Variant replaces governed staged and immutable JSON publication with Path.replace/direct write. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_dynamic_holdout.py",
+      "safety_area": "holdout_publication",
+      "selected_active_sha256": "fa3428e3e7b321fcdeb4bdfee6bc8f9af426ff36e1a7f3509a7c23971afeca6a",
+      "selected_guard_anchor": "atomic_write_text(path, encoded, encoding=\"utf-8\")",
+      "semantic_difference": "Variant replaces governed staged and immutable JSON publication with Path.replace/direct write.",
+      "variant_regression_anchor": "path.write_text(encoded, encoding=\"utf-8\")"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_holdout.py",
+          "root": "visual_recovery",
+          "sha256": "f887fe864804128ee34e6241102022055f5f9e5420ee8fdc192a2829330a7584"
+        }
+      ],
+      "additional_variant_sha256": "f887fe864804128ee34e6241102022055f5f9e5420ee8fdc192a2829330a7584",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4",
+        "runtime_sha256": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4",
+        "working_sha256": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4"
+      },
+      "previously_recorded_variant_sha256": [
+        "1492cb24e049db15447d66db1a89739a22ccb9af304b15fb070b3398c1a4b7c8"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant f887fe864804128ee34e6241102022055f5f9e5420ee8fdc192a2829330a7584: Variant reads environment key during nonexecute paths, logs raw provider errors and writes selector evidence directly; its custom immutable link is redundant. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_holdout.py",
+      "safety_area": "credential_and_holdout_publication",
+      "selected_active_sha256": "56e5cde9d5f5759edce3a3a1e7fc7fd6aa6d83eea4ecc30feecba6fea13000d4",
+      "selected_guard_anchor": "safe_exception_code(exc)",
+      "semantic_difference": "Variant reads environment key during nonexecute paths, logs raw provider errors and writes selector evidence directly; its custom immutable link is redundant.",
+      "variant_regression_anchor": "key = api_key or os.getenv(\"CRYPTO_WIZARDS_API_KEY\", \"\").strip()"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py",
+          "root": "visual_recovery",
+          "sha256": "2079c38b2b32842dbc00cdc64a66c85a22200058d478aa53c2ee90ea5cde9b4c"
+        }
+      ],
+      "additional_variant_sha256": "2079c38b2b32842dbc00cdc64a66c85a22200058d478aa53c2ee90ea5cde9b4c",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face",
+        "runtime_sha256": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face",
+        "working_sha256": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face"
+      },
+      "previously_recorded_variant_sha256": [
+        "8b9e64b2720b31dbaab1a2bcbf80ef5f9bda64aad75aa5cb0255c82270b52ffc"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 2079c38b2b32842dbc00cdc64a66c85a22200058d478aa53c2ee90ea5cde9b4c: Variant reads environment key during nonexecute paths and persists raw credit/capture errors. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_holdout.py",
+      "safety_area": "credential_and_redaction",
+      "selected_active_sha256": "b01f84623d5846cb1bea5436433d77143cb1558fd11dea4a8163e3b58b38face",
+      "selected_guard_anchor": "safe_exception_code(exc)",
+      "semantic_difference": "Variant reads environment key during nonexecute paths and persists raw credit/capture errors.",
+      "variant_regression_anchor": "key = api_key or os.getenv(\"CRYPTO_WIZARDS_API_KEY\", \"\").strip()"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py",
+          "root": "visual_recovery",
+          "sha256": "b92611ab493c8dc0e7319e0379654b621894001bb33553574e7c27d5e9d4d692"
+        }
+      ],
+      "additional_variant_sha256": "b92611ab493c8dc0e7319e0379654b621894001bb33553574e7c27d5e9d4d692",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c",
+        "runtime_sha256": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c",
+        "working_sha256": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c"
+      },
+      "previously_recorded_variant_sha256": [
+        "f7e197fd4daa889635ea71822e50287e899a61eb50223ea08802a0dc04e77799"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant b92611ab493c8dc0e7319e0379654b621894001bb33553574e7c27d5e9d4d692: Variant reads environment key during nonexecute paths and persists raw credit/capture/registration errors. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_holdout.py",
+      "safety_area": "credential_and_redaction",
+      "selected_active_sha256": "079c9ee392a4b1bf9a2704e06b8d5ee81cd9a703f4c65aecd27508138579b80c",
+      "selected_guard_anchor": "safe_exception_code(exc)",
+      "semantic_difference": "Variant reads environment key during nonexecute paths and persists raw credit/capture/registration errors.",
+      "variant_regression_anchor": "key = api_key or os.getenv(\"CRYPTO_WIZARDS_API_KEY\", \"\").strip()"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+          "root": "visual_recovery",
+          "sha256": "1a37b2175c8c0ff6a570523379f6c1dc2933389a755710f7d696bf2dac759e80"
+        }
+      ],
+      "additional_variant_sha256": "1a37b2175c8c0ff6a570523379f6c1dc2933389a755710f7d696bf2dac759e80",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2",
+        "runtime_sha256": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2",
+        "working_sha256": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2"
+      },
+      "previously_recorded_variant_sha256": [
+        "8026c5a0b77a9fd6e67426d027f7ab7745665cae675795d39cc2bc1d736d4662"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 1a37b2175c8c0ff6a570523379f6c1dc2933389a755710f7d696bf2dac759e80: Variant reads environment key during nonexecute paths and persists raw credit/capture/registration errors. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v6_holdout.py",
+      "safety_area": "credential_and_redaction",
+      "selected_active_sha256": "f7244745419fadb8320462e842b9420f5268e053285982e44b51c348ba4fe0f2",
+      "selected_guard_anchor": "safe_exception_code(exc)",
+      "semantic_difference": "Variant reads environment key during nonexecute paths and persists raw credit/capture/registration errors.",
+      "variant_regression_anchor": "key = api_key or os.getenv(\"CRYPTO_WIZARDS_API_KEY\", \"\").strip()"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_parity.py",
+          "root": "visual_recovery",
+          "sha256": "08d97817cb8992c08ccc6aedcd0c897051d20db919deb55cb718132009e93d9b"
+        }
+      ],
+      "additional_variant_sha256": "08d97817cb8992c08ccc6aedcd0c897051d20db919deb55cb718132009e93d9b",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f",
+        "runtime_sha256": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f",
+        "working_sha256": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f"
+      },
+      "previously_recorded_variant_sha256": [
+        "a2c27e44a6ec14307ed1d0d386455ff09c42bf63e2814f805183ee32b23a1288"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 08d97817cb8992c08ccc6aedcd0c897051d20db919deb55cb718132009e93d9b: Variant duplicates canonical Wizard mode names locally and writes capture, fixture and fidelity evidence directly. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_parity.py",
+      "safety_area": "canonical_mode_publication",
+      "selected_active_sha256": "30a39d62ffd1f5c9857e8eeaedcf478f749e6318a19d219bdfda773e25757b7f",
+      "selected_guard_anchor": "PAIR_PAGE_EXACT_MODES = CANONICAL_WIZARD_MODES",
+      "semantic_difference": "Variant duplicates canonical Wizard mode names locally and writes capture, fixture and fidelity evidence directly.",
+      "variant_regression_anchor": "PAIR_PAGE_EXACT_MODES = ("
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+          "root": "visual_recovery",
+          "sha256": "bdaaf213088e91e60d82f8dfe0491fd0c3c4358d81091b2da1fb10be8832ba4b"
+        }
+      ],
+      "additional_variant_sha256": "bdaaf213088e91e60d82f8dfe0491fd0c3c4358d81091b2da1fb10be8832ba4b",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "e9dfbf182f4561b42bf3725ef6316cf7ec09f87f8d1cb5afdd4985299ff8406a",
+        "runtime_sha256": "be2bdd808ad8d427dcb4681327244de76ccd14d76f70b32c896f8140389f1ce1",
+        "working_sha256": "e9dfbf182f4561b42bf3725ef6316cf7ec09f87f8d1cb5afdd4985299ff8406a"
+      },
+      "previously_recorded_variant_sha256": [
+        "6cca2c433996773f9c4034abc68d9b6d32d8e440edf04781a9bef25eb44857bb"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant bdaaf213088e91e60d82f8dfe0491fd0c3c4358d81091b2da1fb10be8832ba4b: Variant launches proof outside scheduler supervision, omits authorized unattended preflight and in-process effect issuer, and writes heartbeat without publication lease. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_proof_launcher.py",
+      "safety_area": "external_effect_supervision",
+      "selected_active_sha256": "e9dfbf182f4561b42bf3725ef6316cf7ec09f87f8d1cb5afdd4985299ff8406a",
+      "selected_guard_anchor": "supervise_scheduler_run(",
+      "semantic_difference": "Variant launches proof outside scheduler supervision, omits authorized unattended preflight and in-process effect issuer, and writes heartbeat without publication lease.",
+      "variant_regression_anchor": "result = run_wizard_proof_launcher("
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+          "root": "visual_recovery",
+          "sha256": "7305b90428e4d3638e6c77ff74f78b63f010962b1d375f39b2ae629dfcd054bc"
+        }
+      ],
+      "additional_variant_sha256": "7305b90428e4d3638e6c77ff74f78b63f010962b1d375f39b2ae629dfcd054bc",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "c1323cc4d66f7365ec469fdef2e9689ce88c472f360b5b527d337efafb67edbb",
+        "runtime_sha256": "b9719636635a1289af3ac6ceae7d89423fa903bbd527208f0a3aff9fdce260e0",
+        "working_sha256": "8caf2e49f662c40f38252506e1b039898cf5cf8807e71d3994b71bf01dba10eb"
+      },
+      "previously_recorded_variant_sha256": [
+        "3f78c0c156baa883b2f29edac0e4100c108eed757dd46848c9442245fadb0e51"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 7305b90428e4d3638e6c77ff74f78b63f010962b1d375f39b2ae629dfcd054bc: Variant removes reserved external-effect session, request ceiling, authorized credential and supervisor; treats a passed credit reservation as spend authority by default. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_CORRECTIVE_COHORT_DEFERRED_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py",
+      "safety_area": "paid_external_effect_authority",
+      "selected_active_sha256": "8caf2e49f662c40f38252506e1b039898cf5cf8807e71d3994b71bf01dba10eb",
+      "selected_guard_anchor": "reserved_external_effect_session(",
+      "semantic_difference": "Variant removes reserved external-effect session, request ceiling, authorized credential and supervisor; treats a passed credit reservation as spend authority by default.",
+      "variant_regression_anchor": "load_env_file(path, override=False)"
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_reset_readiness.py",
+          "root": "visual_recovery",
+          "sha256": "8980c3da7cb7655ddec7e7c8f94f92dd9a62415dfc7be78158b9d3327a6410ea"
+        }
+      ],
+      "additional_variant_sha256": "8980c3da7cb7655ddec7e7c8f94f92dd9a62415dfc7be78158b9d3327a6410ea",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa",
+        "runtime_sha256": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa",
+        "working_sha256": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa"
+      },
+      "previously_recorded_variant_sha256": [
+        "3b7c71b3f1a4da5377137dd855dbdcc46d622024635024098d4e71acff45a234"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 8980c3da7cb7655ddec7e7c8f94f92dd9a62415dfc7be78158b9d3327a6410ea: Variant hardcodes .venv312 interpreter and replaces governed readiness artifact promotion with Path.replace. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RUNTIME_BYTE_IDENTICAL_RETAIN",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_reset_readiness.py",
+      "safety_area": "scheduler_identity_and_publication",
+      "selected_active_sha256": "82f8c24b6a354ef2a72b49a759a7f0c53b0b4c71681e753da182d4a313309efa",
+      "selected_guard_anchor": "expected_python = scheduler_python_path(root)",
+      "semantic_difference": "Variant hardcodes .venv312 interpreter and replaces governed readiness artifact promotion with Path.replace.",
+      "variant_regression_anchor": "expected_python = root / \".venv312\" / \"bin\" / \"python\""
+    },
+    {
+      "additional_variant_copies": [
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_surface_inventory.py",
+          "root": "visual_recovery",
+          "sha256": "75cc379ec1972b76a24363a8f4dcaa3cccf4e63103f8c46c0a94eb2024fb4397"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_surface_inventory.py",
+          "root": "forensic_b",
+          "sha256": "75cc379ec1972b76a24363a8f4dcaa3cccf4e63103f8c46c0a94eb2024fb4397"
+        }
+      ],
+      "additional_variant_sha256": "75cc379ec1972b76a24363a8f4dcaa3cccf4e63103f8c46c0a94eb2024fb4397",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "26a0b9f0bfbbb96730d60d08524e01f4ef9d8e1a77751d64651e0800c1986c58",
+        "runtime_sha256": "26a0b9f0bfbbb96730d60d08524e01f4ef9d8e1a77751d64651e0800c1986c58",
+        "working_sha256": "be13dbcc8eecf64a9a28ac8dafe48a4ce3cd046b5d0a18e574ed576172b39723"
+      },
+      "previously_recorded_variant_sha256": [],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_CORRECTIVE_EXTENDED_VARIANT_RECONCILIATION_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant 75cc379ec1972b76a24363a8f4dcaa3cccf4e63103f8c46c0a94eb2024fb4397: Variant replaces governed immutable and mutable publication with a local hard-link implementation and Path.replace; repeat-link collision handling differs. Retain selected active source.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_RETAIN_RUNTIME_NO_PORT",
+      "recommended_source_decision": "NO_PORT_RETAIN_SELECTED_ACTIVE",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_surface_inventory.py",
+      "safety_area": "inventory_publication",
+      "selected_active_sha256": "be13dbcc8eecf64a9a28ac8dafe48a4ce3cd046b5d0a18e574ed576172b39723",
+      "selected_guard_anchor": "write_immutable_json(path, payload)",
+      "semantic_difference": "Variant replaces governed immutable and mutable publication with a local hard-link implementation and Path.replace; repeat-link collision handling differs.",
+      "variant_regression_anchor": "os.link(temporary, path)"
+    }
+  ],
+  "schema_version": "thewiz.gate0.corrective_extended_variant_reconciliation.v1",
+  "selected_source_changes": 0,
+  "source_prefix": "src/quant_platform/orchestration/corrective_"
+}

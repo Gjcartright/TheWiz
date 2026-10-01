@@ -1,0 +1,29 @@
+{
+  "collection_activation_authorized": false,
+  "decision": "FOUR_STALE_COLLECTION_CONFIGS_REVIEWED_NO_PORT",
+  "historical_config_sha256": {
+    "config/collection_launch_runtime.json": "b5abb8736eda54c79155febe3f0246a331833a29990bf26e4f6722d1f945ba84",
+    "config/collection_prestart_runtime_candidate.json": "48dc1134a1489b9cb066ea55481490693077e25a049d4b06288bd796e3c0c715",
+    "config/collection_verification_batches.json": "3f9f44b2572e26504e74bcb23fcf8a28281ee76916da72b3394e485844d69b8d",
+    "config/collection_verification_scope.json": "3cd182480eba6f926f3b48dd03c2856db28fadefc3ebfe7bbe9abdd4e23749e8"
+  },
+  "historical_lock_sha256": "bc67c17f3873991bc3dfb7a3bf782153d81838402a9c6057de4be9a854549a9a",
+  "historical_verification_scope": {
+    "batches": 82,
+    "paths_absent_in_selected_commit": 118,
+    "selected_nodeids": 2411,
+    "test_file_paths": 129
+  },
+  "live_trading_authorized": false,
+  "schema_version": "thewiz.gate0.collection_runtime_config_source_reconciliation.v1",
+  "selected_canonical_lock_sha256": "c8955d2a94ad5d7c97da861cab9db9a32d3d489d17825052632ee9b96dcad634",
+  "selected_commit": "0b60eadf4f6a8d92cf9653c952f184aa3ea97146",
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 639,
+    "reviewed_paths": 154,
+    "sha256": "2be83b0b1f9a599b11618ddacb76347dd5979a049ac6a2707cf8fe2d882562f4"
+  }
+}

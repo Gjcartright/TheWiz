@@ -210,8 +210,7 @@ def recover_abandoned_scheduler_runs(
         abandoned_reservations_failed = 0
         if (
             int(accounting["open_reservations"]) > 0
-            and int(accounting["issued_provider_effect_permits"]) == 0
-            and int(accounting["consumed_provider_effect_permits"]) == 0
+            and accounting.get("provider_effect_absence_proven") is True
         ):
             abandoned_reservations_failed = (
                 authority.fail_open_external_reservations_without_provider_effects(
@@ -223,7 +222,10 @@ def recover_abandoned_scheduler_runs(
                 run_id=run_id,
                 intended_slot_id=str(intent["intended_slot"]),
             )
-        recovery_blockers = ["scheduler_process_abandoned"]
+        recovery_blockers = [
+            "scheduler_process_abandoned",
+            "scheduler_crash_retry_requires_manual_reauthorization",
+        ]
         if slot_claimed:
             recovery_blockers.append("scheduler_slot_claim_consumed")
         recovery_blockers.extend(str(value) for value in accounting["blockers"])
@@ -235,13 +237,7 @@ def recover_abandoned_scheduler_runs(
             recovery_blockers.append("external_credit_reconciliation_required")
         if int(accounting["order_attempts"]) > 0:
             recovery_blockers.append("abandoned_run_order_activity_detected")
-        retryable = bool(
-            not slot_claimed
-            and int(accounting["consumed_provider_effect_permits"]) == 0
-            and int(accounting["issued_provider_effect_permits"]) == 0
-            and int(accounting["external_credits_consumed"]) == 0
-            and int(accounting["order_attempts"]) == 0
-        )
+        retryable = False
         runtime_identity = {
             "scheduler_key": scheduler_key,
             **{

@@ -1,0 +1,402 @@
+{
+  "base_commit": "2d5ebb7506f9b8929ffdb53302f7619ff359cd16",
+  "decision": "PRESERVE_PRECOLLECTION_COHORT_NO_GATE0_PORT",
+  "mac_savepoint_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+  "method": "Exact queue/savepoint/recovery SHA-256; AST imports and missing-active-module map; tracked active source/scripts/tests/config consumer scan; direct preserved-test import crosswalk; recovery/source-candidate diff review.",
+  "records": [
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [],
+      "quant_platform_imports": [],
+      "rationale": "Runtime-only precollection_admission has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. Recovery variant: Recovery lowers old daily/campaign credit caps from 1000/7000 to 300/2100; this historical budget is not the current governed credit policy.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "0d5790d754a4f30c5cf33fbdcfcff06fca257b3aa03669dcb427173e823c66ea",
+      "recovery_variant": {
+        "diff_added_lines": 1,
+        "diff_removed_lines": 1,
+        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/precollection_admission.py",
+        "semantic_decision": "Recovery lowers old daily/campaign credit caps from 1000/7000 to 300/2100; this historical budget is not the current governed credit policy.",
+        "sha256": "0d5790d754a4f30c5cf33fbdcfcff06fca257b3aa03669dcb427173e823c66ea"
+      },
+      "relative_path": "src/quant_platform/orchestration/precollection_admission.py",
+      "runtime_direct_test_refs": [
+        "tests/precollection_fixture_support.py",
+        "tests/test_campaign_schedule674.py"
+      ],
+      "runtime_sha256": "e34da8dc48824b5a9e4dc526c0fa22e03ac79628bad1521e5415cdbb528d0137"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.collection_release.campaign_schedule",
+        "quant_platform.orchestration.precollection_admission",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.collection_release.campaign_schedule",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.precollection_admission",
+        "quant_platform.orchestration.precollection_campaign_io",
+        "quant_platform.runtime_types"
+      ],
+      "rationale": "Runtime-only precollection_campaign_builder has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.collection_release.campaign_schedule, quant_platform.orchestration.precollection_admission, quant_platform.orchestration.precollection_campaign_io.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_campaign_builder.py",
+      "runtime_direct_test_refs": [
+        "tests/test_precollection_campaign_builder.py"
+      ],
+      "runtime_sha256": "8c45cb1971034673a91e2d64cc573a61af7fe913b1f76572a915ebf394225a4c"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [],
+      "quant_platform_imports": [],
+      "rationale": "Runtime-only precollection_campaign_io has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "a00e054df9b64a6ba0c7439f17e86c5397926617f1a031153a58d1a9d8a7477a",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_campaign_io.py",
+      "runtime_direct_test_refs": [
+        "tests/precollection_fixture_support.py",
+        "tests/test_precollection_campaign_builder.py",
+        "tests/test_released_admission681.py"
+      ],
+      "runtime_sha256": "a00e054df9b64a6ba0c7439f17e86c5397926617f1a031153a58d1a9d8a7477a"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "rationale": "Runtime-only precollection_cycle_owner has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_observer_process.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "e6f4747c10252e876e40b8fe4b27e86fb338cab3953df35018e4cb929341a7ac",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_cycle_owner.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_launcher_native_support.py"
+      ],
+      "runtime_sha256": "e6f4747c10252e876e40b8fe4b27e86fb338cab3953df35018e4cb929341a7ac"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "rationale": "Runtime-only precollection_cycle_worker has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_poll_store, quant_platform.orchestration.precollection_poll_watchdog.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "3dbff3aa9e42e1efa26c75400e395c2a409abdf0eedbf77ce653f308b2ea34c0",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_cycle_worker.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "3dbff3aa9e42e1efa26c75400e395c2a409abdf0eedbf77ce653f308b2ea34c0"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_monitor_schedule",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_monitor_schedule",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "rationale": "Runtime-only precollection_launcher_monitor has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_monitor_schedule, quant_platform.orchestration.precollection_poll_store, quant_platform.orchestration.precollection_poll_watchdog.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "a5b1f312436ec48101448a34217954fc913b096fb0dbb407c82ecae7d8aaf14a",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_launcher_monitor.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "a5b1f312436ec48101448a34217954fc913b096fb0dbb407c82ecae7d8aaf14a"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [],
+      "quant_platform_imports": [],
+      "rationale": "Runtime-only precollection_monitor has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "fec83a791f698384e48c70541295657077077ac2a9c10fa814c877d3836684e1",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_monitor.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "fec83a791f698384e48c70541295657077077ac2a9c10fa814c877d3836684e1"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "rationale": "Runtime-only precollection_monitor_schedule has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_poll_store, quant_platform.orchestration.precollection_poll_watchdog.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "20268c32f0c5967036abca92ae9819c8d5fc743977a147b40d263b42e6d89db3",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_monitor_schedule.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "20268c32f0c5967036abca92ae9819c8d5fc743977a147b40d263b42e6d89db3"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [],
+      "quant_platform_imports": [],
+      "rationale": "Runtime-only precollection_observer has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "d8bfa75de8cd6f48364d6e08107da4ce26ffda11bb478fb38c8632b6bcc7ff13",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_observer.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_observer_negative_support.py"
+      ],
+      "runtime_sha256": "d8bfa75de8cd6f48364d6e08107da4ce26ffda11bb478fb38c8632b6bcc7ff13"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_observer_process",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.precollection_observer_process",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "rationale": "Runtime-only precollection_observer_child has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_observer_process, quant_platform.orchestration.precollection_poll_store. Recovery variant: Recovery removes the observer audit-hook denial of os.kill; retain the stricter LocalRuntime variant if the whole cohort is reconsidered.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "b7bfe4d8913a78cf5e875c9c92bdcf3d12ccd6ac6e970f20e13e1aec6c7cb667",
+      "recovery_variant": {
+        "diff_added_lines": 0,
+        "diff_removed_lines": 2,
+        "path": "/Volumes/Expansion/TheWiz-Workspace/project/src/quant_platform/orchestration/precollection_observer_child.py",
+        "semantic_decision": "Recovery removes the observer audit-hook denial of os.kill; retain the stricter LocalRuntime variant if the whole cohort is reconsidered.",
+        "sha256": "b7bfe4d8913a78cf5e875c9c92bdcf3d12ccd6ac6e970f20e13e1aec6c7cb667"
+      },
+      "relative_path": "src/quant_platform/orchestration/precollection_observer_child.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "18421f5e1ef34aecd9e79c4643014fdfdc6ed695b1e07ce6828440f363d80b21"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "rationale": "Runtime-only precollection_observer_deployment has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_poll_store.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "f497571379bba96304cd149bee8dedf6d9b1487cd826f1d8ef3bef9214d5c609",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_observer_deployment.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "f497571379bba96304cd149bee8dedf6d9b1487cd826f1d8ef3bef9214d5c609"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "rationale": "Runtime-only precollection_observer_inbox has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_observer_process.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "f2e666baf8f970827aecd436ad523d64584de9764387c299c77b3811964b06de",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_observer_inbox.py",
+      "runtime_direct_test_refs": [],
+      "runtime_sha256": "f2e666baf8f970827aecd436ad523d64584de9764387c299c77b3811964b06de"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.collection_observer_bridge",
+        "quant_platform.orchestration.collection_runtime_route",
+        "quant_platform.orchestration.discovery_accounting",
+        "quant_platform.orchestration.precollection_admission",
+        "quant_platform.orchestration.precollection_campaign_io",
+        "quant_platform.orchestration.precollection_monitor",
+        "quant_platform.orchestration.precollection_observer",
+        "quant_platform.orchestration.scheduler_terminal_paths"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_observer_bridge",
+        "quant_platform.orchestration.collection_runtime_route",
+        "quant_platform.orchestration.corrective_scheduler_terminal",
+        "quant_platform.orchestration.discovery_accounting",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.precollection_admission",
+        "quant_platform.orchestration.precollection_campaign_io",
+        "quant_platform.orchestration.precollection_monitor",
+        "quant_platform.orchestration.precollection_observer",
+        "quant_platform.orchestration.scheduler_terminal_paths"
+      ],
+      "rationale": "Runtime-only precollection_observer_io has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.collection_observer_bridge, quant_platform.orchestration.collection_runtime_route, quant_platform.orchestration.discovery_accounting, quant_platform.orchestration.precollection_admission, quant_platform.orchestration.precollection_campaign_io, quant_platform.orchestration.precollection_monitor, quant_platform.orchestration.precollection_observer, quant_platform.orchestration.scheduler_terminal_paths.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "38c859a49096e7bda9aef0898a3541077b843115e501c3bf8732a85a419f8293",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_observer_io.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_observer_negative_support.py",
+        "tests/test_collection_observer_route.py",
+        "tests/test_observer_credited711.py"
+      ],
+      "runtime_sha256": "38c859a49096e7bda9aef0898a3541077b843115e501c3bf8732a85a419f8293"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_observer",
+        "quant_platform.orchestration.precollection_observer_inbox",
+        "quant_platform.orchestration.precollection_observer_io"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.precollection_observer",
+        "quant_platform.orchestration.precollection_observer_inbox",
+        "quant_platform.orchestration.precollection_observer_io"
+      ],
+      "rationale": "Runtime-only precollection_observer_process has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_observer, quant_platform.orchestration.precollection_observer_inbox, quant_platform.orchestration.precollection_observer_io.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "c179688fdd6365e3b8497662d632d20ac9e257dfb2c9d827e9abfa8e19d0d96e",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_observer_process.py",
+      "runtime_direct_test_refs": [
+        "tests/test_collection_observer_process.py",
+        "tests/test_collection_observer_route.py",
+        "tests/test_precollection_observer_child.py",
+        "tests/test_precollection_poll_launcher_contract.py",
+        "tests/test_precollection_poll_store.py"
+      ],
+      "runtime_sha256": "c179688fdd6365e3b8497662d632d20ac9e257dfb2c9d827e9abfa8e19d0d96e"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": {
+        "diff_added_lines": 4,
+        "diff_removed_lines": 7,
+        "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/precollection_poll_launcher.py",
+        "semantic_decision": "Source-candidate poll launcher includes __pycache__, bytecode, and AppleDouble metadata in source traversal/fingerprint; preserve runtime exclusion and do not port the variant.",
+        "sha256": "8bdbdf578104650d5a9395ef35f5371d1b136d1d84caf99404fa3f2e21914ad3"
+      },
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_monitor_schedule",
+        "quant_platform.orchestration.precollection_observer_child",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.precollection_monitor_schedule",
+        "quant_platform.orchestration.precollection_observer_child",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "rationale": "Runtime-only precollection_poll_launcher has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_monitor_schedule, quant_platform.orchestration.precollection_observer_child, quant_platform.orchestration.precollection_poll_store, quant_platform.orchestration.precollection_poll_watchdog. Source-candidate variant weakens source fingerprint hygiene.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "fd98e50fda61bbcf310c828b7840d9b4db7b1f41a7bfc1551ec65e2042717b14",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_poll_launcher.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_launcher_native_support.py"
+      ],
+      "runtime_sha256": "fd98e50fda61bbcf310c828b7840d9b4db7b1f41a7bfc1551ec65e2042717b14"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "rationale": "Runtime-only precollection_poll_store has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_observer_process.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "e0d06b1157b1f5e0d663bdb5bff126c5ead3d4818893e7c112d73dc29847c87e",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_poll_store.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_launcher_native_support.py",
+        "tests/collection_watchdog_native_support.py",
+        "tests/test_collection_observer_process.py",
+        "tests/test_precollection_cycle_owner.py",
+        "tests/test_precollection_cycle_validation.py",
+        "tests/test_precollection_cycle_worker.py",
+        "tests/test_precollection_monitor_schedule.py",
+        "tests/test_precollection_owned_schedule.py",
+        "tests/test_precollection_poll_launcher_contract.py",
+        "tests/test_precollection_poll_watchdog.py",
+        "tests/test_precollection_schedule_protocol.py"
+      ],
+      "runtime_sha256": "e0d06b1157b1f5e0d663bdb5bff126c5ead3d4818893e7c112d73dc29847c87e"
+    },
+    {
+      "active_absent": true,
+      "historical_variant": null,
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "quant_platform_imports": [
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "rationale": "Runtime-only precollection_poll_watchdog has no active source, test, script, or config consumer and no installed precollection LaunchAgent; preserved direct tests remain outside the active suite. It imports missing active modules: quant_platform.orchestration.precollection_poll_store.",
+      "recommended_status": "REVIEWED_UNADOPTED_PRECOLLECTION_COHORT_NO_PORT",
+      "recovery_sha256_at_freeze": "02dd2d844e8e2758adcf0ceaeffe9c7d17f92d8804a777f2fffdf7bf2ab52295",
+      "recovery_variant": null,
+      "relative_path": "src/quant_platform/orchestration/precollection_poll_watchdog.py",
+      "runtime_direct_test_refs": [
+        "tests/collection_launcher_native_support.py",
+        "tests/collection_watchdog_native_support.py",
+        "tests/test_precollection_poll_launcher_contract.py"
+      ],
+      "runtime_sha256": "02dd2d844e8e2758adcf0ceaeffe9c7d17f92d8804a777f2fffdf7bf2ab52295"
+    }
+  ],
+  "recovery_root": "/Volumes/Expansion/TheWiz-Workspace/project",
+  "review_date": "2026-09-30",
+  "schema_version": "thewiz.gate0.precollection_cohort_review.v1",
+  "scope": {
+    "active_consumer_matches": 0,
+    "historical_variant_paths": 1,
+    "provider_calls": 0,
+    "recovery_absent_paths": 1,
+    "recovery_variant_paths": 2,
+    "source_paths": 17,
+    "test_execution": 0
+  }
+}

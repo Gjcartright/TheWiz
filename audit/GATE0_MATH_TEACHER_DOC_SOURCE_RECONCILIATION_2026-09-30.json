@@ -1,0 +1,35 @@
+{
+  "decision": "FIVE_MATH_TEACHER_DOCS_SELECTED_WITH_HISTORICAL_ALTERNATIVES_NO_PORT",
+  "historical_runtime_sha256": {
+    "docs/formula_dictionary.md": "583d9329262ef0ef95455ff40c552e1902951b82e449a814f3df5f47f132c55b",
+    "docs/math_v2_teacher_adapter.md": "a96d78cdcd8bbe87a1236a7a984b88f40477925b9a49e0ea3ea826902771bb1a",
+    "docs/teacher_council_student_stack.md": "db336c9854ea7d705a86428178d043751e13e2e98d0347a92a1d325ff8741389"
+  },
+  "historical_variant_sha256": {
+    "docs/formula_dictionary.md": "694491ac6a3635f27939c34b5c8577f3e75157b887ab4623ce8a057400abb12c",
+    "docs/quant_brain.md": "d4232479fbef6a1faf233eca318689f398a797a2137b7d7a46da5bfb3531c041"
+  },
+  "live_trading_authorized": false,
+  "operator_help_probes": [
+    "quant_platform.orchestration.dynamic_cli",
+    "quant_platform.cli"
+  ],
+  "research_acceptance": "BLOCKED",
+  "schema_version": "thewiz.gate0.math_teacher_doc_source_reconciliation.v1",
+  "selected_commit": "785b8da316cae8541922b2b51a5738de35cbd179",
+  "selected_sha256": {
+    "docs/formula_dictionary.md": "3e98f9ce7f1d4639d79afc93e67cfe0836e00785757120d5ab38913b59c3da42",
+    "docs/math_v2_teacher_adapter.md": "2f95f7363f0d2e62a4c328e578b390386970e430286d59b843c17ef4797efb03",
+    "docs/quant_brain.md": "9db366df5a772c9eb814ca3a528084d31c591e63be81c8edaecdda82e6c131c0",
+    "docs/teacher_council_student_stack.md": "5a6248fce2d3f81813ad13a8bd33c1bced3b4345881c595156077795d408ec88",
+    "docs/v2_math_validation_contract.md": "758d25c12788a7a87fd6c3fc680b88f4a1b78d257bdb4ebb83dd322612191529"
+  },
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 626,
+    "reviewed_paths": 167,
+    "sha256": "4b2ec512bfffd5cca48f2ee5b694aaa18cbb894e1d8d16451bff140e9ce0a31b"
+  }
+}

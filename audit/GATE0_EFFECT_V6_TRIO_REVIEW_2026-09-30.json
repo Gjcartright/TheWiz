@@ -1,0 +1,365 @@
+{
+  "api_breaks": [
+    {
+      "canonical_callers": [
+        "src/quant_platform/orchestration/corrective_external_effects.py:347",
+        "src/quant_platform/wizard_credit_ledger.py:846"
+      ],
+      "canonical_removed_argument": "binding_nonce",
+      "method": "register_external_reservation",
+      "preserved_new_required": [
+        "policy_version",
+        "source_fingerprint_sha256",
+        "runtime_fingerprint_sha256",
+        "configuration_fingerprint_sha256",
+        "run_provider_max_total_requests",
+        "run_provider_max_total_credits"
+      ]
+    },
+    {
+      "canonical_callers": [
+        "src/quant_platform/orchestration/corrective_external_effects.py:358"
+      ],
+      "method": "require_open_external_reservation",
+      "preserved_new_required": [
+        "policy_version",
+        "source_fingerprint_sha256",
+        "runtime_fingerprint_sha256",
+        "configuration_fingerprint_sha256",
+        "run_provider_max_total_requests",
+        "run_provider_max_total_credits"
+      ]
+    },
+    {
+      "canonical_callers": [
+        "src/quant_platform/wizard_credit_ledger.py:871"
+      ],
+      "method": "external_reservation_retry_safe",
+      "preserved_new_required": [
+        "provider_id",
+        "account_scope_id",
+        "policy_version",
+        "source_fingerprint_sha256",
+        "runtime_fingerprint_sha256",
+        "configuration_fingerprint_sha256",
+        "max_total_requests",
+        "max_total_credits"
+      ]
+    },
+    {
+      "canonical_callers": [
+        "src/quant_platform/orchestration/corrective_external_effects.py:392",
+        "src/quant_platform/orchestration/corrective_external_effects.py:398"
+      ],
+      "method": "close_external_reservation",
+      "preserved_new_required": [
+        "claim_id"
+      ]
+    }
+  ],
+  "canonical_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/effect-v6-trio-review-u2xXtA/repo",
+  "canonical_commit": "394911783c455013b300a51a1b51aefba51c6acf",
+  "canonical_lineage_includes": [
+    "98a2ba6ff9982250ea67d0e9c95367fbfebb27f5",
+    "4d48930d4e797c040432c9622e492ba019696e7d"
+  ],
+  "contract_versions": {
+    "canonical": {
+      "journal_path": ".runtime_control/effect_authority.sqlite3",
+      "journal_schema": 2,
+      "permit": "thewiz.effect_authority.v2",
+      "reservation": "thewiz.effect_reservation.v1"
+    },
+    "preserved": {
+      "checkpoint_path": ".runtime_control/effect_authority_v6.checkpoints.jsonl",
+      "initialization_seal_path": ".runtime_control/effect_authority_v6.initialization.json",
+      "journal_path": ".runtime_control/effect_authority_v6.sqlite3",
+      "journal_schema": 6,
+      "key_path": ".runtime_control/effect_authority_v6.key",
+      "permit": "thewiz.effect_authority.v3",
+      "reservation": "thewiz.effect_reservation.v3"
+    }
+  },
+  "direct_barrier_test_rows": [
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "4a502c808e6215ddf88e30fbef59b8bc413bc185e37e1142d8fe6ec9d6408c06",
+      "preserved_sha256": "4a502c808e6215ddf88e30fbef59b8bc413bc185e37e1142d8fe6ec9d6408c06",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_collection_barrier664.py",
+      "union_queue_line": 519,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "bdf335c8529933a638be41ebbc8f817ffd8df341c19e935d0af4759a19316031",
+      "preserved_sha256": "bdf335c8529933a638be41ebbc8f817ffd8df341c19e935d0af4759a19316031",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_collection_owner665.py",
+      "union_queue_line": 554,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "96f43f487632c31a8e71ea74022e2661328fa8feb243443a091198da43984b9c",
+      "preserved_sha256": "96f43f487632c31a8e71ea74022e2661328fa8feb243443a091198da43984b9c",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_collection_sequence_supervisor.py",
+      "union_queue_line": 566,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "62f12d807f4e0778a0e4ea29a54442752a9761fdfe78b7babe2d035a1e2fea1e",
+      "preserved_sha256": "62f12d807f4e0778a0e4ea29a54442752a9761fdfe78b7babe2d035a1e2fea1e",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_collection_terminal_targets708.py",
+      "union_queue_line": 574,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "7151ca7398c596e511b06a9760ce2d5c9338197a63208dcc9ce2e2762975ea85",
+      "preserved_sha256": "7151ca7398c596e511b06a9760ce2d5c9338197a63208dcc9ce2e2762975ea85",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_observation_handoff670.py",
+      "union_queue_line": 694,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "761b5a844136f4a9d5882c3379d21c53c996ec75893d37142aff361ae32e7ab6",
+      "preserved_sha256": "761b5a844136f4a9d5882c3379d21c53c996ec75893d37142aff361ae32e7ab6",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_observer_credited711.py",
+      "union_queue_line": 695,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "daeabf4b4a0c37a2d8701a14cb7abc8866a8c640f71c73e17a05c13023e8d17f",
+      "preserved_sha256": "daeabf4b4a0c37a2d8701a14cb7abc8866a8c640f71c73e17a05c13023e8d17f",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_owner_admission666.py",
+      "union_queue_line": 698,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "330c0943f4bb79421c100a9e633970056d67a5d8b55236e2b3c1e53b461064ab",
+      "preserved_sha256": "330c0943f4bb79421c100a9e633970056d67a5d8b55236e2b3c1e53b461064ab",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_owner_release668.py",
+      "union_queue_line": 699,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "9bae8353be5b391e96bc47f04b1a0eac25cb684dc84a3e10997ebaa89a9a6a8a",
+      "preserved_sha256": "9bae8353be5b391e96bc47f04b1a0eac25cb684dc84a3e10997ebaa89a9a6a8a",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_owner_release_inputs669.py",
+      "union_queue_line": 700,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "b24cecd14e6a17c7b3fbdfbf42549ed197cc375620acb08e6f9b6254a02cab83",
+      "preserved_sha256": "b24cecd14e6a17c7b3fbdfbf42549ed197cc375620acb08e6f9b6254a02cab83",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_owner_workload680.py",
+      "union_queue_line": 701,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "f322c214238dd9cf2caf37fb68afe029a7ab3e7aa42e96f7b5fb1a47022f45f9",
+      "preserved_sha256": "f322c214238dd9cf2caf37fb68afe029a7ab3e7aa42e96f7b5fb1a47022f45f9",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_preowner_inputs673.py",
+      "union_queue_line": 740,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "7f376edced5ff946dac2f9c4cef87fcb968f4899aa399f85ff4ddc8665f1afd9",
+      "preserved_sha256": "7f376edced5ff946dac2f9c4cef87fcb968f4899aa399f85ff4ddc8665f1afd9",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_process_integration700.py",
+      "union_queue_line": 744,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "9b4ce63266eba0298f20efd98be8cf201e0a330e9599c8cc55e33febd71a8d98",
+      "preserved_sha256": "9b4ce63266eba0298f20efd98be8cf201e0a330e9599c8cc55e33febd71a8d98",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_STACK",
+      "rationale": "Direct barrier test depends on runtime-only collection route, owner, lease, or release components.",
+      "relative_path": "tests/test_released_admission681.py",
+      "union_queue_line": 753,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    }
+  ],
+  "direct_root_binding_test_paths": [],
+  "mac_savepoint_root": "/Volumes/Expansion/TheWizRestoreRehearsal-2026-09-30/local_runtime",
+  "preserved_root": "/Users/gregc/TheWiz-LocalRuntime",
+  "queue_path": "/Volumes/Expansion/Crypto Wizard/audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "schema_version": "thewiz.gate0.effect_v6_trio_review.v1",
+  "source_and_primary_test_rows": [
+    {
+      "canonical_sha256": "27075c73c226fac5035af96ae45c9005dcef8318e25c8e459281edf55f1cc584",
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+      "preserved_sha256": "0bedce3c97f9a788f391be25b72537b4fcfc42cd3782a6d98ab6402f74dec4f9",
+      "proposed_disposition": "PARTIAL_REVIEW_FULL_V6_PORT_DEFERRED",
+      "rationale": "Retain v2 canonical authority. Earlier directory-authority subreview is partial; v6 journal, key, reservation, publication, and collection contracts require coordinated transition.",
+      "relative_path": "src/quant_platform/orchestration/effect_authority.py",
+      "union_queue_line": 341,
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "c764bf89eea07a684469ed2477bcbbc6e0aaecc84a4057c02b392386cc751272",
+      "preserved_sha256": "c764bf89eea07a684469ed2477bcbbc6e0aaecc84a4057c02b392386cc751272",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_V6_JOURNAL",
+      "rationale": "Read-only recovery witness applies only to an existing signed v6 journal and key; no canonical consumer or direct happy-path test exists.",
+      "relative_path": "src/quant_platform/orchestration/effect_root_binding.py",
+      "union_queue_line": 342,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": null,
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "656ae88de3c9f857e490f9ea4c7041cb956747212297665ed84c8ff6a4c460ec",
+      "preserved_sha256": "656ae88de3c9f857e490f9ea4c7041cb956747212297665ed84c8ff6a4c460ec",
+      "proposed_disposition": "REVIEWED_NO_PORT_PENDING_COLLECTION_BOOTSTRAP",
+      "rationale": "Barrier is inert before process-wide collection installation and denies non-file effects after installation; canonical bootstrap and owner lineage are absent.",
+      "relative_path": "src/quant_platform/orchestration/collection_admission_barrier.py",
+      "union_queue_line": 205,
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "canonical_sha256": "d81d5fb698893d4dece3e42e99ff63f3e717a69fd69ff6f19555a0d21c76dce2",
+      "current_queue_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "mac_savepoint_sha256": "67c1d117368881d2853a603b6821d9a60e852dbcadc508b8735624cfd0c277ed",
+      "preserved_sha256": "67c1d117368881d2853a603b6821d9a60e852dbcadc508b8735624cfd0c277ed",
+      "proposed_disposition": "PARTIAL_REVIEW_PRESERVED_V6_TESTS_DEFERRED",
+      "rationale": "Retain 17 canonical v2 tests. Preserved 46-test suite covers v6 durability and worker context and imports absent canonical scheduler-lock APIs.",
+      "relative_path": "tests/test_phase00_effect_authority.py",
+      "union_queue_line": 709,
+      "working_vs_runtime": "CHANGED"
+    }
+  ],
+  "static_findings": [
+    {
+      "code": "V6_STATIC_AND_DYNAMIC_IMPORT_GAP",
+      "evidence": [
+        "preserved src/quant_platform/orchestration/effect_authority.py:35",
+        "preserved src/quant_platform/orchestration/effect_authority.py:1575",
+        "preserved src/quant_platform/orchestration/effect_authority.py:1664",
+        "preserved src/quant_platform/orchestration/effect_authority.py:2382"
+      ],
+      "finding": "v6 authority statically imports root binding and dynamically imports collection admission; both modules are absent canonically."
+    },
+    {
+      "code": "ADMISSION_PROCESS_LATCH_MISSING",
+      "evidence": [
+        "preserved src/quant_platform/orchestration/collection_admission_barrier.py:17",
+        "preserved src/quant_platform/orchestration/collection_admission_barrier.py:40",
+        "preserved src/quant_platform/orchestration/corrective_scheduler_bootstrap.py:248",
+        "canonical src/quant_platform/orchestration/corrective_scheduler_bootstrap.py:42"
+      ],
+      "finding": "The canonical bootstrap never installs or binds the collection barrier. Without installation, its effect check returns for a legacy process."
+    },
+    {
+      "code": "DURABLE_IDENTITY_AND_KEY_MISMATCH",
+      "evidence": [
+        "canonical src/quant_platform/orchestration/effect_authority.py:31",
+        "canonical src/quant_platform/orchestration/corrective_phase00_control.py:661",
+        "canonical src/quant_platform/orchestration/corrective_scheduler_supervisor.py:344",
+        "preserved src/quant_platform/orchestration/effect_authority.py:40",
+        "preserved src/quant_platform/orchestration/effect_authority.py:536",
+        "preserved src/quant_platform/orchestration/effect_root_binding.py:143"
+      ],
+      "finding": "v2 uses a different journal and transient supervisor secrets; v6 requires a stable private key, checkpoint and initialization seal and binds existing journals to a physical root."
+    },
+    {
+      "code": "EXTERNAL_RESERVATION_API_DRIFT",
+      "evidence": [
+        "canonical src/quant_platform/orchestration/corrective_external_effects.py:347",
+        "canonical src/quant_platform/orchestration/corrective_external_effects.py:392",
+        "canonical src/quant_platform/wizard_credit_ledger.py:846",
+        "preserved src/quant_platform/orchestration/effect_authority.py:1787",
+        "preserved src/quant_platform/orchestration/effect_authority.py:2867"
+      ],
+      "finding": "v6 registration requires policy/fingerprint and run-provider ceilings; retry requires exact provider/budget context; closure requires claim_id. Canonical callers use v2 signatures."
+    },
+    {
+      "code": "SUPERVISOR_GUARD_ONLY_PARTIALLY_READY",
+      "evidence": [
+        "canonical src/quant_platform/orchestration/corrective_scheduler_supervisor.py:210",
+        "preserved src/quant_platform/orchestration/corrective_scheduler_supervisor.py:198",
+        "preserved src/quant_platform/orchestration/corrective_scheduler_supervisor.py:742"
+      ],
+      "finding": "Canonical supervisor now requires proven provider-effect absence for abandoned reservation closure, but it lacks v6 run fences and checkpoint-anchored terminal receipt handling."
+    },
+    {
+      "code": "PUBLICATION_TEST_DEPENDENCY_GAP",
+      "evidence": [
+        "preserved tests/test_phase00_effect_authority.py:19",
+        "preserved src/quant_platform/orchestration/corrective_scheduler_lock.py:848",
+        "canonical src/quant_platform/orchestration/corrective_scheduler_lock.py:307"
+      ],
+      "finding": "Preserved authority tests import capture_publication_worker_context, absent from canonical scheduler lock. Preserved redaction also adds overflow classification absent canonically."
+    },
+    {
+      "code": "ROOT_BINDING_DIRECT_TEST_GAP",
+      "evidence": [
+        "preserved src/quant_platform/orchestration/effect_root_binding.py:133",
+        "preserved src/quant_platform/orchestration/effect_root_binding.py:202",
+        "preserved src/quant_platform/orchestration/effect_root_binding.py:217"
+      ],
+      "finding": "No preserved test imports effect_root_binding directly; authority test checks copied-journal rejection but not explicit signed recovery-binding creation and validation."
+    }
+  ],
+  "test_inventory": {
+    "canonical_primary_test_functions": 17,
+    "preserved_barrier_importing_test_paths": 13,
+    "preserved_direct_root_binding_test_paths": 0,
+    "preserved_primary_test_functions": 46
+  },
+  "verification": {
+    "canonical_source_modified": false,
+    "effects_activated": false,
+    "mode": "read_only_source_and_queue_review",
+    "orders_activated": false,
+    "shared_queue_modified": false,
+    "tests_run": false
+  }
+}

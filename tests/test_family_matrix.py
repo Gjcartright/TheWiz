@@ -4,6 +4,7 @@ import pandas as pd
 from quant_platform.backtest import CostModel
 from quant_platform.experiments import AcceptanceGate, ExperimentConfig, PairDataset
 from quant_platform.family_matrix import run_family_matrix, strategy_family_registry
+from quant_platform import family_matrix
 from quant_platform.strategies import StrategySpec
 
 
@@ -46,6 +47,34 @@ def test_strategy_family_registry_groups_custom_strategies():
     frame = strategy_family_registry(_strategies())
     assert list(frame["family"].unique()) == ["alpha", "beta", "delta", "gamma"]
     assert len(frame) == 5
+    assert {"implementation_kind", "acceptance_authority"}.issubset(frame.columns)
+
+
+def test_family_matrix_does_not_promote_string_false_acceptance(tmp_path, monkeypatch):
+    def acceptance_with_string_flags(results, gate):
+        return pd.DataFrame([{
+            "strategy_id": 9001,
+            "strategy_name": "Alpha One",
+            "production_eligible": "False",
+            "preferred_eligible": "False",
+            "acceptance_reason": "not_accepted",
+            "preferred_reason": "not_accepted",
+            "passing_pairs": 0,
+            "total_trades": 0,
+            "median_profit_factor": 0.0,
+            "median_sharpe": 0.0,
+            "worst_drawdown": 1.0,
+        }])
+
+    monkeypatch.setattr(family_matrix, "strategy_acceptance_report", acceptance_with_string_flags)
+    paths = run_family_matrix(
+        [PairDataset("BTC-USD-SOL-USD", _frame())],
+        output_dir=tmp_path,
+        strategies=_strategies()[:1],
+    )
+    row = pd.read_csv(paths["separate_summary"]).iloc[0]
+    assert str(row["production_eligible"]).lower() == "false"
+    assert str(row["preferred_eligible"]).lower() == "false"
 
 
 def test_run_family_matrix_writes_separate_and_combo_outputs(tmp_path):

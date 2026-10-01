@@ -214,7 +214,7 @@ Example:
     const inputs = Array.from(document.querySelectorAll("input")).map((element, index) => ({
       index,
       type: element.type,
-      value: element.value,
+      value: safeInputValue(element),
       name: element.name || "",
       min: element.min || "",
       max: element.max || "",

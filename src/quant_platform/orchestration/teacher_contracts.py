@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from hashlib import sha256
 from typing import Literal
@@ -12,12 +12,13 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from quant_platform.economic_contract import (
     EXACT_MODES,
     ExactMode,
-    TradeAction as TeacherAction,
     normalize_exact_mode,
+)
+from quant_platform.economic_contract import (
+    TradeAction as TeacherAction,
 )
 from quant_platform.orchestration.contracts import CandidateIdentity, normalize_pair
 from quant_platform.performance_math import MATH_VERSION
-
 
 TEACHER_COUNCIL_SCHEMA_VERSION = "teacher_council.v1"
 MATH_V2 = MATH_VERSION
@@ -85,7 +86,7 @@ def council_context_id_for(
 class CouncilContext(BaseModel):
     """One pair/timeframe snapshot shared by all seven exact-mode teachers."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     pair: str
@@ -120,7 +121,7 @@ class CouncilContext(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _set_or_validate_context_id(self) -> "CouncilContext":
+    def _set_or_validate_context_id(self) -> CouncilContext:
         expected = council_context_id_for(
             pair=self.pair,
             venue=self.venue,
@@ -140,7 +141,7 @@ class CouncilContext(BaseModel):
 class TeacherProposal(BaseModel):
     """A mode specialist's auditable proposal; it has no execution authority."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     proposal_id: str = Field(min_length=1)
@@ -166,7 +167,7 @@ class TeacherProposal(BaseModel):
     source_timestamp: datetime
     blockers: tuple[str, ...] = ()
     evidence_paths: tuple[str, ...] = Field(min_length=1)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @field_validator("exact_mode", mode="before")
     @classmethod
@@ -181,7 +182,7 @@ class TeacherProposal(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_lineage_and_identity(self) -> "TeacherProposal":
+    def _validate_lineage_and_identity(self) -> TeacherProposal:
         if self.candidate.pair != self.context.pair:
             raise ValueError("teacher candidate pair does not match council context")
         if self.candidate.venue.lower() != self.context.venue.lower():
@@ -194,9 +195,12 @@ class TeacherProposal(BaseModel):
             raise ValueError("teacher candidate strategy family does not match exact mode")
         if "wizard" in self.source_system.lower() and self.authority != EvidenceAuthority.DISCOVERY_ONLY:
             raise ValueError("Crypto Wizards evidence is discovery-only")
-        if self.lower_bound_net_return is not None and self.expected_net_return is not None:
-            if self.lower_bound_net_return > self.expected_net_return:
-                raise ValueError("lower-bound return cannot exceed expected return")
+        if (
+            self.lower_bound_net_return is not None
+            and self.expected_net_return is not None
+            and self.lower_bound_net_return > self.expected_net_return
+        ):
+            raise ValueError("lower-bound return cannot exceed expected return")
         if self.proposed_action not in {TeacherAction.ABSTAIN, TeacherAction.FLAT}:
             required = (self.entry_style, self.exit_style, self.invalidation_condition)
             if not all(str(value).strip() for value in required):
@@ -207,7 +211,7 @@ class TeacherProposal(BaseModel):
 class CriticAssessment(BaseModel):
     """An independent critic assessment. Vetoes override every model score."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     assessment_id: str = Field(min_length=1)
@@ -222,7 +226,7 @@ class CriticAssessment(BaseModel):
     source_timestamp: datetime
     blocker_codes: tuple[str, ...] = ()
     evidence_paths: tuple[str, ...] = Field(min_length=1)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @field_validator("source_timestamp", "created_at")
     @classmethod
@@ -235,7 +239,7 @@ class CriticAssessment(BaseModel):
 class StudentRouterPrediction(BaseModel):
     """Advisory mixture-of-experts output that may abstain but never authorize."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     prediction_id: str = Field(min_length=1)
@@ -247,7 +251,7 @@ class StudentRouterPrediction(BaseModel):
     training_support_score: float = Field(ge=0.0, le=1.0)
     feature_completeness_score: float = Field(ge=0.0, le=1.0)
     evidence_paths: tuple[str, ...] = Field(min_length=1)
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     shadow_only: Literal[True] = True
 
     @field_validator("generated_at")
@@ -258,7 +262,7 @@ class StudentRouterPrediction(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_probability_distribution(self) -> "StudentRouterPrediction":
+    def _validate_probability_distribution(self) -> StudentRouterPrediction:
         expected = {mode.value for mode in EXACT_MODES} | {TeacherAction.ABSTAIN.value}
         if set(self.mode_probabilities) != expected:
             raise ValueError("router probabilities must cover all exact modes plus abstain")
@@ -272,7 +276,7 @@ class StudentRouterPrediction(BaseModel):
 class StudentOutcomeForecast(BaseModel):
     """Distributional after-cost forecast used only to tighten council abstention."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     forecast_id: str = Field(min_length=1)
@@ -290,7 +294,7 @@ class StudentOutcomeForecast(BaseModel):
     execution_failure_probability: float = Field(ge=0.0, le=1.0)
     uncertainty: float = Field(ge=0.0, le=1.0)
     evidence_paths: tuple[str, ...] = Field(min_length=1)
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     shadow_only: Literal[True] = True
 
     @field_validator("generated_at")
@@ -301,7 +305,7 @@ class StudentOutcomeForecast(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_interval(self) -> "StudentOutcomeForecast":
+    def _validate_interval(self) -> StudentOutcomeForecast:
         if not self.lower_bound_net_return <= self.median_net_return <= self.upper_bound_net_return:
             raise ValueError("outcome forecast quantiles are not ordered")
         return self
@@ -310,7 +314,7 @@ class StudentOutcomeForecast(BaseModel):
 class CouncilDecision(BaseModel):
     """Final council result. It can enter shadow testing but cannot execute."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
 
     schema_version: Literal[TEACHER_COUNCIL_SCHEMA_VERSION] = TEACHER_COUNCIL_SCHEMA_VERSION
     decision_id: str = Field(min_length=1)
@@ -328,7 +332,7 @@ class CouncilDecision(BaseModel):
     blocker_codes: tuple[str, ...] = ()
     reason: str = Field(min_length=1)
     evidence_paths: tuple[str, ...] = Field(min_length=1)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     shadow_only: Literal[True] = True
     promotion_allowed: Literal[False] = False
     execution_allowed: Literal[False] = False
@@ -341,7 +345,7 @@ class CouncilDecision(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _enforce_abstention_boundary(self) -> "CouncilDecision":
+    def _enforce_abstention_boundary(self) -> CouncilDecision:
         if self.status != CouncilStatus.SHADOW_TEST and self.action != TeacherAction.ABSTAIN:
             raise ValueError("non-shadow council decisions must abstain")
         if self.status == CouncilStatus.SHADOW_TEST and self.action == TeacherAction.ABSTAIN:

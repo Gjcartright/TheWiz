@@ -209,6 +209,8 @@ def test_all_raw_keychain_subprocess_sinks_are_private_and_frozen() -> None:
     }
     observed: set[tuple[str, str]] = set()
     for path in sorted((ROOT / "src/quant_platform").rglob("*.py")):
+        if path.name.startswith("._"):
+            continue
         relative = path.relative_to(ROOT).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for function in (

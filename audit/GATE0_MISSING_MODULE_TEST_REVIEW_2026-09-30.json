@@ -1,0 +1,1672 @@
+{
+  "base_commit": "932108584a4ec4b5c9c5260fd310adb499e6600b",
+  "counts": {
+    "provider_calls": 0,
+    "reviewed_test_and_fixture_paths": 65,
+    "tests_executed": 0
+  },
+  "mac_savepoint_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+  "method": "Parse preserved Python AST; map explicit quant_platform module imports to active src module/package paths; verify test is active-absent and preserved hash matches frozen queue. No test/provider execution.",
+  "records": [
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_cycle_owner",
+        "quant_platform.orchestration.precollection_poll_launcher",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_cycle_owner/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_cycle_owner.py",
+          "module": "quant_platform.orchestration.precollection_cycle_owner"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_launcher/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_launcher.py",
+          "module": "quant_platform.orchestration.precollection_poll_launcher"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_watchdog/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_watchdog.py",
+          "module": "quant_platform.orchestration.precollection_poll_watchdog"
+        }
+      ],
+      "preserved_sha256": "caa11db510ffc053b681af3f52c6fb0c59afbcb57e411ebabf7f60ee3dd738c7",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/collection_launcher_native_support.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_observer_bridge",
+        "quant_platform.orchestration.current_wizard_hyperliquid_daily_runner",
+        "quant_platform.orchestration.precollection_observer",
+        "quant_platform.orchestration.precollection_observer_io"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_observer_bridge/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_observer_bridge.py",
+          "module": "quant_platform.orchestration.collection_observer_bridge"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer.py",
+          "module": "quant_platform.orchestration.precollection_observer"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_io/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_io.py",
+          "module": "quant_platform.orchestration.precollection_observer_io"
+        }
+      ],
+      "preserved_sha256": "6802fa078e6016b087502826fc4b0efe5f447a7813d2e99da6b3fd68813e1c44",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/collection_observer_negative_support.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_watchdog/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_watchdog.py",
+          "module": "quant_platform.orchestration.precollection_poll_watchdog"
+        }
+      ],
+      "preserved_sha256": "de6340a91c2209dcd551ae913a78d81aaa9fa4ef01f630cedd3fd332f7765428",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/collection_watchdog_native_support.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_external_effects",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_supervisor",
+        "quant_platform.orchestration.precollection_admission",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_admission/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_admission.py",
+          "module": "quant_platform.orchestration.precollection_admission"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_campaign_io/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_campaign_io.py",
+          "module": "quant_platform.orchestration.precollection_campaign_io"
+        }
+      ],
+      "preserved_sha256": "ad47811cfe8b1caf89244e44529e0e0e18670fa034283344434959a0d13293a3",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/precollection_fixture_support.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release.campaign_schedule",
+        "quant_platform.orchestration.precollection_admission"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/campaign_schedule/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/campaign_schedule.py",
+          "module": "quant_platform.orchestration.collection_release.campaign_schedule"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_admission/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_admission.py",
+          "module": "quant_platform.orchestration.precollection_admission"
+        }
+      ],
+      "preserved_sha256": "e5d9c905d5e8bf7fc394f1de648323384c2fc48cc8886c0d84f3e6781443cb26",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_campaign_schedule674.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_runtime_route",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_redaction",
+        "quant_platform.orchestration.corrective_runtime"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_runtime_route/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_runtime_route.py",
+          "module": "quant_platform.orchestration.collection_runtime_route"
+        }
+      ],
+      "preserved_sha256": "509a71a6c0fbbb7cc1c2c46ff411c2c371b04a2207d4ea5a59306b34e442d1c3",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_campaign_identity.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.daily_snapshot_contracts",
+        "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+        }
+      ],
+      "preserved_sha256": "8aaedee0041e3d7c8dabf163dde2ec0109f309fa389a17bae03b95031df31bb9",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_chain_semantics.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_publication_sequence",
+        "quant_platform.orchestration.corrective_effect_guard",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_publication_sequence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_publication_sequence.py",
+          "module": "quant_platform.orchestration.collection_publication_sequence"
+        }
+      ],
+      "preserved_sha256": "3d883f7afbac4cabda2c8d78e40720b741a75748f119ca15cff0b7d0eabd6845",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_daily_finalization.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_discovery_stage",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_discovery_stage/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_discovery_stage.py",
+          "module": "quant_platform.orchestration.collection_discovery_stage"
+        }
+      ],
+      "preserved_sha256": "bf7d0bae245b86530933fc256e878d340b8a09d96cc2251320874b6054fa202a",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_discovery_stage.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_display_evidence"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_display_evidence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_display_evidence.py",
+          "module": "quant_platform.orchestration.collection_display_evidence"
+        }
+      ],
+      "preserved_sha256": "6f01960a387a7f86e1b164a7264a3a92f4c151f0813b36a8413e0b50731c4410",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_display_evidence.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_stage_evidence"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_stage_evidence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_stage_evidence.py",
+          "module": "quant_platform.orchestration.collection_stage_evidence"
+        }
+      ],
+      "preserved_sha256": "8d9dfcf4d67cb5547a860e79d92b011161acb21f3d9599f8713b90310d7eb505",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_handoff_semantics.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.precollection_observer_process",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_process/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_process.py",
+          "module": "quant_platform.orchestration.precollection_observer_process"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "86c66cb0f7a16776dc1dfede9f23003cc42ec6ed3dc3789d626632c33db1516f",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_observer_process.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_runtime_route",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.precollection_observer_io",
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_runtime_route/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_runtime_route.py",
+          "module": "quant_platform.orchestration.collection_runtime_route"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_io/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_io.py",
+          "module": "quant_platform.orchestration.precollection_observer_io"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_process/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_process.py",
+          "module": "quant_platform.orchestration.precollection_observer_process"
+        }
+      ],
+      "preserved_sha256": "f54c42504ff81209a44ae2ebeadd93e8b022da2974c8d9bb07c7705c4c736aab",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_observer_route.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.daily_snapshot_contracts",
+        "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+        }
+      ],
+      "preserved_sha256": "d4791519bfaba8b81a5cbd2d375c914438a2568a7ed97cdd09ab778b1a1feaa1",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_robustness_semantics.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.daily_snapshot_contracts",
+        "quant_platform.orchestration.daily_snapshot_contracts_inputs",
+        "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts_inputs/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts_inputs.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts_inputs"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/daily_snapshot_contracts_outcomes.py",
+          "module": "quant_platform.orchestration.daily_snapshot_contracts_outcomes"
+        }
+      ],
+      "preserved_sha256": "f10944e1cbc167a76964c860063c49a27790d85c539d74b8938a9e34ec790e85",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_snapshot_reader.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.collection_runtime_route",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_external_effects",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_runtime_route/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_runtime_route.py",
+          "module": "quant_platform.orchestration.collection_runtime_route"
+        }
+      ],
+      "preserved_sha256": "113522efa9e15c1ffea2d481f041f7ce8f6a603690e1c758fc71d751e37fdd5e",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_collection_startup_preflight.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.backtest",
+        "quant_platform.economic_contract",
+        "quant_platform.math_desk.core_oracles",
+        "quant_platform.performance_math",
+        "quant_platform.statistics.math_v2",
+        "quant_platform.trade_ledger",
+        "quant_platform.zscore_utils"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/math_desk/core_oracles/__init__.py",
+          "expected_py": "src/quant_platform/math_desk/core_oracles.py",
+          "module": "quant_platform.math_desk.core_oracles"
+        }
+      ],
+      "preserved_sha256": "d763540c5a23e6e574805d21fd1b859146f2f7fa04d4e71b0eaba3f86c0e652a",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_contract_boundaries.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_effect_witness_inspection",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_effect_witness_inspection/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_effect_witness_inspection.py",
+          "module": "quant_platform.orchestration.corrective_effect_witness_inspection"
+        }
+      ],
+      "preserved_sha256": "c8f55d73a5ccfbe267c2c1f28cd7a4eb13002867802be549ff77913467b6bb69",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_effect_witness_inspection.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_gate1_cadence"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_gate1_cadence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_gate1_cadence.py",
+          "module": "quant_platform.orchestration.corrective_gate1_cadence"
+        }
+      ],
+      "preserved_sha256": "300d4496fdc9f7dcfde689f6a73a9cdb7b4beea148dd74366bd695709d918787",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_gate1_cadence.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_gate3_evidence",
+        "quant_platform.wizard_hyperliquid_mode_proof"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_gate3_evidence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_gate3_evidence.py",
+          "module": "quant_platform.orchestration.corrective_gate3_evidence"
+        }
+      ],
+      "preserved_sha256": "f56eea70643fda56c5e771629090c754b01a22548d3c6c374b31f93fae141122",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_gate3_evidence.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.corrective_gate3_historical_candidate",
+        "quant_platform.orchestration.corrective_wizard_copula_supersession",
+        "quant_platform.orchestration.corrective_wizard_ou_v6_terminal_accounting"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_gate3_historical_candidate/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_gate3_historical_candidate.py",
+          "module": "quant_platform.orchestration.corrective_gate3_historical_candidate"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_wizard_copula_supersession/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_wizard_copula_supersession.py",
+          "module": "quant_platform.orchestration.corrective_wizard_copula_supersession"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_accounting/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_wizard_ou_v6_terminal_accounting.py",
+          "module": "quant_platform.orchestration.corrective_wizard_ou_v6_terminal_accounting"
+        }
+      ],
+      "preserved_sha256": "0e7774785590399d70831d39bb41cec2b33d6c9e11d1131626ec1336b0db1dd1",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_gate3_historical_candidate_validation.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_data_evidence",
+        "quant_platform.orchestration.corrective_history_disposition",
+        "quant_platform.orchestration.corrective_history_terminal",
+        "quant_platform.orchestration.corrective_runtime",
+        "quant_platform.orchestration.corrective_scheduler_lock"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_history_disposition/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_history_disposition.py",
+          "module": "quant_platform.orchestration.corrective_history_disposition"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_history_terminal/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_history_terminal.py",
+          "module": "quant_platform.orchestration.corrective_history_terminal"
+        }
+      ],
+      "preserved_sha256": "6b9efbf75d66ad956bc04409ee11ae71fcd645c3254ca2b26cc89f04b48e0c9a",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_history_disposition.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_phase00_checkpoint_validation"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_phase00_checkpoint_validation/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_phase00_checkpoint_validation.py",
+          "module": "quant_platform.orchestration.corrective_phase00_checkpoint_validation"
+        }
+      ],
+      "preserved_sha256": "975fb9831d824a73faeaa0271126ed7e29c2481dad62c2d7e385275fb529f2bd",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_phase00_checkpoint_validation.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_trusted_artifact"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_trusted_artifact/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_trusted_artifact.py",
+          "module": "quant_platform.orchestration.corrective_trusted_artifact"
+        }
+      ],
+      "preserved_sha256": "a2f64b18fe2f53d339f1dae6553d0be9488ed308a2f4c760cba7add7480e790e",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_trusted_artifact.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.corrective_wizard_copula_supersession"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_wizard_copula_supersession/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_wizard_copula_supersession.py",
+          "module": "quant_platform.orchestration.corrective_wizard_copula_supersession"
+        }
+      ],
+      "preserved_sha256": "a936f4735145b57e587f8549ccd911478467f47e4490f5d5c9e4db0f988856fc",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_corrective_wizard_copula_supersession.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.dydx_candles",
+        "quant_platform.dydx_public_endpoints"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/dydx_public_endpoints/__init__.py",
+          "expected_py": "src/quant_platform/dydx_public_endpoints.py",
+          "module": "quant_platform.dydx_public_endpoints"
+        }
+      ],
+      "preserved_sha256": "be554f221def28de8e7a2efb1d1de41636ffae0202e7fc02b52abd631cb12c76",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_dydx_public_mainnet.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.elapsed_capture_job",
+        "quant_platform.orchestration.elapsed_capture_store",
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_capture_job/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_capture_job.py",
+          "module": "quant_platform.orchestration.elapsed_capture_job"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_capture_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_capture_store.py",
+          "module": "quant_platform.orchestration.elapsed_capture_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_causal_capture/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_causal_capture.py",
+          "module": "quant_platform.orchestration.elapsed_causal_capture"
+        }
+      ],
+      "preserved_sha256": "5c3f3ad1fe623a09bd8f80bba2fabd6b749495f48529f09ecfee57f1b596a821",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_elapsed_capture_job.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.elapsed_capture_store",
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_capture_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_capture_store.py",
+          "module": "quant_platform.orchestration.elapsed_capture_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_causal_capture/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_causal_capture.py",
+          "module": "quant_platform.orchestration.elapsed_causal_capture"
+        }
+      ],
+      "preserved_sha256": "64c69ba9bdd9ef6a50e50fae7340266430dc0def8e29f3399d55fefd24af8afc",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_elapsed_capture_store.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.elapsed_causal_capture"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/elapsed_causal_capture/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/elapsed_causal_capture.py",
+          "module": "quant_platform.orchestration.elapsed_causal_capture"
+        }
+      ],
+      "preserved_sha256": "08cd9a0cf9c807791979971c9d07931fe8276543e67ba06ccef6010b3dd077f0",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_elapsed_causal_capture.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.entry_exit_contracts"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/entry_exit_contracts/__init__.py",
+          "expected_py": "src/quant_platform/entry_exit_contracts.py",
+          "module": "quant_platform.entry_exit_contracts"
+        }
+      ],
+      "preserved_sha256": "a3415f070f8dc6f5e055772e6659c9f56775bc4ea650d4fd31b93e9534171032",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_entry_exit_contracts.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.publication_target_inventory"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/publication_target_inventory/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/publication_target_inventory.py",
+          "module": "quant_platform.orchestration.publication_target_inventory"
+        }
+      ],
+      "preserved_sha256": "956f30a3c58ab7980e5fcd982cf4a83636ecb92c117d6e72f71d9cc602c6856e",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_exact_directory_inventory.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.forensic_project_audit"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/forensic_project_audit/__init__.py",
+          "expected_py": "src/quant_platform/forensic_project_audit.py",
+          "module": "quant_platform.forensic_project_audit"
+        }
+      ],
+      "preserved_sha256": "94d8e5826123c08bee1d2525420e250c99e01f207fdde69b3db03070dfea1712",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_forensic_project_audit.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_gate1_cadence",
+        "quant_platform.orchestration.corrective_history_terminal",
+        "quant_platform.orchestration.human_evidence_dashboard"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_gate1_cadence/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_gate1_cadence.py",
+          "module": "quant_platform.orchestration.corrective_gate1_cadence"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_history_terminal/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_history_terminal.py",
+          "module": "quant_platform.orchestration.corrective_history_terminal"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/human_evidence_dashboard/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/human_evidence_dashboard.py",
+          "module": "quant_platform.orchestration.human_evidence_dashboard"
+        }
+      ],
+      "preserved_sha256": "958921fb8fa7b81cd7be298b67497eaad8536007d9e7aaf23241d2d289352772",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_human_evidence_dashboard.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.hyperliquid_l2_calibration_intake"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/hyperliquid_l2_calibration_intake/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/hyperliquid_l2_calibration_intake.py",
+          "module": "quant_platform.orchestration.hyperliquid_l2_calibration_intake"
+        }
+      ],
+      "preserved_sha256": "857dd80393295ab88893d0f658921fd742fe48835e800a455ba1397d1b207247",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_hyperliquid_l2_calibration_intake.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.institutional_contracts",
+        "quant_platform.orchestration.institutional_fund_graph"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/institutional_contracts/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/institutional_contracts.py",
+          "module": "quant_platform.orchestration.institutional_contracts"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/institutional_fund_graph/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/institutional_fund_graph.py",
+          "module": "quant_platform.orchestration.institutional_fund_graph"
+        }
+      ],
+      "preserved_sha256": "140857ecffaef54c37f2faad6d2d249f261de1ed30ae509e3a7c5290af7ad5dc",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_institutional_fund_graph.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.institutional_portfolio",
+        "quant_platform.institutional_risk"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/institutional_portfolio/__init__.py",
+          "expected_py": "src/quant_platform/institutional_portfolio.py",
+          "module": "quant_platform.institutional_portfolio"
+        },
+        {
+          "expected_package_init": "src/quant_platform/institutional_risk/__init__.py",
+          "expected_py": "src/quant_platform/institutional_risk.py",
+          "module": "quant_platform.institutional_risk"
+        }
+      ],
+      "preserved_sha256": "ece0adddb0dff12de83232c0b2daa46d9edefdae9dad74eaed37a0c0defc4b6e",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_institutional_portfolio_risk.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release.maintenance_binding",
+        "quant_platform.orchestration.collection_release.release_observation_lock"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/maintenance_binding/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/maintenance_binding.py",
+          "module": "quant_platform.orchestration.collection_release.maintenance_binding"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        }
+      ],
+      "preserved_sha256": "60ffbda97410ac6139ac1c25db2fd309674891a17b54d5df287a9f9033b60af1",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_maintenance_binding684.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.institutional_contracts",
+        "quant_platform.orchestration.operating_lane",
+        "quant_platform.orchestration.personal_trader_graph"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/institutional_contracts/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/institutional_contracts.py",
+          "module": "quant_platform.orchestration.institutional_contracts"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/operating_lane/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/operating_lane.py",
+          "module": "quant_platform.orchestration.operating_lane"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/personal_trader_graph/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/personal_trader_graph.py",
+          "module": "quant_platform.orchestration.personal_trader_graph"
+        }
+      ],
+      "preserved_sha256": "2e54e61aa5ba2bd03809b3d48bfe7357b22a669986a83b097c19b32431595548",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_personal_trader_graph.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_gate_checkpoint_contract",
+        "quant_platform.orchestration.corrective_history_terminal",
+        "quant_platform.orchestration.corrective_phase00_diagnostics"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_gate_checkpoint_contract/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_gate_checkpoint_contract.py",
+          "module": "quant_platform.orchestration.corrective_gate_checkpoint_contract"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/corrective_history_terminal/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/corrective_history_terminal.py",
+          "module": "quant_platform.orchestration.corrective_history_terminal"
+        }
+      ],
+      "preserved_sha256": "ce9ea7e9ae15d52c7fbc669f411f515556322f64445de4410f09f388ea94ea1c",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_phase00_gate_checkpoint_consistency.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.point_in_time_data"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/point_in_time_data/__init__.py",
+          "expected_py": "src/quant_platform/point_in_time_data.py",
+          "module": "quant_platform.point_in_time_data"
+        }
+      ],
+      "preserved_sha256": "91682e24291b99d9e4ad5671b8c6c122ba43d54ae16e16ae594af786b1ce4ccb",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_point_in_time_data.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.precollection_campaign_builder",
+        "quant_platform.orchestration.precollection_campaign_io"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_campaign_builder/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_campaign_builder.py",
+          "module": "quant_platform.orchestration.precollection_campaign_builder"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_campaign_io/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_campaign_io.py",
+          "module": "quant_platform.orchestration.precollection_campaign_io"
+        }
+      ],
+      "preserved_sha256": "a9910a3344ceae30db9af94e6fadf8b72b0cf6e0d52a7f36d20581c62d83bb0c",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_campaign_builder.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "a6ad6e6ef77f2a75c8f3e1cdfd02efd76a878d21445da14ebaf8594b9ab6f5de",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_cycle_owner.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "58ce17f9da7f7ed97d626ea3705603b8cd51ad62b40bfb103f2d927684304720",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_cycle_validation.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "d435244d9aac3cb5642a4edbf0822411a851cb1450c1b8965b6a7ee5fc20f538",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_cycle_worker.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "3acf57db5f4a4929d58a54228651d106d7c60a7c5ca1dc50cdfcd18356cf59f5",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_monitor_schedule.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "1e3fb9e60a2b14b936198302c9dda918544ae83115d5b7d4d7b75496bb42815f",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_owned_schedule.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_observer_process",
+        "quant_platform.orchestration.precollection_poll_store",
+        "quant_platform.orchestration.precollection_poll_watchdog"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_process/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_process.py",
+          "module": "quant_platform.orchestration.precollection_observer_process"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_watchdog/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_watchdog.py",
+          "module": "quant_platform.orchestration.precollection_poll_watchdog"
+        }
+      ],
+      "preserved_sha256": "267469ec47cd1e46dd53c83069d7eeb743623925d29405a1556ee351adc218f3",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_poll_launcher_contract.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_observer_process"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_observer_process/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_observer_process.py",
+          "module": "quant_platform.orchestration.precollection_observer_process"
+        }
+      ],
+      "preserved_sha256": "24c48d88502383f27141d3273e58f8230039d693559cea600cdfd88b92e6a039",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_poll_store.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "667ab6f6730c09d7aa4dc02864dfcde41016c1227501aa5aebf184786652ca26",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_poll_watchdog.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration",
+        "quant_platform.orchestration.precollection_poll_store"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/precollection_poll_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/precollection_poll_store.py",
+          "module": "quant_platform.orchestration.precollection_poll_store"
+        }
+      ],
+      "preserved_sha256": "1965d2ac2445dd76b4418b36c83ad2dd60d655d90985e903dcdb3e6f03132cac",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_precollection_schedule_protocol.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.project_release_reader",
+        "quant_platform.orchestration.collection_release.release_chain",
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.release_record",
+        "quant_platform.orchestration.collection_release.release_store",
+        "quant_platform.orchestration.collection_release.test_release_record",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/project_release_reader/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/project_release_reader.py",
+          "module": "quant_platform.orchestration.collection_release.project_release_reader"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_chain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_chain.py",
+          "module": "quant_platform.orchestration.collection_release.release_chain"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_record.py",
+          "module": "quant_platform.orchestration.collection_release.release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_store.py",
+          "module": "quant_platform.orchestration.collection_release.release_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/test_release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/test_release_record.py",
+          "module": "quant_platform.orchestration.collection_release.test_release_record"
+        }
+      ],
+      "preserved_sha256": "e2f6abe193242116c2b31e29c63ea14afb82a276a83d00c0a8d0336cf1d99969",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_preowner_accounting677.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.project_release_reader",
+        "quant_platform.orchestration.collection_release.release_chain",
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.release_record",
+        "quant_platform.orchestration.collection_release.release_store",
+        "quant_platform.orchestration.collection_release.runtime_binding",
+        "quant_platform.orchestration.collection_release.test_release_record",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.scheduler_terminal_paths"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/project_release_reader/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/project_release_reader.py",
+          "module": "quant_platform.orchestration.collection_release.project_release_reader"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_chain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_chain.py",
+          "module": "quant_platform.orchestration.collection_release.release_chain"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_record.py",
+          "module": "quant_platform.orchestration.collection_release.release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_store.py",
+          "module": "quant_platform.orchestration.collection_release.release_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/runtime_binding/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/runtime_binding.py",
+          "module": "quant_platform.orchestration.collection_release.runtime_binding"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/test_release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/test_release_record.py",
+          "module": "quant_platform.orchestration.collection_release.test_release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/scheduler_terminal_paths/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/scheduler_terminal_paths.py",
+          "module": "quant_platform.orchestration.scheduler_terminal_paths"
+        }
+      ],
+      "preserved_sha256": "7acd85f86a1e829c9465edc3353ce2ed0664dbc538e8ee28215a56069ce1bd94",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_preowner_assessment686.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.project_release_reader",
+        "quant_platform.orchestration.collection_release.release_chain",
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.release_record",
+        "quant_platform.orchestration.collection_release.release_store",
+        "quant_platform.orchestration.collection_release.test_release_record",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/project_release_reader/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/project_release_reader.py",
+          "module": "quant_platform.orchestration.collection_release.project_release_reader"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_chain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_chain.py",
+          "module": "quant_platform.orchestration.collection_release.release_chain"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_record.py",
+          "module": "quant_platform.orchestration.collection_release.release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_store.py",
+          "module": "quant_platform.orchestration.collection_release.release_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/test_release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/test_release_record.py",
+          "module": "quant_platform.orchestration.collection_release.test_release_record"
+        }
+      ],
+      "preserved_sha256": "6a42664cdfd3f56ad1520b13a1f451af05a095f1dfa4daa7061d49bca805593e",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_preowner_campaign675.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.project_release_reader",
+        "quant_platform.orchestration.collection_release.release_chain",
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.release_record",
+        "quant_platform.orchestration.collection_release.release_store",
+        "quant_platform.orchestration.collection_release.test_release_record",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/project_release_reader/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/project_release_reader.py",
+          "module": "quant_platform.orchestration.collection_release.project_release_reader"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_chain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_chain.py",
+          "module": "quant_platform.orchestration.collection_release.release_chain"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_record.py",
+          "module": "quant_platform.orchestration.collection_release.release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_store.py",
+          "module": "quant_platform.orchestration.collection_release.release_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/test_release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/test_release_record.py",
+          "module": "quant_platform.orchestration.collection_release.test_release_record"
+        }
+      ],
+      "preserved_sha256": "51cf8f79d40eec343ab0fb39fafdaa98e2992b68e2263841cd86d2db3b57cf6d",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_preowner_maintenance685.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.release_observation_lock"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        }
+      ],
+      "preserved_sha256": "760c02a7a9e4e5ef3ce5a8328c41dce3c1708de41992d576d632ef5318b4fe30",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_provider_binding707.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.project_release_reader",
+        "quant_platform.orchestration.collection_release.release_chain",
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.release_record",
+        "quant_platform.orchestration.collection_release.release_store",
+        "quant_platform.orchestration.collection_release.test_release_record",
+        "quant_platform.orchestration.corrective_daily_scheduler",
+        "quant_platform.orchestration.corrective_scheduler_lock",
+        "quant_platform.orchestration.effect_authority"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/project_release_reader/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/project_release_reader.py",
+          "module": "quant_platform.orchestration.collection_release.project_release_reader"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_chain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_chain.py",
+          "module": "quant_platform.orchestration.collection_release.release_chain"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_record.py",
+          "module": "quant_platform.orchestration.collection_release.release_record"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_store/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_store.py",
+          "module": "quant_platform.orchestration.collection_release.release_store"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/test_release_record/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/test_release_record.py",
+          "module": "quant_platform.orchestration.collection_release.test_release_record"
+        }
+      ],
+      "preserved_sha256": "3bb4bff2ab4bb556bde22b74f884f84c66c3422cd8dbc7e7e80aa463a7bbcc98",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_released_workload679.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.research_assertions"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/research_assertions/__init__.py",
+          "expected_py": "src/quant_platform/research_assertions.py",
+          "module": "quant_platform.research_assertions"
+        }
+      ],
+      "preserved_sha256": "116fba82b42a7b6071579bb70c370e7c4e1b6d20282d9cc83c47eba2a5a20043",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_research_assertion_contracts.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.research_trial_registry"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/research_trial_registry/__init__.py",
+          "expected_py": "src/quant_platform/research_trial_registry.py",
+          "module": "quant_platform.research_trial_registry"
+        }
+      ],
+      "preserved_sha256": "9baf7ebf1173fee2e3446e65090057347a7c3c0a6f9079883ed3c11758b06663",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_research_trial_registry.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release",
+        "quant_platform.orchestration.collection_release.release_observation_lock"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release.py",
+          "module": "quant_platform.orchestration.collection_release"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        }
+      ],
+      "preserved_sha256": "92c52eebaa8f549726f5438a77189235f249f126d760f83556c8244248f9d7a1",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_runtime_binding687.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.collection_release.release_observation_lock",
+        "quant_platform.orchestration.collection_release.terminal_binding",
+        "quant_platform.orchestration.scheduler_terminal_paths"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/release_observation_lock/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/release_observation_lock.py",
+          "module": "quant_platform.orchestration.collection_release.release_observation_lock"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/collection_release/terminal_binding/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/collection_release/terminal_binding.py",
+          "module": "quant_platform.orchestration.collection_release.terminal_binding"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/scheduler_terminal_paths/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/scheduler_terminal_paths.py",
+          "module": "quant_platform.orchestration.scheduler_terminal_paths"
+        }
+      ],
+      "preserved_sha256": "90bb199db4adeb0b31424c151d74869c2afac6ce35072462752766b0611b811c",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_terminal_binding709.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.video_review_sidecars"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/video_review_sidecars/__init__.py",
+          "expected_py": "src/quant_platform/video_review_sidecars.py",
+          "module": "quant_platform.video_review_sidecars"
+        }
+      ],
+      "preserved_sha256": "091601c665f14d6d14374adea43d4f975c85eef720b2bdaba67e48e6ef98f30f",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_video_review_sidecars.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification",
+        "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/wizard_frozen_source_qualification/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/wizard_frozen_source_qualification.py",
+          "module": "quant_platform.orchestration.wizard_frozen_source_qualification"
+        },
+        {
+          "expected_package_init": "src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter.py",
+          "module": "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter"
+        }
+      ],
+      "preserved_sha256": "e4199ee25ecec1b85faabadcd022d76e7f0eb36c7ade906ed380508d8f9fce9b",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_wizard_hyperliquid_frozen_adapter.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.wizard_hyperliquid_l2_calibration_runner"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner.py",
+          "module": "quant_platform.orchestration.wizard_hyperliquid_l2_calibration_runner"
+        }
+      ],
+      "preserved_sha256": "ba998a237df827108c6e4f629bbf5a3320121f69ed5e26ef340f453d8fb4c1a8",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_wizard_hyperliquid_l2_calibration_runner.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.corrective_external_effects",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.wizard_keychain"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/wizard_keychain/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/wizard_keychain.py",
+          "module": "quant_platform.orchestration.wizard_keychain"
+        }
+      ],
+      "preserved_sha256": "9fe17bfd70860ba75d46078e854dcfadf834e20cabecf55694c828fbd05cf5cd",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_wizard_keychain.py"
+    },
+    {
+      "active_test_absent": true,
+      "decision": "REVIEWED_MISSING_ACTIVE_MODULE_TEST_DEFERRED_NO_PORT",
+      "imported_quant_platform_modules": [
+        "quant_platform.orchestration.wizard_source_route_config"
+      ],
+      "missing_active_modules": [
+        {
+          "expected_package_init": "src/quant_platform/orchestration/wizard_source_route_config/__init__.py",
+          "expected_py": "src/quant_platform/orchestration/wizard_source_route_config.py",
+          "module": "quant_platform.orchestration.wizard_source_route_config"
+        }
+      ],
+      "preserved_sha256": "df3fe1331fbebd637c31e426ff8d84e474381cf6b4db417c23d23a14d46784cd",
+      "queue_working_vs_runtime": "RUNTIME_ONLY",
+      "rationale": "This preserved runtime-only test or fixture is absent from the active checkout and directly imports at least one module absent from the active package; it cannot collect against the canonical source until the corresponding source cohort is reviewed and ported.",
+      "relative_path": "tests/test_wizard_source_route_config.py"
+    }
+  ],
+  "review_date": "2026-09-30",
+  "schema_version": "thewiz.gate0.missing_module_test_review.v1",
+  "scope": "Conservative subset of still-pending runtime-only tests and fixtures with direct AST imports of missing active modules and no unresolved recovery/forensic variant. Other pending tests remain unclassified."
+}

@@ -1,0 +1,1724 @@
+{
+  "active_prerequisite_examples": {
+    "config/collection_verification_batches.json": false,
+    "config/collection_verification_scope.json": false,
+    "config/research_tool_runtime.json": false,
+    "data/external/youtube/brain/snapshots/channel_videos_20260806T143947Z.json": false,
+    "reports/active/wizard_research_journal.csv": false,
+    "reports/dashboard/human_evidence_dashboard_snapshot.json": false,
+    "reports/math_desk/m5x_runs/mathdesk_m5x_b25e10f1b64222f2e3ed": false,
+    "reports/research/full_video_gap_rescrub_2026-08-24": false,
+    "reports/wizard_research_journal_schema.csv": true,
+    "src/quant_platform/forensic_project_audit.py": false,
+    "src/quant_platform/orchestration/collection_startup_contract.py": false,
+    "src/quant_platform/orchestration/human_evidence_research.py": false,
+    "src/quant_platform/orchestration/human_evidence_view.py": false,
+    "src/quant_platform/orchestration/wizard_hyperliquid_frozen_adapter.py": false,
+    "src/quant_platform/orchestration/wizard_hyperliquid_l2_calibration_runner.py": false,
+    "src/quant_platform/video_review_sidecars.py": false
+  },
+  "active_reference_scan_scope": {
+    "directories": [
+      "src/",
+      "scripts/",
+      "tests/",
+      ".github/",
+      "config/"
+    ],
+    "installed_launchagent_plist_count": 19,
+    "tracked_code_config_file_count": 533,
+    "unreadable_installed_plists": [
+      "/Library/LaunchDaemons/com.nordvpn.macos.helper.plist"
+    ]
+  },
+  "canonical_base_head": "da40a10d03e5dd5e06381a672fecf967a121a4b7",
+  "created_at_utc": "2026-09-30T20:11:57.873413+00:00",
+  "excluded_root_handled_paths": [
+    "scripts/build_dashboard_full_inventory.py",
+    "scripts/crawl_crypto_wizards_with_curl.sh",
+    "scripts/run_evidence_pipeline_phase9_final_promotion.py"
+  ],
+  "family_decisions": {
+    "hyperliquid_l2": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Frozen adapter and L2 runner are absent; one-shot runner can make 24 live Hyperliquid info calls and write receipts.",
+      "revisit_condition": "Review adapter, cost/rate authority, retained-response custody and tests under explicit provider authorization.",
+      "script_count": 2,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "journal_schema": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Active journal is absent; script mutates historical schema and writes repair receipt without current consumer.",
+      "revisit_condition": "Identify current journal owner and exact active journal bytes before migration.",
+      "script_count": 1,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "missing_module_wrappers": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Underlying quant_platform implementation is absent in current HEAD; wrapper cannot run alone.",
+      "revisit_condition": "Review missing implementation, output contract and direct tests first.",
+      "script_count": 2,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "phase00_collection": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Pinned old workspace/interpreter/toolchain and subprocess bootstrap; collection contract/config are absent.",
+      "revisit_condition": "Specify current workspace, pinned toolchain, collection scope and launcher tests together.",
+      "script_count": 2,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "preview": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Pinned retained dashboard snapshot and presentation modules are absent; generated page for localhost server is absent.",
+      "revisit_condition": "Restore and verify pinned snapshot and presentation modules before preview adoption.",
+      "script_count": 2,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "research_launchers": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Configured research Python and research_rag/tooling packages are absent from current HEAD.",
+      "revisit_condition": "Reconcile package, runtime config and CLI contract together.",
+      "script_count": 2,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "test_authority": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "revisit_condition": "Review complete contract/test/fixture chain with a named current consumer.",
+      "script_count": 11,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    },
+    "video_lineage": {
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "revisit_condition": "Review complete frozen evidence dataset, companion scripts and tests as one offline producer chain.",
+      "script_count": 12,
+      "source_and_test_decision": "NO_PORT_GATE0"
+    }
+  },
+  "method": [
+    "SHA256 queue/runtime/Mac savepoint comparison",
+    "Python AST parse; Node --check for CJS",
+    "Tracked active code/config/test basename scan",
+    "Installed LaunchAgent plist basename scan",
+    "Runtime test basename crosswalk to queue",
+    "Targeted active prerequisite existence checks",
+    "No script invocation, provider call or source/test port"
+  ],
+  "paths": [
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "1468b4029ad8ffb864c6ad2196c7a27c63e9a84a07393f7a848c725fa6f9af82",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 56,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/attest_full_video_gap_rescrub_postseal.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+          "relative_path": "tests/test_postseal_currentness_path_safety.py",
+          "runtime_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787"
+        }
+      ],
+      "runtime_sha256": "1468b4029ad8ffb864c6ad2196c7a27c63e9a84a07393f7a848c725fa6f9af82",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "df580f16c0703e50966b029282eecdfc6e32730fddde6560e047e3ae90548f34",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 57,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_authoritative_lineage_closure.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5",
+          "relative_path": "tests/test_authoritative_lineage_closure.py",
+          "runtime_sha256": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        }
+      ],
+      "runtime_sha256": "df580f16c0703e50966b029282eecdfc6e32730fddde6560e047e3ae90548f34",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "5184620c5bd2c4a2a292137f67b404cf15239d74a5d4e2c985d6a13e21260b7d",
+      "missing_active_import_modules": [
+        "scripts.lineage_state_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 60,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_current_lineage_action_census.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403",
+          "relative_path": "tests/test_current_lineage_action_census.py",
+          "runtime_sha256": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403"
+        }
+      ],
+      "runtime_sha256": "5184620c5bd2c4a2a292137f67b404cf15239d74a5d4e2c985d6a13e21260b7d",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.lineage_state_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "missing_module_wrappers",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "a262faae9bbbe1e6d79cac42baeadae9092ea80b5215e4e833e4dd680d27b90a",
+      "missing_active_import_modules": [
+        "quant_platform.forensic_project_audit"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 63,
+      "reason": "Underlying quant_platform implementation is absent in current HEAD; wrapper cannot run alone.",
+      "relative_path": "scripts/build_forensic_project_audit.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "94d8e5826123c08bee1d2525420e250c99e01f207fdde69b3db03070dfea1712",
+          "relative_path": "tests/test_forensic_project_audit.py",
+          "runtime_sha256": "94d8e5826123c08bee1d2525420e250c99e01f207fdde69b3db03070dfea1712"
+        }
+      ],
+      "runtime_sha256": "a262faae9bbbe1e6d79cac42baeadae9092ea80b5215e4e833e4dd680d27b90a",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.forensic_project_audit"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "9c433454f5f53570ede8bc63658e292db03cfe9ee0bf3100c9db3ee536dd1e21",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "path_specific_note": "Source-candidate variant changes two Markdown trailing-space lines only.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "1",
+      "queue_historical_variant_sha256": [
+        "ed08e8f60fef6dd0ab746aaf495cbe6a34a0155188e3f665a02632ec1f3538b2"
+      ],
+      "queue_line_at_base": 64,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_full_video_diagnostic.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "runtime_sha256": "9c433454f5f53570ede8bc63658e292db03cfe9ee0bf3100c9db3ee536dd1e21",
+      "source_candidate_distinct_variant": {
+        "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/scripts/build_full_video_diagnostic.py",
+        "sha256": "ed08e8f60fef6dd0ab746aaf495cbe6a34a0155188e3f665a02632ec1f3538b2"
+      },
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "d9a378c6874cd8b495d80c995d6de99488cf1d318eb1483849be5f3c97cb497d",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 65,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_full_video_gap_rescrub.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        }
+      ],
+      "runtime_sha256": "d9a378c6874cd8b495d80c995d6de99488cf1d318eb1483849be5f3c97cb497d",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "preview",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "40b1f208e5e3b3b89b7ac4364513ad8c8a7ef20b769a1e024a5d02ef076be84e",
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.human_evidence_research",
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "path_specific_note": "Pins retained dashboard snapshot SHA 2482172e25da47b4f2e4f4e1f3f11dc9e2feadb244c6eb277f7b4e0c769a0c92.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 66,
+      "reason": "Pinned retained dashboard snapshot and presentation modules are absent; generated page for localhost server is absent.",
+      "relative_path": "scripts/build_human_evidence_preview.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "40b1f208e5e3b3b89b7ac4364513ad8c8a7ef20b769a1e024a5d02ef076be84e",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.orchestration.human_evidence_research",
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "9daaa334fcb677fb481e4f069d70f4867efe6db657eb2f02dc01bd37e74c7b51",
+      "missing_active_import_modules": [
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 67,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_lineage_video_routing.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493",
+          "relative_path": "tests/test_lineage_video_routing.py",
+          "runtime_sha256": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493"
+        }
+      ],
+      "runtime_sha256": "9daaa334fcb677fb481e4f069d70f4867efe6db657eb2f02dc01bd37e74c7b51",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "9b34fd419649496440b53109f4cba272388750bde555ae1763b0b9c39ba88b70",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 68,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_node_coverage_crosswalk.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        }
+      ],
+      "runtime_sha256": "9b34fd419649496440b53109f4cba272388750bde555ae1763b0b9c39ba88b70",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "88df40440f2c2ad07a914fcfbf385b0aaa136848e56370abba04158c30120bc1",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 69,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_self_inspection_scorecard.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "a0e0fe85fb9989965b070d4832ad90885f4539aad4d5ff6fa2d4f31aa3b8900f",
+          "relative_path": "tests/test_math_desk_contracts.py",
+          "runtime_sha256": "a0e0fe85fb9989965b070d4832ad90885f4539aad4d5ff6fa2d4f31aa3b8900f"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+          "relative_path": "tests/test_postseal_currentness_path_safety.py",
+          "runtime_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f",
+          "relative_path": "tests/test_current_test_bundle_consumers.py",
+          "runtime_sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f"
+        }
+      ],
+      "runtime_sha256": "88df40440f2c2ad07a914fcfbf385b0aaa136848e56370abba04158c30120bc1",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "4e207fd098e23b484d5d18939adee4d18ffb88a3cf2498f6b2a9dcdd82b41fad",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 70,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_surface_log_test_registry.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+          "relative_path": "tests/test_planned_registry_integration.py",
+          "runtime_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "runtime_sha256": "4e207fd098e23b484d5d18939adee4d18ffb88a3cf2498f6b2a9dcdd82b41fad",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "0e07a4dc24ec91c18b3b83479298e584faa73db170c2d964456a11ce388e9c37",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 71,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/build_unified_gap_index.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4",
+          "relative_path": "tests/test_unified_gap_snapshot_safety.py",
+          "runtime_sha256": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "runtime_sha256": "0e07a4dc24ec91c18b3b83479298e584faa73db170c2d964456a11ce388e9c37",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "missing_module_wrappers",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "b920b0afbfae615b352f976c2438a802c940086e3cf6108f01021a83e69e6d03",
+      "missing_active_import_modules": [
+        "quant_platform.video_review_sidecars"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 72,
+      "reason": "Underlying quant_platform implementation is absent in current HEAD; wrapper cannot run alone.",
+      "relative_path": "scripts/build_video_review_sidecars.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "b920b0afbfae615b352f976c2438a802c940086e3cf6108f01021a83e69e6d03",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.video_review_sidecars"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "journal_schema",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "8e2744cd4f4e5f544d159c8eea8d4e2e6b733718ef73b07ef439b998a0247413",
+      "missing_active_import_modules": [],
+      "path_specific_note": "Schema CSV exists; reports/active/wizard_research_journal.csv is absent.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 73,
+      "reason": "Active journal is absent; script mutates historical schema and writes repair receipt without current consumer.",
+      "relative_path": "scripts/build_wizard_research_journal_schema.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        }
+      ],
+      "runtime_sha256": "8e2744cd4f4e5f544d159c8eea8d4e2e6b733718ef73b07ef439b998a0247413",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "phase00_collection",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "777b5e3e698cbcc8acdb26dee9a848f41d6fac100c604e9ab69bf2d13561a4d6",
+      "missing_active_import_modules": [],
+      "path_specific_note": "Source-candidate variant omits the runtime AppleDouble sidecar exclusion; hardcodes /Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "1",
+      "queue_historical_variant_sha256": [
+        "9c10a125858c28856f67143863ce13fea135f0f9bf2cf12e7188c394a86c5b7e"
+      ],
+      "queue_line_at_base": 75,
+      "reason": "Pinned old workspace/interpreter/toolchain and subprocess bootstrap; collection contract/config are absent.",
+      "relative_path": "scripts/collection_startup_verify.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "7acd85f86a1e829c9465edc3353ce2ed0664dbc538e8ee28215a56069ce1bd94",
+          "relative_path": "tests/test_preowner_assessment686.py",
+          "runtime_sha256": "7acd85f86a1e829c9465edc3353ce2ed0664dbc538e8ee28215a56069ce1bd94"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "33023519ff01c83148038dfeeb2f4851e05ab779cabeb09fac248fbf8d77f511",
+          "relative_path": "tests/test_collection_startup_verify.py",
+          "runtime_sha256": "33023519ff01c83148038dfeeb2f4851e05ab779cabeb09fac248fbf8d77f511"
+        }
+      ],
+      "runtime_sha256": "777b5e3e698cbcc8acdb26dee9a848f41d6fac100c604e9ab69bf2d13561a4d6",
+      "source_candidate_distinct_variant": {
+        "path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/scripts/collection_startup_verify.py",
+        "sha256": "9c10a125858c28856f67143863ce13fea135f0f9bf2cf12e7188c394a86c5b7e"
+      },
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "6ef7061c1e2f0ce1c04fd812e9c8aef86955c5e7816032e91427dd560e43636e",
+      "missing_active_import_modules": [
+        "scripts.pytest_execution_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 77,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/current_test_bundle_consumer.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f",
+          "relative_path": "tests/test_current_test_bundle_consumers.py",
+          "runtime_sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f"
+        }
+      ],
+      "runtime_sha256": "6ef7061c1e2f0ce1c04fd812e9c8aef86955c5e7816032e91427dd560e43636e",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.pytest_execution_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "f499a5fc3fa3aaae7612c0f6947534d0a4ff81229fb200b9f55f97716d1541cb",
+      "missing_active_import_modules": [
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 78,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/finalize_full_project_test_receipt.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+          "relative_path": "tests/test_planned_registry_integration.py",
+          "runtime_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044",
+          "relative_path": "tests/test_test_receipt_attempt_custody.py",
+          "runtime_sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "ea69e57cae34730d4086594f052b19cc412c03b0213f7f1680aaed35dae3bf5b",
+          "relative_path": "tests/test_finalize_full_project_test_receipt.py",
+          "runtime_sha256": "ea69e57cae34730d4086594f052b19cc412c03b0213f7f1680aaed35dae3bf5b"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "runtime_sha256": "f499a5fc3fa3aaae7612c0f6947534d0a4ff81229fb200b9f55f97716d1541cb",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "e0bb049e047a949931d9c58d8e2fe2c603f6a6626f30ae5d5f10bd80caae62ed",
+      "missing_active_import_modules": [
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 79,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/finalize_relevant_test_receipt.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+          "relative_path": "tests/test_planned_registry_integration.py",
+          "runtime_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044",
+          "relative_path": "tests/test_test_receipt_attempt_custody.py",
+          "runtime_sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6",
+          "relative_path": "tests/test_test_bundle_bootstrap.py",
+          "runtime_sha256": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "81acd908236c800799f86d3fdc45c13fd17d25de913bf2a22e7865d1d8f40b6a",
+          "relative_path": "tests/test_finalize_relevant_test_receipt.py",
+          "runtime_sha256": "81acd908236c800799f86d3fdc45c13fd17d25de913bf2a22e7865d1d8f40b6a"
+        }
+      ],
+      "runtime_sha256": "e0bb049e047a949931d9c58d8e2fe2c603f6a6626f30ae5d5f10bd80caae62ed",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "3aa29735cf48f50c53f8f91a64dd519953a3e19747a0ba00ded6436817fc8606",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 80,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/lineage_state_contract.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a",
+          "relative_path": "tests/test_orientation_remediation_closure.py",
+          "runtime_sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a"
+        }
+      ],
+      "runtime_sha256": "3aa29735cf48f50c53f8f91a64dd519953a3e19747a0ba00ded6436817fc8606",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "phase00_collection",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "fcf85820dda5ecf2e14c0ca633dd1c475cec18cb0ec420a648c0ebee5c6ac9ff",
+      "missing_active_import_modules": [],
+      "path_specific_note": "Pins Python 3.12.13 and uv 0.12.1 by hash and brokers subprocesses; current Phase00 modules alone do not prove launcher compatibility.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 83,
+      "reason": "Pinned old workspace/interpreter/toolchain and subprocess bootstrap; collection contract/config are absent.",
+      "relative_path": "scripts/phase00_closure_verify.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": true,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c",
+          "relative_path": "tests/test_corrective_phase00_closure.py",
+          "runtime_sha256": "15a3f9b760abc0a2ec901e095765d3c1070006a33bf0cddfef561603a307150c"
+        },
+        {
+          "active_path_present": true,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3c4ad3acd3f5fe1429925d4052f14abd9c8daf2f298848d25067d38863375caa",
+          "relative_path": "tests/test_corrective_lineage.py",
+          "runtime_sha256": "3c4ad3acd3f5fe1429925d4052f14abd9c8daf2f298848d25067d38863375caa"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "29278a4de5bd2cf36fed36abb96409d78c65bd9c9d98c8ffdbb3170221f40091",
+          "relative_path": "tests/test_phase00_closure_launcher.py",
+          "runtime_sha256": "29278a4de5bd2cf36fed36abb96409d78c65bd9c9d98c8ffdbb3170221f40091"
+        }
+      ],
+      "runtime_sha256": "fcf85820dda5ecf2e14c0ca633dd1c475cec18cb0ec420a648c0ebee5c6ac9ff",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.orchestration.corrective_phase00_closure",
+        "quant_platform.orchestration.corrective_phase00_control",
+        "quant_platform.orchestration.corrective_phase00_descendants"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "20d5dbdeb120aad8a9f24c343dda8ed88251ef067f6fd6359c2b58e13a82b47c",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 84,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/planned_control_source_contract.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+          "relative_path": "tests/test_planned_registry_integration.py",
+          "runtime_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "72ac90d84719a91998e55042092d7199b4b13afda3cd4409f23e34100a7b4285",
+          "relative_path": "tests/test_planned_control_source_contract.py",
+          "runtime_sha256": "72ac90d84719a91998e55042092d7199b4b13afda3cd4409f23e34100a7b4285"
+        }
+      ],
+      "runtime_sha256": "20d5dbdeb120aad8a9f24c343dda8ed88251ef067f6fd6359c2b58e13a82b47c",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "46be55d3ce7e33a4e919533bf7a04d6d31d1bb382373e05c021452ecd4e18ecd",
+      "missing_active_import_modules": [
+        "scripts.planned_control_source_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 85,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/pytest_execution_contract.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+          "relative_path": "tests/test_planned_registry_integration.py",
+          "runtime_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044",
+          "relative_path": "tests/test_test_receipt_attempt_custody.py",
+          "runtime_sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6",
+          "relative_path": "tests/test_test_bundle_bootstrap.py",
+          "runtime_sha256": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+          "relative_path": "tests/test_postseal_currentness_path_safety.py",
+          "runtime_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a",
+          "relative_path": "tests/test_orientation_remediation_closure.py",
+          "runtime_sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f",
+          "relative_path": "tests/test_current_test_bundle_consumers.py",
+          "runtime_sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3f03e2097629e2d79970efb473a14ef862a20bfbaeb6d7b352338b33323d3b4a",
+          "relative_path": "tests/test_pytest_execution_contract.py",
+          "runtime_sha256": "3f03e2097629e2d79970efb473a14ef862a20bfbaeb6d7b352338b33323d3b4a"
+        }
+      ],
+      "runtime_sha256": "46be55d3ce7e33a4e919533bf7a04d6d31d1bb382373e05c021452ecd4e18ecd",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.planned_control_source_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "9ab0835fc7e53047c33e641d445e0127ea0fe56a0c0d437b24770e2cce0f01dc",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 86,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/pytest_import_path_probe.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "9ab0835fc7e53047c33e641d445e0127ea0fe56a0c0d437b24770e2cce0f01dc",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "88e2265d22e842784299d04d610a170f6f28e77d09c376052d6d27cd8492c4ce",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 87,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/pytest_outcome_plugin.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "runtime_sha256": "88e2265d22e842784299d04d610a170f6f28e77d09c376052d6d27cd8492c4ce",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "085d497a7f75736f7163a7a9c2cbf04057bb6b6ba56a12559291fe47c7b3b01f",
+      "missing_active_import_modules": [
+        "scripts.build_surface_log_test_registry",
+        "scripts.current_test_bundle_consumer",
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.lineage_state_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 88,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/rebase_gate_authority_chain.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec",
+          "relative_path": "tests/test_math_desk_scope_registry.py",
+          "runtime_sha256": "087b0c334fd8a07934f5d4248ed2c687b5e25ee5a1ac3bfc2d14cd38a3a259ec"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a",
+          "relative_path": "tests/test_orientation_remediation_closure.py",
+          "runtime_sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a"
+        }
+      ],
+      "runtime_sha256": "085d497a7f75736f7163a7a9c2cbf04057bb6b6ba56a12559291fe47c7b3b01f",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.build_surface_log_test_registry",
+        "scripts.current_test_bundle_consumer",
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.lineage_state_contract",
+        "scripts.pytest_execution_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "research_launchers",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "cc30828a169265caec86142da4432c9294aa0d59f24ea880b07748067fb0779f",
+      "missing_active_import_modules": [
+        "quant_platform.research_rag"
+      ],
+      "path_specific_note": "Requires config/research_tool_runtime.json and quant_platform.research_rag.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 89,
+      "reason": "Configured research Python and research_rag/tooling packages are absent from current HEAD.",
+      "relative_path": "scripts/research_rag.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "cc30828a169265caec86142da4432c9294aa0d59f24ea880b07748067fb0779f",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.research_rag"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "hyperliquid_l2",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "14c564d901a85ec31d0c412873774e07e0a8391aed90348f3a015eb628a016fd",
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.wizard_frozen_source_qualification",
+        "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter",
+        "quant_platform.orchestration.wizard_hyperliquid_l2_calibration_runner"
+      ],
+      "path_specific_note": "Targets https://api.hyperliquid.xyz/info; no provider call was made.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 91,
+      "reason": "Frozen adapter and L2 runner are absent; one-shot runner can make 24 live Hyperliquid info calls and write receipts.",
+      "relative_path": "scripts/run_one_shot_hyperliquid_l2_calibration.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "14c564d901a85ec31d0c412873774e07e0a8391aed90348f3a015eb628a016fd",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.orchestration.corrective_external_effects",
+        "quant_platform.orchestration.corrective_hyperliquid_network",
+        "quant_platform.orchestration.effect_authority",
+        "quant_platform.orchestration.wizard_frozen_source_qualification",
+        "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter",
+        "quant_platform.orchestration.wizard_hyperliquid_l2_calibration_runner"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "6bd2f0bd0b9dfb10cac10fd51591979a10585a534257089ce4b1ba64a828f035",
+      "missing_active_import_modules": [
+        "scripts.attest_full_video_gap_rescrub_postseal",
+        "scripts.build_self_inspection_scorecard",
+        "scripts.current_test_bundle_consumer",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 107,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/seal_full_video_gap_rescrub_package.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+          "relative_path": "tests/test_postseal_currentness_path_safety.py",
+          "runtime_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787"
+        }
+      ],
+      "runtime_sha256": "6bd2f0bd0b9dfb10cac10fd51591979a10585a534257089ce4b1ba64a828f035",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.attest_full_video_gap_rescrub_postseal",
+        "scripts.build_self_inspection_scorecard",
+        "scripts.current_test_bundle_consumer",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "preview",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "7c7d43eb934472cce6ce834e0658820eda4bab96316a4df826b60799bc8254b6",
+      "missing_active_import_modules": [],
+      "path_specific_note": "GET/HEAD-only local server passed node --check; generated HTML is absent.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 108,
+      "reason": "Pinned retained dashboard snapshot and presentation modules are absent; generated page for localhost server is absent.",
+      "relative_path": "scripts/serve_human_evidence_preview.cjs",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "7c7d43eb934472cce6ce834e0658820eda4bab96316a4df826b60799bc8254b6",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "NODE_CHECK_OK",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "796eb8d27a00d8a02425a285e235561dc7217e9fb2e74793ca54f16c30f6b88b",
+      "missing_active_import_modules": [],
+      "path_specific_note": "No current consumer; Git and nightly savepoints currently provide snapshot custody.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 109,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/stable_project_snapshot.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4",
+          "relative_path": "tests/test_unified_gap_snapshot_safety.py",
+          "runtime_sha256": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493",
+          "relative_path": "tests/test_lineage_video_routing.py",
+          "runtime_sha256": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493"
+        }
+      ],
+      "runtime_sha256": "796eb8d27a00d8a02425a285e235561dc7217e9fb2e74793ca54f16c30f6b88b",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "research_launchers",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "be2ac17d565a5971a07840c498ce2abeebad4a2326afed60b4c541b4be51a2a8",
+      "missing_active_import_modules": [
+        "quant_platform.tooling"
+      ],
+      "path_specific_note": "Requires config/research_tool_runtime.json and quant_platform.tooling.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 110,
+      "reason": "Configured research Python and research_rag/tooling packages are absent from current HEAD.",
+      "relative_path": "scripts/thewiz_tools.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "be2ac17d565a5971a07840c498ce2abeebad4a2326afed60b4c541b4be51a2a8",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.tooling"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "video_lineage",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "4916d21d5fff360e458d6694fb815684ed809b9076c9eb2d49cb5d8b0dd2da00",
+      "missing_active_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 111,
+      "reason": "Coupled historical August video/math desk/lineage output chain needs frozen reports, snapshot data, companion scripts and matching tests; local report and attestation writes.",
+      "relative_path": "scripts/validate_full_video_gap_rescrub.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "REVIEWED_GOVERNED_EVIDENCE_BLOCKED_MATH_DESK_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "a0e0fe85fb9989965b070d4832ad90885f4539aad4d5ff6fa2d4f31aa3b8900f",
+          "relative_path": "tests/test_math_desk_contracts.py",
+          "runtime_sha256": "a0e0fe85fb9989965b070d4832ad90885f4539aad4d5ff6fa2d4f31aa3b8900f"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477",
+          "relative_path": "tests/test_research_producer_publication_safety.py",
+          "runtime_sha256": "dcbc8cb01d5127f30e187f9b9f0af56fdabebe5504be0f6221f7c5e1ad7c7477"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210",
+          "relative_path": "tests/test_validator_check_contract.py",
+          "runtime_sha256": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+          "relative_path": "tests/test_planned_audit_downstream.py",
+          "runtime_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "522a97be07f4ade6de269847ea5cea55650ceb8984911536337d21510a5a8bd5",
+          "relative_path": "tests/test_surface_external_input_validator.py",
+          "runtime_sha256": "522a97be07f4ade6de269847ea5cea55650ceb8984911536337d21510a5a8bd5"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5",
+          "relative_path": "tests/test_authoritative_lineage_closure.py",
+          "runtime_sha256": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "ecd94cfc5714beacec4d51ee156cbc45d2f5a5f87b1d4355c8c5bf4d86495269",
+          "relative_path": "tests/test_closure_predecessor_currentness.py",
+          "runtime_sha256": "ecd94cfc5714beacec4d51ee156cbc45d2f5a5f87b1d4355c8c5bf4d86495269"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+          "relative_path": "tests/test_current_lineage_selector_consistency.py",
+          "runtime_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        },
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403",
+          "relative_path": "tests/test_current_lineage_action_census.py",
+          "runtime_sha256": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403"
+        }
+      ],
+      "runtime_sha256": "4916d21d5fff360e458d6694fb815684ed809b9076c9eb2d49cb5d8b0dd2da00",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "scripts.current_test_bundle_consumer",
+        "scripts.lineage_state_contract",
+        "scripts.planned_control_source_contract",
+        "scripts.pytest_execution_contract",
+        "scripts.stable_project_snapshot",
+        "scripts.validator_check_contract"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "test_authority",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "09889e66707d7da255707c26c8d512523a27525ba44772dff6aa7606661785d5",
+      "missing_active_import_modules": [],
+      "path_specific_note": null,
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 112,
+      "reason": "Former test-bundle, receipt, selector, snapshot and gate-authority chain; standalone port would duplicate current authority and can write/rebase receipts.",
+      "relative_path": "scripts/validator_check_contract.py",
+      "runtime_direct_test_references": [
+        {
+          "active_path_present": false,
+          "active_still_references_script": false,
+          "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+          "queue_runtime_sha256_at_freeze": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210",
+          "relative_path": "tests/test_validator_check_contract.py",
+          "runtime_sha256": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210"
+        }
+      ],
+      "runtime_sha256": "09889e66707d7da255707c26c8d512523a27525ba44772dff6aa7606661785d5",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    },
+    {
+      "active_path_present": false,
+      "active_tracked_consumer_references": [],
+      "family": "hyperliquid_l2",
+      "installed_launchagent_references": [],
+      "mac_savepoint_sha256": "470d5faf4f1283b6879dde35c127086ae5c9c06cd6980bf623ad147f3dba41fc",
+      "missing_active_import_modules": [
+        "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter"
+      ],
+      "path_specific_note": "Reads retained calibration records and writes review receipt; missing frozen adapter import.",
+      "proposed_queue_status": "REVIEWED_PENDING_LEGACY_SCRIPT_NO_PORT",
+      "queue_custody_status_at_base": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_count": "0",
+      "queue_historical_variant_sha256": [],
+      "queue_line_at_base": 113,
+      "reason": "Frozen adapter and L2 runner are absent; one-shot runner can make 24 live Hyperliquid info calls and write receipts.",
+      "relative_path": "scripts/verify_one_shot_hyperliquid_l2_calibration.py",
+      "runtime_direct_test_references": [],
+      "runtime_sha256": "470d5faf4f1283b6879dde35c127086ae5c9c06cd6980bf623ad147f3dba41fc",
+      "source_candidate_distinct_variant": null,
+      "source_port_recommendation": "NO_PORT_GATE0",
+      "static_import_modules": [
+        "quant_platform.orchestration.wizard_hyperliquid_frozen_adapter"
+      ],
+      "static_syntax": "AST_PARSED",
+      "test_port_recommendation": "NO_PORT_WITHOUT_MATCHED_SOURCE_AND_FIXTURES"
+    }
+  ],
+  "queue_relative_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "queue_sha256_at_base": "f0b61f0f8843bace02b6d65729adfe7c1e031c48fc97a6d331d9a22bd93c7e2e",
+  "schema": "thewiz.gate0.scripts_remaining_reconciliation.v1",
+  "scope": "All 34 pending scripts/* union queue paths excluding the three root-handled paths; evidence-only isolated clone.",
+  "summary": {
+    "all_absent_from_canonical_head": true,
+    "all_queue_runtime_mac_hashes_match": true,
+    "distinct_source_candidate_variants": 2,
+    "family_counts": {
+      "hyperliquid_l2": 2,
+      "journal_schema": 1,
+      "missing_module_wrappers": 2,
+      "phase00_collection": 2,
+      "preview": 2,
+      "research_launchers": 2,
+      "test_authority": 11,
+      "video_lineage": 12
+    },
+    "reviewed_script_count": 34,
+    "scripts_with_active_tracked_consumer_refs": 0,
+    "scripts_with_installed_launchagent_refs": 0,
+    "unique_runtime_direct_test_reference_count": 28
+  }
+}

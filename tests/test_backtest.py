@@ -177,3 +177,43 @@ def test_cost_model_rejects_impossible_parameters():
         CostModel(slippage_bps=-1.0)
     with pytest.raises(ValueError, match="partial_fill_probability"):
         CostModel(partial_fill_probability=1.1)
+    for invalid in (True, 1.5, float("nan")):
+        with pytest.raises(ValueError, match="bars_per_day"):
+            CostModel(bars_per_day=invalid)
+    with pytest.raises(ValueError, match="bars_per_day"):
+        CostModel().funding_per_bar(bars_per_day=float("nan"))
+
+
+@pytest.mark.parametrize("runner", [backtest_pair, backtest_two_leg_spread])
+def test_backtest_rejects_unaligned_missing_or_nonnumeric_signal(runner):
+    frame = pd.DataFrame(
+        {
+            "spread": [0.0, 0.02, 0.04],
+            "price_x": [100.0, 101.0, 102.0],
+            "price_y": [50.0, 50.5, 51.0],
+            "hedge_ratio": [1.0, 1.0, 1.0],
+        }
+    )
+    invalid_signals = (
+        pd.Series([1.0, 0.0], index=[0, 2]),
+        pd.Series([True, True, False], index=frame.index),
+        pd.Series([1.0, float("nan"), 0.0], index=frame.index),
+        pd.Series([1.0 + 0.0j, 1.0 + 0.0j, 0.0j], index=frame.index),
+    )
+    for signal in invalid_signals:
+        with pytest.raises(ValueError, match="signal"):
+            runner(frame, signal)
+
+
+def test_two_leg_backtest_rejects_negative_modeled_slippage():
+    frame = pd.DataFrame(
+        {
+            "price_x": [100.0, 101.0, 102.0],
+            "price_y": [50.0, 50.5, 51.0],
+            "hedge_ratio": [1.0, 1.0, 1.0],
+            "slippage_x_model_bps": [-10.0, -10.0, -10.0],
+            "slippage_y_model_bps": [0.0, 0.0, 0.0],
+        }
+    )
+    with pytest.raises(ValueError, match="modeled leg slippage"):
+        backtest_two_leg_spread(frame, pd.Series([1.0, 1.0, 0.0], index=frame.index))

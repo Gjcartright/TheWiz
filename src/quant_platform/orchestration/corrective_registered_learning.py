@@ -2146,7 +2146,10 @@ def _reconcile_registered_learning_acceptance(
         "regime_pnl_concentration",
     )
     rl_checks = {
-        "runner_summary_accepted": _truthy(rl.summary.get("accepted")),
+        "runner_summary_accepted": bool(
+            _truthy(rl.summary.get("accepted"))
+            and _truthy(computed_rl_row.get("accepted"))
+        ),
         "acceptance_artifact_accepted": _truthy(rl_acceptance_row.get("accepted")),
         "acceptance_recomputed": _truthy(computed_rl_row.get("accepted")),
         "acceptance_artifact_matches_recomputed": _acceptance_rows_match(

@@ -3094,10 +3094,12 @@ def test_dydx_execution_checklist_loads_credentials_from_env_local(tmp_path, mon
     monkeypatch.delenv("DYDX_TESTNET_PRIVATE_KEY", raising=False)
     monkeypatch.delenv("DYDX_TESTNET_SUBMIT_ORDERS", raising=False)
 
-    (tmp_path / ".env.local").write_text(
+    env_file = tmp_path / ".env.local"
+    env_file.write_text(
         "DYDX_TESTNET_WALLET_ADDRESS=wallet_from_file\nDYDX_TESTNET_PRIVATE_KEY=private_from_file\n",
         encoding="utf-8",
     )
+    env_file.chmod(0o600)
 
     frame = dydx_execution_checklist_report()
     rows = frame.set_index("step")
@@ -5950,7 +5952,7 @@ def test_priority_readiness_report_uses_cached_capture_checklist(tmp_path, monke
     assert "candidate_paths=1" in gate["evidence"]
 
 
-def test_priority_readiness_report_marks_learning_store_ready_from_model_ready_outcomes(
+def test_priority_readiness_report_blocks_unverified_learning_outcome_claims(
     tmp_path, monkeypatch
 ):
     monkeypatch.setattr(cli, "ROOT", tmp_path)
@@ -5979,12 +5981,55 @@ def test_priority_readiness_report_marks_learning_store_ready_from_model_ready_o
     frame = priority_readiness_report()
     gate = frame.set_index("gate").loc["learning_event_store"]
 
-    assert bool(gate["ready"]) is True
+    assert bool(gate["ready"]) is False
     assert "trade_store_rows=100" in gate["evidence"]
-    assert "outcomes=100" in gate["evidence"]
-    assert "outcomes_remaining=0" in gate["evidence"]
-    assert "ready_for_modeling=True" in gate["evidence"]
-    assert gate["blocker"] == ""
+    assert "outcomes=0" in gate["evidence"]
+    assert "outcomes_remaining=100" in gate["evidence"]
+    assert "ready_for_modeling=False" in gate["evidence"]
+    assert gate["blocker"] == "missing_model_ready_outcomes"
+
+
+def test_priority_readiness_rejects_nontrue_modeling_flag_from_report(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "build_dydx_indexer_adapter", lambda config: None)
+    (tmp_path / "reports").mkdir()
+
+    def write_untrusted_learning_summary(paper_journal, trade_store, output):
+        pd.DataFrame([{
+            "source": "combined",
+            "events": 100,
+            "outcome_events": 100,
+            "audit_only_events": 0,
+            "outcome_events_remaining": 0,
+            "ready_for_modeling": "not-verified",
+        }]).to_csv(output, index=False)
+        return output
+
+    monkeypatch.setattr(cli, "write_learning_event_summary_report", write_untrusted_learning_summary)
+
+    frame = priority_readiness_report()
+    gate = frame.set_index("gate").loc["learning_event_store"]
+
+    assert bool(gate["ready"]) is False
+    assert "ready_for_modeling=False" in gate["evidence"]
+
+
+def test_learning_dashboard_metric_rejects_nontrue_modeling_flag():
+    frame = pd.DataFrame([{
+        "source": "combined",
+        "events": 100,
+        "outcome_events": 100,
+        "outcome_events_remaining": 0,
+        "ready_for_modeling": "not-verified",
+    }])
+
+    assert cli._learning_dashboard_metric(frame).endswith("ready_for_modeling=False")
+
+
+def test_learning_dashboard_gate_rejects_false_string():
+    gates = pd.DataFrame([{"gate": "learning_event_store", "ready": "False"}]).set_index("gate")
+
+    assert cli._gate_ready_from_index(gates, "learning_event_store") is False
 
 
 def test_priority_readiness_blocks_record_only_dydx_adapter(tmp_path, monkeypatch):
@@ -6087,9 +6132,9 @@ def test_append_learning_outcome_feeds_learning_summary(tmp_path, monkeypatch):
 
     summary = pd.read_csv(reports / "learning_event_summary.csv").set_index("source")
     assert int(summary.loc["trade_store", "events"]) == 1
-    assert int(summary.loc["trade_store", "outcome_events"]) == 1
+    assert int(summary.loc["trade_store", "outcome_events"]) == 0
     assert int(summary.loc["trade_store", "profitable_outcomes"]) == 0
-    assert int(summary.loc["combined", "outcome_events"]) == 1
+    assert int(summary.loc["combined", "outcome_events"]) == 0
 
 
 def test_learning_outcome_template_report_writes_required_schema(tmp_path, monkeypatch):

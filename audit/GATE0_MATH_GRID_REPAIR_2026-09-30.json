@@ -1,0 +1,57 @@
+{
+  "authority": "No cointegration strategy acceptance, Testnet order, or live order authority is granted.",
+  "baseline_commit": "6ce7bc7f6e47a27f847b98ee76093efdd31bb67e",
+  "decision": "Require exact pair-index identity, a regular ordered observation grid, and complete finite positive paired prices before Engle-Granger estimation. Preserve other Math V2 variants for dependency-complete review.",
+  "diagnostic_files": {
+    "active_baseline": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/math-grid-active.json",
+      "sha256": "6fcb8af53e0d5b710d0862d0628e1d99e1c690b107cb13a369ef41d385f5d292"
+    },
+    "focused_junit": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/math-grid-fix-junit.xml",
+      "sha256": "d2bf362491be28062520da4517e797713f29343abd393157433694aef4d5dff0"
+    },
+    "patched": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/math-grid-patched.json",
+      "sha256": "70013a44d439f2d6e83f03f4dce2c328c2b1b2faa690af56a2b05feb8e8c81c5"
+    },
+    "runtime_candidate": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/math-grid-runtime.json",
+      "sha256": "70013a44d439f2d6e83f03f4dce2c328c2b1b2faa690af56a2b05feb8e8c81c5"
+    },
+    "script": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/math-grid-probe.py",
+      "sha256": "50581fcbe7144c60409876d7d58c9230564f6a014acfcbd87ffe650795536f7b"
+    }
+  },
+  "focused_tests_passed": 35,
+  "remaining_source_decisions": [
+    "Engle-Granger identified-design and finite-inference contract",
+    "paired sample and relationship identities across EG and ECM",
+    "OU observation-grid and missing-sample treatment",
+    "historical I(1) diagnostic and Johansen estimator",
+    "shared performance math and full strategy integration"
+  ],
+  "schema_version": "thewiz.gate0.math_grid_repair.v1",
+  "source_sha256": {
+    "src/quant_platform/statistics/math_v2.py": {
+      "baseline": "140a36a04812959002b5865562d3ef44c422449a1ff5312d8a998c604930e187",
+      "historical_variants": [
+        "cf9da8c24bb5b9bd431649970dc74192daecb4b359da267b96228ebcbdaf3244",
+        "df1f8543ec21c4fcab60c56ab8bdd1851ef7f49255a82db13112c2f315f00d1d"
+      ],
+      "patched": "a9815c2689a484329b35360a71a3f28515b3153f9476f02649da6ad32cd42bb3",
+      "runtime_candidate": "f40fbd88078e96c9793242bb1b73cd8ce9853942707899d3c0c87e6c897257cb"
+    },
+    "tests/test_statistics_math_v2.py": {
+      "baseline": "a1b8231d30f2f68faa82b82ca60a2821e1c94837a7227204ebc36acffd309061",
+      "historical_variants": [
+        "ad575307c3b2736747829b76b46dbc834585dcd6762679a51c51accfb6c2459e",
+        "d954acb64472eff879f04c7b66cb25f0e128b93fecd3fc7270f006867d51bb69"
+      ],
+      "patched": "27954f793f0f0609bd350a49aa8cbb0d41c033b329d13be4a772375245900516",
+      "runtime_candidate": "e7ef9be795b1fc48e583eb7a74f317b6df68d26f70b1eb3ae4da3fd0f9b8a92d"
+    }
+  },
+  "status": "PARTIAL_SOURCE_REVIEW_REPAIR_COMMITTED_PENDING_REMAINDER"
+}

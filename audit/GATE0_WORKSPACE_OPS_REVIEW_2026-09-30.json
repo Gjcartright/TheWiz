@@ -1,0 +1,136 @@
+{
+  "active_mount_script_absent": true,
+  "clone_head": "785b8da316cae8541922b2b51a5738de35cbd179",
+  "created_at_utc": "2026-09-30T19:26:46.739314+00:00",
+  "decision_recommendations": {
+    "scripts/ops/mount_workspace.sh": {
+      "rationale": "Preserved runtime-only script targets CodexWorkspace-Rebuilt.sparsebundle, attaches with Keychain and hdiutil, and validates an obsolete encrypted repository/symlink. Active source and nightly backup instead use the direct Expansion Crypto Wizard checkout. No active code or LaunchAgent invokes this repository script.",
+      "status": "REVIEWED_STALE_ENCRYPTED_MOUNT_NO_PORT"
+    },
+    "scripts/ops/validate_workspace.sh": {
+      "rationale": "Retain active local Git/report identity check. Runtime variant uses old Documents/Codex canonical path and reads .env.local/API presence; forensic variant defaults to the same obsolete path. Neither establishes current Expansion source identity. Active output expressly grants no credential, release, or trading readiness.",
+      "status": "REVIEWED_ACTIVE_RETAIN_RUNTIME_AND_FORENSIC_NO_PORT"
+    }
+  },
+  "direct_legacy_config_observation": {
+    "env_local_contents_inspected": false,
+    "inventory_and_alignment_plan": "Both tracked files still label /Users/gregc/Documents/Codex/TheWiz-publish-20260625 as active; neither is a pending union queue row.",
+    "three_hour_loop": "Tracked script hardcodes the old root; no loaded LaunchAgent calls it. Separate legacy cleanup candidate, outside these two pending queue rows.",
+    "tracked_report": "The checked-in workspace_alignment_status.md still asserts canonical repository and .env.local present from the old workflow; it is not current readiness evidence. The active validator overwrites this tracked report, so running it can dirty the checkout and enter the private source mirror if left uncommitted."
+  },
+  "external_agent_observation": {
+    "active_nightly_backup_depends_on_agent": false,
+    "current_expansion_checkout_depends_on_agent": false,
+    "current_mount_absent_at_review": true,
+    "installed_legacy_corrective_agents_with_old_mount_paths": "three installed, not loaded in gui/501 (launchctl print exit 113)",
+    "label": "com.openai.codexworkspace.mount",
+    "loaded": true,
+    "observed_last_exit_code": 1,
+    "observed_runs": 6487,
+    "program": "/Users/gregc/Library/Application Support/CodexWorkspace/mount-codex-workspace.sh",
+    "program_target_bundle": "/Volumes/Expansion/CodexWorkspace.sparsebundle",
+    "program_target_mount": "/Volumes/CodexWorkspace",
+    "re_enable_commands": [
+      "launchctl enable gui/$(id -u)/com.openai.codexworkspace.mount",
+      "launchctl bootstrap gui/$(id -u) '/Users/gregc/Library/LaunchAgents/com.openai.codexworkspace.mount.plist'"
+    ],
+    "repo_mount_script_is_caller": false,
+    "reversible_disable_commands": [
+      "launchctl disable gui/$(id -u)/com.openai.codexworkspace.mount",
+      "launchctl bootout gui/$(id -u)/com.openai.codexworkspace.mount"
+    ],
+    "schedule": "RunAtLoad and StartInterval=60 seconds",
+    "state_changed_during_review": false
+  },
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo",
+  "qualification": "Static/read-only inspection only; no script, tests, hdiutil, mount, or launchctl mutation was run.",
+  "queue_rows": {
+    "scripts/ops/mount_workspace.sh": {
+      "frozen_row": {
+        "custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+        "decision_evidence": "",
+        "decision_rationale": "",
+        "historical_copy_roots": "",
+        "historical_variant_count": "0",
+        "historical_variant_sha256": "",
+        "in_four_root_reconciliation": "True",
+        "in_same_path_drift": "False",
+        "recovery_sha256_at_freeze": "7f94c5fd3a17d1390afe553f608bd4f9705cd7c62a0ca59bb72859b010fa4221",
+        "relative_path": "scripts/ops/mount_workspace.sh",
+        "runtime_sha256_at_freeze": "7f94c5fd3a17d1390afe553f608bd4f9705cd7c62a0ca59bb72859b010fa4221",
+        "working_sha256_at_freeze": "",
+        "working_vs_runtime": "RUNTIME_ONLY"
+      },
+      "line_at_clone": 81
+    },
+    "scripts/ops/validate_workspace.sh": {
+      "frozen_row": {
+        "custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+        "decision_evidence": "",
+        "decision_rationale": "",
+        "historical_copy_roots": "forensic_a;forensic_b;workspace_outer",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "f90f83d69e1172ba062bfb1fd6718f5d53ab8d494aac588b4a170be3a1db3408",
+        "in_four_root_reconciliation": "True",
+        "in_same_path_drift": "True",
+        "recovery_sha256_at_freeze": "ee7ea641d5a4a06ea16672355da996e30610784507e3d2fa0201055ff5a31274",
+        "relative_path": "scripts/ops/validate_workspace.sh",
+        "runtime_sha256_at_freeze": "ee7ea641d5a4a06ea16672355da996e30610784507e3d2fa0201055ff5a31274",
+        "working_sha256_at_freeze": "a6ae1f0378370bbf25ef8de1a7e4e54f4c1ab3893df1d12db400cb4bee00d079",
+        "working_vs_runtime": "CHANGED"
+      },
+      "line_at_clone": 82
+    }
+  },
+  "schema": "thewiz.gate0.workspace_ops_review.v1",
+  "sources": {
+    "active_nightly_source": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/scripts/ops/nightly_savepoint.py",
+      "sha256": "9f772ca384312aa1968b075679e5d913c54eaca05bdc58039cf433c2f19a94fb"
+    },
+    "active_validate": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/scripts/ops/validate_workspace.sh",
+      "sha256": "a6ae1f0378370bbf25ef8de1a7e4e54f4c1ab3893df1d12db400cb4bee00d079"
+    },
+    "external_mount_agent_plist": {
+      "path": "/Users/gregc/Library/LaunchAgents/com.openai.codexworkspace.mount.plist",
+      "sha256": "c0a8d1b1dbd6b45cc08a652ab173909c14ae6305dd2033642d9f1290982177f2"
+    },
+    "external_mount_agent_script": {
+      "path": "/Users/gregc/Library/Application Support/CodexWorkspace/mount-codex-workspace.sh",
+      "sha256": "1c62ae6c85a3164e8511098bbe8b07484f4878536eeb1825e000a6a0badb05ee"
+    },
+    "forensic_validate": {
+      "path": "/Users/gregc/Backups/TheWiz/source-delta-evidence/2026-09-30/variants/f90f83d69e1172ba062bfb1fd6718f5d53ab8d494aac588b4a170be3a1db3408",
+      "sha256": "f90f83d69e1172ba062bfb1fd6718f5d53ab8d494aac588b4a170be3a1db3408"
+    },
+    "installed_nightly_script": {
+      "path": "/Users/gregc/Library/Application Support/TheWizBackup/nightly_savepoint.py",
+      "sha256": "9f772ca384312aa1968b075679e5d913c54eaca05bdc58039cf433c2f19a94fb"
+    },
+    "legacy_alignment_plan": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/docs/workspace_alignment_plan.md",
+      "sha256": "08c8019531c789be9418af4c7f2f3ca5a1da47a5fc4bf86ace3457988d9c58e3"
+    },
+    "legacy_inventory": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/work/legacy_workspace_inventory.csv",
+      "sha256": "eb113d829014f88f2a955cd58ab22835662cc0bf155bb19e9d333feb4dd54997"
+    },
+    "legacy_three_hour_loop": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/scripts/run_three_hour_bh_loop.sh",
+      "sha256": "27dd3688439ecef6c5543b743e820d7b1c47a848cc2aaa8bdcd54653d4b3d9cb"
+    },
+    "runtime_mount": {
+      "path": "/Users/gregc/TheWiz-LocalRuntime/scripts/ops/mount_workspace.sh",
+      "sha256": "7f94c5fd3a17d1390afe553f608bd4f9705cd7c62a0ca59bb72859b010fa4221"
+    },
+    "runtime_validate": {
+      "path": "/Users/gregc/TheWiz-LocalRuntime/scripts/ops/validate_workspace.sh",
+      "sha256": "ee7ea641d5a4a06ea16672355da996e30610784507e3d2fa0201055ff5a31274"
+    },
+    "tracked_legacy_alignment_report": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/workspace-ops-review-FBh81o/repo/reports/workspace_alignment_status.md",
+      "sha256": "773a4fc003623950c77028c8537d5a1e06c71c21240492322dccc99bda2de692"
+    }
+  }
+}

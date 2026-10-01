@@ -1,0 +1,37 @@
+{
+  "authority": "RESEARCH_ONLY_NO_EXTERNAL_OR_ORDER",
+  "baseline_errors": 67,
+  "baseline_failed": 18,
+  "baseline_junit": "/Users/gregc/Backups/TheWiz/mathdesk-diagnostics/2026-09-30/mathdesk-junit.xml",
+  "baseline_junit_sha256": "4b9651811985a2d41cac2890656f1cb5b878dce433046db4c8c4f9308cc93280",
+  "baseline_passed": 89,
+  "baseline_tests": 174,
+  "followup_errors": 4,
+  "followup_junit": "/Users/gregc/Backups/TheWiz/mathdesk-diagnostics/2026-09-30/risk-census-junit.xml",
+  "followup_junit_sha256": "5e7b690e6f8566713e2b489f7f6e18b13530cfc33d25680aa5303331785d373c",
+  "followup_passed": 8,
+  "followup_tests": 12,
+  "interpretation": "Nonpasses are missing governed inputs, a missing journal, or an incompatible data-index schema; algorithm acceptance is unproven.",
+  "isolated_source_and_test_files_matching_runtime": 38,
+  "lecture_index_actual_fields": [
+    "course",
+    "lecture_id",
+    "lecture_url",
+    "section",
+    "video_title",
+    "evidence_source"
+  ],
+  "lecture_index_missing_fields": [
+    "review_status",
+    "topic_tags",
+    "transcript_text_stored"
+  ],
+  "lecture_index_sha256": "4967bbd6964f73f9ce13e6a441883fa95dad6ba84dd278e76141f5df09a7bb5a",
+  "nonpass_cause_counts": {
+    "INDEX_SCHEMA_MISMATCH_AFTER_EXACT_INDEX_COPY": 4,
+    "MISSING_ACTIVE_JOURNAL": 1,
+    "MISSING_GOVERNED_SOURCES": 79,
+    "MISSING_GOVERNED_SOURCES_INDIRECT": 1
+  },
+  "schema_version": "thewiz.gate0.mathdesk_diagnostic.v1"
+}

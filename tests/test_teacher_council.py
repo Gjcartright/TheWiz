@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import math
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
 
 from quant_platform.orchestration.contracts import CandidateIdentity
+from quant_platform.orchestration.student_readiness import StudentReadinessPolicy
 from quant_platform.orchestration.teacher_contracts import (
     CouncilContext,
     CriticAssessment,
@@ -17,10 +19,15 @@ from quant_platform.orchestration.teacher_contracts import (
     TeacherAction,
     TeacherProposal,
 )
-from quant_platform.orchestration.teacher_council import arbitrate_teacher_council
+from quant_platform.orchestration.teacher_council import (
+    TeacherCouncilPolicy,
+    _teacher_vote,
+    _weighted_average,
+    arbitrate_teacher_council,
+)
+from quant_platform.statistics.math_v2 import MATH_VERSION
 
-
-NOW = datetime(2026, 8, 6, 18, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 6, 18, tzinfo=UTC)
 
 
 def _context() -> CouncilContext:
@@ -40,7 +47,7 @@ def _proposal(
     action: TeacherAction = TeacherAction.SHORT_X_LONG_Y,
     authority: EvidenceAuthority = EvidenceAuthority.LOCAL_POINT_IN_TIME,
     source_system: str = "hyperliquid_local_replay",
-    math_version: str = "math-v2.1-y-on-x",
+    math_version: str = MATH_VERSION,
 ) -> TeacherProposal:
     context = _context()
     return TeacherProposal(
@@ -116,6 +123,16 @@ def test_complete_math_v2_council_can_only_authorize_shadow_test():
     assert decision.action == "short_x_long_y"
     assert decision.selected_mode in set(ExactMode)
     assert decision.promotion_allowed is False
+    assert decision.execution_allowed is False
+
+
+def test_previous_math_version_requires_new_evidence_after_repair():
+    proposals = tuple(_proposal(mode, math_version="math-v2.1-y-on-x") for mode in ExactMode)
+    decision = arbitrate_teacher_council(
+        context=_context(), proposals=proposals, assessments=_critics(), now=NOW
+    )
+    assert decision.status == "BLOCKED"
+    assert "math_v2_required" in decision.blocker_codes
     assert decision.execution_allowed is False
 
 
@@ -195,3 +212,51 @@ def test_student_router_can_only_add_an_abstention():
     assert decision.status == "ABSTAIN"
     assert decision.action == "abstain"
     assert "student_teacher_mode_disagreement" in decision.blocker_codes
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"expected_net_return": float("inf")},
+        {"lower_bound_net_return": float("inf"), "expected_net_return": None},
+        {"expected_net_return": float("nan")},
+    ],
+)
+def test_teacher_proposal_rejects_nonfinite_return_evidence(values):
+    payload = _proposal(ExactMode.COPULA).model_dump(mode="python")
+    payload.update(values)
+    with pytest.raises(ValidationError):
+        TeacherProposal.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"max_teacher_disagreement": float("nan")},
+        {"max_uncertainty": float("inf")},
+        {"min_weighted_confidence": True},
+        {"max_evidence_age_hours": -1.0},
+        {"required_math_version": "math-v1"},
+    ],
+)
+def test_teacher_policy_rejects_invalid_thresholds_and_stale_math(values):
+    with pytest.raises(ValueError):
+        TeacherCouncilPolicy(**values)
+
+
+def test_student_policy_cannot_admit_stale_math_lineage():
+    with pytest.raises(ValueError):
+        StudentReadinessPolicy(required_math_version="math-v1")
+
+
+def test_large_finite_teacher_returns_do_not_overflow_weighted_average():
+    result = _weighted_average(((1e308, 1.0), (1e308, 1.0)), default=None)
+    assert math.isfinite(result)
+    assert result == 1e308
+
+
+def test_duplicate_teacher_ids_cannot_contribute_to_a_vote():
+    proposal = _proposal(ExactMode.COPULA)
+    vote = _teacher_vote((proposal, proposal))
+    assert vote["action"] == TeacherAction.ABSTAIN
+    assert vote["selected"] is None

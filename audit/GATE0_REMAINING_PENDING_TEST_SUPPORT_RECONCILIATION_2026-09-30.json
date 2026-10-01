@@ -1,0 +1,3390 @@
+{
+  "decision_counts": {
+    "dependency-blocked": 76,
+    "no-port": 18,
+    "selective-port-candidate": 13
+  },
+  "no_authority_claim": "Evidence-only; no test source port, provider call, promotion, or shared queue edit. Selective candidates remain pending.",
+  "queue_proposal_path": "audit/GATE0_REMAINING_PENDING_TEST_SUPPORT_QUEUE_UPDATE_2026-09-30.csv",
+  "rows": [
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/candidate_queue_support.py",
+          "root_label": "forensic_b",
+          "sha256": "50fcfd02714bd54fec08195539b85f50b5ffc12b229545bd4773392decaa599a"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/candidate_queue_support.py",
+          "root_label": "source_candidate",
+          "sha256": "4eb38e5b26b47a16bbf8d140a3f4a82005f06ab2f745ec890fd4c078287642c3"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/candidate_queue_support.py",
+          "root_label": "visual_recovery",
+          "sha256": "50fcfd02714bd54fec08195539b85f50b5ffc12b229545bd4773392decaa599a"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "50fcfd02714bd54fec08195539b85f50b5ffc12b229545bd4773392decaa599a",
+      "relative_path": "tests/candidate_queue_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "4eb38e5b26b47a16bbf8d140a3f4a82005f06ab2f745ec890fd4c078287642c3",
+      "selected_active_test_sha256": "50fcfd02714bd54fec08195539b85f50b5ffc12b229545bd4773392decaa599a",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected support adds current candidate queue and history contract fixtures; the runtime copy expects a retired history contract and would regress current fixture wiring.",
+      "source_candidate_test_sha256": "4eb38e5b26b47a16bbf8d140a3f4a82005f06ab2f745ec890fd4c078287642c3",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_history_terminal.CURRENT_HISTORY_COHORT_CONTRACT"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/check_late_bootstrap700.py",
+          "root_label": "source_candidate",
+          "sha256": "7455c65135c0e4c0bc8aa9086075df3bbd188d3e74a64190bdc557fe47d77d61"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.collection_admission_barrier",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/check_late_bootstrap700.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "7455c65135c0e4c0bc8aa9086075df3bbd188d3e74a64190bdc557fe47d77d61",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.collection_admission_barrier, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "7455c65135c0e4c0bc8aa9086075df3bbd188d3e74a64190bdc557fe47d77d61",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.collection_admission_barrier"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/collection_daily_fixture_support.py",
+          "root_label": "source_candidate",
+          "sha256": "b62b6688bbc3b33aba2ae75c997e29dbc47b4b35a4d0bdce4263bbb52503f9b4"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/collection_daily_fixture_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "b62b6688bbc3b33aba2ae75c997e29dbc47b4b35a4d0bdce4263bbb52503f9b4",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "b62b6688bbc3b33aba2ae75c997e29dbc47b4b35a4d0bdce4263bbb52503f9b4",
+      "static_missing_reference_count": "3",
+      "static_missing_reference_examples": [
+        "src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse",
+        "tests.test_collection_daily_entry.NOW",
+        "tests.test_collection_handoff_preparation._remaining_handoff_inputs"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/collection_overlay_fixture_support.py",
+          "root_label": "source_candidate",
+          "sha256": "e805b9a25c0f889cf0163c3b071fcf3b76a1102e66c0cc07696b5bfeed7776fd"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py:materialize_prepared_current_wizard_hyperliquid_cost_evidence",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/collection_overlay_fixture_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "e805b9a25c0f889cf0163c3b071fcf3b76a1102e66c0cc07696b5bfeed7776fd",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py:materialize_prepared_current_wizard_hyperliquid_cost_evidence, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "e805b9a25c0f889cf0163c3b071fcf3b76a1102e66c0cc07696b5bfeed7776fd",
+      "static_missing_reference_count": "18",
+      "static_missing_reference_examples": [
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_costs.py:materialize_prepared_current_wizard_hyperliquid_cost_evidence",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_observed_replay.py:run_prepared_current_wizard_hyperliquid_observed_cost_replay",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_replay.py:materialize_prepared_current_wizard_hyperliquid_history"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/collection_profile715.py",
+          "root_label": "source_candidate",
+          "sha256": "1e76ccc5788078399ee88c43f2266e6a58cd8ca54f093ff4af33da5750ff591a"
+        }
+      ],
+      "primary_target": "tests/test_collection_profile715.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/collection_profile715.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "1e76ccc5788078399ee88c43f2266e6a58cd8ca54f093ff4af33da5750ff591a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only helper is consumed by an absent collection profile test and has no selected active consumer.",
+      "source_candidate_test_sha256": "1e76ccc5788078399ee88c43f2266e6a58cd8ca54f093ff4af33da5750ff591a",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/collection_publication_profile724.py",
+          "root_label": "source_candidate",
+          "sha256": "a7616541706cf5279560ad09b77486d2f9bde9f837c4f8d9bcb344aae585dcee"
+        }
+      ],
+      "primary_target": "tests/test_publication_profile724.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/collection_publication_profile724.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "a7616541706cf5279560ad09b77486d2f9bde9f837c4f8d9bcb344aae585dcee",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only helper belongs to the absent legacy publication profile suite.",
+      "source_candidate_test_sha256": "a7616541706cf5279560ad09b77486d2f9bde9f837c4f8d9bcb344aae585dcee",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/conftest.py",
+          "root_label": "source_candidate",
+          "sha256": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "8380be1ed3fd331d6b0700c95d9f180b118899a74ad986d6e47257702fa60c06",
+      "relative_path": "tests/conftest.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b",
+      "selected_active_test_sha256": "8380be1ed3fd331d6b0700c95d9f180b118899a74ad986d6e47257702fa60c06",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected collection and publication profiles carry the current suite fixture contract; the runtime copy expects absent legacy publication profile fixtures.",
+      "source_candidate_test_sha256": "f1b7a27a065773fad5183d387ddc0cb5de34ce7630f5053b2867219487893e0b",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "tests.collection_publication_profile724.LEGACY_PUBLICATION_FILES"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/native_handoff_fixture_support.py",
+          "root_label": "source_candidate",
+          "sha256": "3b78a7da3f630cc244bd0bb376f0f559cf99cb8c97677240633cc3b53fc018ea"
+        }
+      ],
+      "primary_target": "tests/test_native_stage34_rehearsal.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/native_handoff_fixture_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "3b78a7da3f630cc244bd0bb376f0f559cf99cb8c97677240633cc3b53fc018ea",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only native handoff helper belongs to an absent stage 3/4 rehearsal suite.",
+      "source_candidate_test_sha256": "3b78a7da3f630cc244bd0bb376f0f559cf99cb8c97677240633cc3b53fc018ea",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/native_inventory_fixture_support.py",
+          "root_label": "source_candidate",
+          "sha256": "e8e250ea581860bff7cfda4d96e72fc4e9bc46f37d67a8012e85c43ae9ec43cf"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.ExactHttpRequest",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/native_inventory_fixture_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "e8e250ea581860bff7cfda4d96e72fc4e9bc46f37d67a8012e85c43ae9ec43cf",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.ExactHttpRequest, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "e8e250ea581860bff7cfda4d96e72fc4e9bc46f37d67a8012e85c43ae9ec43cf",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.ExactHttpRequest",
+        "quant_platform.orchestration.corrective_external_effects.ExactHttpResponse"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/postseal_materialized_artifact_currentness.py",
+          "root_label": "source_candidate",
+          "sha256": "6fa8f957dc920b2196377e52df2cfd837178bc763842960ec1a0b764403f580c"
+        }
+      ],
+      "primary_target": "tests/test_postseal_currentness_path_safety.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/postseal_materialized_artifact_currentness.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "6fa8f957dc920b2196377e52df2cfd837178bc763842960ec1a0b764403f580c",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only postseal helper belongs to absent postseal currentness checks.",
+      "source_candidate_test_sha256": "6fa8f957dc920b2196377e52df2cfd837178bc763842960ec1a0b764403f580c",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/runtime_separation_fixture_support.py",
+          "root_label": "source_candidate",
+          "sha256": "899540cc3624d4d142e838b7c9da78d05d9d2bf74829fba89292ccfbcc92330e"
+        }
+      ],
+      "primary_target": "tests/test_collection_startup_preflight.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/runtime_separation_fixture_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "899540cc3624d4d142e838b7c9da78d05d9d2bf74829fba89292ccfbcc92330e",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only separation helper belongs to an absent startup preflight test.",
+      "source_candidate_test_sha256": "899540cc3624d4d142e838b7c9da78d05d9d2bf74829fba89292ccfbcc92330e",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/subprocess_environment_support.py",
+          "root_label": "source_candidate",
+          "sha256": "f3d893eff5aba8a4b1faca136747ffedcbedc6e0990da5cb02c1784fd1346d34"
+        }
+      ],
+      "primary_target": "tests/test_corrective_daily_scheduler.py",
+      "primary_target_selected_sha256": "0093447a1705059b1ce420904f6c75815a75aec210f10c4b55d66e623dd4479b",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/subprocess_environment_support.py",
+      "runtime_test_function_count": 0,
+      "runtime_test_sha256": "f3d893eff5aba8a4b1faca136747ffedcbedc6e0990da5cb02c1784fd1346d34",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime-only subprocess helper has no selected consumer; its consumers are historical corrective tests.",
+      "source_candidate_test_sha256": "f3d893eff5aba8a4b1faca136747ffedcbedc6e0990da5cb02c1784fd1346d34",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_active_pipeline.py",
+          "root_label": "forensic_b",
+          "sha256": "cfd6b930864fbc4f487665547d965977cc59db4334ea315ea3b5b46f1a4a7a69"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_active_pipeline.py",
+          "root_label": "source_candidate",
+          "sha256": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_active_pipeline.py",
+          "root_label": "visual_recovery",
+          "sha256": "019d0e00d1050c529bc7c4090bab4e750a8928ea9becb7ef9022e0f579a26e89"
+        }
+      ],
+      "primary_target": "src/quant_platform/active_pipeline.py",
+      "primary_target_selected_sha256": "82ebbeb59f7abff0f603b5cdcaff3e96de819d61a77c4c41b3bb723424a51709",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "019d0e00d1050c529bc7c4090bab4e750a8928ea9becb7ef9022e0f579a26e89;cfd6b930864fbc4f487665547d965977cc59db4334ea315ea3b5b46f1a4a7a69",
+      "queue_working_sha256_at_freeze": "5ff039ce58ff7b1a08e40df3ca90f84ed42c0a0469f46bfbf23a93280c424442",
+      "relative_path": "tests/test_active_pipeline.py",
+      "runtime_test_function_count": 55,
+      "runtime_test_sha256": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+      "selected_active_test_sha256": "af95e0dbdd419e57bd272df807bdee373cb1073fcb4f08bc148bce135671f93a",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Runtime proxy quarantine test requires absent payload legacy-proxy declaration helper.",
+      "source_candidate_test_sha256": "ccc8f1705c214b0bde2dd913df20a69c09176ad4b21eef4ebb231ce843f610ba",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.active_pipeline._payload_declares_legacy_research_proxies"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_apify_sources.py",
+          "root_label": "forensic_b",
+          "sha256": "fc8c01a350ae48822a88138b6c252d01eebf605385c1625b87e91461a678baac"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_apify_sources.py",
+          "root_label": "source_candidate",
+          "sha256": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_apify_sources.py",
+          "root_label": "visual_recovery",
+          "sha256": "fc8c01a350ae48822a88138b6c252d01eebf605385c1625b87e91461a678baac"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "fc8c01a350ae48822a88138b6c252d01eebf605385c1625b87e91461a678baac",
+      "queue_working_sha256_at_freeze": "3812994627b533ff53ebc2abf63dd13085cac1da9323c508c608b02790eff3df",
+      "relative_path": "tests/test_apify_sources.py",
+      "runtime_test_function_count": 13,
+      "runtime_test_sha256": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+      "selected_active_test_sha256": "3812994627b533ff53ebc2abf63dd13085cac1da9323c508c608b02790eff3df",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected assertions use the current secret fixture and exact source list; forensic copies only alter older fixture expectations.",
+      "source_candidate_test_sha256": "4c801a614883662a3d1591a7b2fd8519a2399cd0fd1d1a57761aa446dcce98c9",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_authoritative_lineage_closure.py",
+          "root_label": "source_candidate",
+          "sha256": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5"
+        }
+      ],
+      "primary_target": "scripts.build_authoritative_lineage_closure",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_authoritative_lineage_closure.py",
+      "runtime_test_function_count": 25,
+      "runtime_test_sha256": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_authoritative_lineage_closure, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "9c017be88c749250b64b898eba6b332295581d88dc28564d9d2fe6ad9d64d4b5",
+      "static_missing_reference_count": "44",
+      "static_missing_reference_examples": [
+        "scripts.build_authoritative_lineage_closure",
+        "scripts.build_authoritative_lineage_closure.DOWNSTREAM_DERIVED_REFERENCE_BRANCH",
+        "scripts.build_authoritative_lineage_closure.DOWNSTREAM_DERIVED_REFERENCE_CLASS"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_backtest.py",
+          "root_label": "forensic_b",
+          "sha256": "16848e74c234e4b47291134deb7a46853360564de8bf1182f2c882e639d7f417"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_backtest.py",
+          "root_label": "source_candidate",
+          "sha256": "91d660b2c6c6edbf100eacded3769855ed7584f1657eb45952219b8e3bbf18f8"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_backtest.py",
+          "root_label": "visual_recovery",
+          "sha256": "77504a189c96d3077bb1b422b53830f9ba00ecdbbef64eebb54d29afc0fab6ac"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "16848e74c234e4b47291134deb7a46853360564de8bf1182f2c882e639d7f417;77504a189c96d3077bb1b422b53830f9ba00ecdbbef64eebb54d29afc0fab6ac",
+      "queue_working_sha256_at_freeze": "689490c8491e8c1cc0110d0d35503d66a8ec180c9efc5614fc627eeb38a52ee0",
+      "relative_path": "tests/test_backtest.py",
+      "runtime_test_function_count": 9,
+      "runtime_test_sha256": "91d660b2c6c6edbf100eacded3769855ed7584f1657eb45952219b8e3bbf18f8",
+      "selected_active_test_sha256": "0a185cfe252c3e5e282a306a6512637c477f1cca596f557f68c1f9f958fddb80",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Selected tests cover current V2.3 backtest semantics; the extra runtime crossing truth-table case is tautological and adds no independent contract.",
+      "source_candidate_test_sha256": "91d660b2c6c6edbf100eacded3769855ed7584f1657eb45952219b8e3bbf18f8",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_boot701.py",
+          "root_label": "source_candidate",
+          "sha256": "09ff4cbdf4a81b703e9da1bde330254d843365dc1f90ba31fa5fba0b5796049c"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/collection_release/darwin_boot_identity.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_boot701.py",
+      "runtime_test_function_count": 7,
+      "runtime_test_sha256": "09ff4cbdf4a81b703e9da1bde330254d843365dc1f90ba31fa5fba0b5796049c",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test dynamically loads absent Darwin boot identity source.",
+      "source_candidate_test_sha256": "09ff4cbdf4a81b703e9da1bde330254d843365dc1f90ba31fa5fba0b5796049c",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root_label": "forensic_a",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root_label": "forensic_b",
+          "sha256": "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root_label": "source_candidate",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root_label": "visual_recovery",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_canonical_wizard_hyperliquid_contract.py",
+          "root_label": "workspace_outer",
+          "sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "1224532fdf002ffb2bb241e66220496ef24d1bd172aef0d853d12105dd245700",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_canonical_wizard_hyperliquid_contract.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+      "selected_active_test_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; the distinct forensic copy predates the selected canonical contract.",
+      "source_candidate_test_sha256": "462dd94a9515d452aeebddd48ed4a5d6b296563c4e83d87eeedcd816a9144492",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_capture_input_minimization.cjs",
+          "root_label": "source_candidate",
+          "sha256": "1269dd8267a5d66966f734710ad0260da0596060b5abd1f49c243da0416c0cdc"
+        }
+      ],
+      "primary_target": "scripts/capture_crypto_wizards_pair_detail_ui_bundle.js",
+      "primary_target_selected_sha256": "328a0675f9e7483100962d5d4bf3eb0d54c1b96f5e3e03af71c4e5cdd00c45a8",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_capture_input_minimization.cjs",
+      "runtime_test_function_count": null,
+      "runtime_test_sha256": "1269dd8267a5d66966f734710ad0260da0596060b5abd1f49c243da0416c0cdc",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime fake-DOM test exercises selected capture projection markers and appears separable from collection authority.",
+      "source_candidate_test_sha256": "1269dd8267a5d66966f734710ad0260da0596060b5abd1f49c243da0416c0cdc",
+      "static_missing_reference_count": "JS",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_charge_retry660.py",
+          "root_label": "source_candidate",
+          "sha256": "3e67a03fb21508e1e46f7ff06c915f2b032d52179122e7558e6000646e03b78f"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.external_effect_worker_session",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_charge_retry660.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "3e67a03fb21508e1e46f7ff06c915f2b032d52179122e7558e6000646e03b78f",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.external_effect_worker_session, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "3e67a03fb21508e1e46f7ff06c915f2b032d52179122e7558e6000646e03b78f",
+      "static_missing_reference_count": "8",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.external_effect_worker_session",
+        "quant_platform.orchestration.corrective_external_effects.issue_external_effect_worker_grant",
+        "quant_platform.orchestration.corrective_external_effects.mark_current_external_effect_session_failed_zero"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_cli.py",
+          "root_label": "forensic_a",
+          "sha256": "bc1f9dfd2f8618b73c9a8fabf02763093a103fa95ca8aa6f0f771bd0248bdf18"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_cli.py",
+          "root_label": "forensic_b",
+          "sha256": "bc1f9dfd2f8618b73c9a8fabf02763093a103fa95ca8aa6f0f771bd0248bdf18"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_cli.py",
+          "root_label": "source_candidate",
+          "sha256": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_cli.py",
+          "root_label": "visual_recovery",
+          "sha256": "bc1f9dfd2f8618b73c9a8fabf02763093a103fa95ca8aa6f0f771bd0248bdf18"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_cli.py",
+          "root_label": "workspace_outer",
+          "sha256": "bc1f9dfd2f8618b73c9a8fabf02763093a103fa95ca8aa6f0f771bd0248bdf18"
+        }
+      ],
+      "primary_target": "src/quant_platform/cli.py",
+      "primary_target_selected_sha256": "3a02690323ac110b1707da6e6fcd9b643705a66e13c80f15e2039e1846b65e9d",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "bc1f9dfd2f8618b73c9a8fabf02763093a103fa95ca8aa6f0f771bd0248bdf18",
+      "queue_working_sha256_at_freeze": "9f0b80e555a896dfbfac2983417eaabe17333828eab908ae26560dbf25948eb3",
+      "relative_path": "tests/test_cli.py",
+      "runtime_test_function_count": 195,
+      "runtime_test_sha256": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+      "selected_active_test_sha256": "9f0b80e555a896dfbfac2983417eaabe17333828eab908ae26560dbf25948eb3",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires dYdX direct fallback and transport guards that differ from the selected indexer adapter contract.",
+      "source_candidate_test_sha256": "6fe641c4ee96cf74aaed3b53683902b1e6a9c2ca865717f4d096b74b88591fb9",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_closure_predecessor_currentness.py",
+          "root_label": "source_candidate",
+          "sha256": "ecd94cfc5714beacec4d51ee156cbc45d2f5a5f87b1d4355c8c5bf4d86495269"
+        }
+      ],
+      "primary_target": "scripts.validate_full_video_gap_rescrub",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_closure_predecessor_currentness.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "ecd94cfc5714beacec4d51ee156cbc45d2f5a5f87b1d4355c8c5bf4d86495269",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.validate_full_video_gap_rescrub, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "ecd94cfc5714beacec4d51ee156cbc45d2f5a5f87b1d4355c8c5bf4d86495269",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.validate_full_video_gap_rescrub"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_crypto_wizards_history.py",
+          "root_label": "forensic_b",
+          "sha256": "cd558f8258d5ad40800bd17f10e9f97d94621672f03cdf2fb7eaf75021defee7"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_crypto_wizards_history.py",
+          "root_label": "source_candidate",
+          "sha256": "3085134bcc4d7a1a564f8683265730745e56db094afafd278f446bcbf0ca7f83"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_crypto_wizards_history.py",
+          "root_label": "visual_recovery",
+          "sha256": "cd558f8258d5ad40800bd17f10e9f97d94621672f03cdf2fb7eaf75021defee7"
+        }
+      ],
+      "primary_target": "src/quant_platform/crypto_wizards_history.py",
+      "primary_target_selected_sha256": "5a9d0c035d498e04769a556690f37826899445d45f9ddaf90800de3d160132bc",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "cd558f8258d5ad40800bd17f10e9f97d94621672f03cdf2fb7eaf75021defee7",
+      "queue_working_sha256_at_freeze": "66f35706ef9a2a865c61eb6f8d38ee1897d57c763c2c538c3838ccb4e84f110b",
+      "relative_path": "tests/test_crypto_wizards_history.py",
+      "runtime_test_function_count": 12,
+      "runtime_test_sha256": "3085134bcc4d7a1a564f8683265730745e56db094afafd278f446bcbf0ca7f83",
+      "selected_active_test_sha256": "66f35706ef9a2a865c61eb6f8d38ee1897d57c763c2c538c3838ccb4e84f110b",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires governed exact HTTP and no-redirect transport absent from the selected history fetch path.",
+      "source_candidate_test_sha256": "3085134bcc4d7a1a564f8683265730745e56db094afafd278f446bcbf0ca7f83",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_crypto_wizards_scanner.py",
+          "root_label": "forensic_b",
+          "sha256": "7e36ec4f244996d66145978ab684ea26792defd52c2c245aec83bdd06963cc87"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_crypto_wizards_scanner.py",
+          "root_label": "source_candidate",
+          "sha256": "7ee3f16ef33797c300a0e7fa0e41fbee1e2462ccea4456121b081b565275252a"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_crypto_wizards_scanner.py",
+          "root_label": "visual_recovery",
+          "sha256": "7e36ec4f244996d66145978ab684ea26792defd52c2c245aec83bdd06963cc87"
+        }
+      ],
+      "primary_target": "src/quant_platform/crypto_wizards_scanner.py",
+      "primary_target_selected_sha256": "cbad3408b43ded3e00d1b2b833d919cccf67e0e194da029cde964ca21d447edc",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "7e36ec4f244996d66145978ab684ea26792defd52c2c245aec83bdd06963cc87",
+      "relative_path": "tests/test_crypto_wizards_scanner.py",
+      "runtime_test_function_count": 7,
+      "runtime_test_sha256": "7ee3f16ef33797c300a0e7fa0e41fbee1e2462ccea4456121b081b565275252a",
+      "selected_active_test_sha256": "7e36ec4f244996d66145978ab684ea26792defd52c2c245aec83bdd06963cc87",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires independent leg volatility and tail-risk fields absent from the selected scanner contract.",
+      "source_candidate_test_sha256": "7ee3f16ef33797c300a0e7fa0e41fbee1e2462ccea4456121b081b565275252a",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_crypto_wizards_sweep.py",
+          "root_label": "forensic_b",
+          "sha256": "b791597cf8b00c630089cd8db157132d0dcdd0242822510db872000a8e97d7db"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_crypto_wizards_sweep.py",
+          "root_label": "source_candidate",
+          "sha256": "0fd4784bbdebc9f6a65c793736359109c9aecc1b795f320bb1466ee7bf31b834"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_crypto_wizards_sweep.py",
+          "root_label": "visual_recovery",
+          "sha256": "b791597cf8b00c630089cd8db157132d0dcdd0242822510db872000a8e97d7db"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "b791597cf8b00c630089cd8db157132d0dcdd0242822510db872000a8e97d7db",
+      "queue_working_sha256_at_freeze": "b50aaf478aa7d8f379bc90a54e1c173b7ea27721d689942e5a41e4230e77336d",
+      "relative_path": "tests/test_crypto_wizards_sweep.py",
+      "runtime_test_function_count": 12,
+      "runtime_test_sha256": "0fd4784bbdebc9f6a65c793736359109c9aecc1b795f320bb1466ee7bf31b834",
+      "selected_active_test_sha256": "b50aaf478aa7d8f379bc90a54e1c173b7ea27721d689942e5a41e4230e77336d",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected tests bind the current authority secret fixture; the runtime variant carries an older secret expectation.",
+      "source_candidate_test_sha256": "0fd4784bbdebc9f6a65c793736359109c9aecc1b795f320bb1466ee7bf31b834",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_lineage_action_census.py",
+          "root_label": "source_candidate",
+          "sha256": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403"
+        }
+      ],
+      "primary_target": "scripts.build_current_lineage_action_census",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_current_lineage_action_census.py",
+      "runtime_test_function_count": 17,
+      "runtime_test_sha256": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_current_lineage_action_census, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "00bb32bb08a67b9de4748de57052118c82b50b83f27f057c8c4b070494b9b403",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "scripts.build_current_lineage_action_census",
+        "scripts.validate_full_video_gap_rescrub"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_lineage_selector_consistency.py",
+          "root_label": "source_candidate",
+          "sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae"
+        }
+      ],
+      "primary_target": "scripts.build_authoritative_lineage_closure",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_current_lineage_selector_consistency.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_authoritative_lineage_closure, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "3153d769c0f74cf3e82bde40c6748adf660a1c4a37db6f6afd1c29b3155efbae",
+      "static_missing_reference_count": "6",
+      "static_missing_reference_examples": [
+        "scripts.build_authoritative_lineage_closure",
+        "scripts.build_current_lineage_action_census",
+        "scripts.build_full_video_gap_rescrub"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_current_test_bundle_consumers.py",
+          "root_label": "source_candidate",
+          "sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f"
+        }
+      ],
+      "primary_target": "scripts.build_self_inspection_scorecard",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_current_test_bundle_consumers.py",
+      "runtime_test_function_count": 16,
+      "runtime_test_sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_self_inspection_scorecard, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "db8660bab7d11c35217b3a9dbcb1de5fcabc3c797038ba86e69310aa90dc294f",
+      "static_missing_reference_count": "4",
+      "static_missing_reference_examples": [
+        "scripts.build_self_inspection_scorecard",
+        "scripts.current_test_bundle_consumer",
+        "scripts.pytest_execution_contract.BUNDLE_SELECTION_KEYS"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_daily_stage_deadline.py",
+          "root_label": "source_candidate",
+          "sha256": "49c3d17e25e9961ebf9a3d381a5135d901336b5a8e3e565df01f735dfecced0e"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py",
+      "primary_target_selected_sha256": "0b7f4a4dc4539c03d17210aa048230cd701bd8b5cd90879311703102e9957bfb",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_daily_stage_deadline.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "49c3d17e25e9961ebf9a3d381a5135d901336b5a8e3e565df01f735dfecced0e",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected in-process timeout can be swallowed inside the stage body; a separate fail-closed source repair is required before porting.",
+      "source_candidate_test_sha256": "49c3d17e25e9961ebf9a3d381a5135d901336b5a8e3e565df01f735dfecced0e",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_daily_stage_effect_accounting.py",
+          "root_label": "source_candidate",
+          "sha256": "258df19276a86630a2514cc5d34e947977f0de0b73bc3d360c462c8b2db95182"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:_stage_effect_accounting",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_daily_stage_effect_accounting.py",
+      "runtime_test_function_count": 5,
+      "runtime_test_sha256": "258df19276a86630a2514cc5d34e947977f0de0b73bc3d360c462c8b2db95182",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:_stage_effect_accounting, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "258df19276a86630a2514cc5d34e947977f0de0b73bc3d360c462c8b2db95182",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:_stage_effect_accounting"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_dynamic_agent_ledger.py",
+          "root_label": "forensic_b",
+          "sha256": "b2615dbc5ca2b85a22b1582726b392513d06570bfe45343f0e88240de0a2aa03"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_dynamic_agent_ledger.py",
+          "root_label": "source_candidate",
+          "sha256": "5e546add30d0635f047da893537818ab5ccc65e2d3770cc3f3bdf01d03548457"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_dynamic_agent_ledger.py",
+          "root_label": "visual_recovery",
+          "sha256": "b2615dbc5ca2b85a22b1582726b392513d06570bfe45343f0e88240de0a2aa03"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_scheduler_lock.py",
+      "primary_target_selected_sha256": "cbef6e90ea37170d6933b87c7f469aa1d9f7306ef7afc05934dd1cd6f597aedd",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "b2615dbc5ca2b85a22b1582726b392513d06570bfe45343f0e88240de0a2aa03",
+      "queue_working_sha256_at_freeze": "0f4d16f7f0afc5a4f9d620025d617fa56392531d5db1c620c2e04f30db4b3cb5",
+      "relative_path": "tests/test_dynamic_agent_ledger.py",
+      "runtime_test_function_count": 7,
+      "runtime_test_sha256": "5e546add30d0635f047da893537818ab5ccc65e2d3770cc3f3bdf01d03548457",
+      "selected_active_test_sha256": "0f4d16f7f0afc5a4f9d620025d617fa56392531d5db1c620c2e04f30db4b3cb5",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime ledger test expects publication worker context capture absent from selected scheduler lock.",
+      "source_candidate_test_sha256": "5e546add30d0635f047da893537818ab5ccc65e2d3770cc3f3bdf01d03548457",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_dynamic_agent_venue_gate.py",
+          "root_label": "forensic_b",
+          "sha256": "fec7d8368d6d689cd387b275836d2790ef15c9b0256afcc669a0ec5f2cb853f1"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_dynamic_agent_venue_gate.py",
+          "root_label": "source_candidate",
+          "sha256": "4e45dc051db86ae0c722c7d5ea3d794431bdd0c9a2e26eacfdf6edcddc33060b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_dynamic_agent_venue_gate.py",
+          "root_label": "visual_recovery",
+          "sha256": "4e45dc051db86ae0c722c7d5ea3d794431bdd0c9a2e26eacfdf6edcddc33060b"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "fec7d8368d6d689cd387b275836d2790ef15c9b0256afcc669a0ec5f2cb853f1",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_dynamic_agent_venue_gate.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "4e45dc051db86ae0c722c7d5ea3d794431bdd0c9a2e26eacfdf6edcddc33060b",
+      "selected_active_test_sha256": "4e45dc051db86ae0c722c7d5ea3d794431bdd0c9a2e26eacfdf6edcddc33060b",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; retain the selected venue gate contract over the distinct forensic copy.",
+      "source_candidate_test_sha256": "4e45dc051db86ae0c722c7d5ea3d794431bdd0c9a2e26eacfdf6edcddc33060b",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_env.py",
+          "root_label": "forensic_b",
+          "sha256": "751f46c6bb7f26dcd6d78384a752af17a278b88c4df6088b22f8e8c99ffdffe8"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_env.py",
+          "root_label": "source_candidate",
+          "sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_env.py",
+          "root_label": "visual_recovery",
+          "sha256": "909910bb58e5e20adfa8b245b40380c6d0310867754372d4ac88e90599027d85"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "751f46c6bb7f26dcd6d78384a752af17a278b88c4df6088b22f8e8c99ffdffe8;909910bb58e5e20adfa8b245b40380c6d0310867754372d4ac88e90599027d85",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_env.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8",
+      "selected_active_test_sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; the two forensic hashes are historical environment expectations.",
+      "source_candidate_test_sha256": "27f38b9df1085f349fb5c87a02bf06965f0f60fd9da6421cf6ca77b2829fb6e8",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_estimator_consumer_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "872f44b3b1ea3a5be31729e8fbc4010aaad7d1090addcffcede3e54312544600"
+        }
+      ],
+      "primary_target": "src/quant_platform/economic_contract.py",
+      "primary_target_selected_sha256": "e58ed28342dfac66dcc290669282ebe046feb5cf624b3100c285cf14e20802ce",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_estimator_consumer_repairs.py",
+      "runtime_test_function_count": 3,
+      "runtime_test_sha256": "872f44b3b1ea3a5be31729e8fbc4010aaad7d1090addcffcede3e54312544600",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression checks selected economic and math consumer orientation and numeric inputs.",
+      "source_candidate_test_sha256": "872f44b3b1ea3a5be31729e8fbc4010aaad7d1090addcffcede3e54312544600",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_estimator_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "f777e64eee7b78e3b7fb511fc2d6419fa28f309f83d2ff6922e0f478781a61a0"
+        }
+      ],
+      "primary_target": "src/quant_platform/statistics/math_v2.py",
+      "primary_target_selected_sha256": "f40fbd88078e96c9793242bb1b73cd8ce9853942707899d3c0c87e6c897257cb",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_estimator_repairs.py",
+      "runtime_test_function_count": 18,
+      "runtime_test_sha256": "f777e64eee7b78e3b7fb511fc2d6419fa28f309f83d2ff6922e0f478781a61a0",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression checks selected estimator numeric-domain and y-on-x contracts.",
+      "source_candidate_test_sha256": "f777e64eee7b78e3b7fb511fc2d6419fa28f309f83d2ff6922e0f478781a61a0",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_exact_http_transport_authority.py",
+          "root_label": "source_candidate",
+          "sha256": "8f1f354136993d09dc6e5a2234f6259b5da05036dfe9df409007050d035a9085"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.ExactHttpRequest",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_exact_http_transport_authority.py",
+      "runtime_test_function_count": 10,
+      "runtime_test_sha256": "8f1f354136993d09dc6e5a2234f6259b5da05036dfe9df409007050d035a9085",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.ExactHttpRequest, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "8f1f354136993d09dc6e5a2234f6259b5da05036dfe9df409007050d035a9085",
+      "static_missing_reference_count": "4",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.ExactHttpRequest",
+        "quant_platform.orchestration.corrective_external_effects.ExactHttpResponse",
+        "quant_platform.orchestration.corrective_external_effects.exact_http_request"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_exact_publication_targets.py",
+          "root_label": "source_candidate",
+          "sha256": "55c2536ff9def950766b83bbd650a9ddf905cb514df484b9b1f45ef287a412aa"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_exact_publication_targets.py",
+      "runtime_test_function_count": 10,
+      "runtime_test_sha256": "55c2536ff9def950766b83bbd650a9ddf905cb514df484b9b1f45ef287a412aa",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "55c2536ff9def950766b83bbd650a9ddf905cb514df484b9b1f45ef287a412aa",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+        "src/quant_platform/orchestration/corrective_runtime.py:_directory_quarantine_path"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root_label": "forensic_a",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root_label": "forensic_b",
+          "sha256": "f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root_label": "source_candidate",
+          "sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root_label": "visual_recovery",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_exhaustive_wizard_hyperliquid_replay.py",
+          "root_label": "workspace_outer",
+          "sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "1110a792d727ba319428cd51019ddb58959774fea861b7700bbe245c28e5d082;f6cde9d8ffa4ff2007cf467226acae0d66513a4329ecd630a9e3ee93d3d32f9b",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_exhaustive_wizard_hyperliquid_replay.py",
+      "runtime_test_function_count": 18,
+      "runtime_test_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+      "selected_active_test_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; two forensic variants predate the current replay contract.",
+      "source_candidate_test_sha256": "19c2c7f983e9f37ef86200601537b902bbab305040452e83f158de75bf2d4675",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_experiment_regime_clock.py",
+          "root_label": "source_candidate",
+          "sha256": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3"
+        }
+      ],
+      "primary_target": "src/quant_platform/experiments.py",
+      "primary_target_selected_sha256": "059cb181a3219e9eb7aeabf006e4ebac56eb6681c657da9f740480cbfc3e03d8",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_experiment_regime_clock.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression checks selected experiment and regime clock behavior.",
+      "source_candidate_test_sha256": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_external_effect_worker_hardening.py",
+          "root_label": "source_candidate",
+          "sha256": "e0bf6a5ced6ba99315c849aefd208dfcd720a672bebc206e2b0ea4a1064d3f0f"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.ExternalEffectWorkerGrant",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_external_effect_worker_hardening.py",
+      "runtime_test_function_count": 12,
+      "runtime_test_sha256": "e0bf6a5ced6ba99315c849aefd208dfcd720a672bebc206e2b0ea4a1064d3f0f",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.ExternalEffectWorkerGrant, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "e0bf6a5ced6ba99315c849aefd208dfcd720a672bebc206e2b0ea4a1064d3f0f",
+      "static_missing_reference_count": "6",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.ExternalEffectWorkerGrant",
+        "quant_platform.orchestration.corrective_external_effects.ExternalEffectWorkerSpec",
+        "quant_platform.orchestration.corrective_external_effects.external_effect_worker_session"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_feature_engine.py",
+          "root_label": "forensic_b",
+          "sha256": "49347383d5974ac6950cb823a75f65180cf69c4b05185472f358f2e12da8d7ce"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_feature_engine.py",
+          "root_label": "source_candidate",
+          "sha256": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_feature_engine.py",
+          "root_label": "visual_recovery",
+          "sha256": "49347383d5974ac6950cb823a75f65180cf69c4b05185472f358f2e12da8d7ce"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "49347383d5974ac6950cb823a75f65180cf69c4b05185472f358f2e12da8d7ce",
+      "relative_path": "tests/test_feature_engine.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56",
+      "selected_active_test_sha256": "3720eabe6b9bf9c3007f153613ce631415c1d8f972ee47fb43f18445838c6612",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Selected tests add current canonical metrics and proxy quarantine cases beyond the runtime copy.",
+      "source_candidate_test_sha256": "10727c989ff7998612478439c14f54ad9d1c5066c1ba45cb14c16ce7c4ac8e56",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_finalize_full_project_test_receipt.py",
+          "root_label": "source_candidate",
+          "sha256": "ea69e57cae34730d4086594f052b19cc412c03b0213f7f1680aaed35dae3bf5b"
+        }
+      ],
+      "primary_target": "scripts.finalize_full_project_test_receipt",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_finalize_full_project_test_receipt.py",
+      "runtime_test_function_count": 12,
+      "runtime_test_sha256": "ea69e57cae34730d4086594f052b19cc412c03b0213f7f1680aaed35dae3bf5b",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.finalize_full_project_test_receipt, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "ea69e57cae34730d4086594f052b19cc412c03b0213f7f1680aaed35dae3bf5b",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.finalize_full_project_test_receipt"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_finalize_relevant_test_receipt.py",
+          "root_label": "source_candidate",
+          "sha256": "81acd908236c800799f86d3fdc45c13fd17d25de913bf2a22e7865d1d8f40b6a"
+        }
+      ],
+      "primary_target": "scripts.finalize_relevant_test_receipt",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_finalize_relevant_test_receipt.py",
+      "runtime_test_function_count": 9,
+      "runtime_test_sha256": "81acd908236c800799f86d3fdc45c13fd17d25de913bf2a22e7865d1d8f40b6a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.finalize_relevant_test_receipt, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "81acd908236c800799f86d3fdc45c13fd17d25de913bf2a22e7865d1d8f40b6a",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.finalize_relevant_test_receipt"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_forward_walk_classification_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "0d874997986017c103cfa2c8dd752da9baba3923799681c6d7ea02c36d59a278"
+        }
+      ],
+      "primary_target": "src/quant_platform/three_brain_system.py",
+      "primary_target_selected_sha256": "52e84d769918a230f46472a62db4b63e4ff5833b6c691c43420f6537c071bcfc",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_forward_walk_classification_repairs.py",
+      "runtime_test_function_count": 14,
+      "runtime_test_sha256": "0d874997986017c103cfa2c8dd752da9baba3923799681c6d7ea02c36d59a278",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected fold slicing drops an initial interval for length 11 and 3 folds; source repair is needed before porting the runtime regression.",
+      "source_candidate_test_sha256": "0d874997986017c103cfa2c8dd752da9baba3923799681c6d7ea02c36d59a278",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_funding.py",
+          "root_label": "forensic_b",
+          "sha256": "bff6b5464c1371bf3fbadff891cf2ff78ff3004e116d4b5a0c3b624c8887ad88"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_funding.py",
+          "root_label": "source_candidate",
+          "sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_funding.py",
+          "root_label": "visual_recovery",
+          "sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "bff6b5464c1371bf3fbadff891cf2ff78ff3004e116d4b5a0c3b624c8887ad88",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_funding.py",
+      "runtime_test_function_count": 16,
+      "runtime_test_sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e",
+      "selected_active_test_sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; forensic funding test bytes are historical.",
+      "source_candidate_test_sha256": "d935393378173152e5f1baef656536a60dfe6e5f97e6b3df3c82cf870475cc4e",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_funding_allocation_candidate.py",
+          "root_label": "source_candidate",
+          "sha256": "cc9617efe0f74151758d532eeccbfafa9a4414c754f771218d936c35b67ed9e9"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.InertHttpResponseFixture",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_funding_allocation_candidate.py",
+      "runtime_test_function_count": 21,
+      "runtime_test_sha256": "cc9617efe0f74151758d532eeccbfafa9a4414c754f771218d936c35b67ed9e9",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.InertHttpResponseFixture, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "cc9617efe0f74151758d532eeccbfafa9a4414c754f771218d936c35b67ed9e9",
+      "static_missing_reference_count": "9",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.InertHttpResponseFixture",
+        "quant_platform.orchestration.corrective_external_effects.inert_http_json_response",
+        "quant_platform.orchestration.daily_workload_preflight"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_gate00g_order_authority.py",
+          "root_label": "source_candidate",
+          "sha256": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/effect_authority.py",
+      "primary_target_selected_sha256": "27075c73c226fac5035af96ae45c9005dcef8318e25c8e459281edf55f1cc584",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "ed55b13d356b4f7e1306349bde85acf0b685e197bdc7232806b650230cf3f5b2",
+      "relative_path": "tests/test_gate00g_order_authority.py",
+      "runtime_test_function_count": 17,
+      "runtime_test_sha256": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784",
+      "selected_active_test_sha256": "ed55b13d356b4f7e1306349bde85acf0b685e197bdc7232806b650230cf3f5b2",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test extends deferred private sink scope and signature authority beyond the selected contract.",
+      "source_candidate_test_sha256": "3017033ae5bf0c555e919c72b831ef920aa6ac8395a037967ea3621d65375784",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_human_evidence_presentation_isolated.py",
+          "root_label": "source_candidate",
+          "sha256": "197bec8ddce987769e5dcb798fa85746f6374cb26b76ae18559a9aa19b9a0b2b"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/human_evidence_research.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_human_evidence_presentation_isolated.py",
+      "runtime_test_function_count": 31,
+      "runtime_test_sha256": "197bec8ddce987769e5dcb798fa85746f6374cb26b76ae18559a9aa19b9a0b2b",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test dynamically loads absent human evidence research source.",
+      "source_candidate_test_sha256": "197bec8ddce987769e5dcb798fa85746f6374cb26b76ae18559a9aa19b9a0b2b",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_human_view_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "d74bbeeea7248617149b2b58f059dd4efadad3048a82a0d3f35e94583ae91c81"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/human_evidence_view.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_human_view_repairs.py",
+      "runtime_test_function_count": 14,
+      "runtime_test_sha256": "d74bbeeea7248617149b2b58f059dd4efadad3048a82a0d3f35e94583ae91c81",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test dynamically loads absent human evidence view source.",
+      "source_candidate_test_sha256": "d74bbeeea7248617149b2b58f059dd4efadad3048a82a0d3f35e94583ae91c81",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_hyperliquid.py",
+          "root_label": "forensic_a",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_hyperliquid.py",
+          "root_label": "forensic_b",
+          "sha256": "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_hyperliquid.py",
+          "root_label": "source_candidate",
+          "sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_hyperliquid.py",
+          "root_label": "visual_recovery",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_hyperliquid.py",
+          "root_label": "workspace_outer",
+          "sha256": "7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f"
+        }
+      ],
+      "primary_target": "src/quant_platform/hyperliquid.py",
+      "primary_target_selected_sha256": "721571e124a9176795eca10ef4b7e28a5ed1fc458a90b2e6ba4849a2919bbec4",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "4a57f163f44b1b12f0c3ada9bbef7096cb7e4b2e0e4360f4ee54900b4f0e03d4;7cbcf906a7c6e19faac16630361aa14d1cfa35b78250f78981fcc8819fc7412f",
+      "queue_working_sha256_at_freeze": "20566317f90aafd44810459524a664d12a11b810096a7d258b583a9933645881",
+      "relative_path": "tests/test_hyperliquid.py",
+      "runtime_test_function_count": 22,
+      "runtime_test_sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+      "selected_active_test_sha256": "79087dcfc3ab8a0da100158115b8eb09c0f077ada793393f73056f4b3faa29f9",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Runtime nonfinite JSON rewrite test exposes selected json.loads/json.dumps allow_nan behavior; source repair is required.",
+      "source_candidate_test_sha256": "8cf9955b1c155f848ba3f89e885096bbca954d4c241605690a0dbeae6b8417f4",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_institutional_metric_integrity.py",
+          "root_label": "source_candidate",
+          "sha256": "2fe171ca89d41c698e18b47ba7335661f371cb3351e38bc708416590d918d4d8"
+        }
+      ],
+      "primary_target": "src/quant_platform/backtest.py",
+      "primary_target_selected_sha256": "42d0ddb01d131cbb901d46fef610a4778bbce4cb978ee96dfcbfdcc1bef2179e",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_institutional_metric_integrity.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "2fe171ca89d41c698e18b47ba7335661f371cb3351e38bc708416590d918d4d8",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime metric-integrity assertions target the selected backtest calculation path.",
+      "source_candidate_test_sha256": "2fe171ca89d41c698e18b47ba7335661f371cb3351e38bc708416590d918d4d8",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_ledger_clock_consumer.py",
+          "root_label": "source_candidate",
+          "sha256": "d83f9ee6754344324e2ca0026d1f3f60f0223148deec0f371534a9f1a1ea30a0"
+        }
+      ],
+      "primary_target": "src/quant_platform/trade_ledger.py",
+      "primary_target_selected_sha256": "3c247c1170ffb7710007298f3bb8a4e792ee932ebec56ddb4262c4c7d6f8e5eb",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_ledger_clock_consumer.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "d83f9ee6754344324e2ca0026d1f3f60f0223148deec0f371534a9f1a1ea30a0",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression targets the selected ledger clock consumer.",
+      "source_candidate_test_sha256": "d83f9ee6754344324e2ca0026d1f3f60f0223148deec0f371534a9f1a1ea30a0",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_legacy_pipeline_quarantine.py",
+          "root_label": "forensic_b",
+          "sha256": "352d7594ff6c80b56161fe7b15d18b1bc02bd16a0ff3f7a674d93ffead391656"
+        }
+      ],
+      "primary_target": "scripts/run_evidence_pipeline_phase9_final_promotion.py",
+      "primary_target_selected_sha256": "84034e45ebe52af92b311d7944a5a86ba0982dd5388173881a0a99fcfceef39a",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_legacy_pipeline_quarantine.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "352d7594ff6c80b56161fe7b15d18b1bc02bd16a0ff3f7a674d93ffead391656",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression checks the selected historical-research-only pipeline quarantine marker.",
+      "source_candidate_test_sha256": null,
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_lineage_video_routing.py",
+          "root_label": "source_candidate",
+          "sha256": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493"
+        }
+      ],
+      "primary_target": "scripts.build_lineage_video_routing",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_lineage_video_routing.py",
+      "runtime_test_function_count": 6,
+      "runtime_test_sha256": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_lineage_video_routing, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "5e2bb7caeac9eae2a57edf6fe39a422626e6bd115036e22b43a77153f2e39493",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "scripts.build_lineage_video_routing",
+        "scripts.stable_project_snapshot"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_meta_learning.py",
+          "root_label": "forensic_b",
+          "sha256": "182beacc6539f98063db05c6613b777fb14eebe4b46021c5034810c22658acc9"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_meta_learning.py",
+          "root_label": "source_candidate",
+          "sha256": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_meta_learning.py",
+          "root_label": "visual_recovery",
+          "sha256": "182beacc6539f98063db05c6613b777fb14eebe4b46021c5034810c22658acc9"
+        }
+      ],
+      "primary_target": "src/quant_platform/meta_learning.py",
+      "primary_target_selected_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "182beacc6539f98063db05c6613b777fb14eebe4b46021c5034810c22658acc9",
+      "relative_path": "tests/test_meta_learning.py",
+      "runtime_test_function_count": 5,
+      "runtime_test_sha256": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9",
+      "selected_active_test_sha256": "182beacc6539f98063db05c6613b777fb14eebe4b46021c5034810c22658acc9",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime tests require verified outcome readiness and reported versus verified separation absent selected meta learning.",
+      "source_candidate_test_sha256": "53988a888558e88da9e65445d474eba06b59ed362c3e8729200451340c962bb9",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_meta_learning_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "95fdcb5087cd858342dc12fb4fa5344f8eecc798cf9951c1cecd9e5c4c9e024d"
+        }
+      ],
+      "primary_target": "src/quant_platform/meta_learning.py",
+      "primary_target_selected_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_meta_learning_repairs.py",
+      "runtime_test_function_count": 19,
+      "runtime_test_sha256": "95fdcb5087cd858342dc12fb4fa5344f8eecc798cf9951c1cecd9e5c4c9e024d",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected realized-return parser accepts ambiguous, boolean, and nonfinite values; source repair is needed before the runtime regression.",
+      "source_candidate_test_sha256": "95fdcb5087cd858342dc12fb4fa5344f8eecc798cf9951c1cecd9e5c4c9e024d",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_mixed_version_metadata_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "88638fcded8ea4dac1adb4787a659725d98083d5ae5bb644657aa3c42015c7fb"
+        }
+      ],
+      "primary_target": "src/quant_platform/math_desk/m3.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_mixed_version_metadata_repairs.py",
+      "runtime_test_function_count": 3,
+      "runtime_test_sha256": "88638fcded8ea4dac1adb4787a659725d98083d5ae5bb644657aa3c42015c7fb",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test dynamically loads historical math desk M3/M4 source not selected active.",
+      "source_candidate_test_sha256": "88638fcded8ea4dac1adb4787a659725d98083d5ae5bb644657aa3c42015c7fb",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "6fbd8a81e3093902739f8849a918d205d1d59a8022e8a691affa1122a90c9d63",
+      "relative_path": "tests/test_multi_asset_capture_job.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "852d5e26528fbb90f2df3ebba1d91c012e77d1391de92bb719b38d9510e4891e",
+      "selected_active_test_sha256": "73603e4c850d687947a8fa48d17a393c31e3931242c9d79b159d71858df3d13e",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Selected coverage includes the current multi-asset capture job contract and is substantially broader than the runtime copy.",
+      "source_candidate_test_sha256": null,
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_native_stage34_rehearsal.py",
+          "root_label": "source_candidate",
+          "sha256": "317e39b3ead2bf92e3e16d8db1b3ce0e038393f17ff3f6635d7f2d9eebea2c6e"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_native_stage34_rehearsal.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "317e39b3ead2bf92e3e16d8db1b3ce0e038393f17ff3f6635d7f2d9eebea2c6e",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "317e39b3ead2bf92e3e16d8db1b3ce0e038393f17ff3f6635d7f2d9eebea2c6e",
+      "static_missing_reference_count": "7",
+      "static_missing_reference_examples": [
+        "src/quant_platform/orchestration/corrective_external_effects.py:ExactHttpResponse",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:_hyperliquid_stage_external_context",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:_stage_effect_accounting"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_orientation_remediation_closure.py",
+          "root_label": "source_candidate",
+          "sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a"
+        }
+      ],
+      "primary_target": "scripts.lineage_state_contract.REQUIRED_PRESENT_SELECTOR_STAGES",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_orientation_remediation_closure.py",
+      "runtime_test_function_count": 24,
+      "runtime_test_sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.lineage_state_contract.REQUIRED_PRESENT_SELECTOR_STAGES, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "dd4a91596c1da91f2dbbee2c25c216189547a633cc50a182b6f39fd2eacf7c4a",
+      "static_missing_reference_count": "5",
+      "static_missing_reference_examples": [
+        "scripts.lineage_state_contract.REQUIRED_PRESENT_SELECTOR_STAGES",
+        "scripts.lineage_state_contract.derive_present_selector_state",
+        "scripts.pytest_execution_contract.FULL_PROJECT_EXECUTION_EVIDENCE_CURRENT_STATE"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_partial_cleanup662.py",
+          "root_label": "source_candidate",
+          "sha256": "94cb6968a837d92db3d6ca47b6582094c3a976c42bf023b1c3cc8f8f2daaabb3"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects._partial_permit_cleanup",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_partial_cleanup662.py",
+      "runtime_test_function_count": 3,
+      "runtime_test_sha256": "94cb6968a837d92db3d6ca47b6582094c3a976c42bf023b1c3cc8f8f2daaabb3",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects._partial_permit_cleanup, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "94cb6968a837d92db3d6ca47b6582094c3a976c42bf023b1c3cc8f8f2daaabb3",
+      "static_missing_reference_count": "5",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects._partial_permit_cleanup",
+        "tests.test_external_effect_worker_hardening.KEY_A",
+        "tests.test_external_effect_worker_hardening.TARGET_A"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_performance_input_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "e1121b3fe0e1fc5cdaf8cc5b2baf2eab0433680c610cab9527b351a3aa1adb7a"
+        }
+      ],
+      "primary_target": "src/quant_platform/performance_math.py",
+      "primary_target_selected_sha256": "b1c7cf4a862e5114b1e64e03c0c3b543ce8f143f0c4e7a56515a8d5339567199",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_performance_input_repairs.py",
+      "runtime_test_function_count": 9,
+      "runtime_test_sha256": "e1121b3fe0e1fc5cdaf8cc5b2baf2eab0433680c610cab9527b351a3aa1adb7a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime regression checks selected performance input validation.",
+      "source_candidate_test_sha256": "e1121b3fe0e1fc5cdaf8cc5b2baf2eab0433680c610cab9527b351a3aa1adb7a",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_active_artifact_envelopes.py",
+          "root_label": "source_candidate",
+          "sha256": "c53ea6bf4d4f161b8b3419b85fd79242275ebc5c76bc6aec888c98c2505d654f"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_trusted_artifact.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "fea65d4d4ffeded62634b7d88bb6b2659c88cd647c37d4bc97282a1047263d83",
+      "relative_path": "tests/test_phase00_active_artifact_envelopes.py",
+      "runtime_test_function_count": 51,
+      "runtime_test_sha256": "c53ea6bf4d4f161b8b3419b85fd79242275ebc5c76bc6aec888c98c2505d654f",
+      "selected_active_test_sha256": "fea65d4d4ffeded62634b7d88bb6b2659c88cd647c37d4bc97282a1047263d83",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime artifact envelope tests require absent trusted-artifact source and legacy pointer schemas.",
+      "source_candidate_test_sha256": "c53ea6bf4d4f161b8b3419b85fd79242275ebc5c76bc6aec888c98c2505d654f",
+      "static_missing_reference_count": "9",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_trusted_artifact",
+        "src/quant_platform/orchestration/corrective_active_artifact_envelopes.py:LEGACY_MANIFEST_SCHEMA_VERSION",
+        "src/quant_platform/orchestration/corrective_active_artifact_envelopes.py:LEGACY_POINTER_SCHEMA_VERSION"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_closure_launcher.py",
+          "root_label": "source_candidate",
+          "sha256": "29278a4de5bd2cf36fed36abb96409d78c65bd9c9d98c8ffdbb3170221f40091"
+        }
+      ],
+      "primary_target": "scripts/phase00_closure_verify.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_phase00_closure_launcher.py",
+      "runtime_test_function_count": 39,
+      "runtime_test_sha256": "29278a4de5bd2cf36fed36abb96409d78c65bd9c9d98c8ffdbb3170221f40091",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test invokes an absent phase 00 closure launcher script.",
+      "source_candidate_test_sha256": "29278a4de5bd2cf36fed36abb96409d78c65bd9c9d98c8ffdbb3170221f40091",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_effect_authority.py",
+          "root_label": "source_candidate",
+          "sha256": "67c1d117368881d2853a603b6821d9a60e852dbcadc508b8735624cfd0c277ed"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/effect_authority.py",
+      "primary_target_selected_sha256": "27075c73c226fac5035af96ae45c9005dcef8318e25c8e459281edf55f1cc584",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "d81d5fb698893d4dece3e42e99ff63f3e717a69fd69ff6f19555a0d21c76dce2",
+      "relative_path": "tests/test_phase00_effect_authority.py",
+      "runtime_test_function_count": 46,
+      "runtime_test_sha256": "67c1d117368881d2853a603b6821d9a60e852dbcadc508b8735624cfd0c277ed",
+      "selected_active_test_sha256": "d81d5fb698893d4dece3e42e99ff63f3e717a69fd69ff6f19555a0d21c76dce2",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime checkpoint and process authority tests require v6 checkpoint symbols absent from selected source.",
+      "source_candidate_test_sha256": "67c1d117368881d2853a603b6821d9a60e852dbcadc508b8735624cfd0c277ed",
+      "static_missing_reference_count": "9",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+        "src/quant_platform/orchestration/effect_authority.py:MAX_EFFECT_AUTHORITY_CHECKPOINT_BYTES",
+        "src/quant_platform/orchestration/effect_authority.py:_DARWIN_PROC_BSDINFO_SIZE"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_expansion_interfaces.py",
+          "root_label": "source_candidate",
+          "sha256": "1eebece63b3d7d57c0b37679bb8bf1b58beb0608e17f77ad921482c211187a77"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_expansion_interfaces.py",
+      "primary_target_selected_sha256": "40642e726e1ed84b95b224d5611b0a1a888ca3ff449784c601229c553ff6db29",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "5004a2ead9a737f2ba00fe09ba0557bd7b52fd96d40e2c5a5c7ecfd1478ffa87",
+      "relative_path": "tests/test_phase00_expansion_interfaces.py",
+      "runtime_test_function_count": 25,
+      "runtime_test_sha256": "1eebece63b3d7d57c0b37679bb8bf1b58beb0608e17f77ad921482c211187a77",
+      "selected_active_test_sha256": "5004a2ead9a737f2ba00fe09ba0557bd7b52fd96d40e2c5a5c7ecfd1478ffa87",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime holdout interval contamination case targets an existing selected HeldOutDimensionReceipt guard.",
+      "source_candidate_test_sha256": "1eebece63b3d7d57c0b37679bb8bf1b58beb0608e17f77ad921482c211187a77",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_external_effects.py",
+          "root_label": "source_candidate",
+          "sha256": "54cbbd3aedb0c9f30d51b2a654868cf142631790f70bd09f2cbfb5cc46903db5"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_external_effects.py",
+      "primary_target_selected_sha256": "2693c75ff434fcc49ed50276b268533d46f1fb91b37bb68a430492196865a225",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "fe9507490a903abe82d4c04e2dbfc8765ff1f65eed3ddda2ccda950f6b88600e",
+      "relative_path": "tests/test_phase00_external_effects.py",
+      "runtime_test_function_count": 23,
+      "runtime_test_sha256": "361ce5976f60bcc06ecb6993fd4ecb452c3d950a346903b8e38ec2e3176a4057",
+      "selected_active_test_sha256": "8724d2c4c420a026e2e96d00093bc21b11ae0a16d11002cef6b6ebc363e01666",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Runtime external worker tests require worker grant and exact HTTP APIs absent selected source.",
+      "source_candidate_test_sha256": "54cbbd3aedb0c9f30d51b2a654868cf142631790f70bd09f2cbfb5cc46903db5",
+      "static_missing_reference_count": "7",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.ExternalEffectWorkerSpec",
+        "quant_platform.orchestration.corrective_external_effects.exact_http_request",
+        "quant_platform.orchestration.corrective_external_effects.external_effect_worker_session"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_hyperliquid_network_authority.py",
+          "root_label": "source_candidate",
+          "sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9",
+      "relative_path": "tests/test_phase00_hyperliquid_network_authority.py",
+      "runtime_test_function_count": 7,
+      "runtime_test_sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+      "selected_active_test_sha256": "aa9116ce17e9ed853e45ce678500f609da91d5e559ec67f93b618c05c1f56fe9",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected test adds the current raw POST network owner to the authority set; runtime copy has the older owner list.",
+      "source_candidate_test_sha256": "d5e2461aa602aa8ba68efe65f0c30d3b1caca725ebbfadcf567ad161210ddcf4",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_lineage_dag.py",
+          "root_label": "source_candidate",
+          "sha256": "23cfcd7c2dc54975f33b97691249110d66de30df84424580e5197e3de4299f70"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_lineage.py",
+      "primary_target_selected_sha256": "63b47b2ae3b9304d420d35ec9395b918c9c28b08942983b6c4acb8821035c55d",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "966ddf846edc93b22e21fffa71a2e07e9b700a7fc8027d1fed64093a23c95067",
+      "relative_path": "tests/test_phase00_lineage_dag.py",
+      "runtime_test_function_count": 19,
+      "runtime_test_sha256": "23cfcd7c2dc54975f33b97691249110d66de30df84424580e5197e3de4299f70",
+      "selected_active_test_sha256": "966ddf846edc93b22e21fffa71a2e07e9b700a7fc8027d1fed64093a23c95067",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime lineage test requires absent bounded lineage file constant.",
+      "source_candidate_test_sha256": "23cfcd7c2dc54975f33b97691249110d66de30df84424580e5197e3de4299f70",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "src/quant_platform/orchestration/corrective_lineage.py:MAX_LINEAGE_FILE_BYTES"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_redaction.py",
+          "root_label": "source_candidate",
+          "sha256": "b25f1865a081e31bf73c8a401156d2db01744650a551ee9d7e344d1a1282e63b"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_redaction.py",
+      "primary_target_selected_sha256": "a58a01b38ebc49a3e088bfb3f907daf475a57271ab5c43f7cf0b813b4fb7b3e2",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "4a82dd8ed44323cabe3dd4059eadc57a2e15da91e55c3340e252a31022058bda",
+      "relative_path": "tests/test_phase00_redaction.py",
+      "runtime_test_function_count": 15,
+      "runtime_test_sha256": "b25f1865a081e31bf73c8a401156d2db01744650a551ee9d7e344d1a1282e63b",
+      "selected_active_test_sha256": "069b10834fef6eda99773c0236b77fc54921baf37be92de0dc3d34c496e1a960",
+      "selected_drifted_from_queue_freeze": true,
+      "semantic_rationale": "Runtime redaction test requires absent streaming secret scanner API.",
+      "source_candidate_test_sha256": "b25f1865a081e31bf73c8a401156d2db01744650a551ee9d7e344d1a1282e63b",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_redaction.evidence_payload_secret_codes_from_chunks"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_phase00_supreme_diagnostics.py",
+          "root_label": "source_candidate",
+          "sha256": "fbb1f5eb583f0dba33daa8e77f88e6288eb097366e295ee2c0f6121058814cbf"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/corrective_trusted_artifact.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "a260ebb16ca1c42f2a4c9b12e6b3b53429433184dad5fa9bc116d45cd3ce56bd",
+      "relative_path": "tests/test_phase00_supreme_diagnostics.py",
+      "runtime_test_function_count": 15,
+      "runtime_test_sha256": "fbb1f5eb583f0dba33daa8e77f88e6288eb097366e295ee2c0f6121058814cbf",
+      "selected_active_test_sha256": "a260ebb16ca1c42f2a4c9b12e6b3b53429433184dad5fa9bc116d45cd3ce56bd",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime diagnostics tests require trusted artifact and worker context authority absent selected source.",
+      "source_candidate_test_sha256": "fbb1f5eb583f0dba33daa8e77f88e6288eb097366e295ee2c0f6121058814cbf",
+      "static_missing_reference_count": "6",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+        "quant_platform.orchestration.corrective_trusted_artifact",
+        "quant_platform.orchestration.effect_authority.load_effect_authority_secret"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_planned_audit_downstream.py",
+          "root_label": "source_candidate",
+          "sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a"
+        }
+      ],
+      "primary_target": "scripts.build_full_video_diagnostic",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_planned_audit_downstream.py",
+      "runtime_test_function_count": 16,
+      "runtime_test_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_full_video_diagnostic, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "4d91ffebcd12f28aa146370404dd2e67283cc669564a0221beacdf561c8cc78a",
+      "static_missing_reference_count": "13",
+      "static_missing_reference_examples": [
+        "scripts.build_full_video_diagnostic",
+        "scripts.build_node_coverage_crosswalk",
+        "scripts.build_self_inspection_scorecard"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_planned_control_source_contract.py",
+          "root_label": "source_candidate",
+          "sha256": "72ac90d84719a91998e55042092d7199b4b13afda3cd4409f23e34100a7b4285"
+        }
+      ],
+      "primary_target": "scripts.planned_control_source_contract",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_planned_control_source_contract.py",
+      "runtime_test_function_count": 8,
+      "runtime_test_sha256": "72ac90d84719a91998e55042092d7199b4b13afda3cd4409f23e34100a7b4285",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.planned_control_source_contract, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "72ac90d84719a91998e55042092d7199b4b13afda3cd4409f23e34100a7b4285",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.planned_control_source_contract"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_planned_registry_integration.py",
+          "root_label": "source_candidate",
+          "sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53"
+        }
+      ],
+      "primary_target": "scripts.build_surface_log_test_registry",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_planned_registry_integration.py",
+      "runtime_test_function_count": 9,
+      "runtime_test_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_surface_log_test_registry, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "f18dc4c4a0dd83a3e8beea122f9d83f0bfdaea42cc7599c85f45afb0bfbe9f53",
+      "static_missing_reference_count": "12",
+      "static_missing_reference_examples": [
+        "scripts.build_surface_log_test_registry",
+        "scripts.finalize_full_project_test_receipt",
+        "scripts.finalize_relevant_test_receipt"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_postseal_currentness_path_safety.py",
+          "root_label": "source_candidate",
+          "sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787"
+        }
+      ],
+      "primary_target": "scripts.attest_full_video_gap_rescrub_postseal",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_postseal_currentness_path_safety.py",
+      "runtime_test_function_count": 103,
+      "runtime_test_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.attest_full_video_gap_rescrub_postseal, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "12892614bf9c32e252cc1bcb273df2dbc889a83906410dbd1dc61e31be13f787",
+      "static_missing_reference_count": "5",
+      "static_missing_reference_examples": [
+        "scripts.attest_full_video_gap_rescrub_postseal",
+        "scripts.build_self_inspection_scorecard",
+        "scripts.pytest_execution_contract.RUNNER_ARTIFACT_KEYS"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_precollection_launcher_monitor.py",
+          "root_label": "source_candidate",
+          "sha256": "12a3ba95aaa89624bd113eb71a00b874f6effb534a94d6a3d70220e7583c26c5"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.precollection_launcher_monitor",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_precollection_launcher_monitor.py",
+      "runtime_test_function_count": 8,
+      "runtime_test_sha256": "12a3ba95aaa89624bd113eb71a00b874f6effb534a94d6a3d70220e7583c26c5",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.precollection_launcher_monitor, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "12a3ba95aaa89624bd113eb71a00b874f6effb534a94d6a3d70220e7583c26c5",
+      "static_missing_reference_count": "9",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.precollection_launcher_monitor",
+        "quant_platform.orchestration.precollection_observer_child",
+        "quant_platform.orchestration.precollection_poll_launcher"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_precollection_monitor_review.py",
+          "root_label": "source_candidate",
+          "sha256": "cb14f26e2f4e4063aa1851ed3427d8a9c0389ef20d024b19a222aadd4daf21a1"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.precollection_cycle_owner",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_precollection_monitor_review.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "cb14f26e2f4e4063aa1851ed3427d8a9c0389ef20d024b19a222aadd4daf21a1",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.precollection_cycle_owner, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "cb14f26e2f4e4063aa1851ed3427d8a9c0389ef20d024b19a222aadd4daf21a1",
+      "static_missing_reference_count": "10",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.precollection_cycle_owner",
+        "quant_platform.orchestration.precollection_launcher_monitor",
+        "quant_platform.orchestration.precollection_monitor_schedule"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_precollection_observer_child.py",
+          "root_label": "source_candidate",
+          "sha256": "58da5381eecff7be8f058bf26db49a04d66f76b2679583b8175c8a77abcb5571"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.precollection_observer_child",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_precollection_observer_child.py",
+      "runtime_test_function_count": 8,
+      "runtime_test_sha256": "6cc635cb90a5cd9c00f39b0fa799f0b6db9066be5eac91641259d3da449eb429",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.precollection_observer_child, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "58da5381eecff7be8f058bf26db49a04d66f76b2679583b8175c8a77abcb5571",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.precollection_observer_child",
+        "quant_platform.orchestration.precollection_observer_process.AUTHORITY"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_precollection_poll_launcher.py",
+          "root_label": "source_candidate",
+          "sha256": "e32d507360f0312d05bbf61633426613a421d14c7edccc40edb5cde7e6482c84"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.precollection_observer_child",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_precollection_poll_launcher.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "e32d507360f0312d05bbf61633426613a421d14c7edccc40edb5cde7e6482c84",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.precollection_observer_child, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "e32d507360f0312d05bbf61633426613a421d14c7edccc40edb5cde7e6482c84",
+      "static_missing_reference_count": "6",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.precollection_observer_child",
+        "quant_platform.orchestration.precollection_poll_launcher",
+        "quant_platform.orchestration.precollection_poll_store"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_prestart_census676.py",
+          "root_label": "source_candidate",
+          "sha256": "2507eafec613509e64f3d74c0e5630cc0adf9a9fc696920403cb6dd6fc6c23b9"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_daily_scheduler.load_current_campaign_attempt_accounting",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_prestart_census676.py",
+      "runtime_test_function_count": 7,
+      "runtime_test_sha256": "2507eafec613509e64f3d74c0e5630cc0adf9a9fc696920403cb6dd6fc6c23b9",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_daily_scheduler.load_current_campaign_attempt_accounting, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "2507eafec613509e64f3d74c0e5630cc0adf9a9fc696920403cb6dd6fc6c23b9",
+      "static_missing_reference_count": "3",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_daily_scheduler.load_current_campaign_attempt_accounting",
+        "tests.test_collection_startup_preflight._setup",
+        "tests.test_collection_startup_preflight._tree"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_process_identity699.py",
+          "root_label": "source_candidate",
+          "sha256": "f3835313544c5221ad21f81879d800e769f5392750830a1add136fa0f76eff5b"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/collection_release/darwin_process_identity.py",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_process_identity699.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "f3835313544c5221ad21f81879d800e769f5392750830a1add136fa0f76eff5b",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test dynamically loads absent Darwin process identity source.",
+      "source_candidate_test_sha256": "f3835313544c5221ad21f81879d800e769f5392750830a1add136fa0f76eff5b",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_protective_exits.py",
+          "root_label": "source_candidate",
+          "sha256": "9710694521f8c5657f45502fe51c8909832d227f72361b51bc2187e21a87e5ef"
+        }
+      ],
+      "primary_target": "src/quant_platform/protective_exits.py",
+      "primary_target_selected_sha256": "cc2df3487e7aab01faba18aeffb3119301751cdc2432a7e78522665466fb5e77",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_protective_exits.py",
+      "runtime_test_function_count": 14,
+      "runtime_test_sha256": "9710694521f8c5657f45502fe51c8909832d227f72361b51bc2187e21a87e5ef",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime protective-exit regressions target selected finite and positive numeric guards.",
+      "source_candidate_test_sha256": "9710694521f8c5657f45502fe51c8909832d227f72361b51bc2187e21a87e5ef",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_protective_numeric_domain.py",
+          "root_label": "source_candidate",
+          "sha256": "caaec33742a0cc9284e9dbe7e9ded285deecc0f673c88e9528a4b287a9f2ab17"
+        }
+      ],
+      "primary_target": "src/quant_platform/protective_exits.py",
+      "primary_target_selected_sha256": "cc2df3487e7aab01faba18aeffb3119301751cdc2432a7e78522665466fb5e77",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_protective_numeric_domain.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "caaec33742a0cc9284e9dbe7e9ded285deecc0f673c88e9528a4b287a9f2ab17",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime numeric-domain regressions target selected protective-level representability guards.",
+      "source_candidate_test_sha256": "caaec33742a0cc9284e9dbe7e9ded285deecc0f673c88e9528a4b287a9f2ab17",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_publication_profile724.py",
+          "root_label": "source_candidate",
+          "sha256": "942ac164b73328ec7b364204a4f7e6a3a770a3e85eaed223b771aa8dc1cf6588"
+        }
+      ],
+      "primary_target": "tests.collection_publication_profile724.LEGACY_PUBLICATION_FILES",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_publication_profile724.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "942ac164b73328ec7b364204a4f7e6a3a770a3e85eaed223b771aa8dc1cf6588",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires tests.collection_publication_profile724.LEGACY_PUBLICATION_FILES, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "942ac164b73328ec7b364204a4f7e6a3a770a3e85eaed223b771aa8dc1cf6588",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "tests.collection_publication_profile724.LEGACY_PUBLICATION_FILES",
+        "tests.conftest.isolated_legacy_publication_authority"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_publication_worker_lifecycle_regressions.py",
+          "root_label": "source_candidate",
+          "sha256": "ed82f1a041847b61c52ee137f8665304ca2842bcc0ccc699d1d9b5069362fdbf"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_publication_worker_lifecycle_regressions.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "ed82f1a041847b61c52ee137f8665304ca2842bcc0ccc699d1d9b5069362fdbf",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "ed82f1a041847b61c52ee137f8665304ca2842bcc0ccc699d1d9b5069362fdbf",
+      "static_missing_reference_count": "9",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_scheduler_lock.capture_publication_worker_context",
+        "quant_platform.orchestration.corrective_scheduler_lock.publication_lease_worker_session",
+        "quant_platform.orchestration.effect_authority.publication_authority_worker_session"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_pytest_execution_contract.py",
+          "root_label": "source_candidate",
+          "sha256": "3f03e2097629e2d79970efb473a14ef862a20bfbaeb6d7b352338b33323d3b4a"
+        }
+      ],
+      "primary_target": "scripts.pytest_execution_contract",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_pytest_execution_contract.py",
+      "runtime_test_function_count": 39,
+      "runtime_test_sha256": "3f03e2097629e2d79970efb473a14ef862a20bfbaeb6d7b352338b33323d3b4a",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.pytest_execution_contract, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "3f03e2097629e2d79970efb473a14ef862a20bfbaeb6d7b352338b33323d3b4a",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.pytest_execution_contract"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_reconcile_reader661.py",
+          "root_label": "source_candidate",
+          "sha256": "9347593832a97deb9d79718f4a719b3ca253d77dee9653e3900fbbd188a14495"
+        }
+      ],
+      "primary_target": "tests.test_external_effect_worker_hardening._authority",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_reconcile_reader661.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "9347593832a97deb9d79718f4a719b3ca253d77dee9653e3900fbbd188a14495",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires tests.test_external_effect_worker_hardening._authority, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "9347593832a97deb9d79718f4a719b3ca253d77dee9653e3900fbbd188a14495",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "tests.test_external_effect_worker_hardening._authority",
+        "tests.test_external_effect_worker_hardening._session"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_regimes.py",
+          "root_label": "forensic_a",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_regimes.py",
+          "root_label": "forensic_b",
+          "sha256": "f57cd62ff4de735d6d60f9d6613685198740abd9c81fb0aa6be9e0940ba113b6"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_regimes.py",
+          "root_label": "source_candidate",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_regimes.py",
+          "root_label": "visual_recovery",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_regimes.py",
+          "root_label": "workspace_outer",
+          "sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "f57cd62ff4de735d6d60f9d6613685198740abd9c81fb0aa6be9e0940ba113b6",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_regimes.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef",
+      "selected_active_test_sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; forensic regime tests are historical.",
+      "source_candidate_test_sha256": "57b50152676bb4c3e3aa962e966471bf636f72023458215c91a35e6654909cef",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_runtime_types.py",
+          "root_label": "forensic_b",
+          "sha256": "f5df0eb65d2fba7bfdbc0f1e87a199713a8576d04a4357412e29e1c79d77a463"
+        }
+      ],
+      "primary_target": "src/quant_platform/runtime_types.py",
+      "primary_target_selected_sha256": "0cbd81f38eb632b359fdaf40298e6b54321304e728c28b06b2912da479ff3fb9",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_runtime_types.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "f5df0eb65d2fba7bfdbc0f1e87a199713a8576d04a4357412e29e1c79d77a463",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime strict_bool regressions target the selected fail-closed persisted False repair.",
+      "source_candidate_test_sha256": null,
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_settings_identity_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "801ba0c4a58b6709287622440799b6d595a5f00e61444cf633e92f3cb0ea51d6"
+        }
+      ],
+      "primary_target": "src/quant_platform/wizard_run_config.py:canonical_comparison",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_settings_identity_repairs.py",
+      "runtime_test_function_count": 29,
+      "runtime_test_sha256": "801ba0c4a58b6709287622440799b6d595a5f00e61444cf633e92f3cb0ea51d6",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires src/quant_platform/wizard_run_config.py:canonical_comparison, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "801ba0c4a58b6709287622440799b6d595a5f00e61444cf633e92f3cb0ea51d6",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "src/quant_platform/wizard_run_config.py:canonical_comparison",
+        "src/quant_platform/wizard_run_config.py:canonical_optional_count"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_strategy_registry.py",
+          "root_label": "forensic_b",
+          "sha256": "5a4b9406f3dcbc46ef174991d200ab61dbe875ce12b7f02fc6a06a158ce08df2"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_strategy_registry.py",
+          "root_label": "source_candidate",
+          "sha256": "d0e9adb29e8f22dadf013e9ab91d27117f3dc742a05bbd012dfc239e7e133c0f"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_strategy_registry.py",
+          "root_label": "visual_recovery",
+          "sha256": "cbedd98c035062c213056955063cf24afa1b50c7a75053a9b7bddcea7801d781"
+        }
+      ],
+      "primary_target": "src/quant_platform/strategies.py",
+      "primary_target_selected_sha256": "ceaac4be116c63a1a7bb2e43e5ffabfdb72722e9d327f8ffc27339f48fb661df",
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "5a4b9406f3dcbc46ef174991d200ab61dbe875ce12b7f02fc6a06a158ce08df2",
+      "queue_working_sha256_at_freeze": "cbedd98c035062c213056955063cf24afa1b50c7a75053a9b7bddcea7801d781",
+      "relative_path": "tests/test_strategy_registry.py",
+      "runtime_test_function_count": 5,
+      "runtime_test_sha256": "d0e9adb29e8f22dadf013e9ab91d27117f3dc742a05bbd012dfc239e7e133c0f",
+      "selected_active_test_sha256": "cbedd98c035062c213056955063cf24afa1b50c7a75053a9b7bddcea7801d781",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime proxy provenance guards require source validation absent from selected risk ranking and rotation signals.",
+      "source_candidate_test_sha256": "d0e9adb29e8f22dadf013e9ab91d27117f3dc742a05bbd012dfc239e7e133c0f",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_surface_external_input_validator.py",
+          "root_label": "source_candidate",
+          "sha256": "522a97be07f4ade6de269847ea5cea55650ceb8984911536337d21510a5a8bd5"
+        }
+      ],
+      "primary_target": "scripts.validate_full_video_gap_rescrub",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_surface_external_input_validator.py",
+      "runtime_test_function_count": 22,
+      "runtime_test_sha256": "522a97be07f4ade6de269847ea5cea55650ceb8984911536337d21510a5a8bd5",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.validate_full_video_gap_rescrub, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "522a97be07f4ade6de269847ea5cea55650ceb8984911536337d21510a5a8bd5",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "scripts.validate_full_video_gap_rescrub"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_system_check_phase00_env.py",
+          "root_label": "source_candidate",
+          "sha256": "9efabaa4610ee495970fa31186f55235e700d7315f3a6936b97e5355f62cf797"
+        }
+      ],
+      "primary_target": "tests.precollection_fixture_support.run_in_synthetic_campaign",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_system_check_phase00_env.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "9efabaa4610ee495970fa31186f55235e700d7315f3a6936b97e5355f62cf797",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires tests.precollection_fixture_support.run_in_synthetic_campaign, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "9efabaa4610ee495970fa31186f55235e700d7315f3a6936b97e5355f62cf797",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "tests.precollection_fixture_support.run_in_synthetic_campaign"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "selective-port-candidate",
+      "port_recommendation": "focused-qualification-before-port",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_teacher_numeric_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "b0bc4ffc58391b417ba24ad74708f2de5c55a0ae1762d794df798b778a0b1560"
+        }
+      ],
+      "primary_target": "src/quant_platform/orchestration/teacher_contracts.py",
+      "primary_target_selected_sha256": "b1d9acc42dc36be51d7351f0327267cc33d86c3836daa988f835baf94d86aec9",
+      "provider_calls_made": false,
+      "queue_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_teacher_numeric_repairs.py",
+      "runtime_test_function_count": 11,
+      "runtime_test_sha256": "b0bc4ffc58391b417ba24ad74708f2de5c55a0ae1762d794df798b778a0b1560",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime teacher numeric regressions target selected finite-number schema validators.",
+      "source_candidate_test_sha256": "b0bc4ffc58391b417ba24ad74708f2de5c55a0ae1762d794df798b778a0b1560",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_terminal_consumers710.py",
+          "root_label": "source_candidate",
+          "sha256": "a8fd0c1deadf300fe6a1f9187ed5c3e0c97173e537b2fd53aa87389b6bdaffbd"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.precollection_observer_io",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_terminal_consumers710.py",
+      "runtime_test_function_count": 4,
+      "runtime_test_sha256": "a8fd0c1deadf300fe6a1f9187ed5c3e0c97173e537b2fd53aa87389b6bdaffbd",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.precollection_observer_io, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "a8fd0c1deadf300fe6a1f9187ed5c3e0c97173e537b2fd53aa87389b6bdaffbd",
+      "static_missing_reference_count": "6",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.precollection_observer_io",
+        "quant_platform.orchestration.scheduler_terminal_paths",
+        "src/quant_platform/orchestration/corrective_daily_scheduler.py:_validate_daily_scheduler_terminal_lineage_detail"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_test_bundle_bootstrap.py",
+          "root_label": "source_candidate",
+          "sha256": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6"
+        }
+      ],
+      "primary_target": "scripts.finalize_relevant_test_receipt",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_test_bundle_bootstrap.py",
+      "runtime_test_function_count": 19,
+      "runtime_test_sha256": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.finalize_relevant_test_receipt, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "e52b830e45694fec9894cc2a6a00aa536a260a3046b55a449c87c5ae9cc254b6",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.pytest_execution_contract"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_test_receipt_attempt_custody.py",
+          "root_label": "source_candidate",
+          "sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044"
+        }
+      ],
+      "primary_target": "scripts.finalize_full_project_test_receipt",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_test_receipt_attempt_custody.py",
+      "runtime_test_function_count": 23,
+      "runtime_test_sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.finalize_full_project_test_receipt, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "4b591e5bdde3b31587cdfaa5594629f3608a5ea6377ac3bc893ddcd7c8eee044",
+      "static_missing_reference_count": "3",
+      "static_missing_reference_examples": [
+        "scripts.finalize_full_project_test_receipt",
+        "scripts.finalize_relevant_test_receipt",
+        "scripts.pytest_execution_contract"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_three_brain_system.py",
+          "root_label": "forensic_b",
+          "sha256": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_three_brain_system.py",
+          "root_label": "source_candidate",
+          "sha256": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_three_brain_system.py",
+          "root_label": "visual_recovery",
+          "sha256": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816",
+      "relative_path": "tests/test_three_brain_system.py",
+      "runtime_test_function_count": 61,
+      "runtime_test_sha256": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+      "selected_active_test_sha256": "a43369eb914b811f47f5883a56014ba5a95cd677c3ae5e284e15d143441a3816",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected tests enforce current y-on-x orientation, while runtime has an older diagnostic expectation.",
+      "source_candidate_test_sha256": "a7f2d9ab827ce031bb4d45843368d0cd3fb57c6f76dbc08f41c29ddeb6083fbb",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_timing_zscore_repairs.py",
+          "root_label": "source_candidate",
+          "sha256": "0d9389ca9f769dcf0609163bece7f5fede3c12ec3e0e63f87f9a0e029e75b318"
+        }
+      ],
+      "primary_target": "quant_platform.zscore_utils.expanding_sample_zscore",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_timing_zscore_repairs.py",
+      "runtime_test_function_count": 14,
+      "runtime_test_sha256": "0d9389ca9f769dcf0609163bece7f5fede3c12ec3e0e63f87f9a0e029e75b318",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.zscore_utils.expanding_sample_zscore, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "0d9389ca9f769dcf0609163bece7f5fede3c12ec3e0e63f87f9a0e029e75b318",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.zscore_utils.expanding_sample_zscore"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_udemy_math_reconciliation.py",
+          "root_label": "forensic_a",
+          "sha256": "1ed54617df7868692f7efbb44445936d1284bd8225da2b1a37a59dd1e9dbbec3"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_udemy_math_reconciliation.py",
+          "root_label": "forensic_b",
+          "sha256": "34135cc5e2effc719a765423a657e2f46033c9207fc31394be608d64b2d07af3"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_udemy_math_reconciliation.py",
+          "root_label": "source_candidate",
+          "sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_udemy_math_reconciliation.py",
+          "root_label": "visual_recovery",
+          "sha256": "1ed54617df7868692f7efbb44445936d1284bd8225da2b1a37a59dd1e9dbbec3"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_udemy_math_reconciliation.py",
+          "root_label": "workspace_outer",
+          "sha256": "1ed54617df7868692f7efbb44445936d1284bd8225da2b1a37a59dd1e9dbbec3"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "1ed54617df7868692f7efbb44445936d1284bd8225da2b1a37a59dd1e9dbbec3;34135cc5e2effc719a765423a657e2f46033c9207fc31394be608d64b2d07af3",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_udemy_math_reconciliation.py",
+      "runtime_test_function_count": 6,
+      "runtime_test_sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+      "selected_active_test_sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; two forensic copies are earlier math reconciliation expectations.",
+      "source_candidate_test_sha256": "fb68e6893021f0cb7937210510d420af0a134deb4b47660c4d50e6ceb4a0e5b9",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/tests/test_udemy_transcript_vault.py",
+          "root_label": "forensic_a",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_udemy_transcript_vault.py",
+          "root_label": "forensic_b",
+          "sha256": "2d1496387abbf42504ad5ad78e3c1e0060b4d2ffe9cdd9837f7926393db82250"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_udemy_transcript_vault.py",
+          "root_label": "source_candidate",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_udemy_transcript_vault.py",
+          "root_label": "visual_recovery",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d"
+        },
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/tests/test_udemy_transcript_vault.py",
+          "root_label": "workspace_outer",
+          "sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "2d1496387abbf42504ad5ad78e3c1e0060b4d2ffe9cdd9837f7926393db82250",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_udemy_transcript_vault.py",
+      "runtime_test_function_count": 3,
+      "runtime_test_sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d",
+      "selected_active_test_sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected and runtime tests have identical bytes; forensic transcript vault tests are historical.",
+      "source_candidate_test_sha256": "132ee802f972083810222607a7d4ca30671c562cc6c93269449108475b2e181d",
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_uncertain_charge661.py",
+          "root_label": "source_candidate",
+          "sha256": "cc2730dc7b36ff4b55401704d6d7d7e749367c74bca7ec773b58c330a053a427"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.corrective_external_effects.mark_current_external_effect_session_failed_zero",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_uncertain_charge661.py",
+      "runtime_test_function_count": 3,
+      "runtime_test_sha256": "cc2730dc7b36ff4b55401704d6d7d7e749367c74bca7ec773b58c330a053a427",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.corrective_external_effects.mark_current_external_effect_session_failed_zero, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "cc2730dc7b36ff4b55401704d6d7d7e749367c74bca7ec773b58c330a053a427",
+      "static_missing_reference_count": "4",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.corrective_external_effects.mark_current_external_effect_session_failed_zero",
+        "tests.test_external_effect_worker_hardening.TARGET_A",
+        "tests.test_external_effect_worker_hardening._authority"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_unified_gap_snapshot_safety.py",
+          "root_label": "source_candidate",
+          "sha256": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4"
+        }
+      ],
+      "primary_target": "scripts.build_unified_gap_index",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_unified_gap_snapshot_safety.py",
+      "runtime_test_function_count": 9,
+      "runtime_test_sha256": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.build_unified_gap_index, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "ce779983620a3c14c20d880faf0c3a1bd531575e41e2377d09da4f90a6e953f4",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "scripts.build_unified_gap_index",
+        "scripts.stable_project_snapshot"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_validator_check_contract.py",
+          "root_label": "source_candidate",
+          "sha256": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210"
+        }
+      ],
+      "primary_target": "scripts.validate_full_video_gap_rescrub",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_validator_check_contract.py",
+      "runtime_test_function_count": 6,
+      "runtime_test_sha256": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires scripts.validate_full_video_gap_rescrub, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "dd7979a43a4e8ebfa65295091a7168908961ba16152fe7b6ac95d301770a4210",
+      "static_missing_reference_count": "2",
+      "static_missing_reference_examples": [
+        "scripts.validate_full_video_gap_rescrub",
+        "scripts.validator_check_contract"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_workload_and_capture_v2.py",
+          "root_label": "source_candidate",
+          "sha256": "ccbee9b1f9d02710e0a43561d568f2496123aa9abc6a6d871ffd95750e10b184"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.daily_workload_preflight",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_workload_and_capture_v2.py",
+      "runtime_test_function_count": 17,
+      "runtime_test_sha256": "ccbee9b1f9d02710e0a43561d568f2496123aa9abc6a6d871ffd95750e10b184",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.daily_workload_preflight, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "ccbee9b1f9d02710e0a43561d568f2496123aa9abc6a6d871ffd95750e10b184",
+      "static_missing_reference_count": "4",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.daily_workload_preflight",
+        "quant_platform.orchestration.funding_request_allocation",
+        "src/quant_platform/orchestration/current_wizard_hyperliquid_daily_runner.py:HYPERLIQUID_STAGE_REQUEST_BUDGETS"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "dependency-blocked",
+      "port_recommendation": "defer-until-source-dependency-reviewed",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_workload_contract678.py",
+          "root_label": "source_candidate",
+          "sha256": "aabdb30f148b9c708877ee1c3b38fe972bb0e44acad5177d75c29dde5895de43"
+        }
+      ],
+      "primary_target": "quant_platform.orchestration.collection_release.workload_contract.check_released_workload",
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_workload_contract678.py",
+      "runtime_test_function_count": 2,
+      "runtime_test_sha256": "0ed9c4e1f8a400b1e6e6e3b72e11c24bd2e7be6aec020e9bc9ae3600f692e0a6",
+      "selected_active_test_sha256": null,
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Runtime test requires quant_platform.orchestration.collection_release.workload_contract.check_released_workload, absent from the selected dependency contract.",
+      "source_candidate_test_sha256": "aabdb30f148b9c708877ee1c3b38fe972bb0e44acad5177d75c29dde5895de43",
+      "static_missing_reference_count": "1",
+      "static_missing_reference_examples": [
+        "quant_platform.orchestration.collection_release.workload_contract.check_released_workload"
+      ]
+    },
+    {
+      "authority_granted": false,
+      "decision": "no-port",
+      "port_recommendation": "retain-selected",
+      "preserved_manifest_copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_zscore_utils.py",
+          "root_label": "forensic_b",
+          "sha256": "ad70b72a05b74ee5fd418a908bbf16a809ba5a8e4147197dd4e17212fc326df3"
+        }
+      ],
+      "primary_target": null,
+      "primary_target_selected_sha256": null,
+      "provider_calls_made": false,
+      "queue_custody_status": "REVIEWED_RETAIN_SELECTED_TEST_NO_PORT",
+      "queue_historical_variant_sha256": "",
+      "queue_working_sha256_at_freeze": "",
+      "relative_path": "tests/test_zscore_utils.py",
+      "runtime_test_function_count": 1,
+      "runtime_test_sha256": "ad70b72a05b74ee5fd418a908bbf16a809ba5a8e4147197dd4e17212fc326df3",
+      "selected_active_test_sha256": "215e04dba021cd6d7825a0317e7b3067e3b6594f46accce2a4488a67b80bdfb2",
+      "selected_drifted_from_queue_freeze": false,
+      "semantic_rationale": "Selected tests include current source binding checks beyond the runtime test.",
+      "source_candidate_test_sha256": null,
+      "static_missing_reference_count": "0",
+      "static_missing_reference_examples": []
+    }
+  ],
+  "schema_version": "gate0.remaining_pending_test_support.v1",
+  "scope": {
+    "excluded_prefixes": [
+      "test_collection_",
+      "test_corrective_",
+      "test_wizard_",
+      "test_current_wizard_",
+      "test_hyperliquid_",
+      "test_binance_",
+      "test_pair_",
+      "test_research_",
+      "test_v2_",
+      "test_youtube_",
+      "test_execution"
+    ],
+    "extended_manifest_sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918",
+    "isolated_candidate_head": "d799ceb6b7516482c2e206d47c61f58f77814633",
+    "original_811_queue_sha256": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+    "path_filter": "original-811 tests/ rows still pending in selected queue, excluding collection, corrective, and legacy_loop assigned prefixes",
+    "reviewed_paths": 107,
+    "runtime_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+    "selected_active_891_queue_sha256": "d4be34b903468e59e86e8991342825cf9a85a5eede17f57b522ad0c6f722fe34",
+    "selected_active_commit": "58d4f95b826fd1abca61ed5cd80a8adadd2c4455",
+    "selected_active_tests_present": 34,
+    "source_candidate_root": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate"
+  },
+  "verifier_path": "audit/verify_gate0_remaining_pending_test_support.py"
+}

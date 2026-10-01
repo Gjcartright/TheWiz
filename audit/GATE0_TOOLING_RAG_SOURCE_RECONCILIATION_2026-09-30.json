@@ -1,0 +1,441 @@
+{
+  "active_consumer_review": {
+    "active_imports": [],
+    "active_research_knowledge_store_has_rag_bridge": false,
+    "runtime_dependent_paths": [
+      "scripts/thewiz_tools.py",
+      "scripts/research_rag.py",
+      "src/quant_platform/research_knowledge_store.py"
+    ],
+    "runtime_direct_test_references": [
+      "tests/test_static_desk_math_adapter.py"
+    ]
+  },
+  "base_commit": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "decision": "DEFER_BOTH_PRESERVED_PACKAGES_NO_ACTIVE_PORT",
+  "frozen_data_review": {
+    "active_lock_selected_package_presence": {
+      "duckdb": false,
+      "gymnasium": true,
+      "matlabengine": false,
+      "mlflow": false,
+      "numpy": true,
+      "pandas": true,
+      "pandera": false,
+      "pyvinecopulib": false,
+      "scikit-learn": true,
+      "stable-baselines3": true,
+      "sympy": true
+    },
+    "index_exists_in_active_runtime_or_savepoint": false,
+    "rag_config_sha256": "a656e47d895e5514b2be0d625181d38db43f4e706c599f936ffeaa199e7f0854",
+    "rag_existing_unique_roots": 0,
+    "rag_expected_index_sha256": "0475c933bb70b6d7e27fe7bf25b915490e2a812811e8d136389ce8982dd3f7e7",
+    "rag_index_path": "data/processed/research_rag/20260910/research.sqlite3",
+    "rag_manifest_entries": 18,
+    "rag_source_roots": [
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/data/external/research_sources/papers"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/data/external/udemy/restricted_transcripts"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/data/external/youtube/cryptowizards_full_scrub/subtitles"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/data/external/youtube/hudson_thames/subtitles"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/data/processed/research_knowledge"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/docs/scrub_2026-09-08"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/docs/scrub_2026-09-08/papers_continuation"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/docs/scrub_2026-09-08/video_continuation"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/docs/strategy_desks_2026-09-09"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/reports/research/books/chan_2026-08-24"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/reports/research/crypto_wizards_guide_2026-08-30"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/reports/research/papers/reviews"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/reports/research/wizard_papers_2026-08-24"
+      },
+      {
+        "exists_at_review": false,
+        "root": "/Volumes/CodexWorkspace/Codex/thewiz-project-scrub-20260907.WRMOaJ/papers"
+      }
+    ],
+    "rag_sources_manifest_sha256": "15c55ccdcc428aa5674a371cc6742796431a876001bc949a393e69b347df5346",
+    "rag_unique_roots": 14,
+    "tool_runtime_config_sha256": "1a7ab5896a3b1691d64c7cc3bd91a072c9b76aa01160d0263f5decebb3deddb4",
+    "tool_runtime_paths": {
+      "adapter_acceptance_receipt": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-connected-runtime-20260909.o58tFg/adapter-checks-c0q_hkog/receipt.json"
+      },
+      "browser_path": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-expanded-tooling-20260909.xa5Fly/browsers"
+      },
+      "matlab_python": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-matlab-engine-20260909.I5x3b2/venv/bin/python"
+      },
+      "matlab_root": {
+        "exists_at_review": true,
+        "path": "/Volumes/Expansion/Applications/MATLAB_R2026a.app"
+      },
+      "mlflow_python": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-expanded-tooling-20260909.xa5Fly/.venv/bin/python"
+      },
+      "previous_adapter_acceptance_receipt": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-connected-runtime-20260909.o58tFg/adapter-checks-m5dcrnez/receipt.json"
+      },
+      "project_pin_file": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-connected-runtime-20260909.o58tFg/worker-split-candidate.in"
+      },
+      "project_python": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-connected-runtime-20260909.o58tFg/.venv/bin/python"
+      },
+      "state_root": {
+        "exists_at_review": false,
+        "path": "/Volumes/CodexWorkspace/Codex/thewiz-connected-runtime-20260909.o58tFg/research-runs"
+      }
+    }
+  },
+  "future_review_requirements": [
+    "Select current tool runtime and dependency lock before worker launchers; inspect worker effects and add direct tests.",
+    "Reconcile active zscore_utils API and pyvinecopulib dependency before the independent math adapter.",
+    "Rebuild RAG manifest against accessible provenance-checked sources and regenerate a pinned index before RAG client/bridge selection."
+  ],
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/tooling-rag-hipw2y/repo",
+  "isolated_math_adapter_probe": {
+    "collection_errors": 1,
+    "disposable_source_copies_removed": true,
+    "error": "ImportError: cannot import name EXPANDING_SAMPLE_IMPLEMENTATION_VERSION from active quant_platform.zscore_utils",
+    "junit_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/tooling-rag-hipw2y/math_adapter_candidate.junit.xml",
+    "junit_sha256": "d4603ddb819a4a2fb13bfcae24f7b263950f6b7f06d3028d8cf6ad8418ccd07b",
+    "pytest_exit_code": 2,
+    "source_sha256": "e3b01e514c2dab6da119ca7f16ed5e32b5a9387584a7a86ffbffbd87678fc706",
+    "test_functions_in_file": 4,
+    "test_sha256": "c04d54d9f6ed5542668138b9862557dcab0cb50e35d1740aa5dedf6659ff1b74",
+    "tests_executed": 0
+  },
+  "mac_savepoint_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+  "queue_sha256_at_base": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+  "reviewed_at_utc": "2026-09-30T20:01:28.620431+00:00",
+  "runtime_root": "/Users/gregc/TheWiz-LocalRuntime",
+  "safety_boundary": {
+    "expansion_changed": false,
+    "matlab_started_during_review": false,
+    "provider_calls_during_review": false,
+    "rag_answer_optional_generator_is_caller_supplied": true,
+    "rag_build_writes_new_sqlite_index_if_invoked": true,
+    "rag_index_built_during_review": false,
+    "shared_queue_changed": false,
+    "tool_worker_can_start_matlab_mlflow_or_training_if_invoked": true,
+    "tool_worker_spawns_local_subprocess": true,
+    "workers_started_during_review": false
+  },
+  "schema": "thewiz.gate0.tooling_rag_source_review.v1",
+  "scope": {
+    "direct_pending_test_paths": 1,
+    "research_rag_source_paths": 7,
+    "tooling_source_paths": 10
+  },
+  "source_paths": [
+    {
+      "active_path_present": false,
+      "decision_rationale": "Package export has no active caller or available indexed corpus.",
+      "mac_savepoint_sha256": "6a9f2ae8c050856f358ee41207e226cf1abb0852e5841fb7f9adbcf9b5d562dd",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 427,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/__init__.py",
+      "runtime_sha256": "6a9f2ae8c050856f358ee41207e226cf1abb0852e5841fb7f9adbcf9b5d562dd"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "CLI build writes SQLite, while configured corpus roots and pinned index are absent.",
+      "mac_savepoint_sha256": "c351098fbb4abf7c2761f9ef63b853df517aaabf4e46d78303369cd5521702db",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 428,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/__main__.py",
+      "runtime_sha256": "c351098fbb4abf7c2761f9ef63b853df517aaabf4e46d78303369cd5521702db"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Extractive citations and optional caller generator lack active indexed evidence and direct tests.",
+      "mac_savepoint_sha256": "7fae807abbda159ce49b2f1f7492347d04e3ab54f54f2930eac13b810d9c3846",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 429,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/answers.py",
+      "runtime_sha256": "7fae807abbda159ce49b2f1f7492347d04e3ab54f54f2930eac13b810d9c3846"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Pinned SQLite index is missing in active, runtime and Mac savepoint.",
+      "mac_savepoint_sha256": "3385eb44b083fc020f5343f940fc51215a192af442d9b9d44f666d66684210ca",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 430,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/client.py",
+      "runtime_sha256": "3385eb44b083fc020f5343f940fc51215a192af442d9b9d44f666d66684210ca"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "All 14 unique declared source roots across 18 entries are absent.",
+      "mac_savepoint_sha256": "6ff92aed56146a32231a66e7f9437f6ff10075cf161d3ac14ac6e752d2265a8b",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 431,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/corpus.py",
+      "runtime_sha256": "6ff92aed56146a32231a66e7f9437f6ff10075cf161d3ac14ac6e752d2265a8b"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Evaluation needs missing index/question population and writes output; no direct tests.",
+      "mac_savepoint_sha256": "7e36003879c5d9e0cb5ebdfb59fa850658034039ee12aea016d0f513cb3d40cd",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 432,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/evaluation.py",
+      "runtime_sha256": "7e36003879c5d9e0cb5ebdfb59fa850658034039ee12aea016d0f513cb3d40cd"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "SQLite/FTS builder and search API lack accessible corpus, pinned index, active caller and direct tests.",
+      "mac_savepoint_sha256": "f46946d8451e56e2f1a24acbb3100692a1fd7ec4762078abfca943b45423856e",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MISSING_RAG_CORPUS_AND_INDEX_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 433,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/research_rag/index.py",
+      "runtime_sha256": "f46946d8451e56e2f1a24acbb3100692a1fd7ec4762078abfca943b45423856e"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Import-safe marker has no active consumer or selected tool runtime.",
+      "mac_savepoint_sha256": "4c47a37ef5a08be2f762648d058673700c87abb6f7fbee7fc56ab6bfe77bb256",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 456,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/__init__.py",
+      "runtime_sha256": "4c47a37ef5a08be2f762648d058673700c87abb6f7fbee7fc56ab6bfe77bb256"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Entrypoint invokes unselected CLI and stale runtime.",
+      "mac_savepoint_sha256": "6ea5651ba6ad8d1a873e3adac713fc47ea9446763a137dd8d5915a7592c27ffd",
+      "missing_active_imported_modules": [
+        "quant_platform.tooling.cli"
+      ],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.tooling.cli"
+      ],
+      "queue_line_at_base": 457,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/__main__.py",
+      "runtime_sha256": "6ea5651ba6ad8d1a873e3adac713fc47ea9446763a137dd8d5915a7592c27ffd"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "CLI dispatches MATLAB, MLflow, PPO and tracking through absent configured interpreters.",
+      "mac_savepoint_sha256": "56e5fb597b337f623befdb1c2742be6dc1de4e1d058d20584a2822d7989bb748",
+      "missing_active_imported_modules": [
+        "quant_platform.point_in_time_data",
+        "quant_platform.tooling.data_validation",
+        "quant_platform.tooling.math_validation",
+        "quant_platform.tooling.runtime"
+      ],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.point_in_time_data",
+        "quant_platform.tooling.data_validation",
+        "quant_platform.tooling.math_validation",
+        "quant_platform.tooling.runtime"
+      ],
+      "queue_line_at_base": 458,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/cli.py",
+      "runtime_sha256": "56e5fb597b337f623befdb1c2742be6dc1de4e1d058d20584a2822d7989bb748"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "PIT module is absent from active source; Pandera and DuckDB are absent from active lock.",
+      "mac_savepoint_sha256": "f7ff05eab2c8b102bdb172b3f8c02351b83e5745b2b78e0aeb0e586e79a72a24",
+      "missing_active_imported_modules": [
+        "quant_platform.point_in_time_data"
+      ],
+      "proposed_queue_status": "REVIEWED_MISSING_PIT_AND_OPTIONAL_DEPS_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.point_in_time_data",
+        "quant_platform.trade_ledger"
+      ],
+      "queue_line_at_base": 459,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/data_validation.py",
+      "runtime_sha256": "f7ff05eab2c8b102bdb172b3f8c02351b83e5745b2b78e0aeb0e586e79a72a24"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Research Gym bridge has no direct tests or active caller and explicitly omits fill, margin, funding and leg-level return economics.",
+      "mac_savepoint_sha256": "cb24e803e74cb17a7d5c7ee4c7c005b108a69eae2db07cd4c4368afe5c61d977",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_UNTESTED_RL_ADAPTER_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.rl.features",
+        "quant_platform.rl.pair_trading_env"
+      ],
+      "queue_line_at_base": 460,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/gym_adapter.py",
+      "runtime_sha256": "cb24e803e74cb17a7d5c7ee4c7c005b108a69eae2db07cd4c4368afe5c61d977"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Exact source fails test collection against active zscore_utils missing EXPANDING_SAMPLE_IMPLEMENTATION_VERSION; pyvinecopulib is outside the active lock.",
+      "mac_savepoint_sha256": "e3b01e514c2dab6da119ca7f16ed5e32b5a9387584a7a86ffbffbd87678fc706",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_MATH_TOOL_CONTRACT_MISMATCH_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.statistics.math_v2",
+        "quant_platform.zscore_utils"
+      ],
+      "queue_line_at_base": 461,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/math_validation.py",
+      "runtime_sha256": "e3b01e514c2dab6da119ca7f16ed5e32b5a9387584a7a86ffbffbd87678fc706"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Optional PPO trainer writes local receipts, depends on unselected Gym bridge and has no direct tests or active caller.",
+      "mac_savepoint_sha256": "1f33368bb33d14bec792f9d67d03364de17d933ec97e01cf654d09d01f35f369",
+      "missing_active_imported_modules": [
+        "quant_platform.tooling.gym_adapter"
+      ],
+      "proposed_queue_status": "REVIEWED_UNTESTED_RL_ADAPTER_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.tooling.gym_adapter"
+      ],
+      "queue_line_at_base": 462,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/rl_training.py",
+      "runtime_sha256": "1f33368bb33d14bec792f9d67d03364de17d933ec97e01cf654d09d01f35f369"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Subprocess runtime depends on old receipt, pin, interpreter and state paths under unmounted CodexWorkspace.",
+      "mac_savepoint_sha256": "a63702895d490349be4057819f63222e424290d25f3d95d2c749d939112f2325",
+      "missing_active_imported_modules": [],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [],
+      "queue_line_at_base": 463,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/runtime.py",
+      "runtime_sha256": "a63702895d490349be4057819f63222e424290d25f3d95d2c749d939112f2325"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Local MLflow mirror writes artifacts; MLflow and configured worker interpreter are unavailable.",
+      "mac_savepoint_sha256": "2ab739c67b8fd13fa7497ca2e05a5ddf5c7dd2e7dda003708f20bc5d4c3c4428",
+      "missing_active_imported_modules": [
+        "quant_platform.research_trial_registry"
+      ],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.research_trial_registry"
+      ],
+      "queue_line_at_base": 464,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/trial_tracking.py",
+      "runtime_sha256": "2ab739c67b8fd13fa7497ca2e05a5ddf5c7dd2e7dda003708f20bc5d4c3c4428"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Worker can start MATLAB, mirror MLflow or train PPO; no current runtime or direct tests select it.",
+      "mac_savepoint_sha256": "6b1d34a7fb155b14d6293a72cbea82c78ba73e22cf0b49629cb6396da6b4dc1b",
+      "missing_active_imported_modules": [
+        "quant_platform.tooling.cli",
+        "quant_platform.tooling.gym_adapter",
+        "quant_platform.tooling.rl_training",
+        "quant_platform.tooling.trial_tracking"
+      ],
+      "proposed_queue_status": "REVIEWED_STALE_TOOL_RUNTIME_DEPENDENT_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.tooling.cli",
+        "quant_platform.tooling.gym_adapter",
+        "quant_platform.tooling.rl_training",
+        "quant_platform.tooling.trial_tracking"
+      ],
+      "queue_line_at_base": 465,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/tooling/worker.py",
+      "runtime_sha256": "6b1d34a7fb155b14d6293a72cbea82c78ba73e22cf0b49629cb6396da6b4dc1b"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Four retained tests cannot collect with active zscore_utils; exact isolated run executed zero tests.",
+      "mac_savepoint_sha256": "c04d54d9f6ed5542668138b9862557dcab0cb50e35d1740aa5dedf6659ff1b74",
+      "missing_active_imported_modules": [
+        "quant_platform.tooling"
+      ],
+      "proposed_queue_status": "REVIEWED_MATH_TOOL_CONTRACT_MISMATCH_NO_PORT",
+      "quant_platform_imports": [
+        "quant_platform.tooling"
+      ],
+      "queue_line_at_base": 770,
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "tests/test_static_desk_math_adapter.py",
+      "runtime_sha256": "c04d54d9f6ed5542668138b9862557dcab0cb50e35d1740aa5dedf6659ff1b74"
+    }
+  ]
+}

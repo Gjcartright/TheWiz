@@ -1,0 +1,1257 @@
+{
+  "base_commit": "99df4d1f3b3f34a6c6c50c2d111a2344c05c6a61",
+  "baseline_hash_only_note": "A four-root SHA without a manifest copy is preserved as a hash-only baseline; the earlier decision report supplies its semantic review.",
+  "external_effects_or_orders_executed": false,
+  "inputs_sha256": {
+    "audit/GATE0_EXTENDED_VARIANT_GAP_2026-09-30.json": "843abe2a6f4c2234ee1acad4d78c53e13e4ebbc9ef375a402dc6ef1daf136383",
+    "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "6e0beb2f87635f5e7af344519a333ef06b9da8c5ace6175e911380b79791b9b5",
+    "audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "newly_discovered_variant_shas": 14,
+  "queue_edited": false,
+  "reviewed_paths": 14,
+  "rows": [
+    {
+      "current_selected_sha256": "b3eddc87483f8b31a1b3e4d68a68cda447f2d7ff1eb491f08e2d157128d67981",
+      "frozen_four_root_decision": "NOT_IN_FOUR_ROOT_TABLE",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "",
+        "working_sha256": ""
+      },
+      "prior_custody_status_snapshot": "REVIEWED_ACTIVE_LOCK_RETAIN_HISTORICAL_NO_PORT",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_DEPENDENCY_LOCK_DECISION_2026-09-30.json": "85f7dad59c599385b0a27dc722bb9ac4b23bb2b3e11f99d197f935d7741f0d18"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "9d7c24ea6551dd54e361c983f8039d0936728818a9e8036e2d5379465f29a6f1",
+        "a311ff77f4662dc08089616b7ec07a0dea4a4d214fc1ff94d7340ee59f56b9af",
+        "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The paired 157-package Math Desk/collection candidate adds optional math-research and collection-dev extras and changes pytest authority markers; that source set was not selected or qualified. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_LOCK_RETAIN_HISTORICAL_NO_PORT",
+      "relative_path": "pyproject.toml",
+      "selected_active_at_base_sha256": "b3eddc87483f8b31a1b3e4d68a68cda447f2d7ff1eb491f08e2d157128d67981",
+      "semantic_anchor_new_variant": "manual_external_effect_issuer:",
+      "semantic_anchor_selected": "without_public_network_authority:",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/pyproject.toml",
+              "root": "source_candidate",
+              "sha256": "9d7c24ea6551dd54e361c983f8039d0936728818a9e8036e2d5379465f29a6f1"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The paired 157-package Math Desk/collection candidate adds optional math-research and collection-dev extras and changes pytest authority markers; that source set was not selected or qualified.",
+          "sha256": "9d7c24ea6551dd54e361c983f8039d0936728818a9e8036e2d5379465f29a6f1"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/pyproject.toml",
+              "root": "forensic_b",
+              "sha256": "a311ff77f4662dc08089616b7ec07a0dea4a4d214fc1ff94d7340ee59f56b9af"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The older manifest permits SciPy 1.18 on Python 3.12 and omits the active pinned ccxt/dYdX dev dependencies; forensic_b only adds a package-discovery exclude to the same older contract.",
+          "sha256": "a311ff77f4662dc08089616b7ec07a0dea4a4d214fc1ff94d7340ee59f56b9af"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/pyproject.toml",
+              "root": "visual_recovery",
+              "sha256": "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/pyproject.toml",
+              "root": "forensic_a",
+              "sha256": "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/pyproject.toml",
+              "root": "workspace_outer",
+              "sha256": "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The older manifest permits SciPy 1.18 on Python 3.12 and omits the active pinned ccxt/dYdX dev dependencies; forensic_b only adds a package-discovery exclude to the same older contract.",
+          "sha256": "be967304aa53051a530bbeec7aeab41253ce160176bbdafae02c7698f709fd1d"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "050828a317398fd49fee82966344123dc9a7fc1baf0ba2c8f716bde7447b0271",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "b113977e8894a4f6b378376e6ed94c898c8057dda6e6a0b34e844cab3bceb80d",
+        "runtime_sha256": "b113977e8894a4f6b378376e6ed94c898c8057dda6e6a0b34e844cab3bceb80d",
+        "working_sha256": "ce2c1a58d580451f9662760b475f2aa0f32f1c3720fdd6b4100cb74d6ba5ae30"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_HISTORICAL_VARIANTS_RECONCILED",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_DYDX_ML_SOURCE_RECONCILIATION_2026-09-30.json": "548f8c6ca0b35d10f8879c06fed4d568bec75b5d6e5b74afbe9b0addce5daf5e"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "78161bb66b85aa1ce860cc34030e883f6312034fc844db6b2254d9d16de47cc6",
+        "9205f1d0480d139f96cfff46d6ffd68203dc87f8c03b0ca8807f37fd40f0f36a"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual copy maps calendar 1M to 1m, allows provisional features to overwrite native values, backfills future funding into earlier candles, uses price-level pair economics, and writes evidence directly. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_HISTORICAL_VARIANTS_RECONCILED",
+      "relative_path": "src/quant_platform/dydx_candles.py",
+      "selected_active_at_base_sha256": "050828a317398fd49fee82966344123dc9a7fc1baf0ba2c8f716bde7447b0271",
+      "semantic_anchor_new_variant": "_attach_provisional_research_features(rows, overwrite=True)",
+      "semantic_anchor_selected": "\"hedge_ratio_orientation\": \"beta_y_on_x\"",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/dydx_candles.py",
+              "root": "forensic_b",
+              "sha256": "78161bb66b85aa1ce860cc34030e883f6312034fc844db6b2254d9d16de47cc6"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The forensic_b copy retains price-level X-on-Y spread and lacks selected Y-on-X log economics, namespaced proxy backfill, and governed output; its leading funding gaps stay unknown but do not restore the selected contract.",
+          "sha256": "78161bb66b85aa1ce860cc34030e883f6312034fc844db6b2254d9d16de47cc6"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/dydx_candles.py",
+              "root": "visual_recovery",
+              "sha256": "9205f1d0480d139f96cfff46d6ffd68203dc87f8c03b0ca8807f37fd40f0f36a"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual copy maps calendar 1M to 1m, allows provisional features to overwrite native values, backfills future funding into earlier candles, uses price-level pair economics, and writes evidence directly.",
+          "sha256": "9205f1d0480d139f96cfff46d6ffd68203dc87f8c03b0ca8807f37fd40f0f36a"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/dydx_candles.py",
+              "root": "source_candidate",
+              "sha256": "b113977e8894a4f6b378376e6ed94c898c8057dda6e6a0b34e844cab3bceb80d"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate has price-level hedge-ratio tests and predates selected Y-on-X log, monthly interval, native-feature, funding-chronology and atomic-output repairs; working is an earlier hash-only snapshot.",
+          "sha256": "b113977e8894a4f6b378376e6ed94c898c8057dda6e6a0b34e844cab3bceb80d"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate has price-level hedge-ratio tests and predates selected Y-on-X log, monthly interval, native-feature, funding-chronology and atomic-output repairs; working is an earlier hash-only snapshot.",
+          "sha256": "ce2c1a58d580451f9662760b475f2aa0f32f1c3720fdd6b4100cb74d6ba5ae30"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "059cb181a3219e9eb7aeabf006e4ebac56eb6681c657da9f740480cbfc3e03d8",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "d52144efc0bb7edf8f5ed0d54ffca610196528ff0f49904968ea8f21e8a81762",
+        "runtime_sha256": "d52144efc0bb7edf8f5ed0d54ffca610196528ff0f49904968ea8f21e8a81762",
+        "working_sha256": "e53fbb31bb781b100899d65da3181e91197308b3d3f217c2be26d4af3325110f"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_PORTED_V23_SOURCE",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_V23_SOURCE_TRANSITION_2026-09-30.json": "a919974aa703f666ddfafa226ed00884c870d33b2fde0f924c8c2afd122ca270"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "940067ae406c9f1abfa191b23b7caebfc675b0ae1e6eb3bb437be6dd204224de",
+        "ca78d24116a16a348e8626868757fbee3da6630d19f5b02bd4dc0b8a20ddf290"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual copy accepts string truthiness, treats merely present nonfinite two-leg columns as complete, double-counts trades across repriced cost buckets, drops independent eligibility verification, and removes flat-end/reconciliation/uncertainty blockers. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_PORTED_V23_SOURCE",
+      "relative_path": "src/quant_platform/experiments.py",
+      "selected_active_at_base_sha256": "059cb181a3219e9eb7aeabf006e4ebac56eb6681c657da9f740480cbfc3e03d8",
+      "semantic_anchor_new_variant": "fillna(False).astype(bool).all(axis=1)",
+      "semantic_anchor_selected": "def _verified_acceptance_row(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/experiments.py",
+              "root": "forensic_b",
+              "sha256": "940067ae406c9f1abfa191b23b7caebfc675b0ae1e6eb3bb437be6dd204224de"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The forensic_b copy has strict boolean and independent cost-bucket checks, but predates selected V2.3 acceptance-row verification, completed numeric-input checks, atomic reporting and current acceptance lineage.",
+          "sha256": "940067ae406c9f1abfa191b23b7caebfc675b0ae1e6eb3bb437be6dd204224de"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/experiments.py",
+              "root": "visual_recovery",
+              "sha256": "ca78d24116a16a348e8626868757fbee3da6630d19f5b02bd4dc0b8a20ddf290"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual copy accepts string truthiness, treats merely present nonfinite two-leg columns as complete, double-counts trades across repriced cost buckets, drops independent eligibility verification, and removes flat-end/reconciliation/uncertainty blockers.",
+          "sha256": "ca78d24116a16a348e8626868757fbee3da6630d19f5b02bd4dc0b8a20ddf290"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/experiments.py",
+              "root": "source_candidate",
+              "sha256": "d52144efc0bb7edf8f5ed0d54ffca610196528ff0f49904968ea8f21e8a81762"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is the pre-V2.3 experiment implementation; selected source later adds costed causal acceptance and no-proxy-authority guards; working is an earlier hash-only snapshot.",
+          "sha256": "d52144efc0bb7edf8f5ed0d54ffca610196528ff0f49904968ea8f21e8a81762"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is the pre-V2.3 experiment implementation; selected source later adds costed causal acceptance and no-proxy-authority guards; working is an earlier hash-only snapshot.",
+          "sha256": "e53fbb31bb781b100899d65da3181e91197308b3d3f217c2be26d4af3325110f"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "c930ce3cf42c920b1e5e32679ffd51348bfa9a5b19f2caa0280efd4c3c3e8a32",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "7544803621ca3371ec5db8f8fb766d0dfe8d84d4631d3df5b31ea0acd618f965",
+        "runtime_sha256": "7544803621ca3371ec5db8f8fb766d0dfe8d84d4631d3df5b31ea0acd618f965",
+        "working_sha256": "b33d25dab5156275c026ec59934cfc369cce023b22cf34aa8c4655e9cfa333e9"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json": "24b0452bcc7707a7b2ada2db31afae90e36945e05c54f99d2c245d3d24105e74",
+        "audit/GATE0_TEACHER_NUMERIC_GUARDS_2026-09-30.json": "4132b0aa1c17e9892080e1f117b796043840bf8f71dd81f35065db6c10bb9de0"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "0505484cbd452592ce1148c9083424d320566601a8391971206f276b72a3bd35"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy omits duplicate and required-column, explicit timestamp, finite label, provenance, logged bandit-policy, current math-version and atomic-report checks; ambiguous rows can appear ready. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "relative_path": "src/quant_platform/orchestration/student_readiness.py",
+      "selected_active_at_base_sha256": "c930ce3cf42c920b1e5e32679ffd51348bfa9a5b19f2caa0280efd4c3c3e8a32",
+      "semantic_anchor_new_variant": "label_count = int(pd.to_numeric(working[\"good_trade\"], errors=\"coerce\").dropna().nunique())",
+      "semantic_anchor_selected": "duplicate_training_event_id",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/student_readiness.py",
+              "root": "visual_recovery",
+              "sha256": "0505484cbd452592ce1148c9083424d320566601a8391971206f276b72a3bd35"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/student_readiness.py",
+              "root": "forensic_b",
+              "sha256": "0505484cbd452592ce1148c9083424d320566601a8391971206f276b72a3bd35"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy omits duplicate and required-column, explicit timestamp, finite label, provenance, logged bandit-policy, current math-version and atomic-report checks; ambiguous rows can appear ready.",
+          "sha256": "0505484cbd452592ce1148c9083424d320566601a8391971206f276b72a3bd35"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/student_readiness.py",
+              "root": "source_candidate",
+              "sha256": "7544803621ca3371ec5db8f8fb766d0dfe8d84d4631d3df5b31ea0acd618f965"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate supplied strict student dataset checks but predated current math-version and governed report refinements; working is an earlier hash-only snapshot.",
+          "sha256": "7544803621ca3371ec5db8f8fb766d0dfe8d84d4631d3df5b31ea0acd618f965"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate supplied strict student dataset checks but predated current math-version and governed report refinements; working is an earlier hash-only snapshot.",
+          "sha256": "b33d25dab5156275c026ec59934cfc369cce023b22cf34aa8c4655e9cfa333e9"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "41bdf698a655c837c9ce5fdcb496dc7ca8e79de7febbed859559ce24117ca63c",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "2155c3a7e956148da1a487e406519a34dfaca47369f79f3fa25dc70a3a425a2d",
+        "runtime_sha256": "2155c3a7e956148da1a487e406519a34dfaca47369f79f3fa25dc70a3a425a2d",
+        "working_sha256": "93a876e64ea988cb363d1cd7a176c6353083306c2515c831ae76c45bef9fe28b"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_MATH_MARKER_CURRENTNESS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_MATH_MARKER_CURRENTNESS_2026-09-30.json": "349a5396bfd4db91fd50e71d3f77555fec646d71dad4322e9084b43b1dc26cad"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "b891eecba0760b29744ebff4c18484889e90a684802f715889a0a57af79679e6"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy uses an inline weaker math marker check, hardcoded math-v2, raw exception text and direct publication; selected source checks bound/current math evidence and writes atomically. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_MATH_MARKER_CURRENTNESS",
+      "relative_path": "src/quant_platform/orchestration/teacher_adapters.py",
+      "selected_active_at_base_sha256": "41bdf698a655c837c9ce5fdcb496dc7ca8e79de7febbed859559ce24117ca63c",
+      "semantic_anchor_new_variant": "readiness_frame.to_csv(readiness_path, index=False)",
+      "semantic_anchor_selected": "math_acceptance_marker_passes",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/teacher_adapters.py",
+              "root": "source_candidate",
+              "sha256": "2155c3a7e956148da1a487e406519a34dfaca47369f79f3fa25dc70a3a425a2d"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is an older adapter before shared currentness, safe redaction and atomic output; working is an earlier hash-only snapshot.",
+          "sha256": "2155c3a7e956148da1a487e406519a34dfaca47369f79f3fa25dc70a3a425a2d"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is an older adapter before shared currentness, safe redaction and atomic output; working is an earlier hash-only snapshot.",
+          "sha256": "93a876e64ea988cb363d1cd7a176c6353083306c2515c831ae76c45bef9fe28b"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/teacher_adapters.py",
+              "root": "visual_recovery",
+              "sha256": "b891eecba0760b29744ebff4c18484889e90a684802f715889a0a57af79679e6"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/teacher_adapters.py",
+              "root": "forensic_b",
+              "sha256": "b891eecba0760b29744ebff4c18484889e90a684802f715889a0a57af79679e6"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy uses an inline weaker math marker check, hardcoded math-v2, raw exception text and direct publication; selected source checks bound/current math evidence and writes atomically.",
+          "sha256": "b891eecba0760b29744ebff4c18484889e90a684802f715889a0a57af79679e6"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "b1d9acc42dc36be51d7351f0327267cc33d86c3836daa988f835baf94d86aec9",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "2d492ba7480bca3d3281da3429775b7a84277e5f35b51068fddc0040b4f5b2d6",
+        "runtime_sha256": "2d492ba7480bca3d3281da3429775b7a84277e5f35b51068fddc0040b4f5b2d6",
+        "working_sha256": "595cf2afea0da56d63dff3e64383b463419b0184dc9d4b7e51429177a0e781c3"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_TEACHER_NUMERIC_GUARDS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_TEACHER_NUMERIC_GUARDS_2026-09-30.json": "4132b0aa1c17e9892080e1f117b796043840bf8f71dd81f35065db6c10bb9de0"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "35cf7cb5772c03c8979ff64688489146924fa438ff92b2317e8e6a8c98278a41"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy hardcodes math-v2 and permits NaN/Infinity in teacher and student contract numbers, so invalid return evidence can enter council voting. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_TEACHER_NUMERIC_GUARDS",
+      "relative_path": "src/quant_platform/orchestration/teacher_contracts.py",
+      "selected_active_at_base_sha256": "b1d9acc42dc36be51d7351f0327267cc33d86c3836daa988f835baf94d86aec9",
+      "semantic_anchor_new_variant": "MATH_V2 = \"math-v2\"",
+      "semantic_anchor_selected": "allow_inf_nan=False",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/teacher_contracts.py",
+              "root": "source_candidate",
+              "sha256": "2d492ba7480bca3d3281da3429775b7a84277e5f35b51068fddc0040b4f5b2d6"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate has the contract shapes but lacks selected finite-number validation and current shared math version; working is an earlier hash-only snapshot.",
+          "sha256": "2d492ba7480bca3d3281da3429775b7a84277e5f35b51068fddc0040b4f5b2d6"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/teacher_contracts.py",
+              "root": "visual_recovery",
+              "sha256": "35cf7cb5772c03c8979ff64688489146924fa438ff92b2317e8e6a8c98278a41"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/teacher_contracts.py",
+              "root": "forensic_b",
+              "sha256": "35cf7cb5772c03c8979ff64688489146924fa438ff92b2317e8e6a8c98278a41"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy hardcodes math-v2 and permits NaN/Infinity in teacher and student contract numbers, so invalid return evidence can enter council voting.",
+          "sha256": "35cf7cb5772c03c8979ff64688489146924fa438ff92b2317e8e6a8c98278a41"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate has the contract shapes but lacks selected finite-number validation and current shared math version; working is an earlier hash-only snapshot.",
+          "sha256": "595cf2afea0da56d63dff3e64383b463419b0184dc9d4b7e51429177a0e781c3"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "c86fbf75bb72b586da496de8ba86172b69712fd53389e4f376f99445d5b313e5",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "ab8a5682d5cdb0290a05479d66f61e8cb46ec89112980a1cf5717e6fde59ca42",
+        "runtime_sha256": "ab8a5682d5cdb0290a05479d66f61e8cb46ec89112980a1cf5717e6fde59ca42",
+        "working_sha256": "f1e2778596b2f8df64081584aad8f2aa13784bd4c2039cf0a6d5c782de25a1a1"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_MATH_MARKER_CURRENTNESS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_MATH_MARKER_CURRENTNESS_2026-09-30.json": "349a5396bfd4db91fd50e71d3f77555fec646d71dad4322e9084b43b1dc26cad"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "882f7a85fcf3414518f0db6733dea695e127736b7fc0e842eceb64a4e0b7e8c7",
+        "b99eba103e1746522e69e707707a39cb35e5e10a7e5fb155d7de22ac58ac0ecc"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual copy uses inline weaker math marker checks, raw exception text, hardcoded math-v2 and direct CSV/JSONL publication in place of shared currentness, redaction and atomic writes. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_MATH_MARKER_CURRENTNESS",
+      "relative_path": "src/quant_platform/orchestration/teacher_control_plane.py",
+      "selected_active_at_base_sha256": "c86fbf75bb72b586da496de8ba86172b69712fd53389e4f376f99445d5b313e5",
+      "semantic_anchor_new_variant": "readiness.to_csv(readiness_path, index=False)",
+      "semantic_anchor_selected": "math_acceptance_marker_passes",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/teacher_control_plane.py",
+              "root": "visual_recovery",
+              "sha256": "882f7a85fcf3414518f0db6733dea695e127736b7fc0e842eceb64a4e0b7e8c7"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual copy uses inline weaker math marker checks, raw exception text, hardcoded math-v2 and direct CSV/JSONL publication in place of shared currentness, redaction and atomic writes.",
+          "sha256": "882f7a85fcf3414518f0db6733dea695e127736b7fc0e842eceb64a4e0b7e8c7"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/orchestration/teacher_control_plane.py",
+              "root": "source_candidate",
+              "sha256": "ab8a5682d5cdb0290a05479d66f61e8cb46ec89112980a1cf5717e6fde59ca42"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate predates shared bound marker currentness, safe exception codes and atomic control-plane publication; working is an earlier hash-only snapshot.",
+          "sha256": "ab8a5682d5cdb0290a05479d66f61e8cb46ec89112980a1cf5717e6fde59ca42"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/teacher_control_plane.py",
+              "root": "forensic_b",
+              "sha256": "b99eba103e1746522e69e707707a39cb35e5e10a7e5fb155d7de22ac58ac0ecc"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The forensic_b copy has the same publication/currentness gaps; its _boolish handling of persisted blocking_for_shadow is a possible separate narrow guard, while the selected readiness frame is already boolean.",
+          "sha256": "b99eba103e1746522e69e707707a39cb35e5e10a7e5fb155d7de22ac58ac0ecc"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate predates shared bound marker currentness, safe exception codes and atomic control-plane publication; working is an earlier hash-only snapshot.",
+          "sha256": "f1e2778596b2f8df64081584aad8f2aa13784bd4c2039cf0a6d5c782de25a1a1"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "ceaac4be116c63a1a7bb2e43e5ffabfdb72722e9d327f8ffc27339f48fb661df",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "1888367c93c75f558d042d464868a8132cee935ab71ac290d93d559a0b39b2d7",
+        "runtime_sha256": "1888367c93c75f558d042d464868a8132cee935ab71ac290d93d559a0b39b2d7",
+        "working_sha256": "414575071f0562785c4be498a6ac7f491a666e52fad84a22726df79c49e1f75c"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_PORTED_V23_SOURCE",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_V23_SOURCE_TRANSITION_2026-09-30.json": "a919974aa703f666ddfafa226ed00884c870d33b2fde0f924c8c2afd122ca270"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "3f184631cdcfb52c028bdc95fd49a15a99828a1b73ffc0d252cfb7dde7ab6a8e",
+        "fe00ba81f7da831a6166081791fcf024392431cda44f95a1e21ac2609fff558c"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual copy drops proxy implementation/acceptance metadata, converts exit strings with astype(bool), uses current/future distribution statistics for regime decisions and inserts favorable defaults for missing signals. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_PORTED_V23_SOURCE",
+      "relative_path": "src/quant_platform/strategies.py",
+      "selected_active_at_base_sha256": "ceaac4be116c63a1a7bb2e43e5ffabfdb72722e9d327f8ffc27339f48fb661df",
+      "semantic_anchor_new_variant": "vol.rolling(50, min_periods=2).quantile(0.60).fillna(vol.median())",
+      "semantic_anchor_selected": "def _prior_expanding_quantile(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/src/quant_platform/strategies.py",
+              "root": "source_candidate",
+              "sha256": "1888367c93c75f558d042d464868a8132cee935ab71ac290d93d559a0b39b2d7"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is a pre-V2.3 strategy catalog; selected source adds causal thresholds and explicit proxy authority; working is an earlier hash-only snapshot.",
+          "sha256": "1888367c93c75f558d042d464868a8132cee935ab71ac290d93d559a0b39b2d7"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/strategies.py",
+              "root": "forensic_b",
+              "sha256": "3f184631cdcfb52c028bdc95fd49a15a99828a1b73ffc0d252cfb7dde7ab6a8e"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The forensic_b copy keeps strict exits, prior-only expanding quantiles and proxy metadata, but predates selected V2.3 canonical strategy economics and acceptance qualification.",
+          "sha256": "3f184631cdcfb52c028bdc95fd49a15a99828a1b73ffc0d252cfb7dde7ab6a8e"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate is a pre-V2.3 strategy catalog; selected source adds causal thresholds and explicit proxy authority; working is an earlier hash-only snapshot.",
+          "sha256": "414575071f0562785c4be498a6ac7f491a666e52fad84a22726df79c49e1f75c"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/strategies.py",
+              "root": "visual_recovery",
+              "sha256": "fe00ba81f7da831a6166081791fcf024392431cda44f95a1e21ac2609fff558c"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual copy drops proxy implementation/acceptance metadata, converts exit strings with astype(bool), uses current/future distribution statistics for regime decisions and inserts favorable defaults for missing signals.",
+          "sha256": "fe00ba81f7da831a6166081791fcf024392431cda44f95a1e21ac2609fff558c"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "e1b9261b4109e14c76414476e58125f87b29d6317c94554957fc89ea3f884a40",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "2f894a1df45fb3317d7fb930cdb05af939001bbdb15f1ddd7bd1a2f642365cfc",
+        "runtime_sha256": "2f894a1df45fb3317d7fb930cdb05af939001bbdb15f1ddd7bd1a2f642365cfc",
+        "working_sha256": "20c01247f05ff559f1ed9ce26f62ff5745814d8e84c0f6fd69eb76d5d149efe7"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_HISTORICAL_VARIANTS_RECONCILED",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_DYDX_ML_SOURCE_RECONCILIATION_2026-09-30.json": "548f8c6ca0b35d10f8879c06fed4d568bec75b5d6e5b74afbe9b0addce5daf5e"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "2447c8aabc0953cb802e22a7c106548db4f4149b15b129b84b3a124bd72d9f8b",
+        "3f0840b1d61c2abeb2ec4e6a2446a6273317dbccb0e80237b1c5c2ff6fe0f858"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual test copy omits six selected regressions for monthly identity, funding chronology and native-feature preservation, and asserts that provisional values occupy canonical feature names. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_HISTORICAL_VARIANTS_RECONCILED",
+      "relative_path": "tests/test_dydx_candles.py",
+      "selected_active_at_base_sha256": "e1b9261b4109e14c76414476e58125f87b29d6317c94554957fc89ea3f884a40",
+      "semantic_anchor_new_variant": "assert \"conditional_probability_distortion\" in row",
+      "semantic_anchor_selected": "def test_funding_merge_does_not_leak_across_out_of_order_candles(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": {
+        "new_variant_test_functions": 11,
+        "new_variant_tests_absent_from_selected": [],
+        "selected_test_functions": 17,
+        "selected_tests_missing_from_new_variant": [
+          "test_backfill_preserves_existing_native_feature_values",
+          "test_funding_merge_does_not_leak_across_out_of_order_candles",
+          "test_monthly_request_keeps_calendar_month_distinct_from_minute",
+          "test_pair_history_does_not_assign_undated_funding_to_past_candles",
+          "test_pair_history_funding_merge_keeps_pre_observation_rows_unknown",
+          "test_pair_history_preserves_calendar_month_interval"
+        ]
+      },
+      "variants": [
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate retains ten price-level hedge-ratio tests that do not match selected log Y-on-X economics and lacks six later chronology/feature regressions; working is an earlier hash-only snapshot.",
+          "sha256": "20c01247f05ff559f1ed9ce26f62ff5745814d8e84c0f6fd69eb76d5d149efe7"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_dydx_candles.py",
+              "root": "forensic_b",
+              "sha256": "2447c8aabc0953cb802e22a7c106548db4f4149b15b129b84b3a124bd72d9f8b"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The forensic_b test copy retains a pre-observation funding check but lacks selected monthly, unsorted-funding and native-feature regressions; obsolete price-level assertions were replaced by log Y-on-X tests.",
+          "sha256": "2447c8aabc0953cb802e22a7c106548db4f4149b15b129b84b3a124bd72d9f8b"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_dydx_candles.py",
+              "root": "source_candidate",
+              "sha256": "2f894a1df45fb3317d7fb930cdb05af939001bbdb15f1ddd7bd1a2f642365cfc"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime source_candidate retains ten price-level hedge-ratio tests that do not match selected log Y-on-X economics and lacks six later chronology/feature regressions; working is an earlier hash-only snapshot.",
+          "sha256": "2f894a1df45fb3317d7fb930cdb05af939001bbdb15f1ddd7bd1a2f642365cfc"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_dydx_candles.py",
+              "root": "visual_recovery",
+              "sha256": "3f0840b1d61c2abeb2ec4e6a2446a6273317dbccb0e80237b1c5c2ff6fe0f858"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual test copy omits six selected regressions for monthly identity, funding chronology and native-feature preservation, and asserts that provisional values occupy canonical feature names.",
+          "sha256": "3f0840b1d61c2abeb2ec4e6a2446a6273317dbccb0e80237b1c5c2ff6fe0f858"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "d279569e05570bc31e0c91d89b2ea4c47820c4ad1ec78c75c48586ef4f17e5a2",
+      "frozen_four_root_decision": "NO_PORT_NEEDED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38",
+        "runtime_sha256": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38",
+        "working_sha256": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json": "24b0452bcc7707a7b2ada2db31afae90e36945e05c54f99d2c245d3d24105e74"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "0dbd0816630de56cc6e4fb414bc9007a4b9528026fc321929b8a7bc22637ffed",
+        "7273a76a8100c9ac8e248ebe07da3108816cc3c89031125a8742abaf6c7b041f"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual copy lacks five selected regressions for incomplete two-leg inputs, nonfinite/open-trade gating, claimed eligibility, independent repriced trades and string boolean flags. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "relative_path": "tests/test_experiments.py",
+      "selected_active_at_base_sha256": "d279569e05570bc31e0c91d89b2ea4c47820c4ad1ec78c75c48586ef4f17e5a2",
+      "semantic_anchor_new_variant": "def test_harness_runs_executable_strategies_and_marks_missing_ones_skipped(",
+      "semantic_anchor_selected": "def test_strategy_acceptance_rejects_string_boolean_execution_flags(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": {
+        "new_variant_test_functions": 10,
+        "new_variant_tests_absent_from_selected": [],
+        "selected_test_functions": 15,
+        "selected_tests_missing_from_new_variant": [
+          "test_acceptance_gate_rejects_nonfinite_and_unreconciled_open_backtest",
+          "test_harness_routes_incomplete_two_leg_inputs_to_spread_only_research",
+          "test_strategy_acceptance_counts_repriced_trades_once",
+          "test_strategy_acceptance_rechecks_claimed_eligible_rows",
+          "test_strategy_acceptance_rejects_string_boolean_execution_flags"
+        ]
+      },
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_experiments.py",
+              "root": "forensic_b",
+              "sha256": "0dbd0816630de56cc6e4fb414bc9007a4b9528026fc321929b8a7bc22637ffed"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The five forensic_b-only tests map to current experiment/historical-strategy-authority successors; they do not warrant restoring its older file.",
+          "sha256": "0dbd0816630de56cc6e4fb414bc9007a4b9528026fc321929b8a7bc22637ffed"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_experiments.py",
+              "root": "visual_recovery",
+              "sha256": "7273a76a8100c9ac8e248ebe07da3108816cc3c89031125a8742abaf6c7b041f"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual copy lacks five selected regressions for incomplete two-leg inputs, nonfinite/open-trade gating, claimed eligibility, independent repriced trades and string boolean flags.",
+          "sha256": "7273a76a8100c9ac8e248ebe07da3108816cc3c89031125a8742abaf6c7b041f"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_experiments.py",
+              "root": "source_candidate",
+              "sha256": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root source_candidate has 11 tests and lacks current acceptance guards; the initial working/recovery/runtime hashes are identical and prior migration is recorded.",
+          "sha256": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "e711ca46c2d9fc7107a1b09a2de53354e532dabff2790e6336251d984540aac4",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "f4849fa06f8690b43c0470c1d9f3436ca0b34d4d5999aaf0ba10d42b39e6af29",
+        "runtime_sha256": "f4849fa06f8690b43c0470c1d9f3436ca0b34d4d5999aaf0ba10d42b39e6af29",
+        "working_sha256": "12a135ab20637e1d372eebdcae81efe659f7d6a3a387c2d7b0e32a6428f6f937"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json": "24b0452bcc7707a7b2ada2db31afae90e36945e05c54f99d2c245d3d24105e74"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "419ec425ea01698ceb6306c6328800e9a12c8be4369f740089dac599b5f60afb"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy omits five selected schema, identity, provenance, numeric timestamp and finite-label regressions and hardcodes math-v2 test data. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "relative_path": "tests/test_student_readiness.py",
+      "selected_active_at_base_sha256": "e711ca46c2d9fc7107a1b09a2de53354e532dabff2790e6336251d984540aac4",
+      "semantic_anchor_new_variant": "\"math_version\": \"math-v2\"",
+      "semantic_anchor_selected": "def test_duplicate_columns_are_rejected_before_row_audit(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": {
+        "new_variant_test_functions": 5,
+        "new_variant_tests_absent_from_selected": [],
+        "selected_test_functions": 10,
+        "selected_tests_missing_from_new_variant": [
+          "test_duplicate_columns_are_rejected_before_row_audit",
+          "test_duplicate_training_event_and_ambiguous_provenance_are_blocked",
+          "test_integer_feature_timestamps_are_not_treated_as_real_observations",
+          "test_invalid_training_labels_or_provenance_fail_closed",
+          "test_missing_behavior_policy_evidence_blocks_bandit_only"
+        ]
+      },
+      "variants": [
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime test source has the original five readiness cases; selected tests add five fail-closed regressions; working is an earlier hash-only snapshot.",
+          "sha256": "12a135ab20637e1d372eebdcae81efe659f7d6a3a387c2d7b0e32a6428f6f937"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_student_readiness.py",
+              "root": "visual_recovery",
+              "sha256": "419ec425ea01698ceb6306c6328800e9a12c8be4369f740089dac599b5f60afb"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_student_readiness.py",
+              "root": "forensic_b",
+              "sha256": "419ec425ea01698ceb6306c6328800e9a12c8be4369f740089dac599b5f60afb"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy omits five selected schema, identity, provenance, numeric timestamp and finite-label regressions and hardcodes math-v2 test data.",
+          "sha256": "419ec425ea01698ceb6306c6328800e9a12c8be4369f740089dac599b5f60afb"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_student_readiness.py",
+              "root": "source_candidate",
+              "sha256": "f4849fa06f8690b43c0470c1d9f3436ca0b34d4d5999aaf0ba10d42b39e6af29"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime test source has the original five readiness cases; selected tests add five fail-closed regressions; working is an earlier hash-only snapshot.",
+          "sha256": "f4849fa06f8690b43c0470c1d9f3436ca0b34d4d5999aaf0ba10d42b39e6af29"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "ad0fc94a5cfe7b98ad75617a8a02c84e3cdf3efa34f757b51ae8633baec14e60",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "851e5059f232e92aec94349f99b29952bd9ceaa12ec3f0e26660add49d8871d4",
+        "runtime_sha256": "8640c3d3b72db7b79a965520410f4374381538b0b37d2493f1958c8b87785c69",
+        "working_sha256": "851e5059f232e92aec94349f99b29952bd9ceaa12ec3f0e26660add49d8871d4"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json": "24b0452bcc7707a7b2ada2db31afae90e36945e05c54f99d2c245d3d24105e74"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "9b9b20e32fd01489b47d833418c275827bea1c974bbf936b5af9265e5267734f"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy hardcodes math-v2 in its fixture, so it does not track current shared math lineage; selected fixtures derive MATH_VERSION from the active math module. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "relative_path": "tests/test_teacher_adapters.py",
+      "selected_active_at_base_sha256": "ad0fc94a5cfe7b98ad75617a8a02c84e3cdf3efa34f757b51ae8633baec14e60",
+      "semantic_anchor_new_variant": "\"math_version\": \"math-v2\"",
+      "semantic_anchor_selected": "from quant_platform.statistics.math_v2 import MATH_VERSION",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": {
+        "new_variant_test_functions": 2,
+        "new_variant_tests_absent_from_selected": [],
+        "selected_test_functions": 2,
+        "selected_tests_missing_from_new_variant": []
+      },
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_teacher_adapters.py",
+              "root": "source_candidate",
+              "sha256": "851e5059f232e92aec94349f99b29952bd9ceaa12ec3f0e26660add49d8871d4"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working",
+            "recovery"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root working/source_candidate test has the same two behavioral cases; the separate runtime hash predates the selected global scoped publication fixture and current-math fixture.",
+          "sha256": "851e5059f232e92aec94349f99b29952bd9ceaa12ec3f0e26660add49d8871d4"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root working/source_candidate test has the same two behavioral cases; the separate runtime hash predates the selected global scoped publication fixture and current-math fixture.",
+          "sha256": "8640c3d3b72db7b79a965520410f4374381538b0b37d2493f1958c8b87785c69"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_teacher_adapters.py",
+              "root": "visual_recovery",
+              "sha256": "9b9b20e32fd01489b47d833418c275827bea1c974bbf936b5af9265e5267734f"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_teacher_adapters.py",
+              "root": "forensic_b",
+              "sha256": "9b9b20e32fd01489b47d833418c275827bea1c974bbf936b5af9265e5267734f"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy hardcodes math-v2 in its fixture, so it does not track current shared math lineage; selected fixtures derive MATH_VERSION from the active math module.",
+          "sha256": "9b9b20e32fd01489b47d833418c275827bea1c974bbf936b5af9265e5267734f"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "322b46f5c2fbdb06238c6535ef0ec731c5c66815c33ecb79c1ebefcf978c0374",
+      "frozen_four_root_decision": "REVIEW_REQUIRED",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "50e4603195ce593423ea991f1c81bfe1f52128eb1f2b76665fa616c87d222158",
+        "runtime_sha256": "50e4603195ce593423ea991f1c81bfe1f52128eb1f2b76665fa616c87d222158",
+        "working_sha256": "5f56e6556bf6a6c8c19d416a7a126bce96644f4495be4ade3f6055445d803f30"
+      },
+      "prior_custody_status_snapshot": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_STUDENT_TEACHER_SOURCE_RECONCILIATION_2026-09-30.json": "24b0452bcc7707a7b2ada2db31afae90e36945e05c54f99d2c245d3d24105e74",
+        "audit/GATE0_TEACHER_NUMERIC_GUARDS_2026-09-30.json": "4132b0aa1c17e9892080e1f117b796043840bf8f71dd81f35065db6c10bb9de0"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "eb7cb20ee9a422aaa0dfd5e0339224bfed35f509dcd12bc4b63376854a957622"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The visual/forensic copy omits six selected regressions for prior/stale math, nonfinite returns, invalid policy thresholds, duplicate teacher IDs and overflow-safe weighted averages. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_STUDENT_TEACHER_HISTORICAL_VARIANTS",
+      "relative_path": "tests/test_teacher_council.py",
+      "selected_active_at_base_sha256": "322b46f5c2fbdb06238c6535ef0ec731c5c66815c33ecb79c1ebefcf978c0374",
+      "semantic_anchor_new_variant": "math_version: str = \"math-v2\"",
+      "semantic_anchor_selected": "def test_teacher_proposal_rejects_nonfinite_return_evidence(",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": {
+        "new_variant_test_functions": 4,
+        "new_variant_tests_absent_from_selected": [],
+        "selected_test_functions": 10,
+        "selected_tests_missing_from_new_variant": [
+          "test_duplicate_teacher_ids_cannot_contribute_to_a_vote",
+          "test_large_finite_teacher_returns_do_not_overflow_weighted_average",
+          "test_previous_math_version_requires_new_evidence_after_repair",
+          "test_student_policy_cannot_admit_stale_math_lineage",
+          "test_teacher_policy_rejects_invalid_thresholds_and_stale_math",
+          "test_teacher_proposal_rejects_nonfinite_return_evidence"
+        ]
+      },
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "four_root_baseline",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/tests/test_teacher_council.py",
+              "root": "source_candidate",
+              "sha256": "50e4603195ce593423ea991f1c81bfe1f52128eb1f2b76665fa616c87d222158"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime test has five cases including prior-math rejection but lacks the five later numeric/identity tests; working is an earlier hash-only snapshot.",
+          "sha256": "50e4603195ce593423ea991f1c81bfe1f52128eb1f2b76665fa616c87d222158"
+        },
+        {
+          "byte_reverified": false,
+          "classification": "four_root_baseline",
+          "copies": [],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [
+            "working"
+          ],
+          "recorded_in_queue_historical_sha_field": false,
+          "semantic_difference_from_selected": "The four-root recovery/runtime test has five cases including prior-math rejection but lacks the five later numeric/identity tests; working is an earlier hash-only snapshot.",
+          "sha256": "5f56e6556bf6a6c8c19d416a7a126bce96644f4495be4ade3f6055445d803f30"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_teacher_council.py",
+              "root": "visual_recovery",
+              "sha256": "eb7cb20ee9a422aaa0dfd5e0339224bfed35f509dcd12bc4b63376854a957622"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_teacher_council.py",
+              "root": "forensic_b",
+              "sha256": "eb7cb20ee9a422aaa0dfd5e0339224bfed35f509dcd12bc4b63376854a957622"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The visual/forensic copy omits six selected regressions for prior/stale math, nonfinite returns, invalid policy thresholds, duplicate teacher IDs and overflow-safe weighted averages.",
+          "sha256": "eb7cb20ee9a422aaa0dfd5e0339224bfed35f509dcd12bc4b63376854a957622"
+        }
+      ]
+    },
+    {
+      "current_selected_sha256": "c8955d2a94ad5d7c97da861cab9db9a32d3d489d17825052632ee9b96dcad634",
+      "frozen_four_root_decision": "NOT_IN_FOUR_ROOT_TABLE",
+      "frozen_four_root_sha256": {
+        "recovery_sha256": "",
+        "runtime_sha256": "",
+        "working_sha256": ""
+      },
+      "prior_custody_status_snapshot": "REVIEWED_ACTIVE_LOCK_RETAIN_HISTORICAL_NO_PORT",
+      "prior_decision_evidence_sha256": {
+        "audit/GATE0_DEPENDENCY_LOCK_DECISION_2026-09-30.json": "85f7dad59c599385b0a27dc722bb9ac4b23bb2b3e11f99d197f935d7741f0d18"
+      },
+      "queue_historical_variant_sha256_at_base": [
+        "bc67c17f3873991bc3dfb7a3bf782153d81838402a9c6057de4be9a854549a9a",
+        "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+      ],
+      "queue_status_at_base": "PRESERVED_ADDITIONAL_VARIANT_REVIEW_REQUIRED",
+      "recommended_decision_evidence_append": "audit/GATE0_REMAINING_REOPENED_EXTENDED_VARIANTS_2026-09-30.json",
+      "recommended_decision_rationale_append": "Additional frozen variant reviewed: The 157-package source_candidate lock adds 17 unselected Math Desk/collection packages, including arch, cvxpy, pyvinecopulib and matplotlib, paired with an unselected pyproject manifest. Preserve all SHA/root custody and retain selected source; no whole-file port.",
+      "recommended_queue_status": "REVIEWED_ACTIVE_LOCK_RETAIN_HISTORICAL_NO_PORT",
+      "relative_path": "uv.lock",
+      "selected_active_at_base_sha256": "c8955d2a94ad5d7c97da861cab9db9a32d3d489d17825052632ee9b96dcad634",
+      "semantic_anchor_new_variant": "",
+      "semantic_anchor_selected": "",
+      "source_decision": "RETAIN_SELECTED_ACTIVE_NO_PORT",
+      "test_function_comparison": null,
+      "variants": [
+        {
+          "byte_reverified": true,
+          "classification": "newly_discovered",
+          "copies": [
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/reconciliation-inputs/current-source-candidate/uv.lock",
+              "root": "source_candidate",
+              "sha256": "bc67c17f3873991bc3dfb7a3bf782153d81838402a9c6057de4be9a854549a9a"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The 157-package source_candidate lock adds 17 unselected Math Desk/collection packages, including arch, cvxpy, pyvinecopulib and matplotlib, paired with an unselected pyproject manifest.",
+          "sha256": "bc67c17f3873991bc3dfb7a3bf782153d81838402a9c6057de4be9a854549a9a"
+        },
+        {
+          "byte_reverified": true,
+          "classification": "previously_reviewed_historical",
+          "copies": [
+            {
+              "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/uv.lock",
+              "root": "visual_recovery",
+              "sha256": "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819/uv.lock",
+              "root": "forensic_a",
+              "sha256": "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/uv.lock",
+              "root": "forensic_b",
+              "sha256": "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+            },
+            {
+              "absolute_path": "/Volumes/Expansion/TheWiz-Workspace/uv.lock",
+              "root": "workspace_outer",
+              "sha256": "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+            }
+          ],
+          "decision": "NO_WHOLE_FILE_PORT",
+          "four_root_roles": [],
+          "recorded_in_queue_historical_sha_field": true,
+          "semantic_difference_from_selected": "The 129-package older forensic lock admits SciPy 1.18 under Python 3.12 and omits active ccxt, aiohttp and related dependencies.",
+          "sha256": "f203179ba6e53f36ca60ddf50287587a740a5b06e30303ed21c8152bc2d381d9"
+        }
+      ]
+    }
+  ],
+  "schema_version": "thewiz.gate0.remaining_reopened_extended_variants.v1",
+  "source_repair_commits": 0,
+  "whole_file_ports": 0
+}

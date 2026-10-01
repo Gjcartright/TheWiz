@@ -1,0 +1,1136 @@
+{
+  "base_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+  "extended_manifest_path": "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv",
+  "files": [
+    {
+      "completed_narrow_port_commit": "0311956",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/experiments.py"
+        ],
+        "tests": [
+          "tests/test_ablations.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/ablations.py",
+          "root_label": "forensic_b",
+          "sha256": "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089",
+          "size_bytes": 9370,
+          "top_level_definition_count": 8
+        },
+        {
+          "relative_path": "src/quant_platform/ablations.py",
+          "root_label": "source_candidate",
+          "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+          "size_bytes": 9391,
+          "top_level_definition_count": 8
+        },
+        {
+          "relative_path": "src/quant_platform/ablations.py",
+          "root_label": "visual_recovery",
+          "sha256": "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456",
+          "size_bytes": 9302,
+          "top_level_definition_count": 8
+        }
+      ],
+      "frozen_recovery_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "frozen_runtime_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/ablations.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "7fc7e6b656a1e8ab0c9599856df2976a318a8c45b11736b564f9438dd80e0089",
+        "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456"
+      ],
+      "queue_line": 115,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected source retains atomic CSV publication and now parses persisted tested/baseline eligibility with strict_bool. Forensic_b only changes atomic publication to direct to_csv; visual_recovery also uses bool('False') and would elevate false eligibility. No whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/ablations.py",
+        "root_label": "recovery",
+        "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+        "size_bytes": 9391
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/ablations.py",
+        "root_label": "runtime",
+        "sha256": "989054287790321de109bba22ca129d3840ff767ce221988d681c81ed1adc5c4",
+        "size_bytes": 9391
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "b61e3e12ad15721c42796eddbd9bd7b57cd62e3ce18395e1017e5940843453d5",
+      "selected_top_level_definitions": [
+        "AblationSpec",
+        "_conclusion",
+        "_delta",
+        "_finite_metric",
+        "_missing_row",
+        "_strategy_name",
+        "ablation_report",
+        "write_ablation_report"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/active_pipeline.py",
+          "src/quant_platform/cli.py"
+        ],
+        "tests": [
+          "tests/test_apify_sources.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/apify_sources.py",
+          "root_label": "forensic_b",
+          "sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "size_bytes": 20161,
+          "top_level_definition_count": 20
+        },
+        {
+          "relative_path": "src/quant_platform/apify_sources.py",
+          "root_label": "source_candidate",
+          "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+          "size_bytes": 44169,
+          "top_level_definition_count": 31
+        },
+        {
+          "relative_path": "src/quant_platform/apify_sources.py",
+          "root_label": "visual_recovery",
+          "sha256": "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259",
+          "size_bytes": 20161,
+          "top_level_definition_count": 20
+        }
+      ],
+      "frozen_recovery_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+      "frozen_runtime_sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "b24b3ee6b060940ab13ca7c240898a044291538168423ee3e465892b5e7ca4eb",
+      "high_impact_remaining_risk": "Selected callback authorization does not attest the exact Apify URL/path/query/payload; this remains an external-effect authority gap.",
+      "path": "src/quant_platform/apify_sources.py",
+      "queue_historical_variant_count": 1,
+      "queue_historical_variant_sha256": [
+        "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259"
+      ],
+      "queue_line": 118,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Recovery/runtime source switches real Apify requests to ExactHttpRequest with exact method, path, query, and payload binding while retaining the injected-client callback. The selected corrective external-effect module lacks that request type/API, so the source cannot be transplanted. Forensic/visual copy predates the governed call path. Keep selected callback authority until a complete exact-request dependency is integrated.",
+      "recommended_queue_status": "REVIEWED_EXACT_REQUEST_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/apify_sources.py",
+        "root_label": "recovery",
+        "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+        "size_bytes": 44169
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/apify_sources.py",
+        "root_label": "runtime",
+        "sha256": "0e32a405f1bd8fe2089a4559ee62b503b6b2a0f672f2f54a11417cb7faac1f3c",
+        "size_bytes": 44169
+      },
+      "selected_changed_since_freeze": false,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "b24b3ee6b060940ab13ca7c240898a044291538168423ee3e465892b5e7ca4eb",
+      "selected_top_level_definitions": [
+        "RefreshResult",
+        "_apify_attempt_id",
+        "_apify_attempt_paths",
+        "_apify_default_coverage_rows",
+        "_apify_outcome_requires_reconciliation",
+        "_assert_no_unresolved_apify_attempt",
+        "_authorized_apify_http_call",
+        "_build_default_capture_rows",
+        "_classify_output_file",
+        "_coverage_path",
+        "_credit_reconciliation_status",
+        "_dydx_inbox",
+        "_enrichment_root",
+        "_extract_usage_details",
+        "_load_apify_attempt",
+        "_manifest_path",
+        "_normalize_source_name",
+        "_normalize_usage_value",
+        "_now",
+        "_publish_apify_actor_intent",
+        "_publish_apify_actor_terminal",
+        "_raw_root",
+        "_record_apify_provider_response",
+        "_run_actor_fetch",
+        "_seal_apify_attempt",
+        "_snapshot_target_path",
+        "_to_slug",
+        "_update_row_after_fetch",
+        "infer_apify_venue",
+        "parse_apify_sources_from_mcp_url",
+        "refresh_apify_sources"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py"
+        ],
+        "tests": [
+          "tests/test_binance_testnet.py",
+          "tests/test_gate00g_order_authority.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/binance_testnet.py",
+          "root_label": "forensic_b",
+          "sha256": "ed0fed7a11611761a253093f8837d4a7c5c929fc88adb62af7009cf0a08e8223",
+          "size_bytes": 19567,
+          "top_level_definition_count": 20
+        },
+        {
+          "relative_path": "src/quant_platform/binance_testnet.py",
+          "root_label": "source_candidate",
+          "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
+          "size_bytes": 24540,
+          "top_level_definition_count": 22
+        },
+        {
+          "relative_path": "src/quant_platform/binance_testnet.py",
+          "root_label": "visual_recovery",
+          "sha256": "ed0fed7a11611761a253093f8837d4a7c5c929fc88adb62af7009cf0a08e8223",
+          "size_bytes": 19567,
+          "top_level_definition_count": 20
+        }
+      ],
+      "frozen_recovery_sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
+      "frozen_runtime_sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "6e316f082ae3fafc61fea76afffff95dd3b28c377612e9334313e07ad0982461",
+      "high_impact_remaining_risk": "Pair submission validates adapter type once, then directly invokes mutable place_order for both entry and rollback; method shadowing can evade the selected type-only check.",
+      "path": "src/quant_platform/binance_testnet.py",
+      "queue_historical_variant_count": 1,
+      "queue_historical_variant_sha256": [
+        "ed0fed7a11611761a253093f8837d4a7c5c929fc88adb62af7009cf0a08e8223"
+      ],
+      "queue_line": 121,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Selected source enforces gate00g testnet adapter type/order authority; older forensic/visual copy removes those checks. Runtime source candidate adds canonical type registration and instance-method binding checks, but depends on a broader execution attestation API. Review a focused source/test guard; no wholesale import of the older or runtime file.",
+      "recommended_queue_status": "REVIEWED_ADAPTER_AUTHORITY_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/binance_testnet.py",
+        "root_label": "recovery",
+        "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
+        "size_bytes": 24540
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/binance_testnet.py",
+        "root_label": "runtime",
+        "sha256": "4b0520be7f616967753db20c8e255b99486c464510d1123f929213fdb34bcba2",
+        "size_bytes": 24540
+      },
+      "selected_changed_since_freeze": false,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "6e316f082ae3fafc61fea76afffff95dd3b28c377612e9334313e07ad0982461",
+      "selected_top_level_definitions": [
+        "BinancePairExecutionResult",
+        "BinanceSpotTestnetOrderAdapter",
+        "BinanceTestnetConfig",
+        "BinanceUsdmTestnetOrderAdapter",
+        "_BinanceTestnetOrderAdapter",
+        "_append_pair_execution_result",
+        "_decimal_text",
+        "_env_int",
+        "_env_truthy",
+        "_exchange_info_path",
+        "_is_testnet_url",
+        "_next_action",
+        "_normalize_market",
+        "_pair_preflight_next_action",
+        "_preflight_blockers_without_submission",
+        "_require_gate00g_binance_pair_adapter",
+        "_reverse_intent",
+        "_time_path",
+        "binance_testnet_pair_preflight",
+        "binance_testnet_preflight",
+        "execute_binance_testnet_pair"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "",
+      "direct_importers": {
+        "scripts": [
+          "scripts/run_crypto_wizards_post_contract_probe.py"
+        ],
+        "source": [
+          "src/quant_platform/cli.py",
+          "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "src/quant_platform/orchestration/corrective_wizard_proof_scheduler.py"
+        ],
+        "tests": [
+          "tests/test_env.py",
+          "tests/test_phase00_effect_guard.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/env.py",
+          "root_label": "forensic_b",
+          "sha256": "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0",
+          "size_bytes": 4400,
+          "top_level_definition_count": 7
+        },
+        {
+          "relative_path": "src/quant_platform/env.py",
+          "root_label": "source_candidate",
+          "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+          "size_bytes": 2237,
+          "top_level_definition_count": 3
+        },
+        {
+          "relative_path": "src/quant_platform/env.py",
+          "root_label": "visual_recovery",
+          "sha256": "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13",
+          "size_bytes": 957,
+          "top_level_definition_count": 2
+        }
+      ],
+      "frozen_recovery_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "frozen_runtime_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "high_impact_remaining_risk": "The API credit receipt caller uses load_selected_env_keys without adjacent ownership, mode, or symlink checks; selected loader does not enforce those secret-file provenance controls.",
+      "path": "src/quant_platform/env.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "aa70663e8d85e687935e33e1cd33667f263c3cc3a588bac93a0410a097f888d0",
+        "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13"
+      ],
+      "queue_line": 164,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected, recovery, and runtime bytes match. Forensic adds owner-only and non-symlink secret-file resolution but removes load_selected_env_keys, which active proof scheduler and API credit receipt import; visual also drops the loader. Keep selected API and review a narrow file-provenance guard.",
+      "recommended_queue_status": "REVIEWED_SECRET_PROVENANCE_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/env.py",
+        "root_label": "recovery",
+        "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+        "size_bytes": 2237
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/env.py",
+        "root_label": "runtime",
+        "sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+        "size_bytes": 2237
+      },
+      "selected_changed_since_freeze": false,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "1b3ac1b3aacffe8fab5f32a150651a2b654b2a5ed7fb27ddbf93cdb69637db0f",
+      "selected_top_level_definitions": [
+        "_strip_quotes",
+        "load_env_file",
+        "load_selected_env_keys"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "1089747",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/active_pipeline.py",
+          "src/quant_platform/binance_testnet.py",
+          "src/quant_platform/cli.py",
+          "src/quant_platform/dydx_immediate_submission_adapter.py",
+          "src/quant_platform/dydx_record_only_adapter.py",
+          "src/quant_platform/dydx_sdk_order_adapter.py",
+          "src/quant_platform/hyperliquid_testnet.py",
+          "src/quant_platform/orchestration/corrective_l2_scheduler.py",
+          "src/quant_platform/orchestration/corrective_testnet_pair_execution.py",
+          "src/quant_platform/rl/base_rl_lane.py"
+        ],
+        "tests": [
+          "tests/test_binance_testnet.py",
+          "tests/test_execution.py",
+          "tests/test_gate00g_order_authority.py",
+          "tests/test_hyperliquid_testnet.py",
+          "tests/test_hyperliquid_testnet_lifecycle_evidence.py",
+          "tests/test_phase00_scheduler_supervisor.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/execution.py",
+          "root_label": "forensic_b",
+          "sha256": "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a",
+          "size_bytes": 167259,
+          "top_level_definition_count": 111
+        },
+        {
+          "relative_path": "src/quant_platform/execution.py",
+          "root_label": "source_candidate",
+          "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+          "size_bytes": 200503,
+          "top_level_definition_count": 135
+        },
+        {
+          "relative_path": "src/quant_platform/execution.py",
+          "root_label": "visual_recovery",
+          "sha256": "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c",
+          "size_bytes": 166719,
+          "top_level_definition_count": 110
+        }
+      ],
+      "frozen_recovery_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+      "frozen_runtime_sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "076431ef62cdd19415637cf00d9e5aaba37b771b31940f4d5bee671d93fc2171",
+      "high_impact_remaining_risk": "A confirmed-flat browser override can synthesize checked empty dYdX account state when live state is unchecked or blocked; adapter identity/callable checks also remain weaker than runtime candidate.",
+      "path": "src/quant_platform/execution.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "3e29897abf550865ee700b7b38e20bf5726c038cc5a7a8252adb5eb7320de15a",
+        "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c"
+      ],
+      "queue_line": 166,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Selected source now strictly parses persisted venue compatibility/preflight flags. Older forensic/visual source omits later gate00g controls; runtime candidate adds a large coherent canonical-adapter attestation and advisory-only browser account-state contract. Keep completed strict-bool repair; review high-risk authority guards separately, not as a whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_AUTHORITY_GAP_DEFERRED_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/execution.py",
+        "root_label": "recovery",
+        "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+        "size_bytes": 200503
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/execution.py",
+        "root_label": "runtime",
+        "sha256": "a350d7a0a39a4435bf3f4d7d6733d50047e254c3e7abbb5f0c2496c62d9fbcbe",
+        "size_bytes": 200503
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "f8ebdb3ab217ca1c8d7a2911c1e1cc6ec94eaa166c17c854d214d4024072d84e",
+      "selected_top_level_definitions": [
+        "DryRunDydxExecution",
+        "DydxMarketDataClient",
+        "DydxNetworkConfig",
+        "DydxOrderClient",
+        "DydxV4IndexerAdapter",
+        "ExecutionMode",
+        "ExecutionVenue",
+        "FillReport",
+        "OrderIntent",
+        "PaperDydxExecution",
+        "PaperTradingRecord",
+        "PaperVenueExecution",
+        "SpreadOrderPlan",
+        "UnsupportedVenueExecution",
+        "VenueOrderClient",
+        "_boolish",
+        "_canonical_execution_json",
+        "_dydx_market",
+        "_extract_dydx_reference_price",
+        "_gate00g_adapter_instance_allowed",
+        "_gate00g_execution_venue_allowed",
+        "_gmx_assets_for_pair",
+        "_gmx_candidate_source_frame",
+        "_gmx_fetch_json",
+        "_gmx_inventory_frame",
+        "_gmx_market_indexes",
+        "_gmx_market_payloads",
+        "_gmx_pair_key",
+        "_gmx_scaled_usd",
+        "_gmx_symbol_from_market",
+        "_gmx_token_index",
+        "_hyperliquid_assets_for_pair",
+        "_hyperliquid_candidate_source_frame",
+        "_hyperliquid_inventory_frame",
+        "_hyperliquid_margin_tier_frame",
+        "_hyperliquid_market_indexes",
+        "_hyperliquid_pair_key",
+        "_hyperliquid_post_json",
+        "_hyperliquid_safe_float",
+        "_injective_assets_for_pair",
+        "_injective_fetch_json",
+        "_injective_market_indexes",
+        "_injective_symbol_index",
+        "_lookup_dashboard_trade_snapshot",
+        "_lookup_dydx_reference_prices",
+        "_match_pair_detail_price_snapshot",
+        "_maybe_float",
+        "_monitor_markdown",
+        "_monitor_timeframe_sort_key",
+        "_normalized_pair_key",
+        "_parse_adapter_path",
+        "_place_order_accepts_intent_config",
+        "_place_order_call",
+        "_plan_status_from_fills",
+        "_quantize_size_to_step",
+        "_read_csv",
+        "_read_csv_or_empty",
+        "_safe_json_dict",
+        "_split_pair",
+        "_status_is_confirmed_for_paper_submit",
+        "_venue_market",
+        "_write_hyperliquid_public_response",
+        "append_paper_outcome_record",
+        "append_paper_trading_record",
+        "block_paper_plan_for_execution_config",
+        "build_dydx_indexer_adapter",
+        "build_dydx_order_client_adapter",
+        "build_execution_venue",
+        "build_market_neutral_spread_intents",
+        "build_research_gated_paper_plan",
+        "build_venue_order_client_adapter",
+        "dydx_account_state_snapshot",
+        "dydx_execution_compatibility_snapshot",
+        "dydx_indexer_adapter_available",
+        "dydx_market_confirmed_for_paper_submit",
+        "dydx_readiness_report",
+        "dydx_v4_client_installed",
+        "effective_dydx_account_state_snapshot",
+        "fill_report_confirmed",
+        "gmx_execution_compatibility_snapshot",
+        "hyperliquid_execution_compatibility_snapshot",
+        "hyperliquid_testnet_order_preflight_status",
+        "injective_execution_compatibility_snapshot",
+        "load_browser_account_state_override",
+        "load_dydx_execution_attempts",
+        "load_dydx_execution_compatibility",
+        "load_gmx_execution_compatibility",
+        "load_hyperliquid_execution_compatibility",
+        "load_injective_execution_compatibility",
+        "normalize_venue_name",
+        "paper_trading_record",
+        "refresh_current_paper_watch_positions",
+        "refresh_dydx_execution_compatibility_table",
+        "refresh_gmx_execution_compatibility_table",
+        "refresh_gmx_testnet_candidate_shortlist",
+        "refresh_gmx_testnet_market_inventory",
+        "refresh_hyperliquid_execution_compatibility_table",
+        "refresh_hyperliquid_testnet_candidate_shortlist",
+        "refresh_hyperliquid_testnet_market_inventory",
+        "refresh_injective_execution_compatibility_table",
+        "refresh_injective_mirror_candidate_queue",
+        "refresh_injective_spot_first_candidate_shortlist",
+        "refresh_injective_spot_supported_pair_universe",
+        "refresh_live_paper_trade_monitor",
+        "refresh_non_eth_route_submit_queue",
+        "refresh_paper_trade_decision_report",
+        "refresh_paper_trade_price_journal",
+        "refresh_paper_trade_rulebook",
+        "submit_paper_plan",
+        "validate_dydx_order_client_adapter",
+        "validate_venue_order_client_adapter",
+        "venue_has_paper_adapter",
+        "venue_order_adapter_env",
+        "write_browser_account_state_override"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "0311956",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py"
+        ],
+        "tests": [
+          "tests/test_family_matrix.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/family_matrix.py",
+          "root_label": "forensic_b",
+          "sha256": "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a",
+          "size_bytes": 14851,
+          "top_level_definition_count": 8
+        },
+        {
+          "relative_path": "src/quant_platform/family_matrix.py",
+          "root_label": "source_candidate",
+          "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+          "size_bytes": 14885,
+          "top_level_definition_count": 8
+        },
+        {
+          "relative_path": "src/quant_platform/family_matrix.py",
+          "root_label": "visual_recovery",
+          "sha256": "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce",
+          "size_bytes": 14666,
+          "top_level_definition_count": 8
+        }
+      ],
+      "frozen_recovery_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "frozen_runtime_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/family_matrix.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce",
+        "b46719f90a18022fcc87e366e20d1b03d85cec5eade3904336944384c733ba8a"
+      ],
+      "queue_line": 168,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected source retains atomic family report publication and strict persisted production/preferred eligibility parsing. Forensic_b replaces atomic writers with direct writes; visual_recovery also drops registry authority columns and uses bool('False'). No whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/family_matrix.py",
+        "root_label": "recovery",
+        "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+        "size_bytes": 14885
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/family_matrix.py",
+        "root_label": "runtime",
+        "sha256": "5bf8c8768339ed05c026502970d1903c39f7d2c7919f30aff8a5d2f1e2de4875",
+        "size_bytes": 14885
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "884212ccd833a9621446b832903011c3b69b0070937a020b90b6407346843cf6",
+      "selected_top_level_definitions": [
+        "FamilyRunArtifact",
+        "_best_acceptance_row",
+        "_build_combo_reports",
+        "_evaluate_combo_members",
+        "_family_matrix_runbook",
+        "_safe_metric_value",
+        "run_family_matrix",
+        "strategy_family_registry"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py"
+        ],
+        "tests": [
+          "tests/test_meta_learning.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/meta_learning.py",
+          "root_label": "forensic_b",
+          "sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "size_bytes": 12184,
+          "top_level_definition_count": 15
+        },
+        {
+          "relative_path": "src/quant_platform/meta_learning.py",
+          "root_label": "source_candidate",
+          "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+          "size_bytes": 17911,
+          "top_level_definition_count": 26
+        },
+        {
+          "relative_path": "src/quant_platform/meta_learning.py",
+          "root_label": "visual_recovery",
+          "sha256": "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec",
+          "size_bytes": 12184,
+          "top_level_definition_count": 15
+        }
+      ],
+      "frozen_recovery_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+      "frozen_runtime_sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+      "high_impact_remaining_risk": "Selected outcome count can include raw currency pnl, ambiguous pnl_pct, duplicate/nonfinite/bool returns, and any nonempty exit-price paper row; it can mark modeling ready without verified outcomes.",
+      "path": "src/quant_platform/meta_learning.py",
+      "queue_historical_variant_count": 1,
+      "queue_historical_variant_sha256": [
+        "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec"
+      ],
+      "queue_line": 206,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Recovery/runtime revision separates finite normalized returns and holds verified readiness false but changes report schema and CLI expectations. Selected CLI P5 directly consumes ready_for_modeling. Selected file must retain current report/CLI contract while a focused outcome-proof and readiness repair is reviewed; older forensic/visual variant also reverts atomic publication.",
+      "recommended_queue_status": "REVIEWED_MODEL_READINESS_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/meta_learning.py",
+        "root_label": "recovery",
+        "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+        "size_bytes": 17911
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/meta_learning.py",
+        "root_label": "runtime",
+        "sha256": "1f29b9beb0d39901e45a7636cf499bcdd5a03de4e938d2a9c2c84dc3fecb99d9",
+        "size_bytes": 17911
+      },
+      "selected_changed_since_freeze": false,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "a6731a8f67f84487bdd3b26d4f8949e7609eaef64b1b25bb2d6b2ca64cfc53b9",
+      "selected_top_level_definitions": [
+        "JsonlTradeStore",
+        "TradeRecord",
+        "_empty_summary",
+        "_fill_statuses",
+        "_json_dict",
+        "_paper_journal_row_has_verified_outcome",
+        "_paper_journal_summary",
+        "_read_paper_journal",
+        "_read_trade_store",
+        "_realized_return",
+        "_snapshot_has_exit_price",
+        "_trade_store_summary",
+        "_weighted_average_return",
+        "learning_event_summary",
+        "write_learning_event_summary_report"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "0311956",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/active_pipeline.py",
+          "src/quant_platform/cli.py",
+          "src/quant_platform/trade_timing.py",
+          "src/quant_platform/wizard_evidence.py",
+          "src/quant_platform/wizard_pair_detail_ui_bundle.py"
+        ],
+        "tests": [
+          "tests/test_binance_spot.py",
+          "tests/test_pair_detail_ingestion.py",
+          "tests/test_yahoo_crypto.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+          "root_label": "forensic_b",
+          "sha256": "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1",
+          "size_bytes": 65751,
+          "top_level_definition_count": 78
+        },
+        {
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+          "root_label": "source_candidate",
+          "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+          "size_bytes": 65843,
+          "top_level_definition_count": 78
+        },
+        {
+          "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+          "root_label": "visual_recovery",
+          "sha256": "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65",
+          "size_bytes": 65642,
+          "top_level_definition_count": 78
+        }
+      ],
+      "frozen_recovery_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "frozen_runtime_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/pair_detail_ingestion.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65",
+        "e1e26ff73f852586b4f69654d995fb7d87b2f4d0d94b39b0ebcdfaf6087078a1"
+      ],
+      "queue_line": 452,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected source retains atomic/promoted capture publication and now strictly parses persisted ECM, research usability, and execution-readiness flags. Forensic_b replaces atomic/promoted writes; visual_recovery also uses bool('False') for those guards. No whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+        "root_label": "recovery",
+        "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+        "size_bytes": 65843
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/pair_detail_ingestion.py",
+        "root_label": "runtime",
+        "sha256": "f2d8637851dd8b8533cb86458f85ccd78a390eca59a808f07e560a09f88c2e04",
+        "size_bytes": 65843
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "faa541fa308fd128003f43f8789f015b1084c03d30b03359f30f23340b1e992b",
+      "selected_top_level_definitions": [
+        "PairDetailSnapshot",
+        "_best_capture_candidate",
+        "_cache_integer",
+        "_cached_boolean",
+        "_cached_report_rows",
+        "_candidate_history_records",
+        "_canonical_history_row",
+        "_capture_operator_hint",
+        "_capture_paths",
+        "_capture_payload_counts",
+        "_conditional_probability",
+        "_contains_line",
+        "_execution_assumption_notes",
+        "_extract_int_before_phrase",
+        "_extract_pair_header",
+        "_extract_selected_label",
+        "_extract_strategy_mode",
+        "_field_locations",
+        "_first_list",
+        "_har_entries",
+        "_har_request_url",
+        "_har_response_text",
+        "_has_placeholder_execution_assumptions",
+        "_has_research_columns",
+        "_history_identity",
+        "_history_records",
+        "_int_metric_after_colon",
+        "_is_capture_metadata_path",
+        "_is_har_dydx_candle_request",
+        "_json_path_key",
+        "_leading_nonfinite_count",
+        "_looks_like_market",
+        "_match",
+        "_metric_after_colon",
+        "_missing_rate",
+        "_next_capture_focus",
+        "_nonfinite_rate",
+        "_numeric_series",
+        "_pair_detail_cache_valid",
+        "_pair_detail_quality_blockers",
+        "_pair_detail_source_entries",
+        "_parallel_series_records",
+        "_parsed_json_value",
+        "_path_sha256",
+        "_post_warmup_nonfinite_rate",
+        "_read_json_dict",
+        "_research_execution_assumptions_ready",
+        "_safe_count",
+        "_safe_float",
+        "_safe_int",
+        "_split_columns",
+        "_stale_rate",
+        "_text_after_label",
+        "_value_after_label",
+        "_value_before_label",
+        "_walk_json",
+        "_walk_json_with_parsed_strings",
+        "_weighting",
+        "_write_frame_atomic",
+        "_write_json_atomic",
+        "_zero_rate",
+        "datasets_from_pair_detail_snapshots",
+        "extract_history_rows",
+        "load_or_refresh_pair_detail_evidence_cache",
+        "load_pair_detail_payload",
+        "load_pair_detail_snapshots",
+        "pair_detail_capture_audit",
+        "pair_detail_capture_checklist",
+        "pair_detail_field_rows",
+        "pair_detail_history_coverage",
+        "pair_detail_payload_capture_audit",
+        "pair_detail_payload_capture_checklist",
+        "pair_detail_payload_history_coverage",
+        "pair_detail_payload_quality",
+        "pair_detail_quality_report",
+        "parse_pair_detail_text",
+        "snapshot_from_payload",
+        "write_pair_detail_reports"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "543d415",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py",
+          "src/quant_platform/research_extract_ccxt.py",
+          "src/quant_platform/research_extract_udemy.py",
+          "src/quant_platform/research_extract_youtube.py",
+          "src/quant_platform/research_papers.py"
+        ],
+        "tests": [
+          "tests/test_research_ingestion.py",
+          "tests/test_youtube_brain.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/research_ingestion.py",
+          "root_label": "forensic_b",
+          "sha256": "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a",
+          "size_bytes": 11960,
+          "top_level_definition_count": 20
+        },
+        {
+          "relative_path": "src/quant_platform/research_ingestion.py",
+          "root_label": "source_candidate",
+          "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+          "size_bytes": 11991,
+          "top_level_definition_count": 20
+        },
+        {
+          "relative_path": "src/quant_platform/research_ingestion.py",
+          "root_label": "visual_recovery",
+          "sha256": "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08",
+          "size_bytes": 11796,
+          "top_level_definition_count": 20
+        }
+      ],
+      "frozen_recovery_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "frozen_runtime_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/research_ingestion.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08",
+        "f5dee7dfa100e6186069b43cf01bfe8c23c4d1979d4a7f7dcaae3935de84cb1a"
+      ],
+      "queue_line": 462,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected source keeps atomic manifest/audit publication and the narrow AppleDouble sidecar exclusion from forensic_b. Forensic_b uses direct writes; visual_recovery lacks sidecar filtering and UnicodeDecodeError quarantine. No whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/research_ingestion.py",
+        "root_label": "recovery",
+        "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+        "size_bytes": 11991
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/research_ingestion.py",
+        "root_label": "runtime",
+        "sha256": "398a9509e5655c1cc7fd81a9f55d35415545648aaaedfbf90cb7d92b19520340",
+        "size_bytes": 11991
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "38ade386e6f2c4df660150ceddb1a075d964589266d0473500e54ea1ccc11928",
+      "selected_top_level_definitions": [
+        "ResearchSourceRecord",
+        "_audit_markdown",
+        "_audit_paths",
+        "_normalize_confidence",
+        "_normalize_source_type",
+        "_normalize_status",
+        "_now_iso",
+        "_read_registry",
+        "_record_from_payload",
+        "_safe_source_id",
+        "_stringify_tags",
+        "_write_registry",
+        "active_research_sources",
+        "build_research_source_registry",
+        "ingest_research_source",
+        "mark_research_sources_processed",
+        "research_manifest_dir",
+        "research_registry_path",
+        "research_source_audit",
+        "research_source_base"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py",
+          "src/quant_platform/research_extract_udemy.py",
+          "src/quant_platform/youtube_brain.py"
+        ],
+        "tests": [
+          "tests/test_research_ingestion.py",
+          "tests/test_udemy_research.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
+          "root_label": "forensic_b",
+          "sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "size_bytes": 6596,
+          "top_level_definition_count": 7
+        },
+        {
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
+          "root_label": "source_candidate",
+          "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+          "size_bytes": 7570,
+          "top_level_definition_count": 9
+        },
+        {
+          "relative_path": "src/quant_platform/research_knowledge_store.py",
+          "root_label": "visual_recovery",
+          "sha256": "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9",
+          "size_bytes": 6596,
+          "top_level_definition_count": 7
+        }
+      ],
+      "frozen_recovery_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+      "frozen_runtime_sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "754087b1b5f18f21873fbbb2d062b1570bbdd76cd854e7d5356e6fd22aee9db5",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/research_knowledge_store.py",
+      "queue_historical_variant_count": 1,
+      "queue_historical_variant_sha256": [
+        "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9"
+      ],
+      "queue_line": 463,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "CHANGED",
+      "rationale": "Recovery/runtime only add query_research_evidence and answer_research_question wrappers around research_rag.client.configured_rag, but selected tree has no research_rag package. Existing CLI/YouTube/Udemy consumers use selected CSV builder/query paths. Forensic/visual revert atomic CSV/Markdown publication. Defer RAG wrappers until the package and contract are selected.",
+      "recommended_queue_status": "REVIEWED_RAG_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/research_knowledge_store.py",
+        "root_label": "recovery",
+        "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+        "size_bytes": 7570
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/research_knowledge_store.py",
+        "root_label": "runtime",
+        "sha256": "35a16180b218d68c62f07db3f313115d873f865136badea641c746e16133416d",
+        "size_bytes": 7570
+      },
+      "selected_changed_since_freeze": false,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "754087b1b5f18f21873fbbb2d062b1570bbdd76cd854e7d5356e6fd22aee9db5",
+      "selected_top_level_definitions": [
+        "_boolish",
+        "_source_summary",
+        "_summary_markdown",
+        "build_research_knowledge_store",
+        "knowledge_base",
+        "query_research_knowledge",
+        "research_knowledge_summary"
+      ]
+    },
+    {
+      "completed_narrow_port_commit": "0311956",
+      "direct_importers": {
+        "scripts": [],
+        "source": [
+          "src/quant_platform/cli.py"
+        ],
+        "tests": [
+          "tests/test_v2_run.py"
+        ]
+      },
+      "extended_copies": [
+        {
+          "relative_path": "src/quant_platform/v2_run.py",
+          "root_label": "forensic_b",
+          "sha256": "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54",
+          "size_bytes": 31735,
+          "top_level_definition_count": 30
+        },
+        {
+          "relative_path": "src/quant_platform/v2_run.py",
+          "root_label": "source_candidate",
+          "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+          "size_bytes": 31854,
+          "top_level_definition_count": 30
+        },
+        {
+          "relative_path": "src/quant_platform/v2_run.py",
+          "root_label": "visual_recovery",
+          "sha256": "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b",
+          "size_bytes": 31640,
+          "top_level_definition_count": 30
+        }
+      ],
+      "frozen_recovery_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "frozen_runtime_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "frozen_working_git_provenance": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+      "frozen_working_sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+      "high_impact_remaining_risk": "",
+      "path": "src/quant_platform/v2_run.py",
+      "queue_historical_variant_count": 2,
+      "queue_historical_variant_sha256": [
+        "99affa8274c7f5673bfba0071f015739183cab784c96acc198ac6214b01bbb54",
+        "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b"
+      ],
+      "queue_line": 515,
+      "queue_status_at_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "queue_working_vs_runtime": "",
+      "rationale": "Selected V2 source retains atomic pointer/publication controls and now strictly parses persisted readiness and authority booleans. Forensic_b replaces atomic publication; visual_recovery also uses truthiness on serialized flags. A remaining _control_plane_blockers permissive false-like field parse is a schema issue, but the pointer still forces live authority false. No whole-file port.",
+      "recommended_queue_status": "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT",
+      "recovery_copy": {
+        "relative_path": "src/quant_platform/v2_run.py",
+        "root_label": "recovery",
+        "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+        "size_bytes": 31854
+      },
+      "runtime_copy": {
+        "relative_path": "src/quant_platform/v2_run.py",
+        "root_label": "runtime",
+        "sha256": "0a0aac9f22db0671e25ac888162d5ae19ec03582d351eb7ed5702673c7ab9547",
+        "size_bytes": 31854
+      },
+      "selected_changed_since_freeze": true,
+      "selected_commit": "7776c58c4bca3216765ccb46be7e3a79afc21e3d",
+      "selected_sha256": "77cd780d9e8a9d39e9454846a99da86f808b8221bb6974621bcdbf41ed1d7203",
+      "selected_top_level_definitions": [
+        "V2ArtifactSpec",
+        "_as_utc",
+        "_atomic_csv",
+        "_atomic_json",
+        "_atomic_text",
+        "_build_seal",
+        "_build_stage_status",
+        "_column_values",
+        "_control_plane_blockers",
+        "_file_hash",
+        "_normalize_pair_identity",
+        "_pair_values",
+        "_pointer_row",
+        "_read_csv",
+        "_read_json",
+        "_relative",
+        "_require_all_equal",
+        "_require_all_truthy",
+        "_run_directory",
+        "_run_markdown",
+        "_safe_int",
+        "_semantic_blockers",
+        "_snapshot_artifact",
+        "_source_candidate_set",
+        "_text",
+        "_truthy",
+        "_unique_blockers",
+        "build_v2_preflight_run",
+        "publish_v2_run_status",
+        "validate_v2_run"
+      ]
+    }
+  ],
+  "freeze_git_commit": "b98d5b9447a109938b57b239a7d458f47606d7c9",
+  "freeze_path": "audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+  "pending_count": 11,
+  "physical_copy_hashes_verified": 55,
+  "queue_path": "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv",
+  "report_type": "gate0_original_811_nonorchestration_source11",
+  "selection_rule": "11 named original-811 pending non-orchestration source paths",
+  "status_counts": {
+    "REVIEWED_ADAPTER_AUTHORITY_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT": 1,
+    "REVIEWED_EXACT_REQUEST_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT": 1,
+    "REVIEWED_MODEL_READINESS_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT": 1,
+    "REVIEWED_NARROW_PORT_COMPLETE_AUTHORITY_GAP_DEFERRED_NO_WHOLE_FILE_PORT": 1,
+    "REVIEWED_NARROW_PORT_COMPLETE_HISTORICAL_NO_WHOLE_FILE_PORT": 5,
+    "REVIEWED_RAG_DEPENDENCY_DEFERRED_NO_WHOLE_FILE_PORT": 1,
+    "REVIEWED_SECRET_PROVENANCE_REPAIR_CANDIDATE_NO_WHOLE_FILE_PORT": 1
+  }
+}

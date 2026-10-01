@@ -1,0 +1,36 @@
+{
+  "active_capture_opportunities": 21,
+  "active_recorded_missing_integrations": 28,
+  "capture_opportunities_omitted_in_runtime": [
+    "Inspector route receipt"
+  ],
+  "decision": "REVIEWED_ACTIVE_RETAIN_RUNTIME_NO_PORT",
+  "focused_current_tests_passed": 6,
+  "focused_junit_sha256": "2fdcd1175dd6b6282a75b0a80a447602e3403c7f2f8ca376fa0ce844b1bd60cb",
+  "gaps_omitted_in_runtime": [
+    "Authenticated dashboard preflight",
+    "Authenticated inspector status",
+    "Daily and Hourly browser capture completion"
+  ],
+  "interpretation": "Retain the active static inventory for Gate 0; the runtime candidate's lower counts do not by themselves prove these dashboard inspection gaps were completed.",
+  "paths": {
+    "config/wizard_surface_inventory_contract.json": {
+      "active_sha256": "ca8efed2b1a27df963fbe01e0b6305f942f2171b9ba9420c9b7b9be957012698",
+      "runtime_sha256": "317f7e825d7376dabc61fa0e54df5cc3055d224055759b631d4ccbfef3870bf0",
+      "saved_runtime_sha256": "317f7e825d7376dabc61fa0e54df5cc3055d224055759b631d4ccbfef3870bf0"
+    },
+    "src/quant_platform/orchestration/corrective_wizard_surface_inventory.py": {
+      "active_sha256": "be13dbcc8eecf64a9a28ac8dafe48a4ce3cd046b5d0a18e574ed576172b39723",
+      "runtime_sha256": "26a0b9f0bfbbb96730d60d08524e01f4ef9d8e1a77751d64651e0800c1986c58",
+      "saved_runtime_sha256": "26a0b9f0bfbbb96730d60d08524e01f4ef9d8e1a77751d64651e0800c1986c58"
+    },
+    "tests/test_corrective_wizard_surface_inventory.py": {
+      "active_sha256": "3078fc0faaea2835ff008878e18392054d5cf79b766f7b9994be8c8807277a09",
+      "runtime_sha256": "63ed2f308f40d113d2256221e9aaf09f3118fc75d351c3575d4eac62c273f2fb",
+      "saved_runtime_sha256": "63ed2f308f40d113d2256221e9aaf09f3118fc75d351c3575d4eac62c273f2fb"
+    }
+  },
+  "runtime_capture_opportunities": 20,
+  "runtime_recorded_missing_integrations": 25,
+  "schema_version": "thewiz.gate0.dashboard_inventory_decision.v1"
+}

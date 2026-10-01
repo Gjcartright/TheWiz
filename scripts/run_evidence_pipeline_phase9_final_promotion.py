@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "reports" / "evidence_pipeline"
 
 PAIRS = ("ETH-SOL", "BTC-DOGE", "BTC-SOL", "ETH-LINK", "DOGE-XRP")
+LEGACY_PIPELINE_AUTHORITY = "HISTORICAL_RESEARCH_ONLY"
 
 
 def table(frame: pd.DataFrame, columns: list[str], limit: int | None = None) -> str:
@@ -40,7 +41,11 @@ def final_label(pair: str, best: pd.Series | None, stress_pf: float | None, stre
     if best is None:
         return "reject", "No tested row available.", "Restore coverage and rerun baseline."
     if bool(best.get("walk_forward_pass", False)) and stress_pass and stress_pf is not None and stress_pf >= 1.3:
-        return "paper_trade_candidate", "Passed walk-forward and cost stress; still requires operational review.", "Prepare paper-trade runbook."
+        return (
+            "research_only",
+            "Legacy V1 diagnostics passed their historical gates, but this pipeline has no acceptance or paper-trade authority.",
+            "Regenerate the candidate through the canonical V2 exact-mode and observed-cost pipeline.",
+        )
     if bool(best.get("walk_forward_pass", False)):
         return "watchlist", "Passed walk-forward but has not passed cost stress.", "Run and pass Phase 7 stress."
     if pair == "BTC-SOL" and float(best["profit_factor"]) >= 1.3 and float(best["test_profit_factor"]) >= 1.2:
@@ -90,16 +95,16 @@ def main() -> None:
                 else "",
                 "reason_for_label": reason,
                 "next_action": next_action,
+                "promotion_authority": False,
+                "authority_reason": "legacy_v1_pipeline_quarantined_from_active_authority",
             }
         )
 
     results = pd.DataFrame(rows)
     label_order = {
-        "production_candidate": 0,
-        "paper_trade_candidate": 1,
-        "watchlist": 2,
-        "research_only": 3,
-        "reject": 4,
+        "watchlist": 0,
+        "research_only": 1,
+        "reject": 2,
     }
     results["label_order"] = results["final_label"].map(label_order).fillna(9)
     results = results.sort_values(["label_order", "pair"]).drop(columns=["label_order"]).reset_index(drop=True)
@@ -126,7 +131,7 @@ def main() -> None:
     report = [
         "# Evidence Pipeline Phase 9 Final Promotion Report",
         "",
-        "Final labels are evidence-gated. No strategy is marked deployable unless it passes walk-forward and cost stress.",
+        "This is a preserved V1 research report. It has no promotion, paper-trade, or execution authority.",
         "",
         "## Final Labels",
         "",
@@ -134,8 +139,8 @@ def main() -> None:
         "",
         "## Gate Summary",
         "",
-        f"- Production candidates: {int(results['final_label'].eq('production_candidate').sum())}",
-        f"- Paper-trade candidates: {int(results['final_label'].eq('paper_trade_candidate').sum())}",
+        "- Production candidates: 0 (prohibited for this legacy pipeline)",
+        "- Paper-trade candidates: 0 (prohibited for this legacy pipeline)",
         f"- Watchlist: {int(results['final_label'].eq('watchlist').sum())}",
         f"- Research-only: {int(results['final_label'].eq('research_only').sum())}",
         f"- Reject: {int(results['final_label'].eq('reject').sum())}",

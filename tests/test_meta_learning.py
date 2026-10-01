@@ -2,9 +2,11 @@ import json
 from datetime import datetime
 
 import pandas as pd
+import pytest
 
 from quant_platform.meta_learning import (
     JsonlTradeStore,
+    LEARNING_EVENT_SUMMARY_COLUMNS,
     TradeRecord,
     learning_event_summary,
     write_learning_event_summary_report,
@@ -67,14 +69,15 @@ def test_learning_event_summary_combines_paper_journal_and_trade_store(tmp_path)
     assert summary["paper_journal"]["submitted_fill_events"] == 1
     assert summary["paper_journal"]["blocked_fill_events"] == 1
     assert summary["trade_store"]["events"] == 1
-    assert summary["trade_store"]["outcome_events"] == 1
-    assert summary["trade_store"]["profitable_outcomes"] == 1
+    assert summary["trade_store"]["outcome_events"] == 0
+    assert summary["trade_store"]["profitable_outcomes"] == 0
     assert summary["combined"]["events"] == 3
-    assert summary["combined"]["outcome_events"] == 1
-    assert summary["combined"]["audit_only_events"] == 2
-    assert summary["combined"]["outcome_events_remaining"] == 1
+    assert summary["combined"]["outcome_events"] == 0
+    assert summary["combined"]["audit_only_events"] == 3
+    assert summary["combined"]["outcome_events_remaining"] == 2
     assert summary["combined"]["ready_for_modeling"] is False
-    assert summary["combined"]["notes"] == "needs_more_realized_outcomes"
+    assert "reported_normalized_outcomes=1" in summary["combined"]["notes"]
+    assert "verified_outcome_consumer_not_bound" in summary["combined"]["notes"]
 
 
 def test_learning_event_summary_requires_realized_outcomes_not_audit_only_events(tmp_path):
@@ -113,9 +116,9 @@ def test_learning_event_summary_requires_realized_outcomes_not_audit_only_events
     combined = {row["source"]: row for row in rows}["combined"]
 
     assert combined["events"] == 6
-    assert combined["outcome_events"] == 1
-    assert combined["audit_only_events"] == 5
-    assert combined["outcome_events_remaining"] == 4
+    assert combined["outcome_events"] == 0
+    assert combined["audit_only_events"] == 6
+    assert combined["outcome_events_remaining"] == 5
     assert combined["ready_for_modeling"] is False
 
 
@@ -129,13 +132,14 @@ def test_write_learning_event_summary_report_handles_missing_inputs(tmp_path):
     )
 
     report = pd.read_csv(path)
+    assert list(report.columns) == LEARNING_EVENT_SUMMARY_COLUMNS
     assert list(report["source"]) == ["paper_journal", "trade_store", "combined"]
     assert int(report.loc[report["source"] == "combined", "events"].iloc[0]) == 0
     assert int(report.loc[report["source"] == "combined", "outcome_events_remaining"].iloc[0]) == 100
     assert path == output
 
 
-def test_learning_event_summary_counts_realized_outcomes_from_paper_journal(tmp_path):
+def test_learning_event_summary_does_not_promote_single_leg_exit_claim(tmp_path):
     paper_journal = tmp_path / "paper_trading_journal.csv"
     trade_store = tmp_path / "trades.jsonl"
     pd.DataFrame(
@@ -184,10 +188,10 @@ def test_learning_event_summary_counts_realized_outcomes_from_paper_journal(tmp_
     rows = learning_event_summary(paper_journal, trade_store, min_modeling_events=1)
     summary = {row["source"]: row for row in rows}
 
-    assert summary["paper_journal"]["outcome_events"] == 1
-    assert summary["paper_journal"]["profitable_outcomes"] == 1
-    assert summary["paper_journal"]["ready_for_modeling"] is True
-    assert summary["paper_journal"]["notes"] == "modeling_ready"
+    assert summary["paper_journal"]["outcome_events"] == 0
+    assert summary["paper_journal"]["profitable_outcomes"] == 0
+    assert summary["paper_journal"]["ready_for_modeling"] is False
+    assert "verified_outcome_consumer_not_bound" in summary["paper_journal"]["notes"]
 
 
 def test_learning_event_summary_does_not_count_unverified_closed_journal_rows(tmp_path):
@@ -223,4 +227,47 @@ def test_learning_event_summary_does_not_count_unverified_closed_journal_rows(tm
     assert summary["paper_journal"]["outcome_events"] == 0
     assert summary["paper_journal"]["profitable_outcomes"] == 0
     assert summary["paper_journal"]["ready_for_modeling"] is False
-    assert summary["paper_journal"]["notes"] == "handoff_audit_only"
+    assert "verified_outcome_consumer_not_bound" in summary["paper_journal"]["notes"]
+
+
+def test_learning_summary_keeps_unverified_claims_out_of_modeling_gate(tmp_path):
+    paper = tmp_path / "paper.csv"
+    trades = tmp_path / "trades.jsonl"
+    pd.DataFrame([{
+        "plan_status": "paper_completed",
+        "lifecycle_status": "closed",
+        "trade_id": "same-trade",
+        "pair": "ETH-BTC",
+        "venue": "dydx",
+        "realized_return": 0.02,
+        "exit_snapshot_json": json.dumps({"venue_exit_price_x": 101.0, "venue_exit_price_y": 99.0}),
+    }]).to_csv(paper, index=False)
+    rows = [
+        {"trade_id": "same-trade", "pair": "ETH-BTC", "execution": {"venue": "dydx"}, "outcome": {"realized_return": 0.02}},
+        {"trade_id": "same-trade", "pair": "ETH-BTC", "execution": {"venue": "dydx"}, "outcome": {"realized_return": 0.02}},
+        {"trade_id": "conflict", "pair": "ETH-BTC", "execution": {"venue": "dydx"}, "outcome": {"realized_return": 0.03}},
+        {"trade_id": "conflict", "pair": "ETH-BTC", "execution": {"venue": "dydx"}, "outcome": {"realized_return": -0.03}},
+        {"trade_id": "currency", "outcome": {"pnl": 1000}},
+        {"trade_id": "ambiguous", "outcome": {"pnl_pct": 12}},
+        {"trade_id": "boolean", "outcome": {"realized_return": True}},
+        {"trade_id": "infinite", "outcome": {"realized_return": "inf"}},
+        {"trade_id": "", "outcome": {"realized_return": 0.5}, "pair": "ETH-BTC"},
+        {"trade_id": "dual", "outcome": {"realized_return": 0.1, "return": 0.2}},
+    ]
+    trades.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+
+    summary = {row["source"]: row for row in learning_event_summary(paper, trades, min_modeling_events=1)}
+
+    assert summary["combined"]["events"] == 11
+    assert summary["combined"]["outcome_events"] == 0
+    assert summary["combined"]["ready_for_modeling"] is False
+    assert summary["combined"]["outcome_events_remaining"] == 1
+    assert summary["combined"]["audit_only_events"] == 11
+    assert "reported_normalized_outcomes=1" in summary["combined"]["notes"]
+    assert summary["combined"]["profitable_outcomes"] == 0
+
+
+@pytest.mark.parametrize("threshold", [0, -1, True, 1.5])
+def test_learning_summary_requires_positive_integer_threshold(tmp_path, threshold):
+    with pytest.raises(ValueError, match="min_modeling_events"):
+        learning_event_summary(tmp_path / "paper.csv", tmp_path / "trades.jsonl", threshold)

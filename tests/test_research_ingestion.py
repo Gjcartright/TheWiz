@@ -16,6 +16,22 @@ from quant_platform.research_ingestion import (
 from quant_platform.research_knowledge_store import build_research_knowledge_store
 
 
+def test_research_registry_ignores_appledouble_sidecars(tmp_path):
+    manifests = tmp_path / "data" / "external" / "research_sources" / "manifests"
+    manifests.mkdir(parents=True)
+    (manifests / "source.json").write_text(
+        '{"source_id":"source","source_type":"youtube","title":"Source"}',
+        encoding="utf-8",
+    )
+    (manifests / "._source.json").write_bytes(b"\x00\xb0not-json")
+
+    result = build_research_source_registry(root=tmp_path)
+    frame = pd.read_csv(result.paths["research_source_registry"])
+
+    assert result.summary["sources"] == 1
+    assert list(frame["source_id"]) == ["source"]
+
+
 def test_research_registry_quarantine_excludes_source_from_refresh(tmp_path):
     audit = tmp_path / "audit.md"
     audit.write_text(

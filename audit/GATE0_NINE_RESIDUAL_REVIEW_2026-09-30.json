@@ -1,0 +1,590 @@
+{
+  "authority": {
+    "orders_authorized": false,
+    "paper_trading_authorized": false,
+    "provider_calls": false,
+    "selected_source_ported": false,
+    "shared_queue_modified": false
+  },
+  "base_commit": "109de903c3631f057f8a9b8712907266e214f95d",
+  "disposition": "Semantic review of all nine paths is complete for current selection; seven desk paths remain unadopted and two historical test contracts remain deferred. No release or trading authority is inferred.",
+  "external_copy_check": "Every extended-manifest copy and both four-root recovery/runtime copies was SHA-256 checked against pinned metadata during generation and verification.",
+  "paths": [
+    {
+      "decision_rationale": "Offline copula signal has no selected importer or direct component test; its static signal dependency is absent. Adopt only with the complete desk and math-contract cohort.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "5a72e617de7f9eabbdfdc9f46cc51f3036185494c4bc2879b5a0bd6f4299f72c",
+          "size_bytes": 31608
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "5a72e617de7f9eabbdfdc9f46cc51f3036185494c4bc2879b5a0bd6f4299f72c",
+        "runtime": "5a72e617de7f9eabbdfdc9f46cc51f3036185494c4bc2879b5a0bd6f4299f72c",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_OFFLINE_COMPONENT",
+      "relative_path": "src/quant_platform/copula_desk/signal_path.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "offline_signal",
+        "missing_selected_dependencies": [
+          "quant_platform.static_desk.signal_path"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Offline dynamic signal has no selected importer or direct component test; its static signal dependency and four zscore_utils symbols are absent. Adopt only with the complete desk and math-contract cohort.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "0c07a027e8c882f863213d0753cafd1b618a29130fcc2bcee864dec0c9e62ed1",
+          "size_bytes": 18324
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "0c07a027e8c882f863213d0753cafd1b618a29130fcc2bcee864dec0c9e62ed1",
+        "runtime": "0c07a027e8c882f863213d0753cafd1b618a29130fcc2bcee864dec0c9e62ed1",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_OFFLINE_COMPONENT",
+      "relative_path": "src/quant_platform/dynamic_desk/signal_path.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "offline_signal",
+        "missing_selected_dependencies": [
+          "quant_platform.static_desk.signal_path",
+          "ROLLING_SAMPLE_IMPLEMENTATION_VERSION",
+          "EXPANDING_SAMPLE_IMPLEMENTATION_VERSION",
+          "rolling_sample_zscore",
+          "expanding_sample_zscore"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Static profile has no selected importer; institutional_risk and static runtime/accounting/controls dependencies are absent. Research profile custody grants no paper or order authority.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "9e6c4616e3f21f63270938ab4c9561fda7b695a62a5bca811b892c4db2bf058e",
+          "size_bytes": 31888
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "9e6c4616e3f21f63270938ab4c9561fda7b695a62a5bca811b892c4db2bf058e",
+        "runtime": "9e6c4616e3f21f63270938ab4c9561fda7b695a62a5bca811b892c4db2bf058e",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_DEPENDENCY_BLOCKED",
+      "relative_path": "src/quant_platform/static_desk/profile.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "unadopted_static_desk_dependency",
+        "missing_selected_dependencies": [
+          "quant_platform.institutional_risk",
+          "quant_platform.static_desk.runtime",
+          "quant_platform.static_desk.accounting",
+          "quant_platform.static_desk.controls"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Static profile data has no selected importer; its profile and accounting dependencies are unadopted. Research inputs grant no paper or order authority.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "301e826b34aa93358ef97e83fc0f85d1006453eec1dc68a734874478788f8c47",
+          "size_bytes": 13169
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "301e826b34aa93358ef97e83fc0f85d1006453eec1dc68a734874478788f8c47",
+        "runtime": "301e826b34aa93358ef97e83fc0f85d1006453eec1dc68a734874478788f8c47",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_DEPENDENCY_BLOCKED",
+      "relative_path": "src/quant_platform/static_desk/profile_data.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "unadopted_static_desk_dependency",
+        "missing_selected_dependencies": [
+          "quant_platform.static_desk.profile",
+          "quant_platform.static_desk.accounting"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Static risk link has no selected importer; institutional_risk types are absent. No selected risk binding adopts this package.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "a1f89a747f617cd67051c342edee3f43e6fdd69475b2e882294de5ed4855137c",
+          "size_bytes": 9914
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "a1f89a747f617cd67051c342edee3f43e6fdd69475b2e882294de5ed4855137c",
+        "runtime": "a1f89a747f617cd67051c342edee3f43e6fdd69475b2e882294de5ed4855137c",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_DEPENDENCY_BLOCKED",
+      "relative_path": "src/quant_platform/static_desk/risk_link.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "unadopted_static_desk_dependency",
+        "missing_selected_dependencies": [
+          "quant_platform.institutional_risk"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Static runtime has no selected importer; institutional_risk and static accounting/controls/risk_link/signal_path dependencies are absent. Whole-cohort adoption requires risk and math review.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "32f216dae847e0a3c7d08c26c47e11ec0281ac70c25d82ccafd277d365f1b1dc",
+          "size_bytes": 39127
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "32f216dae847e0a3c7d08c26c47e11ec0281ac70c25d82ccafd277d365f1b1dc",
+        "runtime": "32f216dae847e0a3c7d08c26c47e11ec0281ac70c25d82ccafd277d365f1b1dc",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_DEPENDENCY_BLOCKED",
+      "relative_path": "src/quant_platform/static_desk/runtime.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "unadopted_static_desk_dependency",
+        "missing_selected_dependencies": [
+          "quant_platform.institutional_risk",
+          "quant_platform.static_desk.accounting",
+          "quant_platform.static_desk.controls",
+          "quant_platform.static_desk.risk_link",
+          "quant_platform.static_desk.signal_path"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Offline static signal has no selected importer or direct component test; four zscore_utils symbols are absent. Adopt only with the complete desk and math-contract cohort.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "f17d9ff4445d85ca327b08e0f7554fb821c5809ea4ebc190484f2c7d2b7f51b6",
+          "size_bytes": 27352
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "f17d9ff4445d85ca327b08e0f7554fb821c5809ea4ebc190484f2c7d2b7f51b6",
+        "runtime": "f17d9ff4445d85ca327b08e0f7554fb821c5809ea4ebc190484f2c7d2b7f51b6",
+        "working": null
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_DEPENDENCY_BLOCKED_UNADOPTED_DESK_NO_PORT",
+      "queue_status_at_base": "PRESERVED_REVIEW_REQUIRED_OFFLINE_COMPONENT",
+      "relative_path": "src/quant_platform/static_desk/signal_path.py",
+      "selected_sha256_at_base": null,
+      "semantic_review": {
+        "active_direct_reference_paths": [],
+        "active_package_import_closure_complete": false,
+        "future_adoption_requires": "coherent dependency, math-contract, direct-test, risk-authority review; no standalone file copy",
+        "kind": "offline_signal",
+        "missing_selected_dependencies": [
+          "ROLLING_SAMPLE_IMPLEMENTATION_VERSION",
+          "EXPANDING_SAMPLE_IMPLEMENTATION_VERSION",
+          "rolling_sample_zscore",
+          "expanding_sample_zscore"
+        ]
+      },
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    {
+      "decision_rationale": "Strict L2 cadence coverage was selectively ported. Remaining runtime test drift changes the collection-only candidate model/validator contract and requires terminal cohort evidence plus atomic remediation publication; defer those tests with their producer changes.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "forensic_a",
+          "sha256": "21b7ac5e2952edf168219cb9c9f2b8274dd7eb5763bfd8b54629ac461c744ae1",
+          "size_bytes": 37751
+        },
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "forensic_b",
+          "sha256": "21b7ac5e2952edf168219cb9c9f2b8274dd7eb5763bfd8b54629ac461c744ae1",
+          "size_bytes": 37751
+        },
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "d4af0529fbcc84e5f3e78567fbc579d6c363a51b55443419c8aaeadb44a2b8ec",
+          "size_bytes": 42591
+        },
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "visual_recovery",
+          "sha256": "21b7ac5e2952edf168219cb9c9f2b8274dd7eb5763bfd8b54629ac461c744ae1",
+          "size_bytes": 37751
+        },
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "workspace_outer",
+          "sha256": "21b7ac5e2952edf168219cb9c9f2b8274dd7eb5763bfd8b54629ac461c744ae1",
+          "size_bytes": 37751
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "d4af0529fbcc84e5f3e78567fbc579d6c363a51b55443419c8aaeadb44a2b8ec",
+        "runtime": "d4af0529fbcc84e5f3e78567fbc579d6c363a51b55443419c8aaeadb44a2b8ec",
+        "working": "21b7ac5e2952edf168219cb9c9f2b8274dd7eb5763bfd8b54629ac461c744ae1"
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_SOURCE_DEPENDENT_HISTORICAL_TEST_DEFERRED_NO_PORT",
+      "queue_status_at_base": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+      "relative_path": "tests/test_corrective_data_evidence.py",
+      "selected_sha256_at_base": "c326b550ca1bbdd3d7498e236c5b4257d9dcd1fb5bbfd337be981b2688cdc993",
+      "semantic_review": {
+        "changed_shared_test_names": [
+          "test_pair_cost_models_cover_every_registered_candidate_lane"
+        ],
+        "kind": "partial_test_port_with_source_dependent_runtime_drift",
+        "runtime_cadence_test_subsumed": "test_cost_collection_rejects_large_interior_gap_despite_sample_count_and_span",
+        "runtime_only_test_names": [
+          "test_cost_collection_rejects_large_interior_gap_despite_sample_count_and_span",
+          "test_history_remediation_missing_cohort_evidence_preserves_active_outputs"
+        ],
+        "runtime_test_function_sha256": {
+          "test_cost_collection_counts_distinct_observations_and_requires_time_span": "a20e3ca34d4c4c18cad8022437f6465aaf8e5919eaef7739c965194963e79d0a",
+          "test_cost_collection_rejects_large_interior_gap_despite_sample_count_and_span": "5a4facb031e167fd0309abc3090b5f6fc5a1ae6e066aadc897c0a7ff17f4c68f",
+          "test_cost_collection_uses_exhaustive_funding_with_explicit_provenance": "87582ad712365e0754bb3d3472256a0952c50dc8f8e4a0b4d3529dbf04a23aef",
+          "test_cost_collection_uses_local_receipt_only_for_blank_vendor_timestamp": "4cc328dfa90d3bbad93aebbeeeb25e56b39cd8d8276b2b521655d90b74a2de22",
+          "test_cost_contract_rejects_stale_sparse_sign_and_stress_manipulation": "745d22792e9d67dfa9c9f7f6bbad4a77e87cd1e352faadfe95fd850c2aaf864a",
+          "test_current_wizard_selected_pairs_expand_collection_not_stage_two": "96b687a12539a11099a61753063dbd9c4e6ee07ca213aceff3e668519d72c45b",
+          "test_exhaustive_research_rankable_pairs_remain_diagnostic_only": "290e4b1062616385a58021f5db048841a06efce43e996041e07a8b4d54f4ef1e",
+          "test_frozen_registered_candidate_survives_daily_board_rotation": "87ffa6cdc6c3287e3a369d2b3e67a60b0ac1b6fa86f7b24b32610c204d4a7b0b",
+          "test_history_remediation_missing_cohort_evidence_preserves_active_outputs": "2a1ce23e0656472777433504829dbd0421d000d9efe7d0bd01b09c9af2caf093",
+          "test_l2_candidate_builder_rejects_tampered_failure_route_index": "acd020be8d2b0c4e4989745eca0538174168197b7a861f0162f0ac0391d30aab",
+          "test_l2_candidate_builder_uses_hash_bound_failure_route_index": "cc03c20dad0516964db0d9caaa0fea41ac99bf6b9c723ffa2f17a3fbc13e099d",
+          "test_l2_readiness_refresh_diagnostics_are_optional_and_validated": "3f8c758975605b9e944ec0f95e5f32077df13d65ebfde04282ff5dec06918fb1",
+          "test_pair_cost_bundle_allows_hash_bound_l2_assets_outside_model_cohort": "0080c6dc7fac6b2af44a745c6be1dccb4bbe59bd9201abc3fbf32d971e4531c4",
+          "test_pair_cost_bundle_rejects_every_frozen_input_mutation": "4369e70dbeb67b6a596ec837132dcbc75a6a54366bd97e8d1713c3dc453e349d",
+          "test_pair_cost_bundle_rejects_exploratory_only_model_after_reseal": "297916f5d1cc9a8228853309c1a32af5a4a52beb459b518a80ad8d053422fcc1",
+          "test_pair_cost_bundle_rejects_rehashed_candidate_substitution": "8a05d8a0bf8100a1cf99ae7c7cadfbebb95c402ef45428d212c78f37b2fa27d9",
+          "test_pair_cost_models_cover_every_registered_candidate_lane": "3003db961b71b1c0ecb085c6704afa69353bf0390e0d9c1facf76a7c5f043d34",
+          "test_registered_hypotheses_are_normalized_for_public_l2_collection": "1e1e5db5e1b6b7f5987987ceaa42cac44be1818f3a28081fe34138f6bf3c363d",
+          "test_source_contract_fails_closed_on_schema_duplicate_and_stale_data": "ad7734ca2c0f85e26553cdff27ca6aca0d12d87ae93812e408b11627dc2a637f"
+        },
+        "runtime_test_names": [
+          "test_cost_collection_counts_distinct_observations_and_requires_time_span",
+          "test_cost_collection_rejects_large_interior_gap_despite_sample_count_and_span",
+          "test_cost_collection_uses_exhaustive_funding_with_explicit_provenance",
+          "test_cost_collection_uses_local_receipt_only_for_blank_vendor_timestamp",
+          "test_cost_contract_rejects_stale_sparse_sign_and_stress_manipulation",
+          "test_current_wizard_selected_pairs_expand_collection_not_stage_two",
+          "test_exhaustive_research_rankable_pairs_remain_diagnostic_only",
+          "test_frozen_registered_candidate_survives_daily_board_rotation",
+          "test_history_remediation_missing_cohort_evidence_preserves_active_outputs",
+          "test_l2_candidate_builder_rejects_tampered_failure_route_index",
+          "test_l2_candidate_builder_uses_hash_bound_failure_route_index",
+          "test_l2_readiness_refresh_diagnostics_are_optional_and_validated",
+          "test_pair_cost_bundle_allows_hash_bound_l2_assets_outside_model_cohort",
+          "test_pair_cost_bundle_rejects_every_frozen_input_mutation",
+          "test_pair_cost_bundle_rejects_exploratory_only_model_after_reseal",
+          "test_pair_cost_bundle_rejects_rehashed_candidate_substitution",
+          "test_pair_cost_models_cover_every_registered_candidate_lane",
+          "test_registered_hypotheses_are_normalized_for_public_l2_collection",
+          "test_source_contract_fails_closed_on_schema_duplicate_and_stale_data"
+        ],
+        "selected_guards_retained": [
+          "test_cost_collection_rejects_strict_l2_cadence_holes",
+          "test_history_remediation_excludes_intentionally_deferred_and_structural_rows"
+        ],
+        "selected_only_test_names": [
+          "test_cost_collection_rejects_strict_l2_cadence_holes",
+          "test_history_remediation_excludes_intentionally_deferred_and_structural_rows"
+        ],
+        "selected_test_function_sha256": {
+          "test_cost_collection_counts_distinct_observations_and_requires_time_span": "a20e3ca34d4c4c18cad8022437f6465aaf8e5919eaef7739c965194963e79d0a",
+          "test_cost_collection_rejects_strict_l2_cadence_holes": "d45beb8e8b5b9a362f1b5054d69a07de31cf941ece5863585108b5469fc3ba8e",
+          "test_cost_collection_uses_exhaustive_funding_with_explicit_provenance": "87582ad712365e0754bb3d3472256a0952c50dc8f8e4a0b4d3529dbf04a23aef",
+          "test_cost_collection_uses_local_receipt_only_for_blank_vendor_timestamp": "4cc328dfa90d3bbad93aebbeeeb25e56b39cd8d8276b2b521655d90b74a2de22",
+          "test_cost_contract_rejects_stale_sparse_sign_and_stress_manipulation": "745d22792e9d67dfa9c9f7f6bbad4a77e87cd1e352faadfe95fd850c2aaf864a",
+          "test_current_wizard_selected_pairs_expand_collection_not_stage_two": "96b687a12539a11099a61753063dbd9c4e6ee07ca213aceff3e668519d72c45b",
+          "test_exhaustive_research_rankable_pairs_remain_diagnostic_only": "290e4b1062616385a58021f5db048841a06efce43e996041e07a8b4d54f4ef1e",
+          "test_frozen_registered_candidate_survives_daily_board_rotation": "87ffa6cdc6c3287e3a369d2b3e67a60b0ac1b6fa86f7b24b32610c204d4a7b0b",
+          "test_history_remediation_excludes_intentionally_deferred_and_structural_rows": "8ccf929aa5d459348a454728e0057165be66935912b2a1ba43d00f25d7a59662",
+          "test_l2_candidate_builder_rejects_tampered_failure_route_index": "acd020be8d2b0c4e4989745eca0538174168197b7a861f0162f0ac0391d30aab",
+          "test_l2_candidate_builder_uses_hash_bound_failure_route_index": "cc03c20dad0516964db0d9caaa0fea41ac99bf6b9c723ffa2f17a3fbc13e099d",
+          "test_l2_readiness_refresh_diagnostics_are_optional_and_validated": "3f8c758975605b9e944ec0f95e5f32077df13d65ebfde04282ff5dec06918fb1",
+          "test_pair_cost_bundle_allows_hash_bound_l2_assets_outside_model_cohort": "0080c6dc7fac6b2af44a745c6be1dccb4bbe59bd9201abc3fbf32d971e4531c4",
+          "test_pair_cost_bundle_rejects_every_frozen_input_mutation": "4369e70dbeb67b6a596ec837132dcbc75a6a54366bd97e8d1713c3dc453e349d",
+          "test_pair_cost_bundle_rejects_exploratory_only_model_after_reseal": "297916f5d1cc9a8228853309c1a32af5a4a52beb459b518a80ad8d053422fcc1",
+          "test_pair_cost_bundle_rejects_rehashed_candidate_substitution": "8a05d8a0bf8100a1cf99ae7c7cadfbebb95c402ef45428d212c78f37b2fa27d9",
+          "test_pair_cost_models_cover_every_registered_candidate_lane": "7cf5419aa47ebc0cb379ff80bd814f934af745320764e6d19d4e653cdc77ad8d",
+          "test_registered_hypotheses_are_normalized_for_public_l2_collection": "1e1e5db5e1b6b7f5987987ceaa42cac44be1818f3a28081fe34138f6bf3c363d",
+          "test_source_contract_fails_closed_on_schema_duplicate_and_stale_data": "ad7734ca2c0f85e26553cdff27ca6aca0d12d87ae93812e408b11627dc2a637f"
+        },
+        "selected_test_names": [
+          "test_cost_collection_counts_distinct_observations_and_requires_time_span",
+          "test_cost_collection_rejects_strict_l2_cadence_holes",
+          "test_cost_collection_uses_exhaustive_funding_with_explicit_provenance",
+          "test_cost_collection_uses_local_receipt_only_for_blank_vendor_timestamp",
+          "test_cost_contract_rejects_stale_sparse_sign_and_stress_manipulation",
+          "test_current_wizard_selected_pairs_expand_collection_not_stage_two",
+          "test_exhaustive_research_rankable_pairs_remain_diagnostic_only",
+          "test_frozen_registered_candidate_survives_daily_board_rotation",
+          "test_history_remediation_excludes_intentionally_deferred_and_structural_rows",
+          "test_l2_candidate_builder_rejects_tampered_failure_route_index",
+          "test_l2_candidate_builder_uses_hash_bound_failure_route_index",
+          "test_l2_readiness_refresh_diagnostics_are_optional_and_validated",
+          "test_pair_cost_bundle_allows_hash_bound_l2_assets_outside_model_cohort",
+          "test_pair_cost_bundle_rejects_every_frozen_input_mutation",
+          "test_pair_cost_bundle_rejects_exploratory_only_model_after_reseal",
+          "test_pair_cost_bundle_rejects_rehashed_candidate_substitution",
+          "test_pair_cost_models_cover_every_registered_candidate_lane",
+          "test_registered_hypotheses_are_normalized_for_public_l2_collection",
+          "test_source_contract_fails_closed_on_schema_duplicate_and_stale_data"
+        ],
+        "source_dependent_gaps": [
+          {
+            "requirement": "Collection-only candidate must remain in frozen candidate rows while model rows exclude it; selected producer includes all candidates in model_rows and selected validator requires all collection-eligible candidate keys in model rows.",
+            "runtime_test": "test_pair_cost_models_cover_every_registered_candidate_lane",
+            "selected_locations": [
+              "build_pair_cost_models:1187-1335",
+              "validate_pair_cost_bundle_artifacts:1804-1841"
+            ],
+            "selected_source": "src/quant_platform/orchestration/corrective_data_evidence.py"
+          },
+          {
+            "requirement": "Missing terminal cohort evidence must block with active coverage/queue/pointer unchanged; selected build_history_remediation reads history/failure directly and writes coverage/queue without that terminal evidence or pointer contract.",
+            "runtime_test": "test_history_remediation_missing_cohort_evidence_preserves_active_outputs",
+            "selected_locations": [
+              "build_history_remediation:307-383"
+            ],
+            "selected_source": "src/quant_platform/orchestration/corrective_data_evidence.py"
+          }
+        ]
+      },
+      "working_vs_runtime": "CHANGED"
+    },
+    {
+      "decision_rationale": "Missing/false/truthy proof and nonretryability guards were selectively ported. Remaining runtime tests need callback redaction, public-L2 issuer, run fencing, and campaign/request accounting source; two recovery expectations conflict with selected absence-proof handling.",
+      "extended_copies": [
+        {
+          "in_initial_four_root_freeze": "True",
+          "root_label": "source_candidate",
+          "sha256": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+          "size_bytes": 38487
+        }
+      ],
+      "four_root_freeze_sha256": {
+        "recovery": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+        "runtime": "d3e42007013155f4afb3bf64d985fe9934a8ca09b146628442081b58d69f98dc",
+        "working": "85409715ec2033b4831c4f801baa58c9fb5672decf2b0156a4707ab0a10be363"
+      },
+      "historical_variant_count": 0,
+      "proposed_custody_status": "REVIEWED_SOURCE_DEPENDENT_CONFLICTING_HISTORICAL_TEST_DEFERRED_NO_PORT",
+      "queue_status_at_base": "PORTED_V23_PARTIAL_HISTORICAL_REVIEW_REQUIRED",
+      "relative_path": "tests/test_phase00_scheduler_supervisor.py",
+      "selected_sha256_at_base": "f511fac4081770ce3d8f241a61a9112f5b4f21318d2f68d347aa374f58a00c8d",
+      "semantic_review": {
+        "changed_shared_test_names": [
+          "test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting",
+          "test_callback_crash_is_receipted_then_reraised",
+          "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders"
+        ],
+        "conflict": "Selected recovery requires positive provider-effect-absence proof and manual reauthorization; no such proof may be inferred from missing or false fields.",
+        "conflicting_runtime_recovery_tests": [
+          "test_abandoned_intent_without_slot_or_effects_is_recovered_retryable",
+          "test_abandoned_reservation_without_provider_effect_is_nonretryable"
+        ],
+        "kind": "partial_test_port_with_source_dependent_runtime_drift",
+        "runtime_only_test_names": [
+          "test_abandoned_intent_without_slot_or_effects_is_recovered_retryable",
+          "test_abandoned_reservation_without_provider_effect_is_nonretryable",
+          "test_effect_authority_crash_preserves_reason_without_leaking_cause",
+          "test_public_l2_supervisor_installs_zero_credit_no_credential_issuer",
+          "test_successful_scheduler_run_is_fenced_before_terminal_accounting"
+        ],
+        "runtime_test_function_sha256": {
+          "test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting": "54e3376fb08756db9b8a8412b3042cc4b539f61d0e31428877cc9cf618b329ec",
+          "test_abandoned_intent_without_slot_or_effects_is_recovered_retryable": "c76475e11765c4b5c0278ed802e8582c18ad4ffb227a0ef01939e6f6a67e2f7a",
+          "test_abandoned_reservation_without_provider_effect_is_nonretryable": "e89458e63458eac8e00fe393b782e142fa8689cc597f63382932c91131496219",
+          "test_callback_crash_is_receipted_then_reraised": "cfbfaf1caa6ceb256d6698814486c5d8663adeb56bcdf0dcd5e974205bd3ebb8",
+          "test_daily_supervisor_installs_exact_wizard_and_hyperliquid_provider_bundle": "472621ccdb1799285a82938aaaaf31794efe23a3e23f9085efca24f13089db14",
+          "test_effect_authority_crash_preserves_reason_without_leaking_cause": "8956553e99f43ceb60a99d77d6b82d52edb5c41f90baee41ff520f2d5a7f89b4",
+          "test_interval_and_calendar_slots_are_deterministic": "052e04cd40f98bea726626353b50c0dcb32e55e1dbc72ae459c02c4768755a96",
+          "test_maintenance_defers_work_but_terminal_lane_survives": "b7cc74f36d0ce8c2ee7a7f4251e9c75bfe63098184e938ea744d55ade93cb8a4",
+          "test_missing_launchd_provenance_blocks_before_callback": "c374d8822e25cfccb63a5316969e44e5e84ae62a6d08f076b6f36e281de23ba7",
+          "test_public_l2_supervisor_installs_zero_credit_no_credential_issuer": "e3d04234023776a568a508dd2d04bad4b13bc96e69efd3355480e7d97e3d2ce6",
+          "test_same_scheduler_slot_executes_once_and_second_run_gets_no_credit": "89f1f972010a6bb9528ea362b3247a9f01c90a83a38364ad37c8d9e07081cf79",
+          "test_scheduler_result_cannot_claim_authority": "3e8878b23d6219d01ea19e32e8ee9cc9f8bfd841398c274cfbf3d369d971dacc",
+          "test_successful_scheduler_run_is_fenced_before_terminal_accounting": "ab9a7313e7717a9be4fe2c7ae1b7bc754284519a08a761a9417ff49dfcde56f3",
+          "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders": "0c88d780fbe7179b71dc20b6d949b65899fec69c7e4ff2d522f018bcefbb438b",
+          "test_valid_provenance_passes_and_publishes_terminal_receipt": "8e4e95e4d020de09ef3b98fec5b1f4ba2a2996165c4c32b7d98af9bfe48f52fa",
+          "test_wizard_supervisor_installs_no_order_external_issuer": "385404450aaed094802e2b32c0f2da658e0787437dc6cbbcb4fa45816fbe7cae",
+          "test_wizard_supervisor_missing_effect_policy_blocks_before_slot_and_callback": "8080f17ad48c35ca0e86b37c6cc78b24d65c80f76cfa41330b01964b8dd04892"
+        },
+        "runtime_test_names": [
+          "test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting",
+          "test_abandoned_intent_without_slot_or_effects_is_recovered_retryable",
+          "test_abandoned_reservation_without_provider_effect_is_nonretryable",
+          "test_callback_crash_is_receipted_then_reraised",
+          "test_daily_supervisor_installs_exact_wizard_and_hyperliquid_provider_bundle",
+          "test_effect_authority_crash_preserves_reason_without_leaking_cause",
+          "test_interval_and_calendar_slots_are_deterministic",
+          "test_maintenance_defers_work_but_terminal_lane_survives",
+          "test_missing_launchd_provenance_blocks_before_callback",
+          "test_public_l2_supervisor_installs_zero_credit_no_credential_issuer",
+          "test_same_scheduler_slot_executes_once_and_second_run_gets_no_credit",
+          "test_scheduler_result_cannot_claim_authority",
+          "test_successful_scheduler_run_is_fenced_before_terminal_accounting",
+          "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders",
+          "test_valid_provenance_passes_and_publishes_terminal_receipt",
+          "test_wizard_supervisor_installs_no_order_external_issuer",
+          "test_wizard_supervisor_missing_effect_policy_blocks_before_slot_and_callback"
+        ],
+        "selected_guards_retained": [
+          "test_abandoned_intent_without_slot_or_effects_requires_manual_reauthorization",
+          "test_abandoned_reservation_without_absence_proof_remains_open"
+        ],
+        "selected_only_test_names": [
+          "test_abandoned_intent_without_slot_or_effects_requires_manual_reauthorization",
+          "test_abandoned_reservation_without_absence_proof_remains_open"
+        ],
+        "selected_test_function_sha256": {
+          "test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting": "b44d717b73b292c32bf97a8c0267a3dc9d9f5f4d7530146ed1293acaa433a41d",
+          "test_abandoned_intent_without_slot_or_effects_requires_manual_reauthorization": "8f2847ed6c3eb4941c5b6c8f65df2199f8254a5a05c2c9175e41f856491ec905",
+          "test_abandoned_reservation_without_absence_proof_remains_open": "26bb4ad174f2eebef1a66bef46ac09ca11771d3cd76634dc320af22daef36e5a",
+          "test_callback_crash_is_receipted_then_reraised": "7867f6c369069e0def0ab62bcbee5bd99c427ecf4b69b8f3007b03b752dac02f",
+          "test_daily_supervisor_installs_exact_wizard_and_hyperliquid_provider_bundle": "472621ccdb1799285a82938aaaaf31794efe23a3e23f9085efca24f13089db14",
+          "test_interval_and_calendar_slots_are_deterministic": "052e04cd40f98bea726626353b50c0dcb32e55e1dbc72ae459c02c4768755a96",
+          "test_maintenance_defers_work_but_terminal_lane_survives": "b7cc74f36d0ce8c2ee7a7f4251e9c75bfe63098184e938ea744d55ade93cb8a4",
+          "test_missing_launchd_provenance_blocks_before_callback": "c374d8822e25cfccb63a5316969e44e5e84ae62a6d08f076b6f36e281de23ba7",
+          "test_same_scheduler_slot_executes_once_and_second_run_gets_no_credit": "89f1f972010a6bb9528ea362b3247a9f01c90a83a38364ad37c8d9e07081cf79",
+          "test_scheduler_result_cannot_claim_authority": "3e8878b23d6219d01ea19e32e8ee9cc9f8bfd841398c274cfbf3d369d971dacc",
+          "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders": "2bbd2b838265b3520cbe4c09705a5f37753c277dcb1665800db84c000bd68453",
+          "test_valid_provenance_passes_and_publishes_terminal_receipt": "8e4e95e4d020de09ef3b98fec5b1f4ba2a2996165c4c32b7d98af9bfe48f52fa",
+          "test_wizard_supervisor_installs_no_order_external_issuer": "385404450aaed094802e2b32c0f2da658e0787437dc6cbbcb4fa45816fbe7cae",
+          "test_wizard_supervisor_missing_effect_policy_blocks_before_slot_and_callback": "8080f17ad48c35ca0e86b37c6cc78b24d65c80f76cfa41330b01964b8dd04892"
+        },
+        "selected_test_names": [
+          "test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting",
+          "test_abandoned_intent_without_slot_or_effects_requires_manual_reauthorization",
+          "test_abandoned_reservation_without_absence_proof_remains_open",
+          "test_callback_crash_is_receipted_then_reraised",
+          "test_daily_supervisor_installs_exact_wizard_and_hyperliquid_provider_bundle",
+          "test_interval_and_calendar_slots_are_deterministic",
+          "test_maintenance_defers_work_but_terminal_lane_survives",
+          "test_missing_launchd_provenance_blocks_before_callback",
+          "test_same_scheduler_slot_executes_once_and_second_run_gets_no_credit",
+          "test_scheduler_result_cannot_claim_authority",
+          "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders",
+          "test_valid_provenance_passes_and_publishes_terminal_receipt",
+          "test_wizard_supervisor_installs_no_order_external_issuer",
+          "test_wizard_supervisor_missing_effect_policy_blocks_before_slot_and_callback"
+        ],
+        "source_dependent_gaps": [
+          {
+            "requirement": "Callback blocker must use already imported safe_exception_code; selected callback path uses type(exc).__name__.",
+            "runtime_test": "test_effect_authority_crash_preserves_reason_without_leaking_cause",
+            "selected_locations": [
+              "supervise_scheduler_run:532"
+            ],
+            "selected_source": "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+          },
+          {
+            "requirement": "Selected hyperliquid_l2 lane uses PHASE00_REPAIR_PROFILE and has no public-L2 zero-credit issuer/profile.",
+            "runtime_test": "test_public_l2_supervisor_installs_zero_credit_no_credential_issuer",
+            "selected_locations": [
+              "supervise_scheduler_run:351"
+            ],
+            "selected_source": "src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+          },
+          {
+            "requirement": "Run fences before terminal accounting are absent in selected effect authority and supervisor.",
+            "runtime_test": "test_successful_scheduler_run_is_fenced_before_terminal_accounting",
+            "selected_locations": [],
+            "selected_source": "src/quant_platform/orchestration/effect_authority.py;src/quant_platform/orchestration/corrective_scheduler_supervisor.py"
+          },
+          {
+            "requirement": "Runtime fixture/admission assertions need absent daily_workload_preflight, active-campaign admission, and request-accounting fields.",
+            "runtime_test": "test_supervised_daily_run_reconciles_both_provider_lanes_without_orders",
+            "selected_locations": [],
+            "selected_source": "src/quant_platform/orchestration/corrective_scheduler_supervisor.py;src/quant_platform/orchestration/corrective_daily_scheduler.py"
+          }
+        ]
+      },
+      "working_vs_runtime": "CHANGED"
+    }
+  ],
+  "pinned_inputs_sha256": {
+    "audit/GATE0_CORRECTIVE_TEST_COHORT_2026-09-30.json": "4542fbe7555fb0e07548f11cf58b0474323f0cc1f93d7fff356cc354c3d99399",
+    "audit/GATE0_EXTENDED_VARIANT_INPUTS_2026-09-30.csv": "ca055e5cfbd6c5cdcd1e42b712b394aac2701bcf01a173fef151248e9eb046b3",
+    "audit/GATE0_STRATEGY_DESKS_SOURCE_RECONCILIATION_2026-09-30.json": "6cc980be93a8d3dcde6cae28be50bfa8b8c0d08af80bbba7fc3312fbf974357d",
+    "audit/GATE0_UNION_SOURCE_QUEUE_2026-09-30.csv": "a4e1afe755532f8e1e872da634b71de5e04534d3ea76e0777cd1732e9c2ccc21",
+    "audit/evidence_freeze_2026-09-29/source_reconciliation.csv": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "schema_version": "thewiz.gate0.nine_residual_review.v1",
+  "scope": "Seven unadopted desk source files and two V23 partial-port historical test files; evidence and queue proposal only.",
+  "selected_desk_direct_reference_scan": {
+    "institutional_risk_module_absent": true,
+    "matches": [],
+    "missing_selected_zscore_symbols": [
+      "ROLLING_SAMPLE_IMPLEMENTATION_VERSION",
+      "EXPANDING_SAMPLE_IMPLEMENTATION_VERSION",
+      "rolling_sample_zscore",
+      "expanding_sample_zscore"
+    ],
+    "named_test_qualification": "Selected test_static_desk_* files exercise active math/economic/RL helpers, not imports or execution of the absent desk package.",
+    "package_absent": true,
+    "scope": [
+      "src",
+      "scripts",
+      "tests"
+    ]
+  }
+}

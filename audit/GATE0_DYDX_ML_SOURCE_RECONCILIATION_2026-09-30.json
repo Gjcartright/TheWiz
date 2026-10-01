@@ -1,0 +1,54 @@
+{
+  "base_commit": "2f8ff5a0271f31e9504da38bd0c1f04845cd5c65",
+  "decision": "HISTORICAL_VARIANTS_RECONCILED_EXACT_COMMIT_VERIFICATION_REQUIRED",
+  "isolated_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "b4f6ed25cf5c1c15ab9eb9048373845a3dfd817c10669552298464369eeca706",
+    "skipped": 0,
+    "tests": 2593
+  },
+  "live_trading_authorized": false,
+  "preserved_historical_variant_sha256": {
+    "src/quant_platform/dydx_candles.py": [
+      "78161bb66b85aa1ce860cc34030e883f6312034fc844db6b2254d9d16de47cc6"
+    ],
+    "src/quant_platform/ml_filter.py": [
+      "07f3f824e77f36302808b78a34f1bbb79dfe26ccb5fd81beeda02f242e8fe123",
+      "bb156cf2c686aa3cafcf77744f4948cd211bef967654c33b6b6aa45fdbd5d063"
+    ],
+    "tests/test_dydx_candles.py": [
+      "2447c8aabc0953cb802e22a7c106548db4f4149b15b129b84b3a124bd72d9f8b"
+    ],
+    "tests/test_ml_filter.py": [
+      "6d9fac418448eeef73b0718f7b8232b8188a129fa0f4f5f4a6bb1fe03809cca4",
+      "79b14fff82db187e296c2f9b50bbe49556362bc13e94c1176dfdb40f9ec50af3"
+    ]
+  },
+  "research_acceptance": "BLOCKED",
+  "review_decisions": [
+    "retain_log_y_on_x_spread_and_explicit_hedge_ratio_orientation",
+    "preserve_calendar_month_identity_across_dydx_requests_and_pair_history",
+    "namespace_provisional_backfill_without_overwriting_native_features",
+    "preserve_unknown_funding_features_in_ml_and_explicit_cost_assumptions_in_backtest",
+    "exclude_wizard_outcome_fields_from_ml_features",
+    "retain_entry_time_allowlist_and_atomic_model_outputs",
+    "historical_test_functions_accounted_for_with_current_contract_assertions"
+  ],
+  "schema_version": "thewiz.gate0.dydx_ml_source_reconciliation.v1",
+  "selected_file_sha256": {
+    "audit/verify_gate0_ml_funding_repair.py": "b49859f3def9f12088c5b257cfab38dc07d502054615d29fbf929951e35de7e9",
+    "src/quant_platform/dydx_candles.py": "050828a317398fd49fee82966344123dc9a7fc1baf0ba2c8f716bde7447b0271",
+    "src/quant_platform/ml_filter.py": "755d04a12a3adead6cd3301706a09c8b434512536d64584fa8906523117a3679",
+    "tests/test_dydx_candles.py": "e1b9261b4109e14c76414476e58125f87b29d6317c94554957fc89ea3f884a40",
+    "tests/test_ml_filter.py": "8257f2f3e4f5cf72b9e6edaf29a7c5d57726f9d6ca0a602b115bfcf82e9e9436"
+  },
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "file_sha256": "29bd1fc68b0a2dc42883e2f8319d8d93af516d8550794918793665d692c53afd",
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 667,
+    "reviewed_paths": 126
+  }
+}

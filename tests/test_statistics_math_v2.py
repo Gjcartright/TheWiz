@@ -55,6 +55,31 @@ def test_cointegration_and_ou_estimators_recover_known_process():
     assert ou.values["half_life"] > 0
 
 
+def test_engle_granger_rejects_misaligned_irregular_or_incomplete_prices():
+    price_x, price_y, _ = _cointegrated_prices(120)
+
+    shifted_y = price_y.copy()
+    shifted_y.index = pd.RangeIndex(1, 121)
+    shifted = fit_engle_granger(price_x, shifted_y)
+    assert shifted.validity_status == "invalid"
+    assert shifted.validity_reason == "price_index_identity_mismatch"
+
+    irregular_x = price_x.copy()
+    irregular_y = price_y.copy()
+    irregular_index = pd.Index([*range(60), *range(61, 121)])
+    irregular_x.index = irregular_index
+    irregular_y.index = irregular_index
+    irregular = fit_engle_granger(irregular_x, irregular_y)
+    assert irregular.validity_status == "invalid"
+    assert irregular.validity_reason == "irregular_observation_grid"
+
+    incomplete_x = price_x.copy()
+    incomplete_x.iloc[40] = float("nan")
+    incomplete = fit_engle_granger(incomplete_x, price_y)
+    assert incomplete.validity_status == "invalid"
+    assert incomplete.validity_reason == "non_finite_prices"
+
+
 def test_invalid_ou_is_not_clipped_into_validity():
     result = fit_ou(pd.Series([1.01**index for index in range(200)], dtype=float))
     assert result.validity_status == "invalid"

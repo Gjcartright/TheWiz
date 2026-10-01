@@ -1,0 +1,54 @@
+{
+  "authority": "No strategy acceptance, Testnet order, or live order authority is granted.",
+  "baseline_commit": "f8cb4a8efcab3b539575505acab65ec43e946d7a",
+  "decision": "Fail closed on unaligned, missing, boolean, and complex signals; invalid funding clock divisors; and negative leg slippage. Retain the broader backtest implementation variants for dependency-complete review.",
+  "diagnostic_files": {
+    "active_baseline": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/backtest-input-active.json",
+      "sha256": "9e95689342cc664251f435508167fd220c6e852252a94b403b58b96ea10f8430"
+    },
+    "focused_junit": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/backtest-input-fix-junit.xml",
+      "sha256": "297d636475d39b6060a85e68c1a400d2ab2d6dc4417135a37b2715ea9fb41bbd"
+    },
+    "patched": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/backtest-input-patched.json",
+      "sha256": "b99ee6a8f41b7b04ddc84b8f4cfc0b7c2e982f3260db5ff01944732d22b52961"
+    },
+    "runtime_candidate": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/backtest-input-runtime.json",
+      "sha256": "b99ee6a8f41b7b04ddc84b8f4cfc0b7c2e982f3260db5ff01944732d22b52961"
+    },
+    "script": {
+      "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/backtest-input-probe.py",
+      "sha256": "34e202a273161e288cc0f9ed3fad63988944d4ea09575e1f135303462ae36083"
+    }
+  },
+  "focused_tests_passed": 37,
+  "remaining_source_decisions": [
+    "profit-factor numerator and denominator currency contract",
+    "two-leg ledger and return accounting, including fixed-units holding",
+    "hedge-ratio kind, spread orientation, and rebalance policy",
+    "funding-clock and annualization policy",
+    "historical backtest tests and shared math dependencies"
+  ],
+  "schema_version": "thewiz.gate0.backtest_input_repair.v1",
+  "source_sha256": {
+    "src/quant_platform/backtest.py": {
+      "baseline": "0a060a6541ca24b9e5c310e3d632ed36283fd69fb9ad063dcf99a6b3059ce75d",
+      "historical_variants": [
+        "104c2ea21bd9296252486bff9fe8e8d6efd9e2276f68fae0487962a12156c6b3",
+        "d3ae5a6d5fd6e0bf35bbc1d4c731c88e62b0672afd041d5260a69afc6bd7cdb8"
+      ],
+      "patched": "bfad0930d67b134418c402682f87e4068cdaf1a7ce429a2dffd4c269d350751a",
+      "runtime_candidate": "a5988596d59144eac0cc8fea4a143b9cabfefbe2ee649b83e57764814cd0ee4f"
+    },
+    "tests/test_backtest.py": {
+      "baseline": "689490c8491e8c1cc0110d0d35503d66a8ec180c9efc5614fc627eeb38a52ee0",
+      "historical_variant": "16848e74c234e4b47291134deb7a46853360564de8bf1182f2c882e639d7f417",
+      "patched": "0a185cfe252c3e5e282a306a6512637c477f1cca596f557f68c1f9f958fddb80",
+      "runtime_candidate": "91d660b2c6c6edbf100eacded3769855ed7584f1657eb45952219b8e3bbf18f8"
+    }
+  },
+  "status": "PARTIAL_SOURCE_REVIEW_REPAIR_COMMITTED_PENDING_REMAINDER"
+}

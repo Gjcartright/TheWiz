@@ -29,6 +29,46 @@ The canonical workflow document is `docs/langgraph_agent_workflow.md`. Runtime g
 
 The proposed event-driven extension, including the comparison to the current ordered workflow and the strategy-cell model, is documented in `docs/dynamic_multi_agent_architecture.md`. It remains shadow-mode design work until its evidence and safety behavior is proven against the existing workflow.
 
+## Runtime Setup and Component Graph
+
+The quant platform is a Python package. The locked development environment is
+installed with `uv sync --extra dev --locked`, and project commands and tests
+should run through `uv run` so they use the versions in `uv.lock`. On this
+Mac mini's exFAT Expansion checkout, set `UV_PROJECT_ENVIRONMENT` to an internal
+drive path before installation or `uv run`; the default on-drive `.venv` is
+incomplete and AppleDouble sidecars can disrupt wheel installation.
+
+Node.js is auxiliary rather than the platform runtime. This repository has no
+`package.json` or npm dependency lockfile. The `.js` and `.mjs` helpers are
+browser-capture adapters that expect a host-provided `tab.playwright` object;
+they are not standalone Playwright programs. The optional TradeStaq MCP entry
+uses `npx` and downloads its package on first use. See
+`docs/tradestaq_mcp_setup.md` before enabling that integration.
+
+```mermaid
+flowchart LR
+    A[Crypto Wizards discovery] --> B[Exact setup and timeframe capture]
+    H[Public exchange market data] --> C[Immutable raw evidence]
+    B --> C
+    C --> D[Schema, lineage, freshness, and universe checks]
+    D --> E[Point-in-time pair replay]
+    E --> F[Two-leg PnL and observed cost stress]
+    F --> G[Walk-forward and regime acceptance]
+    G -->|research only| J[Watch journal and verified outcomes]
+    J --> K[Leakage-audited ML gate]
+    K -->|advisory unless accepted| L[Portfolio and venue compatibility]
+    L -->|separate approval and evidence| M[Testnet candidate]
+    M -->|explicit user authorization| N[Live canary]
+    G -->|failed or incomplete| R[Blocked, rejected, or fetch-more evidence]
+    N -. disabled by default .-> S[Live trading]
+```
+
+The Mermaid flow is the research and authority path. The executable LangGraph
+wrapper is a separate control-flow graph that initializes run state, invokes the
+selected existing stage contracts in order, routes fail-fast or report-only
+results, and finalizes reports. A graph edge describes an allowed handoff; it is
+not evidence that the stage ran or passed.
+
 The graph lanes are: project scrub, Crypto Wizards capture, local verification, paper watch journal, execution compatibility, ML gate, base RL handoff, and gap/pre-mortem/red-team review. This keeps Wizard discovery, live journaling, Injective/dYdX execution truth, machine learning labels, and reinforcement learning promotion on one explicit workflow path.
 
 ## Unified Experiment Harness
@@ -81,19 +121,19 @@ When `price_x` and `price_y` are available, the backtester uses explicit two-leg
 
 ## Acceptance Gates
 
-A strategy is not production eligible unless it passes:
+The versioned policy in `config/acceptance_policy_manifest.json` defines the
+corrective program's five-fold walk-forward, minimum positive folds and trade
+count, base/stress costs, `ALL`-regime, false-discovery, independent-cluster,
+regime, parameter, and concentration requirements. It also binds source hashes
+for `config/research.yaml` and the cost/discovery contracts.
 
-- Profit factor >= 1.8 after fees, funding, slippage, and execution risk.
-- Sharpe > 1.2.
-- Max drawdown < 15%.
-- Positive expectancy.
-- At least 100 completed trades.
-- At least two distinct pairs.
-- Explicit two-leg execution inputs for each accepted pair.
-- Required base and stress cost buckets.
-- Required `ALL` regime slice for deployable acceptance.
-- Prefer at least 250 completed trades before production deployment.
-- Multi-pair robustness.
-- Walk-forward validation.
-- Regime-conditioned diagnostics.
-- No unresolved leakage or survivorship bias.
+`config/research.yaml` separately specifies higher platform targets, including
+100 completed trades, profit factor 1.8, Sharpe 1.2, maximum drawdown 15%, and
+at least two pairs. The manifest hash-binds this file, but the project does not
+state whether those targets are a second conjunctive gate or how each pipeline
+must apply them. Until a new versioned resolver settles that relationship,
+require both sets of gates for promotion and fail closed on any disagreement.
+
+Passing research gates only qualifies a candidate for the next separately
+authorized stage. The manifest keeps Testnet orders and live trading under
+separate gates and sets live trading to unauthorized by default.

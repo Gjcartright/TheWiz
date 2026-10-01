@@ -20,23 +20,30 @@ The LangGraph layer makes that process explicit and repeatable. It also keeps th
 
 ## Run It
 
-Dry-run the full workflow without executing expensive or live stages:
+On the exFAT Expansion checkout, set
+`UV_PROJECT_ENVIRONMENT="/Users/gregc/Library/Application Support/TheWizRuntime/venv"`
+and install the locked development environment with `uv sync --extra dev --locked`.
+The dry-run skips stage actions, but the workflow still publishes orchestrator and
+graph status reports under `reports/active`. The helper below grants only scoped
+file-publication authority for those reports and records permits in the private
+`.runtime_control` journal. Use a disposable checkout when
+checking its output behavior.
+
+Dry-run the full workflow:
 
 ```bash
-PYTHONPATH=src ./.venv311/bin/python -m quant_platform.cli run-langgraph-agent-workflow --stage all --dry-run
+uv run --locked python scripts/ops/run_langgraph_dry_run.py --stage all
 ```
 
 Run one lane as a dry-run:
 
 ```bash
-PYTHONPATH=src ./.venv311/bin/python -m quant_platform.cli run-langgraph-agent-workflow --stage discovery --dry-run
+uv run --locked python scripts/ops/run_langgraph_dry_run.py --stage discovery
 ```
 
-Run report-only review stages:
-
-```bash
-PYTHONPATH=src ./.venv311/bin/python -m quant_platform.cli run-langgraph-agent-workflow --stage supreme_team --report-only
-```
+Report-only review stages require a separately authorized supervisor context;
+the dry-run helper never executes them. A bare CLI invocation fails closed when
+publication authority is absent.
 
 ## Generated Reports
 

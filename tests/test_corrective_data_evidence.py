@@ -695,6 +695,58 @@ def test_cost_collection_uses_local_receipt_only_for_blank_vendor_timestamp(tmp_
     assert row["collection_status"] == "READY"
 
 
+@pytest.mark.parametrize(
+    ("minutes_ago", "blocker"),
+    [
+        (
+            [110 - offset for offset in range(11)] + [0],
+            "strict_l2_maximum_gap_exceeded",
+        ),
+        (
+            [16 + 9.3 * offset for offset in range(12)],
+            "strict_l2_latest_observation_stale",
+        ),
+    ],
+)
+def test_cost_collection_rejects_strict_l2_cadence_holes(
+    tmp_path: Path, minutes_ago: list[float], blocker: str
+) -> None:
+    active = tmp_path / "reports" / "active"
+    processed = tmp_path / "data" / "processed"
+    config = tmp_path / "config"
+    active.mkdir(parents=True)
+    processed.mkdir(parents=True)
+    config.mkdir(parents=True)
+    (config / "acceptance_policy_manifest.json").write_text(
+        '{"cost_gates":{"strict_l2_window_hours":2,"minimum_strict_l2_samples":12,'
+        '"minimum_strict_l2_span_minutes":100,"maximum_strict_l2_gap_minutes":15}}',
+        encoding="utf-8",
+    )
+    pd.DataFrame(
+        [{"asset": "ETH", "funding_status": "COMPLETE", "funding_rows": 500}]
+    ).to_csv(active / "current_wizard_hyperliquid_funding_asset_results.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "asset": "ETH",
+                "source_timestamp": (NOW - timedelta(minutes=minutes)).isoformat(),
+                "buy_complete": True,
+                "sell_complete": True,
+            }
+            for minutes in minutes_ago
+        ]
+    ).to_csv(processed / "hyperliquid_l2_slippage_samples.csv", index=False)
+
+    result = build_cost_collection_status(root=tmp_path, now=NOW)
+    row = pd.read_csv(result["status_path"]).iloc[0]
+
+    assert row["strict_l2_samples"] == 12
+    assert row["strict_l2_span_minutes"] >= 100
+    assert bool(row["strict_l2_cadence_ready"]) is False
+    assert row["collection_status"] == "COLLECTING"
+    assert blocker in row["blocker"]
+
+
 def test_cost_collection_uses_exhaustive_funding_with_explicit_provenance(tmp_path):
     active = tmp_path / "reports" / "active"
     processed = tmp_path / "data" / "processed"
@@ -818,6 +870,16 @@ def test_pair_cost_models_cover_every_registered_candidate_lane(tmp_path):
                 "funding_complete": True,
                 "funding_rows": 500,
                 "strict_l2_cadence_ready": True,
+                "strict_l2_samples": 12,
+                "strict_l2_span_minutes": 100.0,
+                "strict_l2_max_gap_minutes": 100 / 11,
+                "strict_l2_latest_age_minutes": 0.0,
+                "minimum_strict_l2_samples": 12,
+                "minimum_strict_l2_span_minutes": 100.0,
+                "maximum_strict_l2_gap_minutes": 15.0,
+                "l2_timestamp_policy": (
+                    "vendor_source_timestamp_else_local_capture_receipt_for_cadence_only"
+                ),
                 "collection_status": "READY",
                 "funding_evidence_path": f"funding/{asset}.csv",
             }

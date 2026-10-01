@@ -55,6 +55,7 @@ where = ["src"]
 pythonpath = ["src"]
 markers = [
   "external_network: explicitly permits a test to access an external network service",
+  "without_public_network_authority: test intentionally omits public-network effect authority",
 ]
 
 [tool.ruff]

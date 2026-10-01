@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import promote_staged_file
-
-from quant_platform.orchestration.corrective_runtime import atomic_write_text
-
+import json
 from datetime import datetime, timezone
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+from quant_platform.orchestration.corrective_runtime import atomic_write_text, promote_staged_file
+from quant_platform.runtime_types import strict_bool
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_VERSION = "hyperliquid-run-manifest-v1"
@@ -236,13 +234,13 @@ def build_hyperliquid_authority_state(*, root: Path = ROOT, now: datetime | None
     no_order_ready = bool(not preflight.empty and preflight.get("ready_for_no_order_preflight", pd.Series([False])).map(_truthy).iloc[0])
     submit_enabled = bool(not preflight.empty and preflight.get("submit_orders_enabled", pd.Series([False])).map(_truthy).iloc[0])
     lifecycle_ready = bool(not lifecycle.empty and lifecycle.get("status", pd.Series(dtype=str)).astype(str).eq("PASS").all())
-    lineage_ready = bool(manifest.get("lineage_ready", False))
+    lineage_ready = strict_bool(manifest.get("lineage_ready", False))
     research_ready = bool(
         lineage_ready
-        and manifest.get("research_evidence_ready", False)
-        and manifest.get("cost_evidence_ready", False)
-        and manifest.get("wizard_parity_ready", False)
-        and manifest.get("candidate_blockers_clear", False)
+        and strict_bool(manifest.get("research_evidence_ready", False))
+        and strict_bool(manifest.get("cost_evidence_ready", False))
+        and strict_bool(manifest.get("wizard_parity_ready", False))
+        and strict_bool(manifest.get("candidate_blockers_clear", False))
         and decisions_present
         and identity_match
     )
@@ -255,11 +253,11 @@ def build_hyperliquid_authority_state(*, root: Path = ROOT, now: datetime | None
     blockers: list[str] = []
     if not lineage_ready:
         blockers.append("canonical_lineage_not_ready")
-    if not bool(manifest.get("cost_evidence_ready", False)):
+    if not strict_bool(manifest.get("cost_evidence_ready", False)):
         blockers.append("cost_evidence_not_ready")
-    if not bool(manifest.get("wizard_parity_ready", False)):
+    if not strict_bool(manifest.get("wizard_parity_ready", False)):
         blockers.append("wizard_parity_not_ready")
-    if not bool(manifest.get("candidate_blockers_clear", False)):
+    if not strict_bool(manifest.get("candidate_blockers_clear", False)):
         blockers.append("candidate_research_blockers_present")
     if not identity_match:
         blockers.append("council_manifest_identity_mismatch")
@@ -284,7 +282,7 @@ def build_hyperliquid_authority_state(*, root: Path = ROOT, now: datetime | None
         "execution_truth_mode": EXECUTION_TRUTH_MODE,
         "wizard_authority": "discovery_only",
         "infrastructure_ready": no_order_ready,
-        "data_ready": lineage_ready and bool(manifest.get("research_evidence_ready", False)),
+        "data_ready": lineage_ready and strict_bool(manifest.get("research_evidence_ready", False)),
         "research_ready": research_ready,
         "paper_ready": paper_ready,
         "live_ready": live_ready,

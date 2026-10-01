@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 
 ECONOMIC_CONTRACT_VERSION = "wizard-seven-mode-economic-contract.v2"
+WEIGHT_SIGNAL_CONTRACT_VERSION = "bounded-two-leg-signal.v1"
+ROLLING_BETA_IMPLEMENTATION_VERSION = "rolling-y-on-x-beta.exact-window.v2"
 SCANNER_OVERLAYS = ("OU (Optimal)",)
 
 
@@ -114,6 +116,16 @@ CANONICAL_WIZARD_MODES: tuple[str, ...] = tuple(
 )
 MODE_CONTRACT_BY_MODE = {contract.mode: contract for contract in MODE_CONTRACTS}
 MODE_CONTRACT_BY_REPLAY_LABEL = {contract.replay_label: contract for contract in MODE_CONTRACTS}
+
+
+def positive_log_price(price: pd.Series) -> pd.Series:
+    """Return the natural log of a complete, finite, strictly positive price series."""
+
+    numeric = pd.to_numeric(price, errors="coerce")
+    invalid = (~np.isfinite(numeric)) | numeric.le(0.0)
+    if bool(invalid.any()):
+        raise ValueError("prices must be complete, finite, and positive")
+    return np.log(numeric).rename("log_price")
 
 
 def normalize_exact_mode(value: str | ExactMode) -> ExactMode:
@@ -266,17 +278,65 @@ def rolling_y_on_x_beta(
     window: int,
     min_periods: int | None = None,
 ) -> pd.Series:
-    """Estimate the causal OLS slope in `log(Y) = alpha + beta * log(X)`."""
+    """Estimate causal Y-on-X OLS using one paired finite mask per window.
+
+    Partial windows use only jointly observed X/Y pairs, with the same sample
+    count and ddof for covariance and variance. Rows are not compressed, so the
+    window remains a window of the original observations. Each window has fresh
+    centered/scaled two-pass moments: neither evicted values nor cancellation of
+    large uncentered products can change a quiet window's hedge estimate.
+    Complexity is O(N * window), with O(window) temporary space. A full-minimum
+    call on exactly one window computes only that window.
+    """
 
     window = int(window)
-    minimum = int(min_periods or window)
+    minimum = window if min_periods is None else int(min_periods)
     if window < 2 or minimum < 2 or minimum > window:
         raise ValueError("rolling beta requires 2 <= min_periods <= window")
+    if not log_x.index.equals(log_y.index) or not log_x.index.is_unique:
+        raise ValueError("rolling beta requires an identical unique index")
     x = pd.to_numeric(log_x, errors="coerce")
     y = pd.to_numeric(log_y, errors="coerce")
-    variance_x = x.rolling(window, min_periods=minimum).var(ddof=1)
-    covariance_xy = x.rolling(window, min_periods=minimum).cov(y, ddof=1)
-    return covariance_xy.div(variance_x.where(variance_x.abs() > 1e-12))
+    if np.iscomplexobj(x) or np.iscomplexobj(y):
+        raise ValueError("rolling beta requires real observations")
+    x_values = x.to_numpy(dtype=float, na_value=np.nan)
+    y_values = y.to_numpy(dtype=float, na_value=np.nan)
+    result = np.full(len(x), np.nan, dtype=float)
+
+    def centered_scaled(values: np.ndarray) -> tuple[np.ndarray, float]:
+        with np.errstate(over="ignore"):
+            centered = values - values[0]
+        scale = float(np.max(np.abs(centered)))
+        if math.isinf(scale):
+            scale = float(np.max(np.abs(values)))
+            normalized = values / scale
+            centered = normalized - normalized[0]
+        elif scale:
+            centered = centered / scale
+        mean = math.fsum(centered) / len(centered)
+        return centered - mean, scale
+
+    for end in range(minimum - 1, len(x)):
+        start = max(0, end - window + 1)
+        x_window, y_window = x_values[start:end + 1], y_values[start:end + 1]
+        paired = np.isfinite(x_window) & np.isfinite(y_window)
+        count = int(paired.sum())
+        if count < minimum:
+            continue
+        centered_x, scale_x = centered_scaled(x_window[paired])
+        sxx = math.fsum(value * value for value in centered_x)
+        # This remains a sample-variance floor, not a sum-of-squares floor.
+        variance_x = (scale_x * (sxx / (count - 1))) * scale_x
+        if not variance_x > 1e-12:
+            continue
+        centered_y, scale_y = centered_scaled(y_window[paired])
+        sxy = math.fsum(a * b for a, b in zip(centered_x, centered_y))
+        beta = ((sxy / sxx) * scale_y) / scale_x
+        if math.isfinite(beta):
+            result[end] = beta
+    # The pre-existing rolling covariance contract returns unnamed float64,
+    # including for pandas nullable numeric inputs.
+    return pd.Series(result, index=log_x.index, dtype=float)
 
 
 def y_on_x_beta(log_x: pd.Series, log_y: pd.Series) -> float:
@@ -333,14 +393,39 @@ def normalized_two_leg_weights(
     signal: pd.Series,
     beta_y_on_x: float | pd.Series,
 ) -> tuple[pd.Series, pd.Series]:
-    """Return gross-one X/Y target weights under the canonical signal convention."""
+    """Return bounded X/Y target weights under the canonical signal convention.
 
-    position = pd.to_numeric(signal, errors="coerce").fillna(0.0)
-    beta = (
-        pd.Series(float(beta_y_on_x), index=position.index, dtype="float64")
-        if np.isscalar(beta_y_on_x)
-        else pd.to_numeric(beta_y_on_x, errors="coerce").reindex(position.index)
-    )
+    Discrete signals -1/0/+1 remain gross-one/flat. Existing fractional sizing
+    in [-1, 1] remains supported and has gross exposure abs(signal); leverage
+    above one is not this contract. Missing is never silently treated as flat.
+    Numeric text remains accepted, but booleans and complex values do not.
+    """
+
+    if not isinstance(signal, pd.Series) or not signal.index.is_unique:
+        raise ValueError("signal must have a unique Series index")
+    if any(isinstance(value, (bool, np.bool_, complex, np.complexfloating))
+           for value in signal):
+        raise ValueError("signal must be real numeric, not boolean or complex")
+    position = pd.to_numeric(signal, errors="coerce").astype("float64")
+    if bool((~np.isfinite(position) | position.abs().gt(1.0)).any()):
+        raise ValueError("signal must be complete, finite, and within [-1, 1]")
+    if isinstance(beta_y_on_x, pd.Series):
+        if not beta_y_on_x.index.equals(position.index):
+            raise ValueError("hedge ratio must share the signal index and order")
+        if any(isinstance(value, (bool, np.bool_, complex, np.complexfloating))
+               for value in beta_y_on_x):
+            raise ValueError("hedge ratio must be real, finite and positive")
+        beta = pd.to_numeric(beta_y_on_x, errors="coerce").astype("float64")
+    else:
+        if isinstance(beta_y_on_x, (bool, np.bool_, complex, np.complexfloating)):
+            raise ValueError("hedge ratio must be real, finite and positive")
+        try:
+            scalar_beta = float(beta_y_on_x)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("hedge ratio must be finite and positive") from exc
+        if not math.isfinite(scalar_beta) or scalar_beta <= 0.0:
+            raise ValueError("hedge ratio must be finite and positive")
+        beta = pd.Series(scalar_beta, index=position.index, dtype="float64")
     invalid_beta = (~np.isfinite(beta)) | beta.le(0.0)
     if bool(invalid_beta.any()):
         raise ValueError("hedge ratio must be finite and positive")
@@ -358,3 +443,82 @@ def normalized_two_leg_weight_magnitudes(beta_y_on_x: float) -> tuple[float, flo
         raise ValueError("hedge ratio must be finite and positive")
     scale = 1.0 + abs(beta)
     return abs(beta) / scale, 1.0 / scale
+
+
+def lagged_two_leg_gross_return(
+    price_x: pd.Series,
+    price_y: pd.Series,
+    target_weight_x: pd.Series,
+    target_weight_y: pd.Series,
+) -> pd.Series:
+    """Return causal two-leg bar PnL using positions chosen one bar earlier."""
+
+    index = price_x.index
+    if not price_y.index.equals(index):
+        raise ValueError("two-leg prices must share an identical index")
+    if not target_weight_x.index.equals(index) or not target_weight_y.index.equals(index):
+        raise ValueError("two-leg target weights must share the price index")
+    x = pd.to_numeric(price_x, errors="coerce")
+    y = pd.to_numeric(price_y, errors="coerce")
+    invalid = (~np.isfinite(x)) | (~np.isfinite(y)) | x.le(0.0) | y.le(0.0)
+    if bool(invalid.any()):
+        raise ValueError("two-leg prices must be complete, finite, and positive")
+    weight_x = pd.to_numeric(target_weight_x, errors="coerce")
+    weight_y = pd.to_numeric(target_weight_y, errors="coerce")
+    if bool((~np.isfinite(weight_x) | ~np.isfinite(weight_y)).any()):
+        raise ValueError("two-leg target weights must be complete and finite")
+    returns_x = x.pct_change().fillna(0.0)
+    returns_y = y.pct_change().fillna(0.0)
+    return (
+        weight_x.shift(1).fillna(0.0) * returns_x + weight_y.shift(1).fillna(0.0) * returns_y
+    ).rename("gross_return")
+
+
+def two_leg_turnover(
+    target_weight_x: pd.Series,
+    target_weight_y: pd.Series,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Return X, Y, and aggregate turnover from gross-one target weights."""
+
+    if not target_weight_x.index.equals(target_weight_y.index):
+        raise ValueError("two-leg target weights must share an identical index")
+    weight_x = pd.to_numeric(target_weight_x, errors="coerce")
+    weight_y = pd.to_numeric(target_weight_y, errors="coerce")
+    if bool((~np.isfinite(weight_x) | ~np.isfinite(weight_y)).any()):
+        raise ValueError("two-leg target weights must be complete and finite")
+    turnover_x = (weight_x - weight_x.shift(1).fillna(0.0)).abs().rename("turnover_x")
+    turnover_y = (weight_y - weight_y.shift(1).fillna(0.0)).abs().rename("turnover_y")
+    return turnover_x, turnover_y, (turnover_x + turnover_y).rename("turnover")
+
+
+def turnover_rate_cost(turnover: pd.Series, rate_bps: float) -> pd.Series:
+    """Apply a nonnegative basis-point rate to a turnover stream."""
+
+    rate = float(rate_bps)
+    if not math.isfinite(rate) or rate < 0.0:
+        raise ValueError("turnover cost rate must be finite and nonnegative")
+    numeric = pd.to_numeric(turnover, errors="coerce")
+    if bool((~np.isfinite(numeric) | numeric.lt(0.0)).any()):
+        raise ValueError("turnover must be complete, finite, and nonnegative")
+    return numeric.mul(rate / 10_000.0)
+
+
+def expected_partial_fill_cost(
+    turnover: pd.Series,
+    *,
+    probability: float,
+    fill_fraction: float,
+    penalty_bps: float,
+) -> pd.Series:
+    """Return the declared expected partial-fill penalty on turnover."""
+
+    probability_value = float(probability)
+    fill_value = float(fill_fraction)
+    if not 0.0 <= probability_value <= 1.0:
+        raise ValueError("partial-fill probability must be within [0, 1]")
+    if not 0.0 <= fill_value <= 1.0:
+        raise ValueError("partial-fill fraction must be within [0, 1]")
+    return turnover_rate_cost(
+        turnover,
+        probability_value * (1.0 - fill_value) * float(penalty_bps),
+    )

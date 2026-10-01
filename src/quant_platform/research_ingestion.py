@@ -134,9 +134,11 @@ def build_research_source_registry(root: Path = ROOT) -> CommandResult:
     manifest_dir.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, object]] = []
     for path in sorted(manifest_dir.glob("*.json")):
+        if path.name.startswith("._"):
+            continue
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
             rows.append(
                 {
                     "source_id": path.stem,

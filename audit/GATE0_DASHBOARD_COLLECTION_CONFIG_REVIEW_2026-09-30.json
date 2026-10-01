@@ -1,0 +1,73 @@
+{
+  "clone_head": "80cc6220899209ba05db1bf8abe20971f8944444",
+  "created_at_utc": "2026-09-30T19:40:48.865361+00:00",
+  "cross_file_evidence": {
+    "active_budget_defaults": "1000 daily; 100 protected reserve; 424 computed scheduled ceiling and 476 headroom in current test",
+    "active_budget_test_sha256": "e668b9c85fbd24e733f66fbbef63ff0f0d08a97fb442134087881c497de733ba",
+    "active_wizard_budget_source_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7",
+    "dashboard_goal": "Gate 3 requires venue/mode/timeframe and applied-query provenance plus independent numerical parity; active inventory still records 28 integration gaps and 21 capture opportunities.",
+    "l2_calibration_interpretation": "24/24 requests and 48/48 integrity checks recorded on 2026-09-16; production-equivalent false, generic non-account-specific fees, cadence credit zero, no authority; stale for current two-hour freshness",
+    "l2_calibration_receipt_sha256": "202ee8b85429ca061f9ff920c5d0cddaed6d13c68e9f07cb13d8472d15df742e",
+    "l2_calibration_report_path": "/Users/gregc/TheWiz-LocalRuntime/data/research/dashboard_audit_20260915/l2_calibration_20260916/L2_CALIBRATION_REPORT.md",
+    "l2_calibration_report_sha256": "c8e44ce86024b3a887cfc0d3a83d59470b782709fe3953579616d7a889d8999f",
+    "retained_human_evidence_source_check": "All five pinned sources missing across Expansion checkout, LocalRuntime, Mac savepoints, recovery, and isolated clone.",
+    "route_schema_limitation": "JSON Schema alone lacks preserved Pydantic cross-field validation of operations, credential reference, and readiness blockers.",
+    "seven_day_checkpoint_path": "/Users/gregc/TheWiz-LocalRuntime/reports/active/seven_stage_goal_checkpoint.csv",
+    "seven_day_checkpoint_sha256": "2a81cd98bdf595bb04444e9396729c4dffbad055c34984fa331e9ab7faed6502",
+    "seven_day_checkpoint_stage1": "static IN_PROGRESS 5/7 snapshot; no current seven-day qualification inferred"
+  },
+  "files": {
+    "config/human_evidence_research_sources.json": {
+      "active_exists": false,
+      "decision": "REVIEWED_MISSING_RETAINED_EVIDENCE_NO_PORT",
+      "frozen_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 10,
+      "mac_savepoint_matches_runtime": true,
+      "mac_savepoint_sha256": "028cc87ce64cee7e433b260f8a43e6fb8ae1c62122fa6ade8a797fc9b5671164",
+      "rationale": "Only the preserved runtime-only human-evidence research module reads this register. All five pinned inputs are absent from current Expansion, LocalRuntime, Mac savepoints, recovery, and this clone; Gate 3 locators point into the old unmounted CodexWorkspace. The active dashboard has no consumer. Keep as retained display candidate, not current gate evidence.",
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/human_evidence_research_sources.json",
+      "runtime_sha256": "028cc87ce64cee7e433b260f8a43e6fb8ae1c62122fa6ade8a797fc9b5671164",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    "config/seven_day_wizard_credit_budget.json": {
+      "active_exists": false,
+      "decision": "REVIEWED_UNCONSUMED_CREDIT_POLICY_NO_PORT",
+      "frozen_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 21,
+      "mac_savepoint_matches_runtime": true,
+      "mac_savepoint_sha256": "68982fdd8e48cc7ad6fe3d700b6c97ea7e34cf4eab6e3580fc75f58f9af9ac56",
+      "rationale": "No active or preserved code loads this JSON. It declares a 200-credit reserve and 800-credit scheduled ceiling, while the active executable budget defaults to 100 reserve and computes 424 scheduled credits; Stage 1 separately requires a bound 300-credit full-sweep reservation on each qualifying day. Copying the JSON would not enforce its policy or prove seven-day acceptance.",
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/seven_day_wizard_credit_budget.json",
+      "runtime_sha256": "68982fdd8e48cc7ad6fe3d700b6c97ea7e34cf4eab6e3580fc75f58f9af9ac56",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    "config/wizard_source_route_adapter.example.json": {
+      "active_exists": false,
+      "decision": "REVIEWED_DEPENDENT_SOURCE_ROUTE_CONFIG_NO_PORT",
+      "frozen_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 35,
+      "mac_savepoint_matches_runtime": true,
+      "mac_savepoint_sha256": "c99d5459d604481547025a83a230460fd5c3686a584ba632316b18b8cb9020fb",
+      "rationale": "Preserved example is blocked and non-executing, with seven-request cap, zero cadence credit, and missing fee/slippage/manifest mapping. Active source has no route model or consumer. The later 24-request L2 calibration is research-only and does not certify this candidate or current dashboard parity.",
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/wizard_source_route_adapter.example.json",
+      "runtime_sha256": "c99d5459d604481547025a83a230460fd5c3686a584ba632316b18b8cb9020fb",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    },
+    "config/wizard_source_route_adapter.schema.json": {
+      "active_exists": false,
+      "decision": "REVIEWED_DEPENDENT_SOURCE_ROUTE_CONFIG_NO_PORT",
+      "frozen_custody_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "line_at_clone": 36,
+      "mac_savepoint_matches_runtime": true,
+      "mac_savepoint_sha256": "680092159d4ec510a89ff88857712ae1d1722a854caca4326395551f2ea66934",
+      "rationale": "Schema depends on the preserved runtime-only Pydantic model for provider operation allowlists, credential-name restrictions, and readiness/blocker consistency. JSON Schema alone permits invalid combinations. No active consumer exists, so a standalone schema port would provide false validation assurance.",
+      "runtime_path": "/Users/gregc/TheWiz-LocalRuntime/config/wizard_source_route_adapter.schema.json",
+      "runtime_sha256": "680092159d4ec510a89ff88857712ae1d1722a854caca4326395551f2ea66934",
+      "working_vs_runtime": "RUNTIME_ONLY"
+    }
+  },
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/dashboard-config-review-CuTTVd/repo",
+  "schema_version": "thewiz.gate0.dashboard_collection_config_review.v1",
+  "scope": "Read-only static review; no credentials read, provider APIs called, scripts executed, Expansion files modified, or shared queue changed.",
+  "source_changes": 0
+}

@@ -6,13 +6,19 @@ Research-first platform for discovering, validating, ranking, and eventually exe
 
 The active workflow is the seven-stage Crypto Wizards to Hyperliquid corrective program. Its canonical status is `reports/active/seven_stage_goal_checkpoint.csv`; model authority is separate in `reports/active/model_authority_status.json`. A model file, dashboard score, Wizard result, or historical V2 report does not grant Testnet or live authority.
 
-Start with the status-only commands below. They do not submit orders:
+The status commands below do not submit orders. They write governed reports and
+must run under a supervisor with file-publication authority; a bare terminal
+invocation fails closed. For a stage-only graph check, use
+`uv run --locked python scripts/ops/run_langgraph_dry_run.py --stage all` in a
+disposable checkout.
+
+Supervisor command entry points:
 
 ```bash
-PYTHONPATH=src python -m quant_platform.cli system-check
-PYTHONPATH=src python -m quant_platform.cli complete-corrective-plan
-PYTHONPATH=src python -m quant_platform.cli build-artifact-index
-PYTHONPATH=src python -m quant_platform.cli current-state
+uv run --locked python -m quant_platform.cli system-check
+uv run --locked python -m quant_platform.cli complete-corrective-plan
+uv run --locked python -m quant_platform.cli build-artifact-index
+uv run --locked python -m quant_platform.cli current-state
 ```
 
 See `docs/current_corrective_operations.md` for the authority hierarchy, stage definitions, scheduler behavior, and recovery rules. The V2, dYdX, Binance, and other venue sections below remain historical/reference workflows unless the seven-stage checkpoint explicitly incorporates them.
@@ -52,22 +58,34 @@ See `docs/wizard_v2_run_pipeline.md` for the run layout, gate definitions, and p
 - No edge is assumed.
 - Every field must be documented, scored, and tested.
 - Every strategy must be evaluated after realistic costs.
-- No strategy is successful without profit factor >= 1.8, Sharpe > 1.2, max drawdown < 15%, 100+ completed trades, and multi-pair robustness.
+- Acceptance has two versioned inputs: `config/acceptance_policy_manifest.json` and the stricter performance targets in `config/research.yaml`. The manifest hash-binds `research.yaml`, but the repo does not clearly define whether the thresholds are nested or which gate controls each promotion. Until a versioned resolver clarifies this, require both and fail closed on disagreement.
 - Portfolio construction ranks opportunities; it does not trade every signal.
 
 ## Quick Start
 
+On the Mac mini's exFAT Expansion checkout, keep the Python environment on the
+internal drive. The default `.venv` on Expansion is incomplete and macOS
+AppleDouble sidecars can interrupt wheel installation there. Set the environment
+path in each shell before using `uv run`:
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-python -m quant_platform.cli build-dictionaries
-python -m quant_platform.cli ingest-fixtures
-python -m quant_platform.cli run-demo-backtest
-python -m quant_platform.cli run-demo-experiments
-python -m quant_platform.cli run-fixture-experiments
+export UV_PROJECT_ENVIRONMENT="/Users/gregc/Library/Application Support/TheWizRuntime/venv"
 ```
+
+```bash
+uv sync --extra dev --locked
+uv run --locked python -m pytest
+uv run --locked python -m quant_platform.cli build-dictionaries
+uv run --locked python -m quant_platform.cli ingest-fixtures
+uv run --locked python -m quant_platform.cli run-demo-backtest
+uv run --locked python -m quant_platform.cli run-demo-experiments
+uv run --locked python -m quant_platform.cli run-fixture-experiments
+```
+
+The CI test command is a full-suite diagnostic. Tests run with external network
+access denied by default; a test marked `external_network` is an explicit
+exception. Workflow and demo commands can still write reports, so use a
+disposable checkout when checking their output behavior.
 
 Generated research artifacts are written to `docs/` and `reports/`.
 
@@ -448,18 +466,18 @@ For a full local network check from VS Code Terminal or macOS Terminal, run:
 ./scripts/check_crypto_wizards_network.sh
 ```
 
-If Python networking is blocked but your Terminal can reach the API with `curl`, run the curl-based crawler:
+The old direct curl crawler is retired. It exits before reading credentials or contacting Crypto Wizards. Inspect the governed dashboard inventory instead:
 
 ```bash
-./scripts/crawl_crypto_wizards_with_curl.sh
+uv run --locked python scripts/build_dashboard_full_inventory.py
 ```
 
-On success it writes:
+Historical direct crawls wrote:
 
 - `data/raw/prescanned.json`
 - `docs/crypto_wizards_live_field_dictionary.csv`
 
-Then verify the live crawl artifacts:
+Verify any retained crawl artifacts before using them as research evidence:
 
 ```bash
 PYTHONPATH=src python3 -m quant_platform.cli verify-crypto-wizards-live-artifacts

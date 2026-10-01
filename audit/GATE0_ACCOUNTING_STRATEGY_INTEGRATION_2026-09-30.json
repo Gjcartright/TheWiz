@@ -1,0 +1,30 @@
+{
+  "base_commit": "6806d00682079a1d91f00b903263794fe009beb8",
+  "correctness_lint_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+  "decision": "DISPOSABLE_V23_INTEGRATION_QUALIFIED_ACTIVE_PORT_PENDING",
+  "full_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-historical-integration/full-v23-release-junit.xml",
+    "junit_sha256": "2fb25d49ba1f32c31665241a44510f315aeec9288362c75e13f745c8d53e5b8a",
+    "log_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-historical-integration/full-v23-release.log",
+    "log_sha256": "a9dc491f3f6859e3d5e51357dc6026ca390e45104ae6f51730bbfaf6792443f1",
+    "skipped": 0,
+    "tests": 2584
+  },
+  "historical_repair_scope": [
+    "same-currency PnL and risk metrics",
+    "fixed-units execution and explicit spread/hedge orientation",
+    "venue interval and calendar-month distinction",
+    "complete numeric inputs and spread-only nonacceptance",
+    "causal regime thresholds and proxy strategy authority labels"
+  ],
+  "lookahead_probe_sha256": "966203736a29cb09fbc85c1d510ec09a4cf0124349f310bbd8a4423b71e48dc6",
+  "manifest_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-historical-integration/QUALIFIED_V23_SOURCE_MANIFEST.json",
+  "manifest_sha256": "1234259c9904550905da1a01ec9e8d7518cf2a5c00c89a78819d1aabc0be60ec",
+  "next_source_decision": "Review the V2.3 source transition and historical verifier lifecycle, then port as one versioned group and requalify the exact active commit.",
+  "qualification_scope": "This exact disposable source passed integration diagnostics. The Expansion checkout has not selected these files. No research acceptance, Testnet order, or live trading authority follows.",
+  "qualified_source_files": 27,
+  "remaining_gate0_source_paths": 678,
+  "schema_version": "thewiz.gate0.accounting_strategy_integration.v1"
+}

@@ -1,0 +1,1201 @@
+{
+  "canonical_head": "932108584a4ec4b5c9c5260fd310adb499e6600b",
+  "combined_review": {
+    "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-providers-P7zRoZ/repo/audit/GATE0_TOP_LEVEL_PROVIDER_SOURCE_REVIEW_2026-09-30.json",
+    "sha256": "fae7db7c1929914c44a7bbb876f13cc89d023fba4a236108d4bf8f81d2e364ff"
+  },
+  "extended_manifest": {
+    "path": "/Volumes/Expansion/Crypto Wizard/audit/SECOND_PASS_EXTENDED_MANIFEST_2026-09-29.csv",
+    "sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918"
+  },
+  "initial_four_root_manifest": {
+    "path": "/Volumes/Expansion/Crypto Wizard/audit/evidence_freeze_2026-09-29/file_manifest.csv",
+    "sha256": "a0fc9ecc843f79dacc994b46e04bc3a23cf81c12ae7254121b59ec165fb65b2c"
+  },
+  "method": "Exact per-root manifest pair census; classify each frozen SHA against source_reconciliation working/recovery/runtime and queue historical variants plus nine corrections.",
+  "nine_variant_supplement": {
+    "path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/top-level-providers-P7zRoZ/repo/audit/GATE0_TOP_LEVEL_NINE_UNLISTED_VARIANTS_SUPPLEMENT_2026-09-30.json",
+    "sha256": "b1219119e972bce202f56f48b8fd2db080e687be1b549aeabb561df2a4b0ded0"
+  },
+  "rows": [
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "03441c3a6dfd5d5547b56ce13bacb9cde23c935760cb551d731ab5461e362b6c"
+      ],
+      "corrected_historical_sha256": [
+        "4288d7a324283b0215cdb0a2cb42d9654a5a2ac26991345ea9b71dc5f8d71ec2",
+        "457ad94e9ae6f7181af26f9e8e31e6d9e6282dfffd7d8ee7ad748b5b51d14d2e"
+      ],
+      "current_queue_historical_sha256": [
+        "4288d7a324283b0215cdb0a2cb42d9654a5a2ac26991345ea9b71dc5f8d71ec2",
+        "457ad94e9ae6f7181af26f9e8e31e6d9e6282dfffd7d8ee7ad748b5b51d14d2e"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "03441c3a6dfd5d5547b56ce13bacb9cde23c935760cb551d731ab5461e362b6c"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "4288d7a324283b0215cdb0a2cb42d9654a5a2ac26991345ea9b71dc5f8d71ec2"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "457ad94e9ae6f7181af26f9e8e31e6d9e6282dfffd7d8ee7ad748b5b51d14d2e"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "03441c3a6dfd5d5547b56ce13bacb9cde23c935760cb551d731ab5461e362b6c",
+        "runtime": "03441c3a6dfd5d5547b56ce13bacb9cde23c935760cb551d731ab5461e362b6c",
+        "working": "03441c3a6dfd5d5547b56ce13bacb9cde23c935760cb551d731ab5461e362b6c"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/crypto_wizards_dashboard_capture.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1"
+      ],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "5a9d0c035d498e04769a556690f37826899445d45f9ddaf90800de3d160132bc"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "e888e6f3c12e6ef5cb3d172d02723a0e36eaa883108fbf92da3e29a1f5d2ab2b"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "e888e6f3c12e6ef5cb3d172d02723a0e36eaa883108fbf92da3e29a1f5d2ab2b",
+        "runtime": "e888e6f3c12e6ef5cb3d172d02723a0e36eaa883108fbf92da3e29a1f5d2ab2b",
+        "working": "5a9d0c035d498e04769a556690f37826899445d45f9ddaf90800de3d160132bc"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "f9043211b7cd7c08386f8f4224115a00f4bc2c8bee32b784b982f47612503cf1"
+      },
+      "relative_path": "src/quant_platform/crypto_wizards_history.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f"
+      ],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "8fdf434d91e551b85755193a8eb7e83e80a153736af246f5786342d1fbd45fab"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "cbad3408b43ded3e00d1b2b833d919cccf67e0e194da029cde964ca21d447edc"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "8fdf434d91e551b85755193a8eb7e83e80a153736af246f5786342d1fbd45fab",
+        "runtime": "8fdf434d91e551b85755193a8eb7e83e80a153736af246f5786342d1fbd45fab",
+        "working": "cbad3408b43ded3e00d1b2b833d919cccf67e0e194da029cde964ca21d447edc"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "22af4ab7385d3028070f1e1906a2ae855d566b0f379a7ab32cdbd5cd7aaea09f"
+      },
+      "relative_path": "src/quant_platform/crypto_wizards_scanner.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "3128c591d11c4621599861024407e79024e5d37762b204b4b456fa9b50dc2fee",
+        "488ac159c65945aabcdad329c99db5eeb44757aa2586d13976478451d4c4f30d"
+      ],
+      "current_queue_historical_sha256": [
+        "3128c591d11c4621599861024407e79024e5d37762b204b4b456fa9b50dc2fee",
+        "488ac159c65945aabcdad329c99db5eeb44757aa2586d13976478451d4c4f30d"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "06394686395343b5ca39ccf019b6d7cfb6403a70ac68db2c7d7e24c23fea8152"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "3128c591d11c4621599861024407e79024e5d37762b204b4b456fa9b50dc2fee"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "488ac159c65945aabcdad329c99db5eeb44757aa2586d13976478451d4c4f30d"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "e674761bff215c432b2301ddeed65f5c0002150800028eb87f5907105935e6fa"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "06394686395343b5ca39ccf019b6d7cfb6403a70ac68db2c7d7e24c23fea8152",
+        "runtime": "06394686395343b5ca39ccf019b6d7cfb6403a70ac68db2c7d7e24c23fea8152",
+        "working": "e674761bff215c432b2301ddeed65f5c0002150800028eb87f5907105935e6fa"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/crypto_wizards_sweep.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+        "runtime": "86463f0b7882de7a228b50770ab9defad66a1048066bb3fb0e9af40ed487953e",
+        "working": ""
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/dydx_public_endpoints.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "forensic_b",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+        "runtime": "e9d8240c943b91614fcbe4885ec2b2076eaa0b850f8b12ca880eff4f5c2f71d4",
+        "working": "f887cfc4bc10a24d921a1bd7159824532881cb831f9c8b747ca8908c1f8e2f45"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/dydx_record_only_adapter.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+      ],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b",
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+        "runtime": "9e9dbb3e5d7b5f23492f85604b3abb29c1da2874f5ad05a0a6523a9d86c7c6e6",
+        "working": "c8e633a22f8b65dcd31284d9e21a9b4ce7e175c37642745e5a3b488cb08680c9"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "1",
+        "historical_variant_sha256": "28efdb2682cd67104ca2e6e6525afdfd706372a248b1f6e395777ac6fb5b1d71"
+      },
+      "relative_path": "src/quant_platform/dydx_sdk_order_adapter.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef",
+        "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+      ],
+      "current_queue_historical_sha256": [
+        "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef",
+        "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "0286fa39c2cb73b134956889ab9a06231a3ce003012539c97fc00336e16a92ef"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "6f423c1e1c5f7a17f0956fce135455c79d664f6082ffe2c9a10e44e78e4dec64"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+        "runtime": "f16aea476b2631f05a6b2ee3cfc9694e8a2d65ae8f38e25924f4263f92c80425",
+        "working": "ba2c7b24291bbe78de83a5dd75ad077af04b3c5207b5a327237844ae95ac454e"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/hyperliquid.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95",
+        "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+      ],
+      "current_queue_historical_sha256": [
+        "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+        "runtime": "c5c03c5ad3ccc9e539775ea4438b06f7f4cc4949dcb92d8b63afcebc7701400d",
+        "working": "4554e98b38ef870106e4b9c354b7f64766635f2933a632c399292b761572555f"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "3b292eb4694be957c1439b1ecffc7c21226dcb9f604bf4e644b98799d5231c95;7212271e09b78c212377c3cd6980924f3d181ceb2dde74fbc599855f19ae4ef0"
+      },
+      "relative_path": "src/quant_platform/hyperliquid_testnet.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "c2ee9df7d544e5413a309e62ba6e29f047440deb5df11f514fa5e4a6cde40d37"
+      ],
+      "corrected_historical_sha256": [
+        "9d16b5326591acdc033f25b28e0c745491b3cc1b1bd897297896d5ca8d5a1ea8"
+      ],
+      "current_queue_historical_sha256": [
+        "9d16b5326591acdc033f25b28e0c745491b3cc1b1bd897297896d5ca8d5a1ea8"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "9d16b5326591acdc033f25b28e0c745491b3cc1b1bd897297896d5ca8d5a1ea8"
+        },
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "c2ee9df7d544e5413a309e62ba6e29f047440deb5df11f514fa5e4a6cde40d37"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "c2ee9df7d544e5413a309e62ba6e29f047440deb5df11f514fa5e4a6cde40d37",
+        "runtime": "c2ee9df7d544e5413a309e62ba6e29f047440deb5df11f514fa5e4a6cde40d37",
+        "working": "c2ee9df7d544e5413a309e62ba6e29f047440deb5df11f514fa5e4a6cde40d37"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_candidate_set.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676"
+      ],
+      "corrected_historical_sha256": [
+        "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45",
+        "44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc"
+      ],
+      "current_queue_historical_sha256": [
+        "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc"
+        },
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676",
+        "runtime": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676",
+        "working": "c6386cbc80d1356ad67d3a9c866fff3df1771042db6b8845579f92ffdf30e676"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "00ae43f8625b4a8e06a15b6248e21982d0cd2ce49e31a9c035d67da04903dc45;44b0ebdee813a79ea671b6945470257c8d5371182997a8d127b494a8d7894fcc"
+      },
+      "relative_path": "src/quant_platform/wizard_control_plane.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "cb11865bc44d8313806da3832d995e1785a8f75a94f6af96d21e8002e5411620"
+      ],
+      "current_queue_historical_sha256": [
+        "cb11865bc44d8313806da3832d995e1785a8f75a94f6af96d21e8002e5411620"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "88c22602a731f0d370f83dbc312db20590fdbf3c37789daf1195df62ac620256"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "forensic_b",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "cb11865bc44d8313806da3832d995e1785a8f75a94f6af96d21e8002e5411620"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "d1309095ea6f092270ad02d78429d8e1e3f063488443f963cbd551d8704e0b5b"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "88c22602a731f0d370f83dbc312db20590fdbf3c37789daf1195df62ac620256",
+        "runtime": "88c22602a731f0d370f83dbc312db20590fdbf3c37789daf1195df62ac620256",
+        "working": "d1309095ea6f092270ad02d78429d8e1e3f063488443f963cbd551d8704e0b5b"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_credit_ledger.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251",
+        "cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4"
+      ],
+      "current_queue_historical_sha256": [
+        "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "1f3aab9af2849bbff20988734222bc8e1811fdeef6c93812ce36ebcb7273324e"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "d9118a8c11ae186cb5b608febe1bcd5f1f959ab472e11795352891d9d95c62fe"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "1f3aab9af2849bbff20988734222bc8e1811fdeef6c93812ce36ebcb7273324e",
+        "runtime": "1f3aab9af2849bbff20988734222bc8e1811fdeef6c93812ce36ebcb7273324e",
+        "working": "d9118a8c11ae186cb5b608febe1bcd5f1f959ab472e11795352891d9d95c62fe"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "ad4e7014f2ff32cd8abad8618e85ba7434c16a2c108e4cf82bf62710bd88f251;cf3dca4e04ec24bf111290136ef4859c6e668f580ed35ef0573a34d7eea5bbf4"
+      },
+      "relative_path": "src/quant_platform/wizard_evidence.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778"
+      ],
+      "corrected_historical_sha256": [
+        "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607",
+        "d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+      ],
+      "current_queue_historical_sha256": [
+        "d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778",
+        "runtime": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778",
+        "working": "341dc88a6906b7f42fe17fa4b01cbc8540e51665eb62064609bc048ea8666778"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "83f464a1a8fc1ea8cac4250eab5397891cdc93a0a377a375f08d96a8de76f607;d8c4da0eebcd54c08f85366fa7399fb00ea8a5f5060cf19d79eea55fcedf847d"
+      },
+      "relative_path": "src/quant_platform/wizard_hyperliquid_bridge.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8"
+      ],
+      "corrected_historical_sha256": [
+        "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23",
+        "b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+      ],
+      "current_queue_historical_sha256": [
+        "b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+        },
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8",
+        "runtime": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8",
+        "working": "ee80d6fab23433843c64af686998238806b3fb74772a31a8f3c8b57cc4b329c8"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "66ab8cddcd27b7fac443c0cfa9f7fb4a2c4ce0c242de9b23c726b6094034ac23;b388a433532c42f6eec6daa84d5fc924c8ed42755ecc18c48aad1f3c92064568"
+      },
+      "relative_path": "src/quant_platform/wizard_hyperliquid_mode_proof.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "c7d9675753c02f9ff206116ad42746569788e16c61586d3d70210e496725b3e5",
+        "fa8c4a08fd8a1de226eb556d8b0c87d362cc8989d6cb80cf21dbf134fe9c1388"
+      ],
+      "current_queue_historical_sha256": [
+        "c7d9675753c02f9ff206116ad42746569788e16c61586d3d70210e496725b3e5",
+        "fa8c4a08fd8a1de226eb556d8b0c87d362cc8989d6cb80cf21dbf134fe9c1388"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "775e0a59735974984a9a4fecef6ca5afa97396e58ffe3e5d78fb4beb9887aec7"
+        },
+        {
+          "baseline_roles": [
+            "recovery"
+          ],
+          "copy_roots": [
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "83e1501e18cc00fb87a601da7d06b6558cdf8d69e8ef7e4b787cf2e32d37e99b"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "c7d9675753c02f9ff206116ad42746569788e16c61586d3d70210e496725b3e5"
+        },
+        {
+          "baseline_roles": [
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "f1947c8c61777104ca1f0531cd459dd1ac397a1c21cb58c50cb883855ac29ac7"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "fa8c4a08fd8a1de226eb556d8b0c87d362cc8989d6cb80cf21dbf134fe9c1388"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "83e1501e18cc00fb87a601da7d06b6558cdf8d69e8ef7e4b787cf2e32d37e99b",
+        "runtime": "f1947c8c61777104ca1f0531cd459dd1ac397a1c21cb58c50cb883855ac29ac7",
+        "working": "775e0a59735974984a9a4fecef6ca5afa97396e58ffe3e5d78fb4beb9887aec7"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_mode_replay.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055"
+      ],
+      "corrected_historical_sha256": [
+        "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8",
+        "be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+      ],
+      "current_queue_historical_sha256": [
+        "be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "visual_recovery"
+          ],
+          "coverage_kind": "historical_metadata_correction",
+          "sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8"
+        },
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055",
+        "runtime": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055",
+        "working": "98a21f341332516cf67f835dcabbe828ee83a7f174f5d9107786ec16fd60e055"
+      },
+      "queue_metadata_replacement": {
+        "historical_copy_roots": "forensic_b;visual_recovery",
+        "historical_variant_count": "2",
+        "historical_variant_sha256": "883e68bfaa23f38fff81258d8bbcef53955d0a5bce07dfaa6a0391f184b1ffd8;be4a74918ae226f0e31bc4db27ff814e4136ff6b78f52dee3bd47f0542a6bc22"
+      },
+      "relative_path": "src/quant_platform/wizard_ou_comparator_activation.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "826453af5535270e0dd970a50e6aded300fd9f30d91d952aba32ec62b58e0bb6"
+      ],
+      "corrected_historical_sha256": [
+        "47a54147aa4fd0d5f3708cf78f9f51f49c503aacc63fd9ff8a8a7a2f21a2c01d"
+      ],
+      "current_queue_historical_sha256": [
+        "47a54147aa4fd0d5f3708cf78f9f51f49c503aacc63fd9ff8a8a7a2f21a2c01d"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "47a54147aa4fd0d5f3708cf78f9f51f49c503aacc63fd9ff8a8a7a2f21a2c01d"
+        },
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "826453af5535270e0dd970a50e6aded300fd9f30d91d952aba32ec62b58e0bb6"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "826453af5535270e0dd970a50e6aded300fd9f30d91d952aba32ec62b58e0bb6",
+        "runtime": "826453af5535270e0dd970a50e6aded300fd9f30d91d952aba32ec62b58e0bb6",
+        "working": "826453af5535270e0dd970a50e6aded300fd9f30d91d952aba32ec62b58e0bb6"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_ou_v4_comparator_activation.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "34596e31d19d7c72f7dbfb86b0b6ffd741958f6d18908a71a0641293c9aea091"
+      ],
+      "corrected_historical_sha256": [
+        "bbffd3659d8498bb6fa1d57d36085d16fba3823d7a10a031b53ebaf3c991cca6"
+      ],
+      "current_queue_historical_sha256": [
+        "bbffd3659d8498bb6fa1d57d36085d16fba3823d7a10a031b53ebaf3c991cca6"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "34596e31d19d7c72f7dbfb86b0b6ffd741958f6d18908a71a0641293c9aea091"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "bbffd3659d8498bb6fa1d57d36085d16fba3823d7a10a031b53ebaf3c991cca6"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "34596e31d19d7c72f7dbfb86b0b6ffd741958f6d18908a71a0641293c9aea091",
+        "runtime": "34596e31d19d7c72f7dbfb86b0b6ffd741958f6d18908a71a0641293c9aea091",
+        "working": "34596e31d19d7c72f7dbfb86b0b6ffd741958f6d18908a71a0641293c9aea091"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_ou_v5_comparator_activation.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [
+        "7c6377488e64babf459237a097e012171165880ce4b674865c3d622bf885f6e2"
+      ],
+      "corrected_historical_sha256": [
+        "809b4cfb8b389854765f07db94239d6011e8f8d8e9599cde9f4a9a285e3c5f69"
+      ],
+      "current_queue_historical_sha256": [
+        "809b4cfb8b389854765f07db94239d6011e8f8d8e9599cde9f4a9a285e3c5f69"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working",
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "7c6377488e64babf459237a097e012171165880ce4b674865c3d622bf885f6e2"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "809b4cfb8b389854765f07db94239d6011e8f8d8e9599cde9f4a9a285e3c5f69"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "7c6377488e64babf459237a097e012171165880ce4b674865c3d622bf885f6e2",
+        "runtime": "7c6377488e64babf459237a097e012171165880ce4b674865c3d622bf885f6e2",
+        "working": "7c6377488e64babf459237a097e012171165880ce4b674865c3d622bf885f6e2"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_ou_v6_comparator_activation.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [
+        "613a99f364bf1ec08b0b727cc04916f454852792e56b244efe57115dabc2b198",
+        "6f1193577a1616d84663352d09ccb28bc449d6aebd09a96c2bb3521e2670cf6a"
+      ],
+      "current_queue_historical_sha256": [
+        "613a99f364bf1ec08b0b727cc04916f454852792e56b244efe57115dabc2b198",
+        "6f1193577a1616d84663352d09ccb28bc449d6aebd09a96c2bb3521e2670cf6a"
+      ],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "47e2a0fd119fb0bec555ac2a66f672a16fd573448e7e4cd4337d0d0ff8d57e3f"
+        },
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "58117628715a5d4ab394b830db07e3aead2e63b2ac2b717cbc88fff3c233c46f"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_b"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "613a99f364bf1ec08b0b727cc04916f454852792e56b244efe57115dabc2b198"
+        },
+        {
+          "baseline_roles": [],
+          "copy_roots": [
+            "forensic_a",
+            "visual_recovery",
+            "workspace_outer"
+          ],
+          "coverage_kind": "historical_already_queued",
+          "sha256": "6f1193577a1616d84663352d09ccb28bc449d6aebd09a96c2bb3521e2670cf6a"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "58117628715a5d4ab394b830db07e3aead2e63b2ac2b717cbc88fff3c233c46f",
+        "runtime": "58117628715a5d4ab394b830db07e3aead2e63b2ac2b717cbc88fff3c233c46f",
+        "working": "47e2a0fd119fb0bec555ac2a66f672a16fd573448e7e4cd4337d0d0ff8d57e3f"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_research_journal.py",
+      "unclassified_sha256": []
+    },
+    {
+      "baseline_sha256_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": [],
+      "corrected_historical_sha256": [],
+      "current_queue_historical_sha256": [],
+      "distinct_frozen_variants": [
+        {
+          "baseline_roles": [
+            "recovery",
+            "runtime"
+          ],
+          "copy_roots": [
+            "local_runtime",
+            "recovery_project",
+            "source_candidate"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "723769ff422c7f6f42c6ea381d58903815434c6313ca2b14f0702f07878a6ced"
+        },
+        {
+          "baseline_roles": [
+            "working"
+          ],
+          "copy_roots": [
+            "forensic_b",
+            "visual_recovery",
+            "working_git"
+          ],
+          "coverage_kind": "selected_four_root_baseline",
+          "sha256": "da5d0c959f6aa38bacee6fdbb92c42a77d5600fe8553bafd76c8ede29ca6ec7d"
+        }
+      ],
+      "four_root_source_reconciliation_sha256": {
+        "recovery": "723769ff422c7f6f42c6ea381d58903815434c6313ca2b14f0702f07878a6ced",
+        "runtime": "723769ff422c7f6f42c6ea381d58903815434c6313ca2b14f0702f07878a6ced",
+        "working": "da5d0c959f6aa38bacee6fdbb92c42a77d5600fe8553bafd76c8ede29ca6ec7d"
+      },
+      "queue_metadata_replacement": null,
+      "relative_path": "src/quant_platform/wizard_run_config.py",
+      "unclassified_sha256": []
+    }
+  ],
+  "schema_version": "gate0.top_level_all_extended_variants_reconciliation.v1",
+  "source_reconciliation": {
+    "path": "/Volumes/Expansion/Crypto Wizard/audit/evidence_freeze_2026-09-29/source_reconciliation.csv",
+    "sha256": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943"
+  },
+  "summary": {
+    "baseline_path_sha_absent_from_queue_hash_fields_but_covered_by_source_reconciliation": 9,
+    "distinct_path_sha_variants": 65,
+    "frozen_copy_entries": 141,
+    "historical_metadata_correction_path_sha": 9,
+    "source_paths": 22,
+    "unclassified_path_sha": 0
+  }
+}

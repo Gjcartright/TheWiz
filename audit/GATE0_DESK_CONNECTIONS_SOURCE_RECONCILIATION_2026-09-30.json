@@ -1,0 +1,350 @@
+{
+  "active_incoming_imports": [],
+  "base_commit": "ff07b8b66c115e6a6d0ed3bb084b9df71ffc8483",
+  "decision": "DEFER_COHERENT_DEPENDENCY_CLOSURE_NO_PORT",
+  "dependency_closure": {
+    "five_profile_config_status": "Preserved runtime-only strategy_desk profiles reviewed as unadopted research archive; no active profile adoption.",
+    "missing_active_families": [
+      "quant_platform.static_desk",
+      "quant_platform.dynamic_desk",
+      "quant_platform.copula_desk",
+      "quant_platform.institutional_risk",
+      "quant_platform.research_trial_registry",
+      "quant_platform.orchestration.human_evidence_view"
+    ],
+    "standalone_presentation_note": "presentation.py has a standard-library-only top-level import and a retained JSON renderer, but no active consumer and its builder imports the absent package closure."
+  },
+  "diagnostics": {
+    "active_incoming_imports_zero": true,
+    "active_paths_absent": true,
+    "direct_tests_zero": true,
+    "expansion_modified": false,
+    "mac_savepoint_hashes_match": true,
+    "provider_calls": false,
+    "queue_runtime_hashes_match": true,
+    "runtime_ast_parse_passed": true,
+    "shared_queue_modified": false,
+    "source_transplanted": false
+  },
+  "direct_test_references": {
+    "active": [],
+    "runtime": []
+  },
+  "future_review_requirements": [
+    "Review and select the full static/dynamic/copula/accounting/risk/trial dependency closure and five profile pins.",
+    "Add direct tests for journal replay, proposal, reservation release, source freshness, risk veto, and no-order boundary.",
+    "Bind any future reservation release to independently proven venue effect state before considering order integration."
+  ],
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/desk-connections-8aPpmU/repo",
+  "mac_savepoint_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+  "queue_sha256_at_review": "db787932d609c620ce2a58cf72050090cbb97cd5e593fe2b228540d9a87a9bf9",
+  "reservation_and_effect_review": {
+    "direct_active_effect_authority_imports_found": false,
+    "direct_network_imports_found": false,
+    "local_durable_write_surfaces": [
+      "desk_connections.journal.DeskJournal",
+      "desk_connections.reservation.ReservationRegistry",
+      "desk_connections.workflow.record_trial_registration",
+      "desk_connections.workflow.record_trial_result"
+    ],
+    "port_blocker": "Do not connect this capacity ledger to provider orders or treat its research proposal as a permit without a reviewed venue/effect-proof bridge and dedicated tests.",
+    "provider_order_submission_found": false,
+    "release_contract": "reservation.py release requires caller-supplied all_orders_terminal=True, reason=confirmed_cancelled_no_fills, and a source_reference; publish_measurement likewise relies on supplied accounted_orders_terminal and updated local book. The module explicitly says account source assertions are locally bound, not venue-authenticated."
+  },
+  "reviewed_at_utc": "2026-09-30T19:54:02.056034+00:00",
+  "runtime_incoming_imports": [
+    {
+      "line": 217,
+      "source": "src/quant_platform/orchestration/human_evidence_view.py",
+      "target": "quant_platform.desk_connections.presentation"
+    }
+  ],
+  "runtime_root": "/Users/gregc/TheWiz-LocalRuntime",
+  "schema": "thewiz.gate0.desk_connections_source_review.v1",
+  "scope": "11 runtime-only desk_connections paths; Gate 0 source selection only",
+  "source_paths": [
+    {
+      "active_path_present": false,
+      "decision_rationale": "Import-safe package marker only; no active caller or usable desk implementation while the package dependency closure is absent.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [],
+      "internal_package_imports": [],
+      "line_in_base_queue": 140,
+      "missing_active_external_imports": [],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/__init__.py",
+      "runtime_sha256": "c219f3927128daeaf41fdb71c8828514973bfb9eb5822e5b64d0fb7bb47c8f4c",
+      "savepoint_sha256": "c219f3927128daeaf41fdb71c8828514973bfb9eb5822e5b64d0fb7bb47c8f4c"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Read-only preview imports driver, journal, workflow, five pinned profiles, and the runtime-only human-evidence renderer; cannot run from active source.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.driver",
+        "quant_platform.desk_connections.journal",
+        "quant_platform.desk_connections.presentation",
+        "quant_platform.desk_connections.workflow"
+      ],
+      "line_in_base_queue": 141,
+      "missing_active_external_imports": [
+        "quant_platform.orchestration.human_evidence_view"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/__main__.py",
+      "runtime_sha256": "94e26f61854718820c501822441f3a45f9e6b0ca37263f50fdfe369a90bcc2d0",
+      "savepoint_sha256": "94e26f61854718820c501822441f3a45f9e6b0ca37263f50fdfe369a90bcc2d0"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Typed journal codec resolves a static_desk and institutional_risk allowlist absent from active source; importing it alone cannot decode the retained records.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.institutional_risk",
+        "quant_platform.static_desk",
+        "quant_platform.static_desk.risk_link"
+      ],
+      "internal_package_imports": [],
+      "line_in_base_queue": 142,
+      "missing_active_external_imports": [
+        "quant_platform.institutional_risk",
+        "quant_platform.static_desk",
+        "quant_platform.static_desk.risk_link"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/codec.py",
+      "runtime_sha256": "0ec3fbdf25671fa152f564023297eed82132cc857bcb62e8ba8816c2b5ae4d1d",
+      "savepoint_sha256": "0ec3fbdf25671fa152f564023297eed82132cc857bcb62e8ba8816c2b5ae4d1d"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Research decision driver requires unported static, dynamic and copula signal paths and supplied accounting state; no active scheduler, consumer or direct test.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.copula_desk.signal_path",
+        "quant_platform.dynamic_desk.signal_path",
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.profile",
+        "quant_platform.static_desk.profile_data",
+        "quant_platform.static_desk.runtime",
+        "quant_platform.static_desk.signal_path"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.codec",
+        "quant_platform.desk_connections.journal",
+        "quant_platform.desk_connections.performance",
+        "quant_platform.desk_connections.portfolio"
+      ],
+      "line_in_base_queue": 143,
+      "missing_active_external_imports": [
+        "quant_platform.copula_desk.signal_path",
+        "quant_platform.dynamic_desk.signal_path",
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.profile",
+        "quant_platform.static_desk.profile_data",
+        "quant_platform.static_desk.runtime",
+        "quant_platform.static_desk.signal_path"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/driver.py",
+      "runtime_sha256": "17fdcc182718f2e6b7fbac49eaec584c3efb43a35eab751eacf1877dcfe3f821",
+      "savepoint_sha256": "17fdcc182718f2e6b7fbac49eaec584c3efb43a35eab751eacf1877dcfe3f821"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Local SQLite desk journal requires unported static accounting/runtime record types and has no active owner or direct test.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.runtime"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.codec"
+      ],
+      "line_in_base_queue": 144,
+      "missing_active_external_imports": [
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.runtime"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/journal.py",
+      "runtime_sha256": "d358337bf470f2bb17e46b004ac25509ef41c001da646bddc2570ea9af2384f2",
+      "savepoint_sha256": "d358337bf470f2bb17e46b004ac25509ef41c001da646bddc2570ea9af2384f2"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Book outcome reconstruction requires unported static accounting records; current generic performance math does not supply that book contract.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.performance_math",
+        "quant_platform.risk_metrics",
+        "quant_platform.static_desk.accounting"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.codec"
+      ],
+      "line_in_base_queue": 145,
+      "missing_active_external_imports": [
+        "quant_platform.static_desk.accounting"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/performance.py",
+      "runtime_sha256": "17b204ec2db95e626f4004442cfc00613f4674065c669e21162d312d99cd19e3",
+      "savepoint_sha256": "17b204ec2db95e626f4004442cfc00613f4674065c669e21162d312d99cd19e3"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Research-only account admission depends on unported institutional risk and static accounting/risk link/runtime types; not a current risk authority.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.institutional_risk",
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.risk_link",
+        "quant_platform.static_desk.runtime"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.performance"
+      ],
+      "line_in_base_queue": 146,
+      "missing_active_external_imports": [
+        "quant_platform.institutional_risk",
+        "quant_platform.static_desk.accounting",
+        "quant_platform.static_desk.risk_link",
+        "quant_platform.static_desk.runtime"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/portfolio.py",
+      "runtime_sha256": "a9f05d0c594c894afd888dde10ba903bd746bb3833f5fc777611d76d067fdca7",
+      "savepoint_sha256": "a9f05d0c594c894afd888dde10ba903bd746bb3833f5fc777611d76d067fdca7"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Panel renderer can parse retained JSON, but its panel builder binds the unported desk family; the sole runtime inbound renderer is absent from active source.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.static_desk.profile"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.driver",
+        "quant_platform.desk_connections.journal",
+        "quant_platform.desk_connections.performance",
+        "quant_platform.desk_connections.portfolio",
+        "quant_platform.desk_connections.research"
+      ],
+      "line_in_base_queue": 147,
+      "missing_active_external_imports": [
+        "quant_platform.static_desk.profile"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/presentation.py",
+      "runtime_sha256": "7353b63ac3c4b538cb37fe41d91d6534f73d9ac7967a434cb3fef6e07336b25e",
+      "savepoint_sha256": "7353b63ac3c4b538cb37fe41d91d6534f73d9ac7967a434cb3fef6e07336b25e"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Trial and learning adapter depends on unported profile/signal paths and research_trial_registry; no current student or teacher authority follows from the retained code.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.copula_desk.signal_path",
+        "quant_platform.dynamic_desk.signal_path",
+        "quant_platform.economic_contract",
+        "quant_platform.orchestration.student_readiness",
+        "quant_platform.research_extraction",
+        "quant_platform.research_trial_registry",
+        "quant_platform.static_desk.profile",
+        "quant_platform.static_desk.signal_path"
+      ],
+      "internal_package_imports": [],
+      "line_in_base_queue": 148,
+      "missing_active_external_imports": [
+        "quant_platform.copula_desk.signal_path",
+        "quant_platform.dynamic_desk.signal_path",
+        "quant_platform.research_trial_registry",
+        "quant_platform.static_desk.profile",
+        "quant_platform.static_desk.signal_path"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/research.py",
+      "runtime_sha256": "28f99a60b6659c273964bb0b9831a90a7ba9e6d776d403541b97707134515be7",
+      "savepoint_sha256": "28f99a60b6659c273964bb0b9831a90a7ba9e6d776d403541b97707134515be7"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Separate SQLite capacity registry consumes unported portfolio/account facts; release depends on caller-supplied terminal-order assertions and is not bound to active effect authority or a venue proof.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.codec",
+        "quant_platform.desk_connections.journal",
+        "quant_platform.desk_connections.portfolio"
+      ],
+      "line_in_base_queue": 149,
+      "missing_active_external_imports": [],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/reservation.py",
+      "runtime_sha256": "b5c5487b1473ffea5ae86b7ca5f3cb55a21e88b0fc1de5d496f7f16312348f5e",
+      "savepoint_sha256": "b5c5487b1473ffea5ae86b7ca5f3cb55a21e88b0fc1de5d496f7f16312348f5e"
+    },
+    {
+      "active_path_present": false,
+      "decision_rationale": "Composition requires all five unadopted pinned strategy profiles, driver/presentation/research modules and unported ResearchTrialLedger; it commits only to a separate local reservation registry.",
+      "direct_effect_authority_imports": [],
+      "direct_network_imports": [],
+      "direct_test_references": 0,
+      "external_package_imports": [
+        "quant_platform.research_trial_registry",
+        "quant_platform.static_desk.profile"
+      ],
+      "internal_package_imports": [
+        "quant_platform.desk_connections.driver",
+        "quant_platform.desk_connections.presentation",
+        "quant_platform.desk_connections.research",
+        "quant_platform.desk_connections.reservation"
+      ],
+      "line_in_base_queue": 150,
+      "missing_active_external_imports": [
+        "quant_platform.research_trial_registry",
+        "quant_platform.static_desk.profile"
+      ],
+      "proposed_queue_status": "REVIEWED_DEPENDENT_DESK_PACKAGE_DEFERRED_NO_PORT",
+      "queue_status_before_review": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "relative_path": "src/quant_platform/desk_connections/workflow.py",
+      "runtime_sha256": "b4acd8dbec15bce89246f8ea1787904e36547afe4bdd3081d89e9563557f5653",
+      "savepoint_sha256": "b4acd8dbec15bce89246f8ea1787904e36547afe4bdd3081d89e9563557f5653"
+    }
+  ],
+  "summary": "All 11 preserved source files match their frozen queue and Mac savepoint hashes. The canonical source has no package or active caller; the only runtime incoming import is the preserved human-evidence renderer. Direct tests for this package were absent in active and LocalRuntime test trees. The package requires unported desk/risk/trial modules and unadopted five-profile configuration. Its separate SQLite capacity registry is not an active effect-authority or venue-proof contract."
+}

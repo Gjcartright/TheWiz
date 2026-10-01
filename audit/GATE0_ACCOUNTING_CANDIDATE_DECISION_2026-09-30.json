@@ -1,0 +1,29 @@
+{
+  "candidate_boolean_input_defect": true,
+  "coherent_focused_tests_passed": 167,
+  "decision": "PRESERVE_ACCOUNTING_CANDIDATE_AND_REPAIR_VERSIONED_INTEGRATION_BEFORE_PORT",
+  "dependent_paths_still_pending": [
+    "src/quant_platform/economic_contract.py",
+    "src/quant_platform/performance_math.py",
+    "src/quant_platform/trade_ledger.py",
+    "src/quant_platform/backtest.py",
+    "tests/test_backtest.py",
+    "tests/test_performance_math_v2.py"
+  ],
+  "diagnostic_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/accounting-candidate/ACCOUNTING_CANDIDATE_DIAGNOSTIC.json",
+  "diagnostic_sha256": "4a2a4f7b327783782166e9f5f9ed007b6dd008a912dadc8cc20a555c2c6257d6",
+  "full_disposable_failures": 9,
+  "full_disposable_tests": 2509,
+  "interpretation": "Preserve the four exact runtime-only paths without active adoption. The six-module accounting candidate changes Math V2.1 to V2.2; its full integration fails one funding-clock fixture and eight version-bound research/teacher checks. Its pure risk metrics also accept boolean inputs as financial values. Repair those contracts and requalify downstream evidence before selecting the candidate. No research acceptance or order authority follows.",
+  "observed_profit_factor_disagreement": {
+    "entry_normalized_return_basis": 2.0,
+    "same_currency_net_pnl_basis": 1.0
+  },
+  "reviewed_runtime_only_path_sha256": {
+    "src/quant_platform/protective_exits.py": "cc2df3487e7aab01faba18aeffb3119301751cdc2432a7e78522665466fb5e77",
+    "src/quant_platform/risk_metrics.py": "d72141f4af748a649c9cb52563ffc65fe3814e2a5d70787b5001906796fc8968",
+    "tests/test_accounting_repairs.py": "0771b03b34eda3291976781eeeebb3bc50b73cfe427da53a4a263a31045823d4",
+    "tests/test_risk_metrics.py": "6b8a3755eb0e93b6c620213f6194f5e29a26810ff23ed4d07c95debf8d62fab5"
+  },
+  "schema_version": "thewiz.gate0.accounting_candidate_decision.v1"
+}

@@ -15,6 +15,7 @@ import pandas as pd
 from quant_platform.experiments import AcceptanceGate, ExperimentConfig, ExperimentHarness, PairDataset, strategy_acceptance_report
 from quant_platform.feature_engine import FeatureEngine
 from quant_platform.strategies import STRATEGIES, StrategySpec
+from quant_platform.runtime_types import strict_bool
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,8 @@ def strategy_family_registry(strategies: Iterable[StrategySpec] = STRATEGIES) ->
             "primary_fields": ";".join(s.primary_fields),
             "required_tests": ";".join(s.required_tests),
             "executable_signal": str(s.signal_function is not None),
+            "implementation_kind": s.implementation_kind,
+            "acceptance_authority": s.acceptance_authority,
         }
         for s in strategy_list
     )
@@ -105,8 +108,8 @@ def run_family_matrix(
                 "evaluated_rows": int(len(results)),
                 "best_strategy_id": artifact.best_strategy_id if artifact.best_strategy_id is not None else "",
                 "best_strategy_name": artifact.best_strategy_name,
-                "production_eligible": bool(best_row["production_eligible"]) if best_row is not None else False,
-                "preferred_eligible": bool(best_row["preferred_eligible"]) if best_row is not None else False,
+                "production_eligible": strict_bool(best_row["production_eligible"]) if best_row is not None else False,
+                "preferred_eligible": strict_bool(best_row["preferred_eligible"]) if best_row is not None else False,
                 "acceptance_reason": str(best_row["acceptance_reason"]) if best_row is not None else "no_results",
                 "preferred_reason": str(best_row["preferred_reason"]) if best_row is not None else "no_results",
                 "passing_pairs": int(best_row["passing_pairs"]) if best_row is not None else 0,

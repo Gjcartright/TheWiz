@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import atomic_write_text
-
-from quant_platform.orchestration.corrective_runtime import atomic_write_csv
-
 import json
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
+from hashlib import sha256
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import numpy as np
@@ -22,6 +20,8 @@ from quant_platform.backtest import (
     max_drawdown,
 )
 from quant_platform.economic_contract import normalized_two_leg_weights
+from quant_platform.orchestration import math_acceptance_currentness as acceptance_contract
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
 from quant_platform.performance_math import MATH_VERSION, calculate_annualized_sharpe
 from quant_platform.statistics.math_v2 import (
     estimate_hurst_dfa,
@@ -36,18 +36,78 @@ from quant_platform.trade_ledger import build_trade_ledger
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
-    """Run deterministic checks and write a non-hand-authored acceptance marker."""
+def _source_binding() -> tuple[dict[str, str], dict[str, tuple[str, ...]]]:
+    """Bind the loaded installation's source tree, never the output directory.
 
+    Qualifying execution still requires a fresh, independently controlled run.
+    These local hashes establish file consistency, not reviewer authentication.
+    """
+    sources = {name: acceptance_contract._read(acceptance_contract.source_path(name))
+               for name in acceptance_contract.REQUIRED_MATH_SOURCES}
+    return (
+        {name: sha256(raw).hexdigest() for name, raw in sources.items()},
+        acceptance_contract._check_names(
+            sources[acceptance_contract.REQUIRED_MATH_SOURCES[0]]),
+    )
+
+
+def _validate_report_population(
+    reports: tuple[pd.DataFrame, pd.DataFrame],
+    populations: dict[str, tuple[str, ...]],
+) -> None:
+    """Reject incomplete/relabelled checks before publishing any report."""
+    for frame, (_, population) in zip(
+        reports, acceptance_contract.REPORTS.values(), strict=True
+    ):
+        if (not isinstance(frame, pd.DataFrame)
+                or list(frame.columns) != acceptance_contract._COLUMNS
+                or tuple(frame["check"]) != populations[population]):
+            raise ValueError("exact declared math check population and columns required")
+        for math_version, status, error in frame[
+            ["math_version", "status", "error"]
+        ].itertuples(index=False, name=None):
+            if (type(math_version) is not str or math_version != MATH_VERSION
+                    or type(status) is not str or status not in {"PASS", "BLOCKED"}
+                    or type(error) is not str or (status == "PASS" and error != "")):
+                raise ValueError("current math version and explicit check outcome required")
+
+
+def _dependency_context() -> dict[str, str]:
+    context = {}
+    for name in ("numpy", "pandas", "scipy", "statsmodels"):
+        try:
+            context[name] = version(name)
+        except PackageNotFoundError:
+            context[name] = "unavailable"
+    return context
+
+
+def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
+    """Run checks and publish source/report-bound core-math evidence.
+
+    The root argument selects an artifact destination only. It cannot select
+    alternate implementation sources. All downstream authorities stay BLOCKED.
+    """
+
+    source_hashes, populations = _source_binding()
+    reconciliation, statistical = _run_checks()
+    _validate_report_population((reconciliation, statistical), populations)
+    if _source_binding() != (source_hashes, populations):
+        raise ValueError("math source changed during check execution; rerun from a stable process")
     output_dir = root / "reports" / "active"
     output_dir.mkdir(parents=True, exist_ok=True)
     reconciliation_path = output_dir / "math_v2_reconciliation.csv"
     statistical_path = output_dir / "statistical_validity_audit.csv"
     marker_path = output_dir / "math_v2_acceptance.json"
 
-    reconciliation, statistical = _run_checks()
     atomic_write_csv(reconciliation, reconciliation_path, index=False)
     atomic_write_csv(statistical, statistical_path, index=False)
+    artifact_hashes = {
+        str(path.relative_to(root)): sha256(acceptance_contract._read(path)).hexdigest()
+        for path in (reconciliation_path, statistical_path)
+    }
+    if _source_binding() != (source_hashes, populations):
+        raise ValueError("math source changed during publication; no new marker published")
     all_checks = pd.concat([reconciliation, statistical], ignore_index=True)
     passed = bool(not all_checks.empty and all_checks["status"].eq("PASS").all())
     marker = {
@@ -59,6 +119,10 @@ def build_math_v2_acceptance(*, root: Path = ROOT) -> dict[str, object]:
         "total_checks": len(all_checks),
         "generated_at": datetime.now(UTC).isoformat(),
         "generated_by": "quant_platform.math_v2_acceptance",
+        "currentness_binding_schema": acceptance_contract.BINDING_SCHEMA,
+        "source_hashes": source_hashes,
+        "artifact_hashes": artifact_hashes,
+        "dependency_context": _dependency_context(),
         "reconciliation_report": str(reconciliation_path.relative_to(root)),
         "statistical_validity_report": str(statistical_path.relative_to(root)),
         "wizard_exact_mode_parity": "BLOCKED",

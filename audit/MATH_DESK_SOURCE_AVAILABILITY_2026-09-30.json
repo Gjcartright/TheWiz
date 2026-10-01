@@ -1,0 +1,56 @@
+{
+  "conclusion": "UNAVAILABLE_IN_ACCESSIBLE_GATE0_SOURCE_NOT_PROVEN_DELETED",
+  "created_at_utc": "2026-09-30T10:25:47.809506+00:00",
+  "filename_scans": [
+    {
+      "exit_code": 0,
+      "matching_paths": [],
+      "root": "/Users/gregc/Backups and /Users/gregc/Documents"
+    },
+    {
+      "errors_path": "/Users/gregc/Backups/TheWiz/mathdesk-diagnostics/2026-09-30/home-filename-scan-errors.txt",
+      "errors_sha256": "ca1445676497c9e1da852b94dfff0b8b7387cb6aceb100e1c1162f733c696ac7",
+      "exit_code": 1,
+      "matching_paths": [],
+      "root": "/Users/gregc",
+      "unreadable_path_errors": 119
+    },
+    {
+      "exit_code": 1,
+      "matching_paths": [],
+      "root": "/Volumes/Expansion",
+      "stderr_retained": false
+    },
+    {
+      "exit_code": 1,
+      "matching_paths": [],
+      "root": "/Volumes/TOSHIBA EXT",
+      "stderr_retained": false
+    }
+  ],
+  "known_source_roots_checked": {
+    "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime": [],
+    "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/project": [],
+    "/Users/gregc/TheWiz-LocalRuntime": [],
+    "/Volumes/Expansion/Crypto Wizard": [],
+    "/Volumes/Expansion/TheWizRecovery": []
+  },
+  "private_nightly_backup_commit": "1143bb6b3afc7bf84b5f1428d7be079650ee5084",
+  "private_nightly_backup_matching_paths": [],
+  "private_nightly_backup_repository": "Gjcartright/TheWiz-nightly-backup",
+  "private_nightly_backup_tree_entries": 2019,
+  "private_nightly_backup_tree_sha": "9ea6d56b7d7b4d62ca08ab3f8c0af035e24b14ef",
+  "private_nightly_backup_tree_truncated": false,
+  "reachable_source_git_matching_paths": [],
+  "required_relative_paths": [
+    "docs/math_desk_constitution.md",
+    "docs/math_desk_m3_core_contract.md",
+    "reports/plans/2026-08-22_math_desk_m0_m2_implementation_plan.md",
+    "reports/plans/2026-08-23_math_desk_10_of_10_corrective_plan.md",
+    "reports/plans/2026-08-23_math_desk_m3_core_implementation_plan.md"
+  ],
+  "savepoint_manifest_matching_paths": [],
+  "savepoint_manifest_path": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/SAVEPOINT_MANIFEST.json",
+  "schema_version": "thewiz.gate0.math_desk_source_availability.v1",
+  "search_limit": "Filename scans returned no matches in readable mounted paths. Exit code 1 and protected-path errors prevent a claim about unreadable directories. Encrypted sparsebundle contents were not mounted or searched."
+}

@@ -1,0 +1,382 @@
+{
+  "broad_suite": {
+    "baseline_failure_junit_sha256": "11c791c73e96898594961aa75adffaa98dae6663755fdd65363efc10d1621d34",
+    "baseline_failure_log_sha256": "80574d3d6e02e231d0e82697820da57029dce8847d844ce17cfdcac5710c5b80",
+    "errors": 0,
+    "evidence_directory": "audit/gate0_selective_candidate_evidence",
+    "failed": 1,
+    "failing_test_changes_from_selected_base": 0,
+    "failure": "tests/test_corrective_financial_effect_registry.py::test_current_tree_financial_effect_inventory_is_fully_fenced",
+    "failure_expected_surfaces": 19,
+    "failure_observed_surfaces": 17,
+    "junit_gzip_sha256": "754b3297656473589b57671ebfe9d78697bf84cbe97a0a63fbff78732717c7d3",
+    "junit_xml_sha256": "c7cce653ff575b042d1c100c7696f4231c0c32d969a961ba555d43ff63d3e1a3",
+    "passed": 3131,
+    "run": 3132,
+    "selected_base_reproduction": "same 17-versus-19 assertion at ce7131b94ebcd18eb324dd83ab51d213eac0ff66",
+    "skipped": 0,
+    "source_changes_from_selected_base": 0,
+    "suite_log_sha256": "df0f749b0ba9964ce668cab5ce609d31ee179422a13140caee0efc992f456f29"
+  },
+  "focused_evidence": {
+    "capture_tap_sha256": "40733246c50079ffb887abfe4ccc0de4cc863f9dd037c28ca58a5f17d2307d58",
+    "experiment_partial_junit_sha256": "800aff59f7e84afaad009d45a47e31de0cf8ac0dfaeded660039fd854bbdb2a7",
+    "math_junit_sha256": "9fefd9340e88a7a6539269ca56043ad6b6024cc59492f161d782985cb941324e",
+    "phase00_junit_sha256": "aebf1b9c44ef70e200dd6ee504f1e058e6f826697c6cdc0898028260560528e3",
+    "rest_junit_sha256": "03aa5c7ec8d60bc29cc61db8bb9ddefdfea1118318de10ab8c18320c4ae910a6",
+    "teacher_junit_sha256": "599f8eafd09e53c5b1bfe64da627fa7f17154408a21139c54d2205e81c806401"
+  },
+  "focused_evidence_paths": {
+    "capture_tap_sha256": "audit/gate0_selective_candidate_evidence/capture.tap",
+    "experiment_partial_junit_sha256": "audit/gate0_selective_candidate_evidence/experiment_partial.xml",
+    "math_junit_sha256": "audit/gate0_selective_candidate_evidence/math.xml",
+    "phase00_junit_sha256": "audit/gate0_selective_candidate_evidence/phase00.xml",
+    "rest_junit_sha256": "audit/gate0_selective_candidate_evidence/rest.xml",
+    "teacher_junit_sha256": "audit/gate0_selective_candidate_evidence/teacher.xml"
+  },
+  "no_authority_claim": "All ports add test assertions only. No provider calls, promotion, order, execution, or queue edits.",
+  "rows": [
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "1269dd8267a5d66966f734710ad0260da0596060b5abd1f49c243da0416c0cdc",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 17,
+        "run": 17,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "1269dd8267a5d66966f734710ad0260da0596060b5abd1f49c243da0416c0cdc",
+      "provider_calls_made": false,
+      "qualifying_commit": "f778c5923eae8dc840529448ce36f5f8d9eb70fe",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_capture_input_minimization.cjs",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "scripts/capture_crypto_wizards_pair_detail_ui_bundle.js",
+      "selected_base_source_sha256": "328a0675f9e7483100962d5d4bf3eb0d54c1b96f5e3e03af71c4e5cdd00c45a8",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "872f44b3b1ea3a5be31729e8fbc4010aaad7d1090addcffcede3e54312544600",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 11,
+        "run": 11,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "872f44b3b1ea3a5be31729e8fbc4010aaad7d1090addcffcede3e54312544600",
+      "provider_calls_made": false,
+      "qualifying_commit": "9e535125e653fd11f6c43d83a893efc506321fad",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_estimator_consumer_repairs.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/economic_contract.py",
+      "selected_base_source_sha256": "e58ed28342dfac66dcc290669282ebe046feb5cf624b3100c285cf14e20802ce",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "f777e64eee7b78e3b7fb511fc2d6419fa28f309f83d2ff6922e0f478781a61a0",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 42,
+        "run": 42,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "f777e64eee7b78e3b7fb511fc2d6419fa28f309f83d2ff6922e0f478781a61a0",
+      "provider_calls_made": false,
+      "qualifying_commit": "9e535125e653fd11f6c43d83a893efc506321fad",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_estimator_repairs.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/statistics/math_v2.py",
+      "selected_base_source_sha256": "f40fbd88078e96c9793242bb1b73cd8ce9853942707899d3c0c87e6c897257cb",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "blocked_remainder_exact_failures": [
+        "test_unrelated_invalid_inputs_or_signal_errors_are_not_swallowed[invalid_timestamp]",
+        "test_unrelated_invalid_inputs_or_signal_errors_are_not_swallowed[duplicate_timestamp]",
+        "test_unrelated_invalid_inputs_or_signal_errors_are_not_swallowed[bad_price]",
+        "test_irregular_grid_does_not_mask_invalid_price_hedge_or_funding[price_x--1.0-positive]",
+        "test_irregular_grid_does_not_mask_invalid_price_hedge_or_funding[price_y-inf-finite]",
+        "test_irregular_grid_does_not_mask_invalid_price_hedge_or_funding[hedge_ratio-nan-finite and positive]",
+        "test_irregular_grid_does_not_mask_invalid_price_hedge_or_funding[funding_x_bps-nan-missing or nonfinite]"
+      ],
+      "candidate_port_test_sha256": "550ed0fc68caeaccea1315783e424f4b4b204bbca719ac35de360fd0cd9fa6c8",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 7,
+        "pass": 15,
+        "run": 22,
+        "skipped": 0
+      },
+      "omitted_functions": [
+        {
+          "failing_cases": 3,
+          "name": "test_unrelated_invalid_inputs_or_signal_errors_are_not_swallowed",
+          "preserved_cases": 4
+        },
+        {
+          "failing_cases": 4,
+          "name": "test_irregular_grid_does_not_mask_invalid_price_hedge_or_funding",
+          "preserved_cases": 5
+        }
+      ],
+      "port_kind": "partial-test-only",
+      "preserved_runtime_test_sha256": "37ded80035d31e4c72e1c21b8c8a220cefd67ca86e86684d91d9833f17d56ab3",
+      "provider_calls_made": false,
+      "qualifying_commit": "4d8b6a24de89cd51103031a49573b31bba2c02d5",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PARTIAL_REMAINDER_BLOCKED",
+      "rationale": "Ported 13 compatible regime-clock cases. Two omitted functions contain nine cases: seven fail against selected source and two pass. The seven failure IDs are recorded. Selected historical strategy authority tests explicitly require skipped NaN/boolean funding inputs, conflicting with the preserved raise expectation; keep the remainder pending a coordinated contract decision.",
+      "relative_path": "tests/test_experiment_regime_clock.py",
+      "safe_to_port_exact_test_alone": false,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/experiments.py",
+      "selected_base_source_sha256": "059cb181a3219e9eb7aeabf006e4ebac56eb6681c657da9f740480cbfc3e03d8",
+      "selected_base_test_sha256": null,
+      "selected_skip_policy_conflict": {
+        "relative_path": "tests/test_historical_strategy_authority.py",
+        "selected_base_sha256": "7d77fe9d8e0a8212b7485f12e3d3a322653816074cba33ba1b9055b366e83474",
+        "test_name": "test_present_but_incomplete_funding_is_skipped"
+      },
+      "selected_subset_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 13,
+        "run": 13,
+        "skipped": 0
+      }
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "2fe171ca89d41c698e18b47ba7335661f371cb3351e38bc708416590d918d4d8",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 2,
+        "run": 2,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "2fe171ca89d41c698e18b47ba7335661f371cb3351e38bc708416590d918d4d8",
+      "provider_calls_made": false,
+      "qualifying_commit": "97a35ba27ea15cc12087d8add3cb3a7ea50a6c81",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_institutional_metric_integrity.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/backtest.py",
+      "selected_base_source_sha256": "42d0ddb01d131cbb901d46fef610a4778bbce4cb978ee96dfcbfdcc1bef2179e",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "d83f9ee6754344324e2ca0026d1f3f60f0223148deec0f371534a9f1a1ea30a0",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 3,
+        "run": 3,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "d83f9ee6754344324e2ca0026d1f3f60f0223148deec0f371534a9f1a1ea30a0",
+      "provider_calls_made": false,
+      "qualifying_commit": "97a35ba27ea15cc12087d8add3cb3a7ea50a6c81",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_ledger_clock_consumer.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/trade_ledger.py",
+      "selected_base_source_sha256": "3c247c1170ffb7710007298f3bb8a4e792ee932ebec56ddb4262c4c7d6f8e5eb",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "352d7594ff6c80b56161fe7b15d18b1bc02bd16a0ff3f7a674d93ffead391656",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 2,
+        "run": 2,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "352d7594ff6c80b56161fe7b15d18b1bc02bd16a0ff3f7a674d93ffead391656",
+      "provider_calls_made": false,
+      "qualifying_commit": "97a35ba27ea15cc12087d8add3cb3a7ea50a6c81",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_legacy_pipeline_quarantine.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "scripts/run_evidence_pipeline_phase9_final_promotion.py",
+      "selected_base_source_sha256": "84034e45ebe52af92b311d7944a5a86ba0982dd5388173881a0a99fcfceef39a",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "e1121b3fe0e1fc5cdaf8cc5b2baf2eab0433680c610cab9527b351a3aa1adb7a",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 60,
+        "run": 60,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "e1121b3fe0e1fc5cdaf8cc5b2baf2eab0433680c610cab9527b351a3aa1adb7a",
+      "provider_calls_made": false,
+      "qualifying_commit": "9e535125e653fd11f6c43d83a893efc506321fad",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_performance_input_repairs.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/performance_math.py",
+      "selected_base_source_sha256": "b1c7cf4a862e5114b1e64e03c0c3b543ce8f143f0c4e7a56515a8d5339567199",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "1eebece63b3d7d57c0b37679bb8bf1b58beb0608e17f77ad921482c211187a77",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 30,
+        "run": 30,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "1eebece63b3d7d57c0b37679bb8bf1b58beb0608e17f77ad921482c211187a77",
+      "provider_calls_made": false,
+      "qualifying_commit": "4a8675969516452c9fda92635b968c45811246e1",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved test file adds one WP028 held-out replacement interval and explicit zero-authority assertion to the selected 29-case module; all 30 cases pass.",
+      "relative_path": "tests/test_phase00_expansion_interfaces.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/orchestration/corrective_expansion_interfaces.py",
+      "selected_base_source_sha256": "40642e726e1ed84b95b224d5611b0a1a888ca3ff449784c601229c553ff6db29",
+      "selected_base_test_sha256": "5004a2ead9a737f2ba00fe09ba0557bd7b52fd96d40e2c5a5c7ecfd1478ffa87"
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "9710694521f8c5657f45502fe51c8909832d227f72361b51bc2187e21a87e5ef",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 42,
+        "run": 42,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "9710694521f8c5657f45502fe51c8909832d227f72361b51bc2187e21a87e5ef",
+      "provider_calls_made": false,
+      "qualifying_commit": "1632b1b2f1310416a3c475dd0a4ad20ee97884ec",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_protective_exits.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/protective_exits.py",
+      "selected_base_source_sha256": "cc2df3487e7aab01faba18aeffb3119301751cdc2432a7e78522665466fb5e77",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "caaec33742a0cc9284e9dbe7e9ded285deecc0f673c88e9528a4b287a9f2ab17",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 6,
+        "run": 6,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "caaec33742a0cc9284e9dbe7e9ded285deecc0f673c88e9528a4b287a9f2ab17",
+      "provider_calls_made": false,
+      "qualifying_commit": "1632b1b2f1310416a3c475dd0a4ad20ee97884ec",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_protective_numeric_domain.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/protective_exits.py",
+      "selected_base_source_sha256": "cc2df3487e7aab01faba18aeffb3119301751cdc2432a7e78522665466fb5e77",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "f5df0eb65d2fba7bfdbc0f1e87a199713a8576d04a4357412e29e1c79d77a463",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "f5df0eb65d2fba7bfdbc0f1e87a199713a8576d04a4357412e29e1c79d77a463",
+      "provider_calls_made": false,
+      "qualifying_commit": "9e535125e653fd11f6c43d83a893efc506321fad",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_runtime_types.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/runtime_types.py",
+      "selected_base_source_sha256": "0cbd81f38eb632b359fdaf40298e6b54321304e728c28b06b2912da479ff3fb9",
+      "selected_base_test_sha256": null
+    },
+    {
+      "authority_granted": false,
+      "candidate_port_test_sha256": "b0bc4ffc58391b417ba24ad74708f2de5c55a0ae1762d794df798b778a0b1560",
+      "full_preserved_test_result": {
+        "error": 0,
+        "fail": 0,
+        "pass": 54,
+        "run": 54,
+        "skipped": 0
+      },
+      "port_kind": "exact-test-only",
+      "preserved_runtime_test_sha256": "b0bc4ffc58391b417ba24ad74708f2de5c55a0ae1762d794df798b778a0b1560",
+      "provider_calls_made": false,
+      "qualifying_commit": "9e535125e653fd11f6c43d83a893efc506321fad",
+      "queue_status_recommendation": "REVIEWED_SELECTIVE_TEST_PORTED",
+      "rationale": "Exact preserved synthetic regression passes against the selected source and adds no provider or promotion authority.",
+      "relative_path": "tests/test_teacher_numeric_repairs.py",
+      "safe_to_port_exact_test_alone": true,
+      "safe_to_port_selected_subset_alone": true,
+      "selected_base_source_path": "src/quant_platform/orchestration/teacher_contracts.py",
+      "selected_base_source_sha256": "b1d9acc42dc36be51d7351f0327267cc33d86c3836daa988f835baf94d86aec9",
+      "selected_base_test_sha256": null
+    }
+  ],
+  "schema_version": "gate0.selective_test_candidate_qualification.v1",
+  "scope": {
+    "exact_test_only_ports": 12,
+    "partial_test_only_ports": 1,
+    "paths": 13,
+    "qualification_tip_commit": "4d8b6a24de89cd51103031a49573b31bba2c02d5",
+    "runtime_root": "/Users/gregc/Backups/TheWiz/savepoints/2026-09-30/local_runtime",
+    "selected_base_commit": "ce7131b94ebcd18eb324dd83ab51d213eac0ff66",
+    "source_cohort_report_sha256": "79c73324d32f1abf429e8c434208e3484da67d9f05ae9e465e24ddd0b0ee2d33"
+  }
+}

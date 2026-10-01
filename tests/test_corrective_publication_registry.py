@@ -96,6 +96,15 @@ def normalize(source):
     assert publication_surface_rows(tmp_path) == []
 
 
+def test_appledouble_python_sidecars_are_not_scanned_as_source(tmp_path: Path) -> None:
+    source = tmp_path / "src" / "quant_platform"
+    source.mkdir(parents=True)
+    (source / "actual.py").write_text("def safe():\n    return None\n", encoding="utf-8")
+    (source / "._actual.py").write_bytes(b"AppleDouble metadata, not Python source")
+
+    assert publication_surface_rows(tmp_path) == []
+
+
 def test_link_to_temporary_is_staging_but_link_to_final_is_blocking(
     tmp_path: Path,
 ) -> None:

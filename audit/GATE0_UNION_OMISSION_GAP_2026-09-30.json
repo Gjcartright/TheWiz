@@ -1,0 +1,1615 @@
+{
+  "base_commit": "589a168eaf20e8ff2da88afb12cf1e3e7e7d364d",
+  "distinct_historical_variants": 80,
+  "filtered_manifest_sha256": "cc23f7073dd32b0ad77e1780a0d7a0f78818e5e737d64ea95b4bcd3345da3d67",
+  "four_root_baseline_sha256": "cecdd2603471da26db24b826d0a6aafe1ab11b36823f014c1abfe02ec2406943",
+  "frozen_copy_count": 160,
+  "full_extended_manifest_sha256": "7042b2e8fd82ebeb4922d82f39d2823cc350ed38642ef1c734d4efd5e9237918",
+  "omitted_paths": 80,
+  "original_queue_sha256": "d5f77589e1c95aa85d352b82b0a642daa530b44b2ea0f3ca60523177fa63b282",
+  "rows": [
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/config/corrective_artifact_retention.json",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/config/corrective_artifact_retention.json",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300",
+        "runtime_sha256": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300",
+        "working_sha256": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300"
+      },
+      "historical_variant_sha256": "45c32dfe8207e277a0e449511a994b727ab5d08c14c0df7976aee9ed5bae66db",
+      "relative_path": "config/corrective_artifact_retention.json",
+      "selected_sha256_at_base_commit": "24bfd020399006c025d48e95552ac4a2c02e6b7bf8641ca8fee6eb6e8a7f7300"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/api_extraction.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/api_extraction.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1",
+        "runtime_sha256": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1",
+        "working_sha256": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1"
+      },
+      "historical_variant_sha256": "69c55df1ae16bc77249825efff92c998465d048074aa7393f9785da0bda02794",
+      "relative_path": "src/quant_platform/api_extraction.py",
+      "selected_sha256_at_base_commit": "8418f28a34b02240949a6ef628da01535143f46970571a9902e414ccd6d842c1"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/binance_spot.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/binance_spot.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4",
+        "runtime_sha256": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4",
+        "working_sha256": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4"
+      },
+      "historical_variant_sha256": "766f5a63c5f58a08a8e114b4cb7e5f42ab40264b9d01c60896951e8270db89b1",
+      "relative_path": "src/quant_platform/binance_spot.py",
+      "selected_sha256_at_base_commit": "daf4efd22a1ef5151be39ea28dc3fc27166b10c95bf202a560cde279c822cbf4"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/crypto_wizards_catalog.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/crypto_wizards_catalog.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617",
+        "runtime_sha256": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617",
+        "working_sha256": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617"
+      },
+      "historical_variant_sha256": "a60692c62534cf8fd05a41477b2abaa36b22a775af5770629daad8ec173d45a4",
+      "relative_path": "src/quant_platform/crypto_wizards_catalog.py",
+      "selected_sha256_at_base_commit": "38e540e20d2854bf9b8143fc14dd4fd1137bde8026eb725c742e98c53e96f617"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/fixture_ingestion.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/fixture_ingestion.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d",
+        "runtime_sha256": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d",
+        "working_sha256": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d"
+      },
+      "historical_variant_sha256": "e5828aec6d760222af6e792d62b29f491b57df56411f507254925939b420d4e4",
+      "relative_path": "src/quant_platform/fixture_ingestion.py",
+      "selected_sha256_at_base_commit": "41f96754d831260af7659bd1f6494117d62a16c62eb95c9ff490549b48a92b7d"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/copula_shadow_comparison.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006",
+        "runtime_sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006",
+        "working_sha256": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006"
+      },
+      "historical_variant_sha256": "ad63349b99523a1e57fe5b08db86a8de5edd52599238cbd62c35a7cba8aed72d",
+      "relative_path": "src/quant_platform/orchestration/copula_shadow_comparison.py",
+      "selected_sha256_at_base_commit": "7968f4b7c967c5d35d93422f722862401749ed7490eabfbb6f4af95fbdb0c006"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_artifact_retention.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d",
+        "runtime_sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d",
+        "working_sha256": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d"
+      },
+      "historical_variant_sha256": "6d2fb9e5e78fee17dc8f05f36512ae28f8d8d4a1cb9efb67684108f7534e1632",
+      "relative_path": "src/quant_platform/orchestration/corrective_artifact_retention.py",
+      "selected_sha256_at_base_commit": "b98646b3244e8578b39b0ce13c6529ec6bdc96d57cfe38205026b0023a8e011d"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879",
+        "runtime_sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879",
+        "working_sha256": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879"
+      },
+      "historical_variant_sha256": "a53c3576874b90a395c153339d988368b809cca5fe34716d4b5016afee32484a",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary.py",
+      "selected_sha256_at_base_commit": "7b4f8d05f93b1e54a3c0019fb427db1c8d88aa82036e667027feb1a8337d3879"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421",
+        "runtime_sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421",
+        "working_sha256": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421"
+      },
+      "historical_variant_sha256": "6f1fec979f7104dd80d89177b7fb1e5c30341ce5cd049bde628137838ab4c44e",
+      "relative_path": "src/quant_platform/orchestration/corrective_live_canary_outcome.py",
+      "selected_sha256_at_base_commit": "a83e152b82381c10969f19d8c86ac25ee010d84fde67876113cf92f86e014421"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062",
+        "runtime_sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062",
+        "working_sha256": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062"
+      },
+      "historical_variant_sha256": "b569e62c1e06ab50dd23a000edf88c190527d4cff87ef24be36cf7d8e19039ea",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_learning_protocol.py",
+      "selected_sha256_at_base_commit": "b7c94ac2176019135b7566f1baff6c9c5ece2ea62bd31140d0051e90aa852062"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_registered_rerun.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69",
+        "runtime_sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69",
+        "working_sha256": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69"
+      },
+      "historical_variant_sha256": "f86ee3080218032934be11a523a256d9ba13ce220ff1d609d15d4e197c50dfb5",
+      "relative_path": "src/quant_platform/orchestration/corrective_registered_rerun.py",
+      "selected_sha256_at_base_commit": "e5baaa8edfe912acae2043417d590412b1b243b19fcb08c0939335c9e08b3f69"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85",
+        "runtime_sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85",
+        "working_sha256": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85"
+      },
+      "historical_variant_sha256": "5579fefd458e85a64fb159683dd22fdbef0aac50ff1534f353b5a6a7aaa5af0c",
+      "relative_path": "src/quant_platform/orchestration/corrective_stage4_handoff_readiness.py",
+      "selected_sha256_at_base_commit": "f022837269cc40f56da43b85b823a911142ec47e8d02a8bb813cc168e635ad85"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_statistical_remediation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e",
+        "runtime_sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e",
+        "working_sha256": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e"
+      },
+      "historical_variant_sha256": "881ed537831d427d155dad9302f8fa206e968436fd9e733dd254370b4d191889",
+      "relative_path": "src/quant_platform/orchestration/corrective_statistical_remediation.py",
+      "selected_sha256_at_base_commit": "2b711707852adccb16bd26f43fb4e622a8d2628e7a72755ecab60d9e248a9e6e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5",
+        "runtime_sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5",
+        "working_sha256": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5"
+      },
+      "historical_variant_sha256": "156748876c46b67920adc9363abd123e270d7ae87a70b48f723a54ffa0632485",
+      "relative_path": "src/quant_platform/orchestration/corrective_testnet_cohort_readiness.py",
+      "selected_sha256_at_base_commit": "2dacd3a9ba813d768a93385f140604e87c54593945196a9bab6c3e8bab9d12b5"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9",
+        "runtime_sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9",
+        "working_sha256": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9"
+      },
+      "historical_variant_sha256": "763139a9baeb90de83655d8dedd01fe0ea925a32a2be20692cfc6198f568e5cd",
+      "relative_path": "src/quant_platform/orchestration/corrective_testnet_collateral_transfer.py",
+      "selected_sha256_at_base_commit": "75256ce7dd7e36930dd8fcc62a78eabc9436eb411e89ccfe6d8050acd510d7d9"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172",
+        "runtime_sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172",
+        "working_sha256": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172"
+      },
+      "historical_variant_sha256": "43b74760fcb38176ceb3d72ba369ec3b7d5e5708a0b72d9fca478a3c5b455731",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_api_credit_receipt.py",
+      "selected_sha256_at_base_commit": "6113ffc1cdab7d3a7d6d023d4c36a02d65eb323f7af2293ae5ec57e85cf44172"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5",
+        "runtime_sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5",
+        "working_sha256": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5"
+      },
+      "historical_variant_sha256": "7d484dfe0af761b3e671bcb74afb2d17630de02b69ce758ee667d7369f35da77",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_capture_manifest.py",
+      "selected_sha256_at_base_commit": "ab096ff87ad3e0f170a4fc06b657cd2cff34aeb469224428d57281ece05608b5"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc",
+        "runtime_sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc",
+        "working_sha256": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc"
+      },
+      "historical_variant_sha256": "175030976a734825cf8c55a905b5e2d870aed0a0467ffd2afe4f5c8a6141850e",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_capture_reconciliation.py",
+      "selected_sha256_at_base_commit": "70947875ebc234db2c5c66dbd6243d384081328e47e58fc1685f55ec6ba55cdc"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063",
+        "runtime_sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063",
+        "working_sha256": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063"
+      },
+      "historical_variant_sha256": "cfe89322867090a86440d7983fe2b1ae21f1f1e0ffcad2e2e3d1899107b97140",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_copula_behavioral.py",
+      "selected_sha256_at_base_commit": "d808f4a106b1758a6698b42063b66e000790bf84e0d5bca6f32567aa760a3063"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb",
+        "runtime_sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb",
+        "working_sha256": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb"
+      },
+      "historical_variant_sha256": "dff1493c12bbc2abda3925b90cafaebbb456508efd1c67fcbb43aa80a2fd8497",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_dynamic_supreme_review.py",
+      "selected_sha256_at_base_commit": "1b150b79a973a85f734c4c2ee4cce73e1b86b6f258c4138a98d0ac1b0075b3bb"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd",
+        "runtime_sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd",
+        "working_sha256": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd"
+      },
+      "historical_variant_sha256": "af7b894ab1c75c3869c26e38eca67efd241ad0d429e7a84a7b6daa6bfd24b430",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_failure_attribution.py",
+      "selected_sha256_at_base_commit": "258292adede80682b53319a1339a02e3a38e25bd587eb59d95cd4bd48512c3cd"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca",
+        "runtime_sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca",
+        "working_sha256": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca"
+      },
+      "historical_variant_sha256": "05eb88f5dc80634e643f5a34d5a4633672fda3691b426b1f82134e1471aabe7c",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v4_supreme_review.py",
+      "selected_sha256_at_base_commit": "740fdf902b66da9711bae0b254719d4785abc3cc054bd8d6d394b4c55b1777ca"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e",
+        "runtime_sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e",
+        "working_sha256": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e"
+      },
+      "historical_variant_sha256": "28988952519159c8d2803589831a04517b5d462deef61816f07658ea5f6efa63",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_failure_attribution.py",
+      "selected_sha256_at_base_commit": "111b8af419fa8e65bd9145ed38709b69cd3c8bdb77c6d113a5b0f6e3fe60864e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf",
+        "runtime_sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf",
+        "working_sha256": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf"
+      },
+      "historical_variant_sha256": "65317e5886415f1c6a28f147159028809f2014bf6cc47b01779b19b70f151cc5",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v5_supreme_review.py",
+      "selected_sha256_at_base_commit": "5b67e4c192b47d1e788c1ec5cb075f7fd07fa07d213fea40879d2ceb004c52bf"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1",
+        "runtime_sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1",
+        "working_sha256": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1"
+      },
+      "historical_variant_sha256": "cf5a3bedd77e7d970b8e650a74ca81ef0de9d9e0a4be58f4439c948561ddc51b",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_ou_v6_supreme_review.py",
+      "selected_sha256_at_base_commit": "7cb3d867343a686a8efad67ea10c995576ec79a9393b276225cfd1978ee30cf1"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015",
+        "runtime_sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015",
+        "working_sha256": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015"
+      },
+      "historical_variant_sha256": "a1d4b4223074a53bea72be47be0885c90c9a6e5f5ef6ce4047f87aadfdddea78",
+      "relative_path": "src/quant_platform/orchestration/corrective_wizard_unattended_preflight.py",
+      "selected_sha256_at_base_commit": "922024391a19832623d86ec9107b8ba34c11aeec6856985973040cbd2f1df015"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79",
+        "runtime_sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79",
+        "working_sha256": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79"
+      },
+      "historical_variant_sha256": "ded1b879c2d0b81581f76af7aaf3f839a3ddc70fe9a09f08e52079b230712ce6",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_archive_release.py",
+      "selected_sha256_at_base_commit": "5c344ac7c785606e444e64cdeb8a44b43d6a99bd2b9f8498267998b0582ddb79"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa",
+        "runtime_sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa",
+        "working_sha256": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa"
+      },
+      "historical_variant_sha256": "c56f2d7558176bf64a1ed0dad79e632bcb90f680ac3a16af7c13d9b59932a9b0",
+      "relative_path": "src/quant_platform/orchestration/current_wizard_hyperliquid_testnet_protocol.py",
+      "selected_sha256_at_base_commit": "b17439819440d93cdceb150817eb0a6b1c941ae5a7c943971d8eb87cd004c2fa"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_ledger.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_ledger.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8",
+        "runtime_sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8",
+        "working_sha256": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8"
+      },
+      "historical_variant_sha256": "475f66cd19f53641f05fc399765345c8019c6d5b01fc3043d8c87d31d2ebd031",
+      "relative_path": "src/quant_platform/orchestration/dynamic_ledger.py",
+      "selected_sha256_at_base_commit": "adb2e1666172dddcbc0f1cf1f9884967a9181c6622d00d898d55e5cd520f54f8"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_rollout.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_rollout.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290",
+        "runtime_sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290",
+        "working_sha256": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290"
+      },
+      "historical_variant_sha256": "51412071f3eb14c658b690e46907074cf6dffb8325c73dff892bb13a36644c27",
+      "relative_path": "src/quant_platform/orchestration/dynamic_rollout.py",
+      "selected_sha256_at_base_commit": "caf14e51731b45f90c4a694d556a1866e1e354433e1aff8ae54fd3b766457290"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_router.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_router.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259",
+        "runtime_sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259",
+        "working_sha256": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259"
+      },
+      "historical_variant_sha256": "3de589b799c026fa891b354631ccabd5ee44361537445f4c1119a6b5b6c0215e",
+      "relative_path": "src/quant_platform/orchestration/dynamic_router.py",
+      "selected_sha256_at_base_commit": "28257715053041bcfc87a50dbc8d7599fd7f29410804efa110e5d8b0e8f57259"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/dynamic_supreme_team.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568",
+        "runtime_sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568",
+        "working_sha256": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568"
+      },
+      "historical_variant_sha256": "cfc213192c64d901a455a04a6dc06b47e4fcbb3b71f8bbe83357d81c8b01a88c",
+      "relative_path": "src/quant_platform/orchestration/dynamic_supreme_team.py",
+      "selected_sha256_at_base_commit": "ee7e4bcb31e73289771c74df1194e4bb9cd064858ce34d9ef6fb71d65434c568"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/events.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/events.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b",
+        "runtime_sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b",
+        "working_sha256": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b"
+      },
+      "historical_variant_sha256": "3ea47c054da9202fa563bbeda176819a8c55e6d1ae4f47237680926c8516a0eb",
+      "relative_path": "src/quant_platform/orchestration/events.py",
+      "selected_sha256_at_base_commit": "b4a45342fc79b045148d529cf9ab289444221b972d296b104f43d4daf87ade0b"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92",
+        "runtime_sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92",
+        "working_sha256": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92"
+      },
+      "historical_variant_sha256": "ff06000dab9edac93d2e1df55a506afaea4a09461137f09e11cdb4abf788330e",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_concentration.py",
+      "selected_sha256_at_base_commit": "753015317df71aa3ed4d9652d858b4172e89b6e6ac1972b9d5bd0ed96f483a92"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3",
+        "runtime_sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3",
+        "working_sha256": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3"
+      },
+      "historical_variant_sha256": "5ee616e8e5de56fd7b10169ba9d7cea105ab405a7ee0d0d1b6e0dfbc792d811e",
+      "relative_path": "src/quant_platform/orchestration/exhaustive_wizard_hyperliquid_learning.py",
+      "selected_sha256_at_base_commit": "f128a4e5e7a65e5218cbdb2739d354e8f11d1ff8fe08244803debf969abc67b3"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191",
+        "runtime_sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191",
+        "working_sha256": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191"
+      },
+      "historical_variant_sha256": "bbf9a06f55c1ef4364638c1b22090debc71608f883b1ae29b04cfb7c934357e3",
+      "relative_path": "src/quant_platform/orchestration/hyperliquid_learning_and_risk.py",
+      "selected_sha256_at_base_commit": "5c9237d3ee0d46b33169f993c062f5815b97598afef4840bef7a8ad36eb34191"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/reporting.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/reporting.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e",
+        "runtime_sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e",
+        "working_sha256": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e"
+      },
+      "historical_variant_sha256": "d55594bc83be423f0512b6843da4107e36a6224562067ea8a2c61da992396016",
+      "relative_path": "src/quant_platform/orchestration/reporting.py",
+      "selected_sha256_at_base_commit": "752c7fe8cf6d45486991a8267ea04adff468da53294cab37e40e8ed0ff4a658e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e",
+        "runtime_sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e",
+        "working_sha256": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e"
+      },
+      "historical_variant_sha256": "56e18f95f7abc34e7b005ad76f04fea2b850fb55340e2d00d8c9108fc7dd9efa",
+      "relative_path": "src/quant_platform/orchestration/wizard_pair_detail_api_pilot.py",
+      "selected_sha256_at_base_commit": "08278660c779c5a6c69887cd6b149870658d54827c91b006d0b59f546bbccf0e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_extract_ccxt.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_extract_ccxt.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2",
+        "runtime_sha256": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2",
+        "working_sha256": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2"
+      },
+      "historical_variant_sha256": "68bd25d8c6966f9b66d898e12cfa089b50f5beab34997b0fe77bf5f789fba7de",
+      "relative_path": "src/quant_platform/research_extract_ccxt.py",
+      "selected_sha256_at_base_commit": "17b8a44a47cc621633a6ee05068559330199f93ab69afebe6cec5ff0da7075a2"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_extract_youtube.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_extract_youtube.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5",
+        "runtime_sha256": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5",
+        "working_sha256": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5"
+      },
+      "historical_variant_sha256": "e564c0edf094177d4be4431b5bbc00a228c8b3ee63411c8471d36e9b521df0a2",
+      "relative_path": "src/quant_platform/research_extract_youtube.py",
+      "selected_sha256_at_base_commit": "6017f678ee31160e314830f006a58091212227113652f85242a68f3b526624a5"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_extraction.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_extraction.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da",
+        "runtime_sha256": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da",
+        "working_sha256": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da"
+      },
+      "historical_variant_sha256": "06763a4184749cba3db413b598fa534ee87ff85f420e22c452e475034a7162ce",
+      "relative_path": "src/quant_platform/research_extraction.py",
+      "selected_sha256_at_base_commit": "1977916ecb059a07db776c0dfd2992a985891151634049823c937c32646873da"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/research_quantization.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/research_quantization.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092",
+        "runtime_sha256": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092",
+        "working_sha256": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092"
+      },
+      "historical_variant_sha256": "557197dffdb85bd1a4a84406a01ac8dc972af5cf812fb845fc534eed95a5add0",
+      "relative_path": "src/quant_platform/research_quantization.py",
+      "selected_sha256_at_base_commit": "f28b405b984d72edc9a2a041d6587568e584a8e422c32a1db32ed61d36a13092"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/brain_cycle.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/rl/brain_cycle.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "runtime_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6",
+        "working_sha256": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6"
+      },
+      "historical_variant_sha256": "9e353e9a8c74b65bf386f4282aed303f4ff8a3dc0c0c614a1c3fcc63a6a54952",
+      "relative_path": "src/quant_platform/rl/brain_cycle.py",
+      "selected_sha256_at_base_commit": "dc598b15796331cf3360e09b63a5658a128b90f0bfb3e56f19b74419498ba6d6"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/features.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/rl/features.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "runtime_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f",
+        "working_sha256": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f"
+      },
+      "historical_variant_sha256": "017f19a4e4ab68487b1b0af36a094ec0a3ef61e8ba33f0854574e2b18204d0f4",
+      "relative_path": "src/quant_platform/rl/features.py",
+      "selected_sha256_at_base_commit": "ef3e39f0776589546aa3d5766a726e158e7831f08803e353198212d3d11caa7f"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/train_ppo.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/rl/train_ppo.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "runtime_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3",
+        "working_sha256": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3"
+      },
+      "historical_variant_sha256": "840b5325e532911ca2b91b5fa35c204e9f8e0f43445b3d232ade89d80a632050",
+      "relative_path": "src/quant_platform/rl/train_ppo.py",
+      "selected_sha256_at_base_commit": "141db3a2fb677940987e09afb19972eed65837a702ca90104203eca1bcc97cf3"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/trade_timing.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/trade_timing.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4",
+        "runtime_sha256": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4",
+        "working_sha256": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4"
+      },
+      "historical_variant_sha256": "d51a961e77c835b3c37a33ecfda2d3fb72c4a2f2eba4e630534f12b842b0ee69",
+      "relative_path": "src/quant_platform/trade_timing.py",
+      "selected_sha256_at_base_commit": "c009cbd33783e2b2089e46cd061ea233dbbe75e191a55bfb6982f40b8353fee4"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_credit_budget.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_credit_budget.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7",
+        "runtime_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7",
+        "working_sha256": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7"
+      },
+      "historical_variant_sha256": "5e30e9a7c130dd1d0fa9fb4f91bbebe48e29cff32ea5096cb26bc67e7dfec424",
+      "relative_path": "src/quant_platform/wizard_credit_budget.py",
+      "selected_sha256_at_base_commit": "ecc54b83f761cb1f80d439ea9aa561d7d117ee2c16b235b3cfce2c2d98e792e7"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_dynamic_comparator_activation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_dynamic_comparator_activation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e",
+        "runtime_sha256": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e",
+        "working_sha256": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e"
+      },
+      "historical_variant_sha256": "9b16e3e46e16ce6edfde34c07a8f2755ff0c66d4e7c5d0e6532978dcf7d3f79c",
+      "relative_path": "src/quant_platform/wizard_dynamic_comparator_activation.py",
+      "selected_sha256_at_base_commit": "305c5fc12baee34c79b5d7862e017bae83b56d9340557f492c73d3abbb93f04e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_hourly_database.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_hourly_database.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40",
+        "runtime_sha256": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40",
+        "working_sha256": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40"
+      },
+      "historical_variant_sha256": "02f424f424e4d1f32ef26af50d2928ab260053ead9a48b2f85f8379d6e0e85f1",
+      "relative_path": "src/quant_platform/wizard_hourly_database.py",
+      "selected_sha256_at_base_commit": "1eba599cde9ab0f541ba6975ca2957ae0464792fc169c9f415f5c0f4cdbdbf40"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_local_verification.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_local_verification.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c",
+        "runtime_sha256": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c",
+        "working_sha256": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c"
+      },
+      "historical_variant_sha256": "9c5c3d7161ad04f24bcfa77c24750a4b86e2f7ae999658cd14b33425957fc2cf",
+      "relative_path": "src/quant_platform/wizard_local_verification.py",
+      "selected_sha256_at_base_commit": "cdfa47373e90c3063e734ce3b1f32498a1db8b3cfcdea27e3566ea8ecaae6b9c"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_mode_comparison.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_mode_comparison.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b",
+        "runtime_sha256": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b",
+        "working_sha256": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b"
+      },
+      "historical_variant_sha256": "08f39f9863af4b9ff76569c566e08c7b8d09db7cc01179697d28ad8c9ed24fe4",
+      "relative_path": "src/quant_platform/wizard_mode_comparison.py",
+      "selected_sha256_at_base_commit": "33a3e0da134308925a42b0e6b6763a4aead6acb6a9c2bb0746a0f5803cdcd91b"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_pair_detail_ui_bundle.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_pair_detail_ui_bundle.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899",
+        "runtime_sha256": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899",
+        "working_sha256": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899"
+      },
+      "historical_variant_sha256": "037ada6da2cc06c038f7a2b662b30cf8770b8c989677a1f8b56ce68c19c1b967",
+      "relative_path": "src/quant_platform/wizard_pair_detail_ui_bundle.py",
+      "selected_sha256_at_base_commit": "dce7181ef8f07eff0c65aafc1a07c46d73808b48e20750bf22b88102ac281899"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/wizard_pair_matrix.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/wizard_pair_matrix.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a",
+        "runtime_sha256": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a",
+        "working_sha256": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a"
+      },
+      "historical_variant_sha256": "7f0ccd045dfbb04de7e424899a3a047c053110ab27c28bbf1fd3224f319d6c19",
+      "relative_path": "src/quant_platform/wizard_pair_matrix.py",
+      "selected_sha256_at_base_commit": "8a29ff43d1578e25a39e18bf55a743a3cf7641cba6915f666ea2c0645234c26a"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/yahoo_crypto.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/yahoo_crypto.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f",
+        "runtime_sha256": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f",
+        "working_sha256": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f"
+      },
+      "historical_variant_sha256": "50c06dc0cbe3e0a194b7033dd2ee32d74809684c37e9500bbaefb495711abf9a",
+      "relative_path": "src/quant_platform/yahoo_crypto.py",
+      "selected_sha256_at_base_commit": "99caa2f05cd9d5a15f428a1d2ff3b0dee876e52ad701eacc5ddaea830e0f6b1f"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/youtube_caption_insights.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/youtube_caption_insights.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513",
+        "runtime_sha256": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513",
+        "working_sha256": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513"
+      },
+      "historical_variant_sha256": "522baf6aa070a99e8135f622fac9cd20df3d79033b7c06c1040348dfad645993",
+      "relative_path": "src/quant_platform/youtube_caption_insights.py",
+      "selected_sha256_at_base_commit": "c0a96601f7f339efdf14a57d598e4d9524f8a35924b62bbce9c0d26418c75513"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/youtube_channel_research.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/youtube_channel_research.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9",
+        "runtime_sha256": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9",
+        "working_sha256": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9"
+      },
+      "historical_variant_sha256": "be2702cc0264e76ef670d7746a56031d9d81c8c0ad27c288811c9fc8dbf85dc2",
+      "relative_path": "src/quant_platform/youtube_channel_research.py",
+      "selected_sha256_at_base_commit": "61562db7d70d16a4ad7492839d468d71650eea15d5ca000205698677454cd0d9"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/youtube_hypothesis_validation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/src/quant_platform/youtube_hypothesis_validation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a",
+        "runtime_sha256": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a",
+        "working_sha256": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a"
+      },
+      "historical_variant_sha256": "0ff9981b868ef60442c49a3b53599b573a06e7c3dced25456055da87c4eaeada",
+      "relative_path": "src/quant_platform/youtube_hypothesis_validation.py",
+      "selected_sha256_at_base_commit": "0927593cec965fe053c55d808808d9e92ce283ce4e24d621120083bcd51c6b2a"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_api_extraction.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_api_extraction.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8",
+        "runtime_sha256": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8",
+        "working_sha256": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8"
+      },
+      "historical_variant_sha256": "30bdcdf545403b2917125528bc0ac2132f4cbb8ebcfe839c023c579118e22efb",
+      "relative_path": "tests/test_api_extraction.py",
+      "selected_sha256_at_base_commit": "1c09cda0e41b276f5823dca1fe022cf3100d28737f8646cca5353cc689eb67e8"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_governance.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_governance.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "0ac7162ca9f4b6e771c6bce2d20f6f3af3c2a16ccfdd398fe80e8c4123277095",
+        "runtime_sha256": "0ac7162ca9f4b6e771c6bce2d20f6f3af3c2a16ccfdd398fe80e8c4123277095",
+        "working_sha256": "0ac7162ca9f4b6e771c6bce2d20f6f3af3c2a16ccfdd398fe80e8c4123277095"
+      },
+      "historical_variant_sha256": "25003da774b6c8e57fb973907ca13087dc7dfede1b214c3cbf6e0d9101782734",
+      "relative_path": "tests/test_corrective_governance.py",
+      "selected_sha256_at_base_commit": "b2c04d54625eebbf516908c2cfedd0f6a2661f3bd2fe1200fa41288303a12ddd"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_live_canary.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_live_canary.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82",
+        "runtime_sha256": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82",
+        "working_sha256": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82"
+      },
+      "historical_variant_sha256": "128801e9837108636c25162185828fc08717dd9b237f5a915f5f829812f7f0f0",
+      "relative_path": "tests/test_corrective_live_canary.py",
+      "selected_sha256_at_base_commit": "c63ee233214aadc2d36ee0f3c0eda859a5df57efda7c8a05aad8a693578f9b82"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_registered_rerun.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_registered_rerun.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb",
+        "runtime_sha256": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb",
+        "working_sha256": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb"
+      },
+      "historical_variant_sha256": "e38a41d38c7f5606052d2267ec46a03f0012031e53fce4522b99c9422160b769",
+      "relative_path": "tests/test_corrective_registered_rerun.py",
+      "selected_sha256_at_base_commit": "a26fa7646b94906cb82587aa5d454db18365d56c19e4cf58c84f848c3af0adcb"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_registered_rerun_executor.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_registered_rerun_executor.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+        "runtime_sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556",
+        "working_sha256": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556"
+      },
+      "historical_variant_sha256": "be1f22176ee466affcadb3d8b798ddf5d940a9c93393b457065c5a39f1983478",
+      "relative_path": "tests/test_corrective_registered_rerun_executor.py",
+      "selected_sha256_at_base_commit": "00173e210f76e622fade57678d08df456fd8621c002b448d7c91a0e68fb2a556"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_scheduler_runtime_readiness.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_scheduler_runtime_readiness.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858",
+        "runtime_sha256": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858",
+        "working_sha256": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858"
+      },
+      "historical_variant_sha256": "f8660a593e24075f5697b129ccd1e9a0e5ec712607ca711617b51a79fefa325d",
+      "relative_path": "tests/test_corrective_scheduler_runtime_readiness.py",
+      "selected_sha256_at_base_commit": "9aab2fea346c140174d5974eef6f7374542cc43b2020255eec46242074b9c858"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_stage4_handoff_readiness.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_stage4_handoff_readiness.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee",
+        "runtime_sha256": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee",
+        "working_sha256": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee"
+      },
+      "historical_variant_sha256": "47c5d02403090921beaba37150504d0aa71c80ad89c28814fa66d8f8845aac5c",
+      "relative_path": "tests/test_corrective_stage4_handoff_readiness.py",
+      "selected_sha256_at_base_commit": "b0efae8ccf3d29a43cb7b76830be1c772da3d2c0e45876adc8f82ec6ee70a8ee"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_capture_manifest.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_capture_manifest.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0",
+        "runtime_sha256": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0",
+        "working_sha256": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0"
+      },
+      "historical_variant_sha256": "a01b249306f577d7a13bb288c645a69b6b6bfd9e9c57f3e5b7decd1be7500028",
+      "relative_path": "tests/test_corrective_wizard_capture_manifest.py",
+      "selected_sha256_at_base_commit": "54e4e2fecedee846be81d7c3ab241bd776d9c5bcfbf0eaa68e5be5364f36e1d0"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_capture_reconciliation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_capture_reconciliation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b",
+        "runtime_sha256": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b",
+        "working_sha256": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b"
+      },
+      "historical_variant_sha256": "803b4a448ac64304a692cafd621f0a49d34268aece62f1844cb7acc10aff7fbc",
+      "relative_path": "tests/test_corrective_wizard_capture_reconciliation.py",
+      "selected_sha256_at_base_commit": "e5a4e3a2320c170d2fdc93a2e69d7f8f69b2d89c057b619a707e61c439568c6b"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_ou_v4_failure_attribution.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_ou_v4_failure_attribution.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd",
+        "runtime_sha256": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd",
+        "working_sha256": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd"
+      },
+      "historical_variant_sha256": "30b4cdf3962d6901787f90ebfe762ae44817a966af35b68c6917ae3581f951d3",
+      "relative_path": "tests/test_corrective_wizard_ou_v4_failure_attribution.py",
+      "selected_sha256_at_base_commit": "486ef9be67ca747395dac5c2ff5c818f92ce76973a9689bb0d10d2094ae27dbd"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_ou_v4_holdout.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_ou_v4_holdout.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071",
+        "runtime_sha256": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071",
+        "working_sha256": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071"
+      },
+      "historical_variant_sha256": "3f38a13cccc8b046370173a10b13332936a93190fd65097b51b9c1d620ade223",
+      "relative_path": "tests/test_corrective_wizard_ou_v4_holdout.py",
+      "selected_sha256_at_base_commit": "48b47be00571a143d327adb7339103be4040814dca09371e8ab1efd37f270071"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_ou_v5_holdout.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_ou_v5_holdout.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+        "runtime_sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039",
+        "working_sha256": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039"
+      },
+      "historical_variant_sha256": "0f3ee008f8af6701d09f2197a1fac6021d131709707d306d9311a90260808e64",
+      "relative_path": "tests/test_corrective_wizard_ou_v5_holdout.py",
+      "selected_sha256_at_base_commit": "5265826b5d4f1451b952461a4e252ed1e34420a11268ac14d7b2ffca654a2039"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_reset_readiness.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_reset_readiness.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d",
+        "runtime_sha256": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d",
+        "working_sha256": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d"
+      },
+      "historical_variant_sha256": "ccab08c626bb3d1be6e1e3ae8968879799887c72437175942224e31fd0c08e82",
+      "relative_path": "tests/test_corrective_wizard_reset_readiness.py",
+      "selected_sha256_at_base_commit": "61e784e7aa9ce9f514d93732fa78e30ae6e83a4aaf9199252f4994ee3396883d"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_corrective_wizard_unattended_preflight.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_corrective_wizard_unattended_preflight.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+        "runtime_sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b",
+        "working_sha256": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b"
+      },
+      "historical_variant_sha256": "708b41f2f974580ffc3eefdde65f9321468e56267017039da8d155e278f3ba75",
+      "relative_path": "tests/test_corrective_wizard_unattended_preflight.py",
+      "selected_sha256_at_base_commit": "90a6d18938838b64616e2e4cf43fdf62261aae362f768bb6f984ea21e016067b"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_current_wizard_hyperliquid_completion_audit.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_current_wizard_hyperliquid_completion_audit.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ace571591f36c17ff951035ffbf1d01911dd6d850a1116c0a1fcf967b57f89bd",
+        "runtime_sha256": "ace571591f36c17ff951035ffbf1d01911dd6d850a1116c0a1fcf967b57f89bd",
+        "working_sha256": "ace571591f36c17ff951035ffbf1d01911dd6d850a1116c0a1fcf967b57f89bd"
+      },
+      "historical_variant_sha256": "0d7754e592938258deeb119015642a3cb044378637ef68307324048a7fceff7e",
+      "relative_path": "tests/test_current_wizard_hyperliquid_completion_audit.py",
+      "selected_sha256_at_base_commit": "ace571591f36c17ff951035ffbf1d01911dd6d850a1116c0a1fcf967b57f89bd"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_exhaustive_wizard_hyperliquid_learning.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_exhaustive_wizard_hyperliquid_learning.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96",
+        "runtime_sha256": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96",
+        "working_sha256": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96"
+      },
+      "historical_variant_sha256": "3ab3ca12a961e79cce2fbfdce272400e8cdc87e6574e9c20d207c31fecc77e0b",
+      "relative_path": "tests/test_exhaustive_wizard_hyperliquid_learning.py",
+      "selected_sha256_at_base_commit": "2d48de51b4eec2b152feeb4af192587890026381c5333cfb47372f9dd85e5a96"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_fixture_ingestion.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_fixture_ingestion.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "b35afd8227f4fea731bf3b5a2e87ea55734b83361d0a57c33794f199429f738b",
+        "runtime_sha256": "b35afd8227f4fea731bf3b5a2e87ea55734b83361d0a57c33794f199429f738b",
+        "working_sha256": "b35afd8227f4fea731bf3b5a2e87ea55734b83361d0a57c33794f199429f738b"
+      },
+      "historical_variant_sha256": "e316fbf229b415cc2f5a6fe7b7ec5814bf2aabcdb9eeea897e2b4c9e0474a71a",
+      "relative_path": "tests/test_fixture_ingestion.py",
+      "selected_sha256_at_base_commit": "8aa632cb916b883d07d99ce69e40253ec86c2fd647090ba1464ee32f2a4b4ccb"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_v2_run.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_v2_run.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+        "runtime_sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631",
+        "working_sha256": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631"
+      },
+      "historical_variant_sha256": "852712eac034710e088503b2b118a2494c9687e96611b399c6faaa7201f677bd",
+      "relative_path": "tests/test_v2_run.py",
+      "selected_sha256_at_base_commit": "d5a02b287fc4a5814e417bfabc590e8552ef4a02a5c3bf159aec42492a137631"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_wizard_local_verification.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_wizard_local_verification.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e",
+        "runtime_sha256": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e",
+        "working_sha256": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e"
+      },
+      "historical_variant_sha256": "4c4e92b3ad6374ca3d182c13b8f1a664214edcd1e77f8fa03763dc0b5a9f6ed5",
+      "relative_path": "tests/test_wizard_local_verification.py",
+      "selected_sha256_at_base_commit": "ce93cc7426346ae3e1aa837ca81faa8f24a50e87f80383d16d19167d4dd5a54e"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_wizard_mode_comparison.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_wizard_mode_comparison.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96",
+        "runtime_sha256": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96",
+        "working_sha256": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96"
+      },
+      "historical_variant_sha256": "c981b41b924adbab42c4217d38c9c174d33e463d247c7a762444af93785da22d",
+      "relative_path": "tests/test_wizard_mode_comparison.py",
+      "selected_sha256_at_base_commit": "a2856cf65d5efdb2a120d8ceea8d7dab810cf2086ed2f712521686e3e54e7b96"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_wizard_pair_detail_api_pilot.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_wizard_pair_detail_api_pilot.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d",
+        "runtime_sha256": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d",
+        "working_sha256": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d"
+      },
+      "historical_variant_sha256": "1719c6cc3be951bf7b20694c41c21fe11d48cff425c03f27848a4250a71ff152",
+      "relative_path": "tests/test_wizard_pair_detail_api_pilot.py",
+      "selected_sha256_at_base_commit": "76e08aeabd6d3339a42b9e8c8f68b9e8b4b6a9c902de09acd34a71b534902f6d"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_wizard_pair_detail_ui_bundle.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_wizard_pair_detail_ui_bundle.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "a82dba9530dddbd03b191f45dca1062a66650c58f9b7b71a3c6d759864d183ee",
+        "runtime_sha256": "a82dba9530dddbd03b191f45dca1062a66650c58f9b7b71a3c6d759864d183ee",
+        "working_sha256": "a82dba9530dddbd03b191f45dca1062a66650c58f9b7b71a3c6d759864d183ee"
+      },
+      "historical_variant_sha256": "1a09a8e2d7689c96a402de7f861f122ad2fe48f424b2ee8fea11f751a7f84537",
+      "relative_path": "tests/test_wizard_pair_detail_ui_bundle.py",
+      "selected_sha256_at_base_commit": "27128a8c88ab41591acde3df02185f2047a7f87c26e0f79f284e3661637b3cec"
+    },
+    {
+      "copies": [
+        {
+          "absolute_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_youtube_hypothesis_validation.py",
+          "root": "forensic_b"
+        },
+        {
+          "absolute_path": "/Users/gregc/.codex/visualizations/2026/06/22/019eed4d-31bc-7c63-9c9f-62ff25e68be8/TheWiz-recovery-working/tests/test_youtube_hypothesis_validation.py",
+          "root": "visual_recovery"
+        }
+      ],
+      "four_root_baseline_sha256": {
+        "recovery_sha256": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd",
+        "runtime_sha256": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd",
+        "working_sha256": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd"
+      },
+      "historical_variant_sha256": "371c145ffe72e1ed1129c922e4b1636830193d257b5646e24aa2126d1cd16bb2",
+      "relative_path": "tests/test_youtube_hypothesis_validation.py",
+      "selected_sha256_at_base_commit": "e0b64bc8fb41954293f018e978d7099e7bf0829dffd51b4f1baf1b8c998ffdbd"
+    }
+  ],
+  "schema_version": "thewiz.gate0.union_omission_gap.v1",
+  "scope": "src, tests, scripts, config paths with hashes absent from the four-root baseline and original union queue",
+  "selected_source_changes": 0
+}

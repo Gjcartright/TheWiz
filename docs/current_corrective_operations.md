@@ -5,7 +5,7 @@
 Stage 3 requires a fresh immutable browser-auth readiness receipt whenever `config/wizard_browser_auth_contract.json` exists. Run the scanner and pair-detail browser helpers with explicit requested URLs, save both JSON artifacts under `data/raw/crypto_wizards/browser_auth/`, then build the receipt:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 scripts/build_wizard_browser_auth_readiness.py
+uv run --locked python scripts/build_wizard_browser_auth_readiness.py
 ```
 
 The gate fails closed on public redirects, login or verification forms, missing account/member navigation, missing route controls, stale evidence, shared/tampered source files, or legacy self-asserted captures. Its immutable receipt publishes the earliest validity horizon across the two required routes. Reset readiness binds that receipt by ID, path, and SHA-256 and requires the horizon to cover the registered external-attempt timestamp; evidence that is fresh now but expires before the capture window is blocked before any vendor request. The gate grants research evidence only and cannot authorize promotion, Testnet orders, or live orders.
@@ -13,6 +13,8 @@ The gate fails closed on public redirects, login or verification forms, missing 
 ## Purpose
 
 This is the operator entrypoint for the active Crypto Wizards to Hyperliquid research program. The project remains research-only until each authority gate passes in order. No file's existence grants trading authority.
+
+On the exFAT Expansion checkout, set `UV_PROJECT_ENVIRONMENT` to a directory on the Mac internal drive, then run `uv sync --extra dev --locked` before using the commands below. The on-drive `.venv` is incomplete and must not be used as the command interpreter. Commands here describe operator procedures; they do not grant a provider call or order permission.
 
 ## Phase 00 Run-Control Status
 
@@ -50,25 +52,25 @@ implementation passes.
 Phase 00 maintenance and checkpoint commands are fail-closed and non-destructive:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   phase00-maintenance-start --phase00-reason OPERATOR_REASON
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+uv run --locked python -m quant_platform.cli phase00-checkpoint
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-lineage-seal
+uv run --locked python -m quant_platform.cli phase00-lineage-seal
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+uv run --locked python -m quant_platform.cli phase00-checkpoint
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   phase00-descendant-invalidate
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+uv run --locked python -m quant_platform.cli phase00-checkpoint
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-checkpoint
+uv run --locked python -m quant_platform.cli phase00-checkpoint
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli phase00-closure-verify
+uv run --locked python -m quant_platform.cli phase00-closure-verify
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   phase00-maintenance-resume --phase00-maintenance-id MAINTENANCE_ID
 ```
 
@@ -145,8 +147,8 @@ evidence without a schema-upgrade deadlock.
 Canonical runtime inspection commands are also research-only:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-canonical-runtime-contract
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-scheduler-runtime-readiness
+uv run --locked python -m quant_platform.cli build-canonical-runtime-contract
+uv run --locked python -m quant_platform.cli build-scheduler-runtime-readiness
 ```
 
 Do not reload the three LaunchAgents until an operator separately approves a
@@ -200,11 +202,11 @@ The governed operator is two-step and status-first. Neither command grants
 persistent authority:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   hyperliquid-testnet-pair-execution-preflight \
   --testnet-pair-action entry --order-approval-id APPROVAL_ID
 
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   run-hyperliquid-testnet-pair-execution \
   --testnet-pair-action entry \
   --testnet-pair-preflight-id PREFLIGHT_ID \
@@ -279,17 +281,17 @@ control plane never reads the keychain or contacts mainnet automatically.
 These commands inspect or rebuild research status. They do not submit orders:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli system-check
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-credit-budget
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.orchestration.corrective_wizard_surface_inventory
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-next-capture-manifest
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-scheduler-runtime-readiness
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-wizard-reset-readiness
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-stage4-handoff-readiness
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-corrective-agent-governance
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli complete-corrective-plan
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli build-artifact-index
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli current-state
+uv run --locked python -m quant_platform.cli system-check
+uv run --locked python -m quant_platform.cli build-wizard-credit-budget
+uv run --locked python -m quant_platform.orchestration.corrective_wizard_surface_inventory
+uv run --locked python -m quant_platform.cli build-wizard-next-capture-manifest
+uv run --locked python -m quant_platform.cli build-scheduler-runtime-readiness
+uv run --locked python -m quant_platform.cli build-wizard-reset-readiness
+uv run --locked python -m quant_platform.cli build-stage4-handoff-readiness
+uv run --locked python -m quant_platform.cli build-corrective-agent-governance
+uv run --locked python -m quant_platform.cli complete-corrective-plan
+uv run --locked python -m quant_platform.cli build-artifact-index
+uv run --locked python -m quant_platform.cli current-state
 ```
 
 The Wizard surface-inventory command validates, rather than regenerates, the
@@ -313,7 +315,7 @@ schema.
 Each L2 cadence run also refreshes the prospective evidence command center:
 
 ```bash
-PYTHONPATH=src .venv/bin/python3 -m quant_platform.cli \
+uv run --locked python -m quant_platform.cli \
   build-current-wizard-hyperliquid-evidence-command-center
 ```
 
@@ -750,13 +752,19 @@ Stop progression and keep `RESEARCH_ONLY` when any of these is true:
 
 ## Recovery
 
-The active workspace is the mounted encrypted volume at `/Volumes/CodexWorkspace`. The Git remote protects committed source only; ignored evidence and uncommitted work require a separately verified encrypted recovery snapshot. A recovery receipt is current only when its commit and source-manifest hashes match the active workspace and a clean restore drill passes.
-
-With the encrypted recovery volume mounted, build a redacted, restore-tested checkpoint with:
+The canonical source checkout is `/Volumes/Expansion/Crypto Wizard` on the mounted Expansion drive. The midnight local Codex automation runs the installed save-point script, copying a dated project and LocalRuntime snapshot to Expansion and the Mac internal drive and pushing a source-only mirror to the private GitHub backup repository. A 12:45 AM automation checks and retries any missing destination. The older LaunchAgent is disabled after its Python process was denied removable-volume access on 2026-10-01 and is not part of the active schedule. The installed script matches `scripts/ops/nightly_savepoint.py` byte for byte. Check the three destination results and manifest hash with:
 
 ```bash
-python scripts/build_corrective_checkpoint.py
-python scripts/build_current_recovery_checkpoint.py --destination /Volumes/TheWizRecovery
+python scripts/ops/nightly_savepoint.py --status
 ```
 
-The builder excludes environment secrets, data corpora, models, generated reports from the source layer, and unrelated `apps/the-ave` work. It stores a separate allowlisted evidence snapshot and refuses completion unless hashes, compilation, and critical smoke tests pass.
+The dated receipt is stored under `/Users/gregc/Backups/TheWiz/state/`. A current source commit also needs its own complete Git bundle and independent restore proof under `/Users/gregc/Backups/TheWiz/gate0-checkpoints/<commit>/`; the latest head-tied Gate 0 source receipt names that bundle, its SHA-256, the clean restore, and the corresponding GitHub CI runs. The nightly snapshot and exact-commit bundle cover different points in time.
+
+For an additional manual redacted package from a clean reviewed checkout, use the locked Mac internal Python environment:
+
+```bash
+'/Users/gregc/Library/Application Support/TheWizRuntime/venv/bin/python' scripts/build_corrective_checkpoint.py
+'/Users/gregc/Library/Application Support/TheWizRuntime/venv/bin/python' scripts/build_current_recovery_checkpoint.py --destination /Users/gregc/Backups/TheWiz/manual-recovery
+```
+
+This package includes committed source through a Git bundle and snapshots eligible changed source when present. Its restore drill checks the exact Git head, source hashes, compilation, and selected smoke tests. A disposable clean-checkout drill on 2026-09-30 passed 15 smoke tests with zero changed-source rows. The older encrypted-workspace evidence variants remain preserved for separate source review; they are not part of the scheduled midnight save point.

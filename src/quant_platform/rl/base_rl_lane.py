@@ -13,6 +13,7 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT, build_trade_dataset, paper_candidate_shortlist_rows
 from quant_platform.pair_market_utils import pair_markets_from_pair
+from quant_platform.runtime_types import strict_bool
 from quant_platform.execution import (
     DydxNetworkConfig,
     effective_dydx_account_state_snapshot,
@@ -165,7 +166,7 @@ def run_base_rl(root: Path = ROOT, pair_id: str = "") -> CommandResult:
     summary = {
         "status": str(handoff.get("status", pd.Series(["research_only"])).iloc[0]) if not handoff.empty else "research_only",
         "pair_rows": int(len(coverage)),
-        "paper_authorized": bool(handoff.get("paper_authorized", pd.Series([False])).astype(bool).iloc[0]) if not handoff.empty else False,
+        "paper_authorized": strict_bool(handoff.get("paper_authorized", pd.Series([False])).iloc[0]) if not handoff.empty else False,
         "candidate_rows": int(len(frozen_candidates)),
         "candidate_hash": candidate_hash,
     }
@@ -203,7 +204,7 @@ def evaluate_base_rl(root: Path = ROOT) -> CommandResult:
             "promotion_decision_report": reports["promotion_decision_report"],
             "pair_blocker_report": reports["pair_blocker_report"],
         },
-        summary={"pair_rows": int(len(coverage)), "paper_authorized": bool(handoff.get("paper_authorized", pd.Series([False])).astype(bool).iloc[0]) if not handoff.empty else False},
+        summary={"pair_rows": int(len(coverage)), "paper_authorized": strict_bool(handoff.get("paper_authorized", pd.Series([False])).iloc[0]) if not handoff.empty else False},
     )
 
 
@@ -228,9 +229,10 @@ def base_rl_paper_handoff_report(root: Path = ROOT) -> pd.DataFrame:
     strategy_ready = _gate_ready(readiness, "strategy_acceptance")
     failed_preflight_blocker = _first_failed_preflight_blocker(paper_preflight)
     paper_ready = _gate_ready(readiness, "paper_execution_gate") and bool(
-        not paper_preflight.empty and paper_preflight.get("ready", pd.Series(dtype=bool)).fillna(False).astype(bool).all()
+        not paper_preflight.empty
+        and paper_preflight.get("ready", pd.Series(False, index=paper_preflight.index)).map(strict_bool).all()
     )
-    global_model_ready = bool(not model.empty and model.get("accepted", pd.Series([False])).astype(bool).iloc[0])
+    global_model_ready = bool(not model.empty and model.get("accepted", pd.Series([False])).map(strict_bool).iloc[0])
     route_model_ready, route_model_blocker = _route_model_gate_status(root=root, candidate_set=frozen_candidates)
     model_ready = bool(global_model_ready or route_model_ready)
 
@@ -238,7 +240,7 @@ def base_rl_paper_handoff_report(root: Path = ROOT) -> pd.DataFrame:
     compatibility_audit = _route_candidate_compatibility_audit(root=root) if shortlist_pairs == 0 else pd.DataFrame()
     compatibility_audit_pairs = int(len(compatibility_audit))
     compatibility_audit_execution_compatible_pairs = int(
-        compatibility_audit.get("execution_compatible", pd.Series(dtype=bool)).fillna(False).astype(bool).sum()
+        compatibility_audit.get("execution_compatible", pd.Series(dtype=bool)).map(strict_bool).sum()
     ) if not compatibility_audit.empty else 0
     compatibility_audit_blocked_pairs = max(0, compatibility_audit_pairs - compatibility_audit_execution_compatible_pairs)
     empty_route_execution_blocker = ""
@@ -248,14 +250,14 @@ def base_rl_paper_handoff_report(root: Path = ROOT) -> pd.DataFrame:
     if coverage.empty:
         pairs_with_support = 0
     else:
-        rl_supported = coverage.get("rl_supported", pd.Series(dtype=bool)).fillna(False).astype(bool)
-        execution_compatible = coverage.get("execution_compatible", pd.Series(dtype=bool)).fillna(False).astype(bool)
+        rl_supported = coverage.get("rl_supported", pd.Series(dtype=bool)).map(strict_bool)
+        execution_compatible = coverage.get("execution_compatible", pd.Series(dtype=bool)).map(strict_bool)
         pairs_with_support = int((rl_supported & execution_compatible).sum())
     pair_support_coverage = float(pairs_with_support / shortlist_pairs) if shortlist_pairs else 0.0
 
-    compatibility_ready = bool(compatibility.get("checked", False)) and not compatibility.get("blocker")
-    account_state_ready = bool(account_state.get("checked", False)) and not account_state.get("blocker")
-    injective_checked = bool(injective.get("checked", False))
+    compatibility_ready = strict_bool(compatibility.get("checked", False)) and not compatibility.get("blocker")
+    account_state_ready = strict_bool(account_state.get("checked", False)) and not account_state.get("blocker")
+    injective_checked = strict_bool(injective.get("checked", False))
     injective_mirrorable_pairs = int(len(injective.get("mirrorable_pairs", [])))
     injective_spot_pairs = int(len(injective.get("spot_pairs", [])))
     injective_spot_first_pairs = int(len(injective_spot_first))
@@ -546,7 +548,7 @@ def run_augmented_rl(root: Path = ROOT, pair_id: str = "") -> CommandResult:
     comparison_rows: list[dict[str, object]] = []
     for _, row in summary.iterrows():
         pair = str(row.get("pair", ""))
-        base_supported = bool(row.get("rl_supported", False))
+        base_supported = strict_bool(row.get("rl_supported", False))
         augmented_supported = bool(base_supported and pair_signals.get(pair, {}).get("allow", True))
         augmented_policy = _augmented_policy_name(base_policy, pair_signals.get(pair, {}))
         comparison_rows.append(
@@ -573,7 +575,7 @@ def run_augmented_rl(root: Path = ROOT, pair_id: str = "") -> CommandResult:
             "educational_evidence_authority": "research_only_no_trade_authority",
             "pairs_considered": int(len(summary)),
             "pairs_disagreed": int(
-                (pd.DataFrame(comparison_rows)["agreement"].astype(bool) == False).sum()
+                (pd.DataFrame(comparison_rows)["agreement"].map(strict_bool) == False).sum()
                 if comparison_rows
                 else 0
             ),
@@ -823,9 +825,9 @@ def _build_comparison_and_promotion(root: Path, coverage: pd.DataFrame, handoff:
     promo_rows = []
     for _, row in coverage.iterrows():
         pair = str(row.get("pair", ""))
-        execution_compatible = bool(row.get("execution_compatible", False))
+        execution_compatible = strict_bool(row.get("execution_compatible", False))
         in_route = "dydx" in str(row.get("best_execution_venue", "")).lower()
-        supported = bool(row.get("rl_supported", False))
+        supported = strict_bool(row.get("rl_supported", False))
         coverage_supported = bool(supported and execution_compatible)
         base_rows.append(
             {
@@ -844,7 +846,7 @@ def _build_comparison_and_promotion(root: Path, coverage: pd.DataFrame, handoff:
             reason = "out_of_route"
         elif not supported:
             reason = "pair_specific_rl_support_missing"
-        elif not bool(handoff.get("paper_authorized", pd.Series([False])).astype(bool).iloc[0]):
+        elif not strict_bool(handoff.get("paper_authorized", pd.Series([False])).iloc[0]):
             reason = str(handoff.get("blocker", pd.Series(["base_gate_not_ready"])) .astype(str).iloc[0])
         promo_rows.append(
             {
@@ -876,9 +878,9 @@ def _build_pair_blocker_report(root: Path, coverage: pd.DataFrame, handoff: pd.D
     if coverage.empty:
         return pd.DataFrame(columns=BASE_RL_PAIR_BLOCKER_COLUMNS)
 
-    strategy_ready = bool(handoff.get("strategy_acceptance_ready", pd.Series([False])).astype(bool).iloc[0]) if not handoff.empty else False
-    paper_ready = bool(handoff.get("paper_execution_ready", pd.Series([False])).astype(bool).iloc[0]) if not handoff.empty else False
-    model_ready = bool(handoff.get("model_gate_accepted", pd.Series([False])).astype(bool).iloc[0]) if not handoff.empty else False
+    strategy_ready = strict_bool(handoff.get("strategy_acceptance_ready", pd.Series([False])).iloc[0]) if not handoff.empty else False
+    paper_ready = strict_bool(handoff.get("paper_execution_ready", pd.Series([False])).iloc[0]) if not handoff.empty else False
+    model_ready = strict_bool(handoff.get("model_gate_accepted", pd.Series([False])).iloc[0]) if not handoff.empty else False
     global_ready = bool(strategy_ready and paper_ready and model_ready)
 
     def _coerce_bool(value: object, default: bool = False) -> bool:
@@ -960,7 +962,7 @@ def _build_pair_blocker_report(root: Path, coverage: pd.DataFrame, handoff: pd.D
                 else (
                     "wait_for_pair_execution_compatibility"
                     if not execution_compatible
-                    else ("wait_for_pair_support" if not bool(row.get("rl_supported", False)) else ("skip_non_dydx_route" if not in_route else "eligible_for_paper"))
+                    else ("wait_for_pair_support" if not strict_bool(row.get("rl_supported", False)) else ("skip_non_dydx_route" if not in_route else "eligible_for_paper"))
                 ),
             }
         )
@@ -978,8 +980,8 @@ def _write_promotion_decision_report(root: Path, coverage: pd.DataFrame, handoff
     handoff_blocker = str(handoff.get("blocker", pd.Series([""])).iloc[0]).strip() if not handoff.empty else ""
     for _, row in coverage.iterrows():
         in_route = "dydx" in str(row.get("best_execution_venue", "")).lower()
-        supported = bool(row.get("rl_supported", False))
-        execution_compatible = bool(row.get("execution_compatible", False))
+        supported = strict_bool(row.get("rl_supported", False))
+        execution_compatible = strict_bool(row.get("execution_compatible", False))
         coverage_supported = bool(supported and execution_compatible)
         paper_eligible = bool(base_ready and coverage_supported and in_route)
         reason = ""
@@ -1087,7 +1089,7 @@ def _gate_ready(frame: pd.DataFrame, gate: str) -> bool:
     if frame.empty:
         return False
     rows = frame[frame.get("gate", pd.Series(dtype=str)).astype(str) == gate]
-    return bool(not rows.empty and rows.get("ready", pd.Series([False])).fillna(False).astype(bool).any())
+    return bool(not rows.empty and rows.get("ready", pd.Series([False])).map(strict_bool).any())
 
 
 def _first_failed_preflight_blocker(frame: pd.DataFrame) -> str:

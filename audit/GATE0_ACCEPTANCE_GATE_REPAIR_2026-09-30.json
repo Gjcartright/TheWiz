@@ -1,0 +1,52 @@
+{
+  "authority": "No strategy acceptance, Testnet order, or live order authority is granted.",
+  "baseline_commit": "56377e002d98636ea23cd9bc8066b1edc8277187",
+  "decision": "Fail closed on invalid run metrics and unsubstantiated eligibility; count required cost-scenario trades conservatively once. Preserve the remaining source variants for separate review.",
+  "focused_junit_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/acceptance-fix-final-junit.xml",
+  "focused_junit_sha256": "ed0d414e6ace93867b88082e0db660b33bb5a8fabe248cf38ac49c1952bf29f4",
+  "focused_tests_passed": 26,
+  "probe": {
+    "baseline_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/acceptance-probe-baseline.json",
+    "baseline_result": {
+      "invalid_result_accepted": true,
+      "invalid_result_reason": "passed",
+      "unsubstantiated_rows_production_eligible": true,
+      "unsubstantiated_rows_reason": "passed",
+      "unsubstantiated_rows_total_trades": 520
+    },
+    "baseline_sha256": "ebb6024485d50c1135c0fb36a8c61fed9f8f418e55c4bc9b24d2d8ebe42ab421",
+    "patched_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/acceptance-probe-patched.json",
+    "patched_result": {
+      "invalid_result_accepted": false,
+      "invalid_result_reason": "profit_factor_nonfinite;sharpe_invalid_or_unknown_interval;expectancy_lower_95<=0_or_missing;open_trades_at_end;reconciliation_error>1e-10",
+      "unsubstantiated_rows_production_eligible": false,
+      "unsubstantiated_rows_reason": "unverified_eligible_runs:4;passing_pairs<2",
+      "unsubstantiated_rows_total_trades": 260
+    },
+    "patched_sha256": "c1d93aefb966b1a70ba61cca3651c217eb835a34e69efc11de356038b1aacdc2",
+    "script_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/acceptance-probe.py",
+    "script_sha256": "b27ee17e2d542acac04279c2e0726403d49965fc2848ea68b4e50218e6e57ff1"
+  },
+  "remaining_source_decisions": [
+    "forensic strategy registry and authority contract",
+    "runtime funding-clock exception behavior",
+    "historical funding-feature and proxy-authority tests",
+    "backtest, math v2, and strategy source dependencies",
+    "event-identity evidence for truly independent trade counts"
+  ],
+  "schema_version": "thewiz.gate0.acceptance_gate_repair.v1",
+  "source_sha256": {
+    "src/quant_platform/experiments.py": {
+      "baseline": "e53fbb31bb781b100899d65da3181e91197308b3d3f217c2be26d4af3325110f",
+      "forensic_variant": "940067ae406c9f1abfa191b23b7caebfc675b0ae1e6eb3bb437be6dd204224de",
+      "patched": "a9ebda29bfc6dd9501ad581ce10481e63730d793e27e4835382d4a368ca09121",
+      "runtime_candidate": "d52144efc0bb7edf8f5ed0d54ffca610196528ff0f49904968ea8f21e8a81762"
+    },
+    "tests/test_experiments.py": {
+      "baseline": "db00cfeba696cb24bf1cfa3b313265dd5a3ca4ae5cfa91b9abbe80e22095ef38",
+      "forensic_variant": "0dbd0816630de56cc6e4fb414bc9007a4b9528026fc321929b8a7bc22637ffed",
+      "patched": "0cb9c5bed2317163eb7538cbe543eaa5406775fcbae780103b0f1608d15177f3"
+    }
+  },
+  "status": "PARTIAL_SOURCE_REVIEW_REPAIR_COMMITTED_PENDING_REMAINDER"
+}

@@ -123,6 +123,8 @@ def test_refresh_hyperliquid_market_context_captures_public_snapshot_without_pro
     eth = frame.set_index("asset").loc["ETH"]
     assert btc["open_interest_usd"] == 200.0
     assert btc["funding_rate"] == 0.0001
+    assert bool(btc["tradable"]) is True
+    assert bool(btc["execution_authority"]) is False
     assert bool(btc["promotion_allowed"]) is False
     assert bool(eth["tradable"]) is False
     assert "requires_pair_history_cost_slippage_and_preflight" in btc["blocker"]

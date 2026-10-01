@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import atomic_write_text
-
 import json
 import math
 import os
@@ -15,6 +13,7 @@ import pandas as pd
 
 from quant_platform.economic_contract import y_on_x_beta, y_on_x_log_spread
 from quant_platform.funding import normalize_funding_rows
+from quant_platform.orchestration.corrective_runtime import atomic_write_text
 from quant_platform.performance_math import MATH_VERSION
 from quant_platform.statistics.math_v2 import attach_math_v2_statistics
 from quant_platform.zscore_utils import attach_row_level_zscores
@@ -24,6 +23,11 @@ MAX_DYDX_REQUEST_LIMIT = 1000
 MIN_DYDX_REQUEST_LIMIT = 1
 ZSCORE_WINDOW = 7
 ZSCORE_MIN_WINDOW = 7
+
+
+def _resolution_label(resolution: str) -> str:
+    raw = resolution.strip()
+    return "1M" if raw == "1M" else raw.lower()
 
 
 def _clamp_request_limit(limit: int) -> int:
@@ -61,7 +65,7 @@ def dydx_two_leg_request_rows(
         candle_path = output_base / f"{market}_{resolution}_candles.json"
         rows.append(
             _request_template_row(
-                name=f"{leg_name}_candles_{resolution.lower()}",
+                name=f"{leg_name}_candles_{_resolution_label(resolution)}",
                 url=_dydx_indexer_url(
                     indexer_base,
                     f"/v4/candles/perpetualMarkets/{market}",
@@ -107,13 +111,13 @@ def dydx_two_leg_request_rows(
             "curl": "",
             "save_as": str(
                 Path("data/raw/pair_details")
-                / f"pair_{pair_id}_{resolution.lower()}_dydx_candles_derived_history.json"
+                / f"pair_{pair_id}_{_resolution_label(resolution)}_dydx_candles_derived_history.json"
             ),
             "import_command": (
                 "PYTHONPATH=src python3 -m quant_platform.cli build-dydx-pair-history "
                 f"--left-candles data/raw/dydx_candles/{left}_{resolution}_candles.json "
                 f"--right-candles data/raw/dydx_candles/{right}_{resolution}_candles.json "
-                f"--asset-x {left} --asset-y {right} --pair-id {pair_id} --interval {resolution.lower()} "
+                f"--asset-x {left} --asset-y {right} --pair-id {pair_id} --interval {_resolution_label(resolution)} "
                 f"--hedge-ratio {hedge_ratio} --beta {beta_value} --zscore-window {zscore_window}"
             ),
             "notes": "Run after both candle imports. Funding is merged later with --funding-path, not fabricated into this file.",
@@ -233,7 +237,7 @@ def build_pair_history_from_windowed_candles(
     )
     pair_path = (
         Path(pair_output_dir)
-        / f"pair_{_safe_filename(pair_id)}_{resolution.lower()}_dydx_long_history_derived_history.json"
+        / f"pair_{_safe_filename(pair_id)}_{_resolution_label(resolution)}_dydx_long_history_derived_history.json"
     )
     build_pair_history_from_candles(
         left_path=left_path,
@@ -244,7 +248,7 @@ def build_pair_history_from_windowed_candles(
         asset_y=right,
         hedge_ratio=None if derive_hedge_ratio else hedge_ratio,
         beta=None if derive_hedge_ratio else beta,
-        interval=interval or resolution.lower(),
+        interval=interval or _resolution_label(resolution),
         zscore_window=zscore_window,
         funding_path=funding_path,
     )
@@ -319,7 +323,7 @@ def build_pair_history_from_candles(
     ecm_derivation: dict[str, Any] | None = None
     if derive_ecm:
         ecm_derivation = _attach_provisional_ecm(rows)
-    _attach_provisional_research_features(rows, namespace=True)
+    _attach_provisional_research_features(rows)
     statistical_validity = attach_math_v2_statistics(
         rows,
         zscore_window=zscore_window,
@@ -334,9 +338,8 @@ def build_pair_history_from_candles(
             asset_y=asset_y,
         )
 
-    resolution = (
-        interval
-        or str(left[0].get("resolution") or right[0].get("resolution") or "unknown").lower()
+    resolution = _resolution_label(
+        interval or str(left[0].get("resolution") or right[0].get("resolution") or "unknown")
     )
     payload: dict[str, Any] = {
         "pair_id": pair_id,
@@ -344,7 +347,7 @@ def build_pair_history_from_candles(
         "asset_x": asset_x,
         "asset_y": asset_y,
         "exchange": "dydx",
-        "interval": resolution.lower(),
+        "interval": resolution,
         "period": len(rows),
         "strategy_mode": "static",
         "math_version": MATH_VERSION,
@@ -409,7 +412,7 @@ def backfill_provisional_pair_history_features(
         rows = [row for row in history if isinstance(row, dict)]
         if not rows:
             continue
-        _attach_provisional_research_features(rows, overwrite=True)
+        _attach_provisional_research_features(rows)
         payload["history"] = rows
         if "source_note" in payload:
             source_note = str(payload.get("source_note") or "")
@@ -418,9 +421,9 @@ def backfill_provisional_pair_history_features(
                 not in source_note
             ):
                 payload["source_note"] = source_note + (
-                    " Additional research columns such as conditional_probability_distortion, half_life, hurst,"
-                    " tail_dependence, and model confidence inputs are provisional derived features used to exercise"
-                    " the strategy research harness."
+                    " Additional research_proxy_* columns such as conditional probability distortion, half-life,"
+                    " Hurst, tail dependence, and model confidence inputs are provisional derived features used to"
+                    " exercise the strategy research harness; they cannot authorize acceptance or learning."
                 )
         atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         written.append(path)
@@ -460,10 +463,7 @@ def _attach_leg_funding_to_rows(
     if market_funding.empty:
         return
     if "timestamp" not in rows[0] or market_funding["timestamp"].isna().all():
-        latest = market_funding["funding_bps"].dropna()
-        if not latest.empty:
-            for row in rows:
-                row[output_column] = float(latest.iloc[-1])
+        # An undated observation cannot be placed before a dated candle.
         return
 
     frame = pd.DataFrame(rows).reset_index().rename(columns={"index": "_row_index"})
@@ -475,10 +475,6 @@ def _attach_leg_funding_to_rows(
         pd.to_datetime(right["timestamp"], errors="coerce", utc=True).astype("datetime64[ns, UTC]")
     ).sort_values()
     if right.empty:
-        latest = market_funding["funding_bps"].dropna()
-        if not latest.empty:
-            for row in rows:
-                row[output_column] = float(latest.iloc[-1])
         return
 
     frame["_timestamp"] = pd.to_datetime(frame["_timestamp"], utc=True, errors="coerce").astype(
@@ -494,7 +490,9 @@ def _attach_leg_funding_to_rows(
         on="_timestamp",
         direction="backward",
     ).sort_values("_row_index")
-    values = pd.Series(merged["funding_bps"]).ffill().bfill().to_list()
+    # merge_asof already chose the latest observation at or before each candle.
+    # Filling after original row order is restored can leak across out-of-order rows.
+    values = merged["funding_bps"].to_list()
     for row, value in zip(rows, values):
         if value is not None and not pd.isna(value):
             row[output_column] = float(value)
@@ -721,9 +719,6 @@ def _attach_provisional_ecm(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _attach_provisional_research_features(
     rows: list[dict[str, Any]],
-    *,
-    overwrite: bool = False,
-    namespace: bool = False,
 ) -> None:
     if not rows:
         return
@@ -957,13 +952,7 @@ def _attach_provisional_research_features(
             "copula_calibration_score": float(np.clip(0.5 + abs(cpd.iloc[idx]) / 2.0, 0.0, 1.0)),
             "composite_score": composite_score,
         }
-        if namespace:
-            row.update({f"research_proxy_{key}": value for key, value in updates.items()})
-        elif overwrite:
-            row.update(updates)
-        else:
-            for key, value in updates.items():
-                row.setdefault(key, value)
+        row.update({f"research_proxy_{key}": value for key, value in updates.items()})
 
 
 def _safe_series_slope(xs: list[float], ys: list[float]) -> float:

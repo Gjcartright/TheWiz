@@ -7,6 +7,7 @@ from typing import Any
 
 import pandas as pd
 
+from quant_platform.runtime_types import strict_bool
 from quant_platform.orchestration.corrective_runtime import (
     atomic_append_text,
     atomic_write_csv,
@@ -340,7 +341,7 @@ def valid_memory_event(event: dict[str, object]) -> tuple[bool, str]:
         return False, f"missing_memory_keys:{';'.join(missing)}"
     if str(event.get("agent", "")) != BRAIN_MEMORY_AGENT:
         return False, "agent_mismatch"
-    if not bool(event.get("outcome_known")) and bool(event.get("outcome_label")):
+    if not strict_bool(event.get("outcome_known")) and str(event.get("outcome_label") or "").strip():
         return False, "outcome_label_without_outcome_known"
     return True, "valid"
 
@@ -774,7 +775,7 @@ def _native_readiness_row(root: Path, source: Path) -> dict[str, object]:
     promotion_rows = native_promotion[native_promotion.get("lane", pd.Series(dtype=object)).astype(str) == NATIVE_LANE] if not native_promotion.empty else pd.DataFrame()
     if packet_ok:
         supported = quality_rows.get("quality_status", pd.Series(dtype=object)).astype(str).eq("supported").any() if not quality_rows.empty else False
-        paper_credible = promotion_rows.get("paper_credible", pd.Series(dtype=bool)).astype(bool).any() if not promotion_rows.empty else False
+        paper_credible = promotion_rows.get("paper_credible", pd.Series(dtype=bool)).map(strict_bool).any() if not promotion_rows.empty else False
         if not supported:
             status = "candidate_quality_blocked"
             blocker = blocker or "native_candidate_quality_not_supported"
@@ -817,7 +818,7 @@ def _paper_status_row(root: Path, source: Path) -> dict[str, object]:
     if status == "research_only" and blocker in {"", "strategy_acceptance_not_ready"}:
         blocker = _clean_text(_paper_route_blocker(root)) or blocker
     summary = (
-        f"paper_authorized={bool(row.get('paper_authorized', False))};"
+        f"paper_authorized={strict_bool(row.get('paper_authorized', False))};"
         f"status={status};"
         f"execution_truth_mode={str(row.get('execution_truth_mode', 'paper_only'))};"
         f"injective_mirrorable_pairs={int(row.get('injective_mirrorable_pairs', 0) or 0)}"
@@ -853,7 +854,7 @@ def _overall_readiness_row(
         _clean_text(paper_row.get("blocker", "")),
     ]
     clean_blockers = _coerce_blockers(blockers)
-    ready = bool(wizard_row.get("ready")) and bool(native_row.get("ready")) and bool(paper_row.get("ready"))
+    ready = strict_bool(wizard_row.get("ready")) and strict_bool(native_row.get("ready")) and strict_bool(paper_row.get("ready"))
     status = "ready" if ready else "blocked"
     summary = (
         f"wizard={wizard_row.get('status', '')};"
@@ -1077,7 +1078,7 @@ def _preferred_promotion_row(frame: pd.DataFrame) -> pd.Series | None:
     if frame.empty:
         return None
     working = frame.copy()
-    working["_credible"] = working.get("paper_credible", pd.Series(dtype=object)).astype(bool)
+    working["_credible"] = working.get("paper_credible", pd.Series(dtype=object)).map(strict_bool)
     working["_stage_rank"] = working.get("promotion_stage", pd.Series(dtype=object)).astype(str).map(
         {
             "paper_eligible": 0,

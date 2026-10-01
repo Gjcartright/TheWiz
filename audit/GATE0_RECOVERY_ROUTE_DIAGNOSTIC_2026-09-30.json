@@ -1,0 +1,22 @@
+{
+  "fixed_baseline_artifact_and_git_state_binding": "PASS",
+  "fixed_clean_checkout_changed_source_rows": 0,
+  "fixed_disposable_head": "3460047ae408b1685e9b8f435bd1ee5e415e240e",
+  "fixed_disposable_package_path": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/fixed-v2-packages/checkpoint-3460047-worktree-20260930T081531Z",
+  "fixed_package_artifacts_rehashed": 8,
+  "fixed_package_manifest_sha256": "4d61984d277ce115f6f0ce686e286edb507d314f67e2dcd2434c96625653eb7b",
+  "fixed_restore_drill_sha256": "11da6880ae0705c795f96b6d1d23de39cc5af1de1394f047f3efc58ee05f73c0",
+  "fixed_restore_gate": "PASS",
+  "fixed_smoke_tests_passed": 15,
+  "initial_clean_checkout_baseline": "READY_CLEAN_CHECKOUT_ZERO_CHANGED_SOURCE",
+  "initial_recovery_failure": "BASELINE_SOURCE_MANIFEST_EMPTY",
+  "interpretation": "The current scheduled savepoint is passing. The optional redacted packager failed on a clean checkout before the repair and passed a complete disposable restore drill afterward. Historical workspace-specific source variants remain under review.",
+  "nightly_calendar": "00:00 America/New_York",
+  "nightly_date": "2026-09-30",
+  "nightly_expansion": "PASS",
+  "nightly_mac_internal": "PASS",
+  "nightly_manifest_sha256": "b44b6fc5e485b7d447b1e8b422f8973aa9917b23b94a434f77c5f177145d423e",
+  "nightly_private_github": "PASS",
+  "nightly_source_and_installed_script_sha256": "9f772ca384312aa1968b075679e5d913c54eaca05bdc58039cf433c2f19a94fb",
+  "schema_version": "thewiz.gate0.recovery_route_diagnostic.v1"
+}

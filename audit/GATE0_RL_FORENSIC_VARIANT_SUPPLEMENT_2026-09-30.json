@@ -1,0 +1,198 @@
+{
+  "authority_claims": {
+    "capital_authority_granted": false,
+    "full_forensic_file_port_recommended": false,
+    "order_submission_granted": false,
+    "provider_called": false
+  },
+  "base_selected_commit": "1c39119e06c0fba3e32af2a75e6ea0ec14e05972",
+  "forensic_root": "/Volumes/Expansion/TheWizForensic-20260819b",
+  "method": "Direct SHA-256 of accessible forensic_b bytes checked against exact queue variant hash; unified source diff and semantic gate review. No provider calls or active checkout edits.",
+  "observed_bool_probe": {
+    "persisted_string_False": {
+      "pandas_astype_bool": true,
+      "python_bool": true,
+      "runtime_types_strict_bool": false
+    }
+  },
+  "schema_version": "thewiz.gate0.rl_forensic_variant_supplement.v1",
+  "scope_note": "The union queue contains eight RL source variants plus one direct test variant; all nine are reconciled despite the requested seven-source shorthand.",
+  "signal_test": {
+    "active_present": false,
+    "decision": "SAFE_SELECTIVE_TEST_PORT",
+    "errors": 0,
+    "failures": 0,
+    "focused_junit_path": "/tmp/strategy-desks-signal-preserved.xml",
+    "focused_junit_sha256": "811efe34a08201a521ab585feeb4a7bb2f9541da911797d6adb635001d68d96a",
+    "local_runtime_sha256": "7d3e7e527e445898a3b5fdd91e25cc07579b2bee53e6047d85bf94c3268d838c",
+    "path": "tests/test_static_desk_signal_repairs.py",
+    "skipped": 0,
+    "target_modules": [
+      "quant_platform.economic_contract",
+      "quant_platform.backtest"
+    ],
+    "tests": 39
+  },
+  "variants": [
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/base_rl_lane.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 17,
+      "local_runtime_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb",
+      "path": "src/quant_platform/rl/base_rl_lane.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "d441889749b201b44c2ad9f546275239eab8755c6013783c6aeb320f7cee3acc",
+      "recommendation": "SELECTIVE_STRICT_BOOL_REPAIR_CANDIDATE",
+      "selected_sha256": "dc81d34dbbf2978cce8aa63b1e0b13045ace9cf08d82cc448d3f78524bb39dbb",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool guarded paper_authorized, preflight/model/pair support, compatibility and readiness values. Selected uses bool/.astype(bool), which treats persisted nonempty string False as true. Selected atomic writes should remain.",
+      "variant_to_selected_line_changes": {
+        "added": 40,
+        "removed": 37
+      },
+      "verified_forensic_sha256": "d441889749b201b44c2ad9f546275239eab8755c6013783c6aeb320f7cee3acc"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/brain_contract.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 6,
+      "local_runtime_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2",
+      "path": "src/quant_platform/rl/brain_contract.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "5717ae0abcd7bb584d8417f6f6b8be7576bb96711a08bd1556042a9d65f4c45e",
+      "recommendation": "SELECTIVE_STRICT_BOOL_REPAIR_CANDIDATE",
+      "selected_sha256": "de963b7624cea1b3557776bfdacc4e534e8b7904fdda1c20703f91cf5f13cdd2",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool guarded memory outcome_known and paper/native/overall readiness flags. Selected bool/.astype(bool) can promote string False. Selected atomic append/write improvements should remain.",
+      "variant_to_selected_line_changes": {
+        "added": 28,
+        "removed": 20
+      },
+      "verified_forensic_sha256": "5717ae0abcd7bb584d8417f6f6b8be7576bb96711a08bd1556042a9d65f4c45e"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/quantization.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 0,
+      "local_runtime_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d",
+      "path": "src/quant_platform/rl/quantization.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "02f633736bc8181023a0940b705b9df14bee76f422d6327ca8d418d21633c379",
+      "recommendation": "SELECTIVE_STRICT_BOOL_REPAIR_CANDIDATE",
+      "selected_sha256": "5ff913c787dc2b9f4400c40250617ab799e0d5ed0ce75f2aa44a15e40f5e5f9d",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool parsed persisted acceptance accepted before export; selected .astype(bool) can turn string False into true. Retain selected atomic output writes.",
+      "variant_to_selected_line_changes": {
+        "added": 8,
+        "removed": 5
+      },
+      "verified_forensic_sha256": "02f633736bc8181023a0940b705b9df14bee76f422d6327ca8d418d21633c379"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/rl_acceptance.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 4,
+      "local_runtime_sha256": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "path": "src/quant_platform/rl/rl_acceptance.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "12be6924963b5a5934f33425f955436839a248fcf0e42a72f5b33fc743eff21a",
+      "recommendation": "REVIEWED_SELECTED_REPAIR_RETAIN_FORENSIC_NO_PORT",
+      "selected_sha256": "27eeb01e320429ca47c3dac63e535a33b4f628e1d3febc54723b1d01aa420131",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Selected LocalRuntime repair requires qualified calendar equity, exact four-row identity-bound comparison and no-authority report. Forensic strict_bool only wrapped internally computed split booleans and lacks the selected contract.",
+      "variant_to_selected_line_changes": {
+        "added": 285,
+        "removed": 36
+      },
+      "verified_forensic_sha256": "12be6924963b5a5934f33425f955436839a248fcf0e42a72f5b33fc743eff21a"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/rl_backtest.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 0,
+      "local_runtime_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "path": "src/quant_platform/rl/rl_backtest.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "ead88db6ee183d07807b9f24dc25fb3740cf25f966f638cb25b3c61a76759d52",
+      "recommendation": "SELECTIVE_STRICT_BOOL_AND_CALIBRATION_REVIEW",
+      "selected_sha256": "b6ef1ad5303c61294817243bc8320f9428071e1f9304a8c01538b8f913b33877",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool guarded persisted global_label_purge; selected .astype(bool) can accept string False. Forensic also froze zscore_strength_cap from training while selected recomputes a quantile in simulation; review that separate calibration drift. Keep selected no-zero-fill extractor and atomic writes.",
+      "variant_to_selected_line_changes": {
+        "added": 38,
+        "removed": 51
+      },
+      "verified_forensic_sha256": "ead88db6ee183d07807b9f24dc25fb3740cf25f966f638cb25b3c61a76759d52"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/rl_idea_engine.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 1,
+      "local_runtime_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589",
+      "path": "src/quant_platform/rl/rl_idea_engine.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "6c19d2bf17be4299ae96dd1f5f47497a12dc574e3b2a64154cf5e508ca914bf9",
+      "recommendation": "SELECTIVE_FORWARD_OOS_GUARD_REPAIR_CANDIDATE",
+      "selected_sha256": "d9a29a466560368b29cb0b5276dcf42ba470d058ca4a976b1e1d2a55a523f589",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic required OOS score plus provenance, ranked on prediction, used predicted risk, and labeled results hypothesis_only. Selected ranks realized profit_after_cost/labels as expected_return and marks candidate, allowing hindsight leakage. Keep selected atomic output writes.",
+      "variant_to_selected_line_changes": {
+        "added": 36,
+        "removed": 102
+      },
+      "verified_forensic_sha256": "6c19d2bf17be4299ae96dd1f5f47497a12dc574e3b2a64154cf5e508ca914bf9"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/rl_learning_agent.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 3,
+      "local_runtime_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "path": "src/quant_platform/rl/rl_learning_agent.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "7fc8760edce6b8930d4132dccd8e44bd4c6d6ee1e84e8dbd13a0ad3b894375ea",
+      "recommendation": "SELECTIVE_STRICT_BOOL_REPAIR_CANDIDATE",
+      "selected_sha256": "82c7939a968f28b047149ddff7ea6748a29ad00b07efda88b6d3b4580d057cf0",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool parsed test/validation eligibility and ranked eligibility; selected bool/.astype(bool) may accept persisted string False. Keep selected qualified calendar metric gate, no-zero-fill extractor and atomic writes.",
+      "variant_to_selected_line_changes": {
+        "added": 57,
+        "removed": 63
+      },
+      "verified_forensic_sha256": "7fc8760edce6b8930d4132dccd8e44bd4c6d6ee1e84e8dbd13a0ad3b894375ea"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/src/quant_platform/rl/rl_strategy_selector.py",
+      "forensic_root": "forensic_b",
+      "forensic_strict_bool_occurrences": 0,
+      "local_runtime_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68",
+      "path": "src/quant_platform/rl/rl_strategy_selector.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "83e259440a0514b8d741b516d62598762ab1f0d03e56e0588264ec6382514d9d",
+      "recommendation": "SELECTIVE_STRICT_BOOL_REPAIR_CANDIDATE",
+      "selected_sha256": "849778666ac4ecaaccd8801e3e37718590aef971bc9e7b58642a1cd9386f1a68",
+      "selected_strict_bool_occurrences": 0,
+      "semantic_rationale": "Forensic strict_bool filtered accepted/production_eligible; selected .astype(bool) selects nonempty string False as approved.",
+      "variant_to_selected_line_changes": {
+        "added": 1,
+        "removed": 3
+      },
+      "verified_forensic_sha256": "83e259440a0514b8d741b516d62598762ab1f0d03e56e0588264ec6382514d9d"
+    },
+    {
+      "forensic_path": "/Volumes/Expansion/TheWizForensic-20260819b/tests/test_rl_brain_contract.py",
+      "forensic_root": "forensic_b",
+      "local_runtime_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "path": "tests/test_rl_brain_contract.py",
+      "queue_hash_matches": true,
+      "queue_variant_sha256": "7a5f4c0120779f28ac1ee9d4d62ad4388370ba93926b44b04b3ca8567eea7f23",
+      "recommendation": "REVIEWED_HISTORICAL_TEST_NO_EXACT_PORT",
+      "selected_sha256": "ae0b733e652aa56fdc4cad808e89c4fae52aed62239a14fcffc5f36124227bdd",
+      "semantic_rationale": "Forensic adds one stale active_pipeline.current_state contradictory-strategy-acceptance test, absent in selected; referenced older authority audit strings are absent from active source. Replace with focused current RL flag and idea-evidence tests rather than exact port.",
+      "variant_to_selected_line_changes": {
+        "added": 0,
+        "removed": 52
+      },
+      "verified_forensic_sha256": "7a5f4c0120779f28ac1ee9d4d62ad4388370ba93926b44b04b3ca8567eea7f23"
+    }
+  ]
+}

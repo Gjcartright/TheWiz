@@ -24,6 +24,7 @@ from quant_platform.orchestration.current_wizard_hyperliquid_storage import (
     _file_hash,
     _tree_inventory,
 )
+from quant_platform.runtime_types import strict_bool
 
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_VERSION = "wizard_hyperliquid_archive_copy.v1"
@@ -72,7 +73,7 @@ def stage_current_wizard_hyperliquid_archive_copy(
         reclaimable_bytes=0,
         require_safe_candidates=False,
     )
-    if not bool(preliminary_destination["archive_copy_preflight_ready"]):
+    if not strict_bool(preliminary_destination["archive_copy_preflight_ready"]):
         raise ValueError(str(preliminary_destination["archive_destination_blocker"]))
 
     destination_root = Path(str(preliminary_destination["archive_destination_path"]))
@@ -87,7 +88,7 @@ def stage_current_wizard_hyperliquid_archive_copy(
         reclaimable_bytes=bytes_requiring_copy,
         require_safe_candidates=False,
     )
-    if not bool(destination["archive_copy_preflight_ready"]):
+    if not strict_bool(destination["archive_copy_preflight_ready"]):
         raise ValueError(str(destination["archive_destination_blocker"]))
     archive_root.mkdir(parents=True, exist_ok=True)
     approval_fingerprint = sha256(approval_id.encode("utf-8")).hexdigest()[:16]

@@ -9,6 +9,7 @@ import pandas as pd
 
 from quant_platform.active_pipeline import CommandResult, ROOT
 from quant_platform.rl.features import attach_copula_dashboard_features
+from quant_platform.runtime_types import strict_bool
 
 
 RL_IDEAS_COLUMNS = [
@@ -69,6 +70,19 @@ RL_IDEA_SUMMARY_COLUMNS = [
     "generated_at",
 ]
 
+FORWARD_SCORE_COLUMNS = (
+    "oos_predicted_return",
+    "predicted_return",
+    "trade_quality_score",
+    "oos_policy_score",
+)
+OOS_EVALUATION_SPLITS = {
+    "held_out_test",
+    "out_of_sample",
+    "test",
+    "walk_forward_test",
+}
+
 
 def run_rl_idea_scout(
     root: Path = ROOT,
@@ -115,7 +129,26 @@ def run_rl_idea_scout(
             summary={"ideas": 0, "similar_pairs": 0, "policy_type": policy_type, "blocker": "missing_trade_dataset"},
         )
 
-    ideas_frame = _build_rl_idea_rows(dataset, policy_type, eval_report, training, timestamp, top_ideas=max(1, int(top_ideas)))
+    dataset, score_column, evidence_blocker = _forward_prediction_evidence(dataset)
+    if evidence_blocker:
+        _write_empty_idea_artifacts(
+            ideas_path,
+            sim_path,
+            summary_path,
+            timestamp,
+            policy_type,
+            evidence_blocker,
+            dataset_path,
+        )
+        return CommandResult(
+            paths={"rl_ideas": ideas_path, "rl_pair_similarity": sim_path, "rl_idea_summary": summary_path},
+            summary={"ideas": 0, "similar_pairs": 0, "policy_type": policy_type, "blocker": evidence_blocker},
+        )
+
+    ideas_frame = _build_rl_idea_rows(
+        dataset, policy_type, eval_report, training, timestamp,
+        top_ideas=max(1, int(top_ideas)), score_column=score_column,
+    )
     similarity_frame = _build_similarity_frame(
         dataset,
         top_pairs=max(1, min(10, len(ideas_frame))),
@@ -157,15 +190,19 @@ def _build_rl_idea_rows(
     training: pd.DataFrame,
     timestamp: str,
     top_ideas: int,
+    score_column: str,
 ) -> pd.DataFrame:
     if dataset.empty:
         return pd.DataFrame(columns=RL_IDEAS_COLUMNS)
 
     candidates = dataset.copy()
-    candidates["expected_return"] = _to_numeric_series(_select_return_series(candidates))
-    candidates["risk_proxy"] = _to_numeric_series(
-        candidates.get("profit_after_cost", candidates.get("realized_return", pd.Series(0.0, index=candidates.index)))
+    prediction_score = _to_numeric_series(candidates[score_column])
+    candidates["expected_return"] = (
+        prediction_score
+        if score_column in {"oos_predicted_return", "predicted_return"}
+        else pd.Series(0.0, index=candidates.index)
     )
+    candidates["risk_proxy"] = _predicted_risk_series(candidates)
 
     for column in [
         "zscore",
@@ -183,17 +220,21 @@ def _build_rl_idea_rows(
         if column in candidates.columns:
             candidates[column] = _to_numeric_series(candidates[column])
 
-    return_abs = candidates["expected_return"].abs()
-    max_abs = return_abs.replace([np.inf, -np.inf], 0.0).max()
-    if pd.isna(max_abs) or max_abs <= 0:
-        max_abs = 1.0
-    candidates["confidence_score"] = (0.1 + 0.8 * (return_abs / max_abs)).clip(0.0, 1.0)
-    candidates["expected_trade_count"] = _safe_int(candidates.get("closed_trades", 1), default=1)
+    candidates["_forward_rank_score"] = prediction_score
+    candidates["confidence_score"] = (
+        prediction_score.clip(0.0, 1.0)
+        if score_column == "trade_quality_score"
+        else _normalized_prediction_confidence(prediction_score)
+    )
+    candidates["expected_trade_count"] = _safe_int(
+        candidates.get("predicted_trade_count", candidates.get("expected_trade_count", 0)),
+        default=0,
+    )
     candidates["stop_loss_hint"] = _broadcast_hint(_stop_loss_hint(training, eval_report), len(candidates))
     candidates["take_profit_hint"] = _broadcast_hint(_take_profit_hint(training), len(candidates))
     candidates["session_loss_cap_hint"] = _broadcast_hint(_session_loss_cap_hint(training), len(candidates))
     candidates["risk_control_style"] = _risk_control_style(training, eval_report)
-    candidates["source"] = "rl_research_backtest"
+    candidates["source"] = "rl_oos_prediction_hypothesis"
     candidates["reasoning"] = candidates.apply(_reasoning_row, axis=1)
     candidates["source_policy"] = (
         _coalesce(candidates.iloc[0], ["policy", "source_policy", "policy_name", "policy_type"], default=policy_type)
@@ -201,10 +242,10 @@ def _build_rl_idea_rows(
         else policy_type
     )
     candidates["evidence_path"] = _report_or_dataset_path(training, eval_report)
-    candidates["status"] = "candidate"
+    candidates["status"] = "hypothesis_only"
     candidates["generated_at"] = timestamp
 
-    sort_keys: list[str] = ["expected_return", "confidence_score"]
+    sort_keys: list[str] = ["_forward_rank_score", "confidence_score"]
     if "zscore" in candidates.columns:
         sort_keys.append("zscore")
     candidates = candidates.sort_values(sort_keys, ascending=[False] * len(sort_keys), na_position="last")
@@ -400,11 +441,40 @@ def _report_or_dataset_path(training: pd.DataFrame, eval_report: pd.DataFrame) -
     return "data/ml/trade_training_dataset.csv"
 
 
-def _select_return_series(frame: pd.DataFrame) -> pd.Series:
-    for column in ["profit_after_cost", "trade_return", "return", "returns", "realized_return", "label"]:
+def _forward_prediction_evidence(dataset: pd.DataFrame) -> tuple[pd.DataFrame, str, str]:
+    """Require a finite prediction score and explicit out-of-sample provenance."""
+    if not dataset.columns.is_unique:
+        return dataset.iloc[0:0], "", "duplicate_prediction_columns"
+    score_column = next((column for column in FORWARD_SCORE_COLUMNS if column in dataset.columns), "")
+    if not score_column:
+        return dataset.iloc[0:0], "", "missing_out_of_sample_prediction_score"
+    if "prediction_is_oos" in dataset.columns:
+        oos_mask = dataset["prediction_is_oos"].map(strict_bool)
+    elif "evaluation_split" in dataset.columns:
+        oos_mask = dataset["evaluation_split"].astype(str).str.strip().str.lower().isin(OOS_EVALUATION_SPLITS)
+    else:
+        return dataset.iloc[0:0], score_column, "missing_out_of_sample_prediction_provenance"
+    scores = pd.to_numeric(dataset[score_column], errors="coerce")
+    eligible = dataset.loc[oos_mask & np.isfinite(scores)].copy()
+    if eligible.empty:
+        return eligible, score_column, "no_eligible_out_of_sample_predictions"
+    return eligible, score_column, ""
+
+
+def _predicted_risk_series(frame: pd.DataFrame) -> pd.Series:
+    for column in ("predicted_risk", "predicted_drawdown", "forecast_volatility", "volatility_rank"):
         if column in frame.columns:
-            return frame[column]
+            return _to_numeric_series(frame[column]).clip(lower=0.0)
     return pd.Series(0.0, index=frame.index)
+
+
+def _normalized_prediction_confidence(values: pd.Series) -> pd.Series:
+    numeric = _to_numeric_series(values)
+    minimum = float(numeric.min()) if not numeric.empty else 0.0
+    maximum = float(numeric.max()) if not numeric.empty else 0.0
+    if maximum <= minimum:
+        return pd.Series(0.5, index=numeric.index)
+    return (0.1 + 0.8 * ((numeric - minimum) / (maximum - minimum))).clip(0.0, 1.0)
 
 
 def _to_numeric_series(value) -> pd.Series:
@@ -501,7 +571,7 @@ def _take_profit_hint(training: pd.DataFrame) -> pd.Series:
 
 def _session_loss_cap_hint(training: pd.DataFrame) -> pd.Series:
     value = 0.10
-    if not training.empty and "live_enabled" in training.columns and bool(training.iloc[0].get("live_enabled", False)):
+    if not training.empty and "live_enabled" in training.columns and strict_bool(training.iloc[0].get("live_enabled", False)):
         value = 0.08
     return pd.Series([value])
 

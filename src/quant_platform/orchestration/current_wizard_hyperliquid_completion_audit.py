@@ -18,6 +18,7 @@ from quant_platform.active_pipeline import (
     _write_text,
 )
 from quant_platform.economic_contract import CANONICAL_WIZARD_MODES
+from quant_platform.runtime_types import strict_bool
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -93,7 +94,7 @@ def build_current_wizard_hyperliquid_completion_audit(
         value in (None, "", False) for value in prefilters.values()
     )
     refresh_proven = bool(
-        refresh.get("sweep_complete")
+        strict_bool(refresh.get("sweep_complete"))
         and source_rows > 0
         and source_rows == source_rows_accounted
         and no_prefilters

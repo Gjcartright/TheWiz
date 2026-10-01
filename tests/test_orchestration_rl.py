@@ -502,6 +502,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
                 "regime": "trend",
                 "exact_mode": "Static Spread",
                 "profit_after_cost": 0.15,
+                "predicted_return": 0.15,
+                "prediction_is_oos": True,
                 "zscore": 1.2,
                 "spread": 0.08,
                 "closed_trades": 4,
@@ -515,6 +517,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
                 "regime": "range",
                 "exact_mode": "OU Spread",
                 "profit_after_cost": 0.06,
+                "predicted_return": 0.06,
+                "prediction_is_oos": True,
                 "zscore": -1.1,
                 "spread": 0.04,
                 "closed_trades": 6,
@@ -538,6 +542,8 @@ def test_run_rl_idea_scout_generates_hypothesis_artifacts(tmp_path):
     assert not ideas.empty
     assert ideas.iloc[0]["strategy"] == "Static Spread"
     assert ideas.iloc[0]["timeframe"] == "1d"
+    assert ideas.iloc[0]["status"] == "hypothesis_only"
+    assert ideas.iloc[0]["source"] == "rl_oos_prediction_hypothesis"
 
 
 def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
@@ -548,6 +554,8 @@ def test_orchestrator_rl_stage_includes_idea_scout(tmp_path):
             {
                 "pair": "BTC-USD/ETH-USD",
                 "profit_after_cost": 0.11,
+                "predicted_return": 0.11,
+                "prediction_is_oos": True,
                 "timeframe": "1d",
                 "strategy": "Static Spread",
                 "regime": "range",
@@ -625,6 +633,44 @@ def test_rl_policy_calibration_does_not_use_realized_hold_duration():
 
     assert short_policy == long_policy
     assert short_policy["target_hold_bars_by_timeframe"]["1d"] == 3
+
+
+def test_rl_simulation_strength_scaling_does_not_use_evaluation_future():
+    calibration = pd.DataFrame({"entry_abs_zscore": [1.0, 2.0, 3.0, 4.0]})
+    policy = _build_policy(calibration)
+    prefix = pd.DataFrame(
+        {
+            "trade_id": ["T1", "T2"],
+            "profit_after_cost": [0.02, 0.03],
+            "entry_abs_zscore": [3.0, 4.0],
+            "trade_bars": [10, 10],
+            "timeframe": ["1h", "1h"],
+        }
+    )
+    extended = pd.concat(
+        [
+            prefix,
+            pd.DataFrame(
+                {
+                    "trade_id": ["FUTURE"],
+                    "profit_after_cost": [0.01],
+                    "entry_abs_zscore": [1000.0],
+                    "trade_bars": [10],
+                    "timeframe": ["1h"],
+                }
+            ),
+        ],
+        ignore_index=True,
+    )
+
+    prefix_result = simulate_strategy_returns(prefix, policy)["frame"]
+    extended_result = simulate_strategy_returns(extended, policy)["frame"].iloc[:2]
+
+    pd.testing.assert_series_equal(
+        prefix_result["proposed_hold_bars"],
+        extended_result["proposed_hold_bars"],
+    )
+    assert prefix_result["zscore_strength_cap"].eq(policy["zscore_strength_cap"]).all()
 
 
 def test_rl_simulator_uses_net_strategy_return_without_second_cost_or_short_sign_flip():
@@ -771,11 +817,11 @@ def test_rl_acceptance_requires_validation_and_untouched_test_evidence():
         ],
         ignore_index=True,
     )
-    accepted = rl_acceptance_report(oos)
+    rejected = rl_acceptance_report(oos)
 
-    assert bool(accepted.iloc[0]["accepted"])
-    assert bool(accepted.iloc[0]["validation_passed"])
-    assert bool(accepted.iloc[0]["held_out_test_passed"])
+    assert not bool(rejected.iloc[0]["accepted"])
+    assert "missing_fields" in rejected.iloc[0]["blocker"]
+    assert not bool(rejected.iloc[0]["capital_authority"])
 
 
 def test_rl_concentration_separates_opportunity_mix_from_pnl_dependency():

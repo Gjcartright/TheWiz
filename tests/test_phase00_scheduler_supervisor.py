@@ -602,7 +602,7 @@ def test_wizard_supervisor_missing_effect_policy_blocks_before_slot_and_callback
     assert not slot_claims.exists()
 
 
-def test_abandoned_intent_without_slot_or_effects_is_recovered_retryable(
+def test_abandoned_intent_without_slot_or_effects_requires_manual_reauthorization(
     tmp_path: Path,
 ) -> None:
     _prepare_root(tmp_path)
@@ -651,13 +651,17 @@ def test_abandoned_intent_without_slot_or_effects_is_recovered_retryable(
     assert len(result.recovered_receipts) == 1
     receipt = result.recovered_receipts[0]
     assert receipt["terminal_status"] == "CRASH_RECOVERED"
-    assert receipt["retryable"] is True
+    assert receipt["retryable"] is False
+    assert "scheduler_crash_retry_requires_manual_reauthorization" in receipt["blockers"]
     assert receipt["intended_slot_credit"] is False
     assert receipt["order_submissions"] == 0
 
 
-def test_abandoned_reservation_without_provider_effect_is_failed_and_retryable(
+@pytest.mark.parametrize("absence_proof", [None, False, "true"])
+def test_abandoned_reservation_without_absence_proof_remains_open(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    absence_proof: object,
 ) -> None:
     _prepare_root(tmp_path)
     started = NOW - timedelta(minutes=5)
@@ -702,6 +706,15 @@ def test_abandoned_reservation_without_provider_effect_is_failed_and_retryable(
         max_total_requests=3,
         max_total_credits=10,
     )
+    original_accounting = authority.run_accounting
+    if absence_proof is not None:
+        def accounting_with_unproven_absence(**kwargs: object) -> dict[str, object]:
+            return {
+                **original_accounting(**kwargs),
+                "provider_effect_absence_proven": absence_proof,
+            }
+
+        monkeypatch.setattr(authority, "run_accounting", accounting_with_unproven_absence)
 
     result = recover_abandoned_scheduler_runs(
         root=tmp_path,
@@ -713,20 +726,20 @@ def test_abandoned_reservation_without_provider_effect_is_failed_and_retryable(
     )
 
     receipt = result.recovered_receipts[0]
-    accounting = authority.run_accounting(
+    accounting = original_accounting(
         run_id=run_id,
         intended_slot_id=intended_slot,
     )
-    assert receipt["retryable"] is True
-    assert accounting["open_reservations"] == 0
-    assert accounting["failed_reservations"] == 1
-    assert "external_reservation_abandoned_before_provider_effect" in receipt[
-        "blockers"
-    ]
+    assert receipt["retryable"] is False
+    assert "scheduler_crash_retry_requires_manual_reauthorization" in receipt["blockers"]
+    assert accounting["open_reservations"] == 1
+    assert accounting["failed_reservations"] == 0
+    assert "external_reservation_open" in receipt["blockers"]
+    assert "external_reservation_abandoned_before_provider_effect" not in receipt["blockers"]
     assert authority.external_reservation_retry_safe(
         reservation_id="reservation-only-crash",
         reservation_sha256=reservation_sha256,
-    ) is True
+    ) is False
 
 
 def test_abandoned_effects_are_recovered_with_exact_nonretryable_accounting(

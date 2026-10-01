@@ -15,6 +15,7 @@ from quant_platform.orchestration.teacher_adapters import build_teacher_evidence
 from quant_platform.orchestration.teacher_control_plane import build_teacher_council_control_plane
 from quant_platform.orchestration.teacher_evidence_materializer import materialize_teacher_evidence
 from quant_platform.orchestration.venue_capabilities import load_venue_policy
+from quant_platform.runtime_types import strict_bool
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -55,7 +56,7 @@ def run_dynamic_stage(stage: str, state: OrchestratorState, root: Path = ROOT) -
         )
     if stage == "hyperliquid_research_cycle":
         result = run_hyperliquid_research_cycle(root=root, collect_l2=False)
-        ready = bool(result.get("execution_allowed", False))
+        ready = strict_bool(result.get("execution_allowed", False))
         return StageResult(
             stage=stage,
             status=StageStatus.PASSED if ready else StageStatus.BLOCKED,

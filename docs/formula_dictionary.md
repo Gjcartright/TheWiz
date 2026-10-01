@@ -38,18 +38,18 @@
 
 ## ecm_strength
 - Formula: Share of the two HC1 adjustment coefficients that are significant at 5% and have the canonical expected signs (`gamma_x>0`, `gamma_y<0`).
-- Market interpretation: How forcefully the pair corrects deviations.
+- Market interpretation: Support for expected-direction correction across the two legs; the score does not measure coefficient magnitude.
 - Use case: Rank mean-reversion candidates and holding period confidence.
 - Failure mode: High in-sample strength can be overfit or stale.
 
 ## half_life
-- Formula: -ln(2) / ln(phi), where spread_t = c + phi*spread_{t-1} + noise.
+- Formula: `delta_t*ln(2)/(-ln(phi))`, where `spread_t=c+phi*spread_{t-1}+noise`, `0<phi<1`, and `delta_t` is the caller-declared duration of one regular observation interval in the desired output time unit. With `delta_t=1`, the result is in observation intervals.
 - Market interpretation: Expected decay horizon of spread shock.
 - Use case: Set entry horizon, max holding period, and threshold timing.
-- Failure mode: Invalid when spread is not stationary or phi is unstable.
+- Failure mode: The local fit rejects missing or irregular observations and `phi` outside `(0,1)`. A numerically valid fit alone does not establish stationarity or a reliable trading horizon.
 
 ## hurst
-- Formula: Scaling relation E[range/std] ~ n^H.
+- Formula: The local first-order detrended fluctuation analysis (DFA) estimator fits `log(F(n))=a+H*log(n)`, where `F(n)` is the root-mean-square fluctuation after linear detrending of the integrated, mean-centered series in windows of scale `n`.
 - Market interpretation: H < 0.5 suggests anti-persistence; H > 0.5 suggests trend persistence.
 - Use case: Filter mean-reversion vs trend regimes.
 - Failure mode: Sensitive to sample length, microstructure noise, and jumps.

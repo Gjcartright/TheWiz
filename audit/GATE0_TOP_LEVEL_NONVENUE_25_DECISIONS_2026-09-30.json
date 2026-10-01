@@ -1,0 +1,321 @@
+{
+  "held": [
+    {
+      "additional_visual_sha256": [
+        "c7f759625306cfd0c4b872ffd6ca52f572b68f6e13a3e8e3fed93341dcfd4456"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/ablations.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "70a177d338b942b9b2047e1b17cd20be8a56d507182635beb3fa169297a21259"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/apify_sources.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "c0cd5fc35dc5c2ee30703481546e91cfbec9bfd49e4434a45e1187c13021ee13"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/env.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "5160adff48ed36a210d421112e1de72c1d5241e248609cf607c278ec0cbbbd2c"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/execution.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "a647bc088d2625102a1b0a9c09b53117138c78e2b7146f81bf5ebb6042a20fce"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/family_matrix.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "6076f6040e8428279d9b6404137ad6dbf16b77c37affccdb54e3259544e507ec"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/meta_learning.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "8b42dd30c5515c5f960f47abab8f5f5275176354b5f9231ff6d015fc972aad65"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/pair_detail_ingestion.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "ca31ddcebf181ce19e99190453632e64fb68283381ec682fca0620c7ef7c6f08"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/research_ingestion.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "497ac78e4005d4c7db46c7de12f3180443100eff01e2a2c17a2113f4c1ecbbd9"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/research_knowledge_store.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "ef97f638ec827648d6d75bacd0b3f41deaea566f7f72f453221e321441c7587b"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/v2_run.py"
+    },
+    {
+      "additional_visual_sha256": [
+        "7ae6a7aea30ec8905d1d0e262a1c4ae4aa5c2f16cce7b651f0aaa7036700ffa9"
+      ],
+      "reason": "Variant-specific semantic review pending; this source row remains open.",
+      "relative_path": "src/quant_platform/youtube_brain.py"
+    }
+  ],
+  "held_for_visual_variant_review_count": 11,
+  "schema_version": "gate0.top_level_nonvenue_25_decisions.v1",
+  "selected": [
+    {
+      "active_head_sha256_at_decision": "82ebbeb59f7abff0f603b5cdcaff3e96de819d61a77c4c41b3bb723424a51709",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Large dashboard/system-check/recovery drift; current HEAD also changed after four-root freeze; review alongside CLI and stage fixtures.",
+      "relative_path": "src/quant_platform/active_pipeline.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "3a02690323ac110b1707da6e6fcd9b643705a66e13c80f15e2039e1846b65e9d",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Large command router drift adds venue/Phase00 authority paths; no standalone transplant.",
+      "relative_path": "src/quant_platform/cli.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only retired OU review; no current consumer or adopted gate.",
+      "relative_path": "src/quant_platform/desk_review.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only entry/exit coverage report; no current consumer or adopted output contract.",
+      "relative_path": "src/quant_platform/entry_exit_contracts.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "35a4a0b22795f28d30ac2e6010cc12ddcc1971c3ca2353ef1fea16e33d998c64",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/evidence_registry.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "e6af0314c96b81edf9b81ae5215bcbd52ef4df1c1bb7ecfd5eaaf1ace55dc5ce",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [
+        "577c657a968a73261d14e47ce6eaa888e2b3de68",
+        "1b1bcf74bbad9175855d723fae514d30d7180db5"
+      ],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active risk/backtest defaults and supplied-score preservation could launder proxy evidence; two separately tested narrow commits fail closed and recompute scores.",
+      "relative_path": "src/quant_platform/feature_engine.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_NARROW_PORT_REMAINDER_DEFERRED"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only project audit implementation; wrapper and direct tests remain pending.",
+      "relative_path": "src/quant_platform/forensic_project_audit.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "20b03bf025a175c348c736b705d45445672ce37d57b2b9aad803e7f764432dca",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime adds causal log, z-score, two-leg ledger and threshold formula descriptions; bind documented claims to math tests before port.",
+      "relative_path": "src/quant_platform/formula_registry.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "e08528a719228b55764f510ac54ef93f78e70ff65e911896ae512aa6d7f82c34",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/funding.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only portfolio optimizer; capital/risk policy binding for planned live route remains unadopted.",
+      "relative_path": "src/quant_platform/institutional_portfolio.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only independent pretrade verdict; no current execution integration.",
+      "relative_path": "src/quant_platform/institutional_risk.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only point-in-time certification; no adopted manifest/current consumer.",
+      "relative_path": "src/quant_platform/point_in_time_data.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "3932d3e3ca5482579c24b8abf342ffa7f37741a5306d09e21033ac9d6b75df98",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/regimes.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only content/record assertion layer; trial/custody chain needs joint review.",
+      "relative_path": "src/quant_platform/research_assertions.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "1f35afd9fffa5de8907bf93b1c499a25c70dbc20f90f11eee36c18d3b4c30969",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/research_extract_udemy.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "d36d2849aea7cdf0a96d89c1235f9218e6179f4c2837e8ef1fee39ef2be81f49",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/research_paper_math_audit.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "1f1d7bd7a6856cf8c88f63f0c1dc5fa66924dfbb55c5366e4123aed813953655",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [
+        "76ea7a9ad9a8322cb6946f317da4ce137c68ab42"
+      ],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active pair frame reversed canonical Y-on-X regression and return; isolated tested fix restores one-bar-lagged orientation.",
+      "relative_path": "src/quant_platform/research_paper_reproduction.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_NARROW_PORT_REMAINDER_DEFERRED"
+    },
+    {
+      "active_head_sha256_at_decision": "a4de48be60d00b138387844a0811e9e8dc0e43b73f8bae056133bc13d0a31077",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/research_paper_reviews.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "aa3e280256620fc32acb55ffbc1c1486c8a720a312a1d19ddf5270750fbbd9ec",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/research_papers.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only trial/result identity and SQLite registry; no current lifecycle binding.",
+      "relative_path": "src/quant_platform/research_trial_registry.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "52e84d769918a230f46472a62db4b63e4ff5833b6c691c43420f6537c071bcfc",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime declassifies retrospective Native/Wizard proxy partitions that active source treats as forward-walk/OOS; broad coupled evidence review required.",
+      "relative_path": "src/quant_platform/three_brain_system.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "34b1c64d79f02895cecad45d2a6350298c35ce155aaa0bfdcfc23767558a2d39",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/udemy_math_reconciliation.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "ff012e64d578a4205aafd200c85bac1c2ceada32ce1ec0c57151b2f666546629",
+      "active_runtime_relation": "active_equals_runtime",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active source exactly matches preserved runtime; older forensic/recovery variants are historical and carry no new authority.",
+      "relative_path": "src/quant_platform/udemy_transcript_vault.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_ACTIVE_RETAIN_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": null,
+      "active_runtime_relation": "active_absent",
+      "candidate_source_commits": [],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Runtime-only historical video sidecar publisher; companion scripts are pending.",
+      "relative_path": "src/quant_platform/video_review_sidecars.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_DEPENDENCY_DEFERRED_NO_PORT"
+    },
+    {
+      "active_head_sha256_at_decision": "7c942fc9a550ea119979bc7b0edf59d160e1fe09d08ba63f4ad08c74d4ce6324",
+      "active_runtime_relation": "active_differs_runtime",
+      "candidate_source_commits": [
+        "c91fac0ff4d35afa51ebdc366be280d0447b4d66"
+      ],
+      "queue_prior_status": "PRESERVED_REVIEW_REQUIRED_NO_PORT",
+      "rationale": "Active value-dependent source choice skips valid zeros and can change historical prefix after future data; isolated tested fix binds source by schema.",
+      "relative_path": "src/quant_platform/zscore_utils.py",
+      "reviewed_status": "REVIEWED_TOP_LEVEL_NONVENUE_NARROW_PORT_REMAINDER_DEFERRED"
+    }
+  ],
+  "selected_count": 25,
+  "source_report_36_paths": 36,
+  "source_report_path": "audit/GATE0_TOP_LEVEL_NONVENUE_SOURCE_RECONCILIATION_2026-09-30.json",
+  "source_report_sha256": "97731389fae2b5a42a82ccb7fcefb5e7e8bc6be56763f5014fbe4c15f575f1fc"
+}

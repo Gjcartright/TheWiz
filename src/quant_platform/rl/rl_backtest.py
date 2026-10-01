@@ -21,6 +21,7 @@ from quant_platform.rl.features import (
     write_feature_schema,
 )
 from quant_platform.rl.rl_acceptance import return_summary, rl_acceptance_report
+from quant_platform.runtime_types import strict_bool
 
 
 def run_rl_research(
@@ -142,6 +143,9 @@ def run_rl_research(
         policy_plan = _build_policy(
             calibration,
             entry_threshold_quantile=float(entry_threshold_quantile),
+            strength_calibration_source=(
+                "globally_purged_training_partition" if split_ready else "diagnostic_full_sample"
+            ),
         )
         evaluation_rows: list[dict[str, object]] = []
         per_trade_frames: list[pd.DataFrame] = []
@@ -200,7 +204,7 @@ def run_rl_research(
         blocked = _blocked_frame(str(acceptance.get("blocker", pd.Series(["rl_live_use_blocked"])).iloc[0]) or "rl_live_use_blocked", pair_id)
 
     leakage_audit["global_label_purge"] = bool(
-        not split_audit.empty and split_audit.get("global_label_purge", pd.Series([False])).fillna(False).astype(bool).all()
+        not split_audit.empty and split_audit.get("global_label_purge", pd.Series([False])).map(strict_bool).all()
     )
     leakage_audit["split_status"] = (
         "ready" if not split_audit.empty and split_audit.get("status", pd.Series(dtype=str)).eq("ready").all() else "blocked"
@@ -299,10 +303,17 @@ def run_rl_research(
 
 
 def _return_column(frame: pd.DataFrame) -> pd.Series:
+    """Extract trade outcomes without manufacturing missing or invalid returns."""
+    if not frame.columns.is_unique:
+        return pd.Series(np.nan, index=frame.index, dtype=float)
     for column in ["profit_after_cost", "realized_return", "trade_return", "return", "returns"]:
         if column in frame.columns:
-            return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
-    return pd.Series(0.0, index=frame.index)
+            raw = frame[column]
+            invalid_type = raw.map(
+                lambda value: isinstance(value, (bool, np.bool_, complex, np.complexfloating))
+            )
+            return pd.to_numeric(raw.where(~invalid_type, np.nan), errors="coerce")
+    return pd.Series(np.nan, index=frame.index, dtype=float)
 
 
 def _to_numeric(series: pd.Series) -> pd.Series:
@@ -318,17 +329,23 @@ def _build_policy(
     frame: pd.DataFrame,
     *,
     entry_threshold_quantile: float = 0.70,
+    strength_calibration_source: str = "policy_calibration_frame",
 ) -> dict[str, object]:
     data = frame.copy()
     zscores = _to_numeric(data.get("entry_abs_zscore", pd.Series(0.0, index=data.index)).fillna(0.0))
+    finite_zscores = zscores.replace([np.inf, -np.inf], np.nan).dropna()
+    entry_threshold = (
+        float(finite_zscores.quantile(entry_threshold_quantile))
+        if not finite_zscores.empty
+        else 0.0
+    )
+    strength_cap = float(finite_zscores.quantile(0.95)) if not finite_zscores.empty else 0.0
     return {
         "policy_name": "simulated_quantile_hold_policy",
-        "entry_threshold": (
-            float(zscores.quantile(entry_threshold_quantile))
-            if not zscores.empty
-            else 0.0
-        ),
+        "entry_threshold": entry_threshold,
         "entry_threshold_calibration_quantile": float(entry_threshold_quantile),
+        "zscore_strength_cap": max(strength_cap, entry_threshold, 1.0),
+        "strength_calibration_source": strength_calibration_source,
         "max_position_fraction": 1.0,
         "min_hold_bars": 1,
         "target_hold_bars_by_timeframe": {
@@ -365,7 +382,12 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
     take_profit_pct = max(float(policy.get("take_profit_pct", 0.12) or 0.12), 0.0)
     max_trade_drawdown_pct = max(float(policy.get("max_trade_drawdown_pct", stop_loss_pct) or stop_loss_pct), 0.0)
     session_loss_cap_pct = max(float(policy.get("session_loss_cap_pct", 0.15) or 0.15), 0.0)
-    z_cap = float(zscores.quantile(0.95) or 1.0) or 1.0
+    default_cap = max(entry_threshold, 1.0)
+    try:
+        configured_cap = float(policy.get("zscore_strength_cap", default_cap))
+    except (TypeError, ValueError):
+        configured_cap = default_cap
+    z_cap = max(configured_cap, default_cap) if math.isfinite(configured_cap) else default_cap
     position_fraction = min(max(float(policy.get("max_position_fraction", 1.0) or 1.0), 0.0), 1.0)
     hold_cap_pct = min(max(float(policy.get("hold_cap_pct", 1.0) or 1.0), 0.01), 1.0)
     volatility_penalty_weight = min(
@@ -480,6 +502,8 @@ def _simulate_strategy_returns(frame: pd.DataFrame, policy: dict[str, object]) -
             "entry_bar_index": _to_numeric(data.get("entry_bar_index", pd.Series(0, index=data.index))).fillna(0).astype(int),
             "exit_bar_index": data.get("exit_bar_index", pd.Series(0, index=data.index)).astype(str),
             "entry_signal_strength": zscores,
+            "zscore_strength_cap": z_cap,
+            "strength_calibration_source": policy.get("strength_calibration_source", "fixed_policy_default"),
             "entry_side": data["entry_side"],
             "proposed_hold_bars": proposed_hold,
             "actual_exit_bars": realized_hold_proxy.astype(int).clip(lower=1),

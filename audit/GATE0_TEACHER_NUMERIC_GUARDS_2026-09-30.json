@@ -1,0 +1,49 @@
+{
+  "base_commit": "c3f4d9d628f471eb993655d91806f9fe5b56039c",
+  "baseline_false_positives": {
+    "nan_policy_threshold_accepted": true,
+    "nonfinite_packet_lower_bound_is_infinite": true,
+    "nonfinite_packet_status": "SHADOW_TEST",
+    "previous_math_policy_status": "SHADOW_TEST",
+    "previous_math_student_policy_accepted": true
+  },
+  "baseline_probe_sha256": "d4e0f80bb68e2c3b601f1a6265f596ae2a158123030f1178370ad38421542258",
+  "decision": "FINITE_TEACHER_AND_CURRENT_MATH_GUARDS_EXACT_COMMIT_VERIFICATION_REQUIRED",
+  "isolated_suite": {
+    "errors": 0,
+    "failures": 0,
+    "junit_sha256": "6062e1a9c749717496364fc0ab074812494a9f5cf1e513d0b35310e47c5f2144",
+    "skipped": 0,
+    "tests": 2615
+  },
+  "live_trading_authorized": false,
+  "local_runtime_savepoint_sha256": {
+    "src/quant_platform/orchestration/teacher_contracts.py": "2d492ba7480bca3d3281da3429775b7a84277e5f35b51068fddc0040b4f5b2d6",
+    "src/quant_platform/orchestration/teacher_council.py": "6083b211042f6dc6694d3b017b5fbcf04d90b61cef97d90bc741a5598544c624"
+  },
+  "research_acceptance": "BLOCKED",
+  "review_decisions": [
+    "reject_nonfinite_teacher_and_student_contract_numbers",
+    "require_finite_council_thresholds_and_current_math_version",
+    "require_current_math_version_in_student_readiness_policy",
+    "reject_duplicate_teacher_ids_before_vote_aggregation",
+    "compute_finite_weighted_teacher_means_without_intermediate_overflow",
+    "retain_shadow_only_council_boundary"
+  ],
+  "schema_version": "thewiz.gate0.teacher_numeric_guards.v1",
+  "selected_file_sha256": {
+    "audit/verify_gate0_student_teacher_source_reconciliation.py": "26d5d501e7646e16efcb39bd7d2d146f4f6578a176485aad2a6950c20bb2d5b8",
+    "src/quant_platform/orchestration/student_readiness.py": "c930ce3cf42c920b1e5e32679ffd51348bfa9a5b19f2caa0280efd4c3c3e8a32",
+    "src/quant_platform/orchestration/teacher_contracts.py": "b1d9acc42dc36be51d7351f0327267cc33d86c3836daa988f835baf94d86aec9",
+    "src/quant_platform/orchestration/teacher_council.py": "3ba243194a70d284c57ec0bdf4f7e08148c396abe83dabd12140ff63c21ecc16",
+    "tests/test_teacher_council.py": "322b46f5c2fbdb06238c6535ef0ec731c5c66815c33ecb79c1ebefcf978c0374"
+  },
+  "testnet_order_authority": false,
+  "union_source_queue": {
+    "distinct_paths": 811,
+    "file_sha256": "d0bcc2f91db3a89f7c7cae105b87f0f1bb1b1c835474abac746d67334766c65b",
+    "nonsource_paths": 18,
+    "remaining_semantic_review_paths": 658,
+    "reviewed_paths": 135
+  }
+}

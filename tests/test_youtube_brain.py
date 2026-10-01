@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
+import quant_platform.youtube_brain as youtube_brain_module
 from quant_platform.research_extract_youtube import extract_youtube_research
 from quant_platform.research_ingestion import ingest_research_source
 from quant_platform.youtube_brain import (
@@ -146,6 +147,60 @@ def test_youtube_extraction_requires_direct_video_and_avoids_ou_substring(tmp_pa
     assert registry.loc[registry["source_type"].eq("youtube"), "processed_at"].astype(str).ne("").all()
 
 
+def test_youtube_brain_does_not_call_external_priors_native_ready(tmp_path, monkeypatch):
+    _write_hudson_thames_recommendations(tmp_path)
+    atomic_targets = []
+    atomic_write_csv = youtube_brain_module.atomic_write_csv
+
+    def track_atomic_csv(frame, path, *args, **kwargs):
+        atomic_targets.append(path)
+        return atomic_write_csv(frame, path, *args, **kwargs)
+
+    monkeypatch.setattr(youtube_brain_module, "atomic_write_csv", track_atomic_csv)
+
+    result = build_youtube_brain(root=tmp_path)
+    status = pd.read_csv(result.paths["brain_status"])
+
+    assert not bool(status.iloc[0]["native_evidence_ready"])
+    assert status.iloc[0]["status"] == "blocked_external_priors_only"
+    assert status.iloc[0]["external_research_priors"] == 1
+
+    dashboard = build_youtube_brain_dashboard(root=tmp_path)
+    dashboard_status = pd.read_csv(dashboard.paths["youtube_brain_status"])
+    assert not bool(dashboard_status.iloc[0]["native_evidence_ready"])
+    assert dashboard_status.iloc[0]["status"] == "blocked_external_priors_only"
+    assert result.paths["brain_status"] in atomic_targets
+    assert dashboard.paths["youtube_brain_status"] in atomic_targets
+
+
+def test_youtube_brain_without_claims_stays_blocked(tmp_path):
+    result = build_youtube_brain(root=tmp_path)
+    status = pd.read_csv(result.paths["brain_status"])
+
+    assert not bool(status.iloc[0]["native_evidence_ready"])
+    assert status.iloc[0]["status"] == "blocked_no_claims"
+
+    dashboard = build_youtube_brain_dashboard(root=tmp_path)
+    dashboard_status = pd.read_csv(dashboard.paths["youtube_brain_status"])
+    assert not bool(dashboard_status.iloc[0]["native_evidence_ready"])
+    assert dashboard_status.iloc[0]["status"] == "blocked_no_native_evidence"
+
+
+def test_youtube_native_claims_without_formulas_do_not_mark_research_ready(tmp_path):
+    _write_audit(tmp_path)
+    result = build_youtube_brain(root=tmp_path)
+    status = pd.read_csv(result.paths["brain_status"])
+
+    assert status.iloc[0]["native_channel_claims"] > 0
+    assert status.iloc[0]["formulas"] == 0
+    assert not bool(status.iloc[0]["native_evidence_ready"])
+    assert status.iloc[0]["status"] == "blocked_native_formulas_missing"
+
+    dashboard = build_youtube_brain_dashboard(root=tmp_path)
+    dashboard_status = pd.read_csv(dashboard.paths["youtube_brain_status"])
+    assert dashboard_status.iloc[0]["status"] == "blocked_native_formulas_missing"
+
+
 def test_incremental_collection_detects_new_and_changed_videos(tmp_path):
     first = _write_catalog(
         tmp_path / "catalog-1.json",
@@ -190,12 +245,15 @@ def test_youtube_brain_builds_safe_hypotheses_and_idempotent_outcome_memory(tmp_
     brain_result = build_youtube_brain(root=tmp_path)
     external_priors = pd.read_csv(brain_result.paths["external_research_priors"])
     claims = pd.read_csv(brain_result.paths["claims"])
+    brain_status = pd.read_csv(brain_result.paths["brain_status"])
 
     assert len(external_priors) == 1
     assert external_priors.iloc[0]["source_channel"] == "Hudson & Thames"
     assert external_priors.iloc[0]["promotion_authority"] == "none_research_only"
     assert not bool(external_priors.iloc[0]["trade_authorized"])
     assert claims["claim_id"].astype(str).str.startswith("ytx_").any()
+    assert bool(brain_status.iloc[0]["native_evidence_ready"])
+    assert brain_status.iloc[0]["status"] == "native_research_ready"
 
     active = tmp_path / "reports" / "active"
     active.mkdir(parents=True, exist_ok=True)

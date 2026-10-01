@@ -1,0 +1,23 @@
+{
+  "errors": [],
+  "full_junit_checked": true,
+  "full_suite_evidence": {
+    "errors": 0,
+    "failures": 0,
+    "sha256": "3dd0054246f550edba13ebac7056806973a4a9dfe07fcdd04d6e7301fa1dcaab",
+    "static_signal_tests": 39,
+    "tests": 2841
+  },
+  "queue_paths": 27,
+  "review_states": {
+    "PENDING_BLOCKED": 5,
+    "PENDING_DEFERRED": 3,
+    "REVIEWED_EXACT_PORT": 5,
+    "REVIEWED_NO_PORT": 6,
+    "REVIEWED_SELECTIVE_PORT": 8
+  },
+  "schema_version": "thewiz.gate0.strategy_desks_queue_verifier.v1",
+  "verified": true,
+  "visual_variant_addenda": 4,
+  "visual_variant_hashes": 10
+}

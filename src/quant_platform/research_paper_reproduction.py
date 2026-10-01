@@ -387,20 +387,23 @@ def build_causal_pair_frame(
     logs = np.log(prices)
     x = logs[asset_x]
     y = logs[asset_y]
+    # Canonical project orientation: Y is the dependent leg and X is the
+    # independent leg, so Y = alpha + beta * X + residual.  Keep the rolling
+    # moments one bar behind the current observation to prevent look-ahead.
     beta = (
-        x.rolling(hedge_window, min_periods=hedge_window)
-        .cov(y)
+        y.rolling(hedge_window, min_periods=hedge_window)
+        .cov(x)
         .shift(1)
-        .div(y.rolling(hedge_window, min_periods=hedge_window).var().shift(1))
+        .div(x.rolling(hedge_window, min_periods=hedge_window).var().shift(1))
     )
-    alpha = x.rolling(hedge_window, min_periods=hedge_window).mean().shift(1) - beta * y.rolling(
+    alpha = y.rolling(hedge_window, min_periods=hedge_window).mean().shift(1) - beta * x.rolling(
         hedge_window, min_periods=hedge_window
     ).mean().shift(1)
-    spread = x - alpha - beta * y
+    spread = y - alpha - beta * x
     spread_mean = spread.rolling(zscore_window, min_periods=zscore_window).mean().shift(1)
     spread_std = spread.rolling(zscore_window, min_periods=zscore_window).std().shift(1)
     returns = logs.diff()
-    pair_return = (returns[asset_x] - beta * returns[asset_y]) / (1.0 + beta.abs())
+    pair_return = (returns[asset_y] - beta * returns[asset_x]) / (1.0 + beta.abs())
     frame = pd.DataFrame(
         {
             "beta": beta,

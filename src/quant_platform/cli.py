@@ -181,6 +181,7 @@ from quant_platform.meta_learning import (
     TradeRecord,
     write_learning_event_summary_report,
 )
+from quant_platform.runtime_types import strict_bool
 from quant_platform.ml_filter import (
     build_trade_filter_dataset,
     shadow_model_branch_comparison,
@@ -9137,7 +9138,7 @@ def _priority_readiness_report(
     learning_outcomes = int(combined_row.get("outcome_events", 0) or 0)
     learning_audit_only = int(combined_row.get("audit_only_events", 0) or 0)
     learning_outcomes_remaining = int(combined_row.get("outcome_events_remaining", 100) or 0)
-    learning_ready_for_modeling = bool(combined_row.get("ready_for_modeling", False))
+    learning_ready_for_modeling = strict_bool(combined_row.get("ready_for_modeling", False))
     learning_ready = learning_ready_for_modeling
     learning_blocker = (
         "missing_learning_events" if learning_events == 0 else "missing_model_ready_outcomes"
@@ -9720,7 +9721,7 @@ def _all_gates_ready(gates: pd.DataFrame, gate_names: list[str]) -> bool:
 def _gate_ready_from_index(gates: pd.DataFrame, gate: str) -> bool:
     if gates.empty or gate not in gates.index or "ready" not in gates.columns:
         return False
-    return bool(gates.loc[gate, "ready"])
+    return strict_bool(gates.loc[gate, "ready"])
 
 
 def _gate_value(gates: pd.DataFrame, gate: str, column: str) -> str:
@@ -9850,7 +9851,7 @@ def _learning_dashboard_metric(frame: pd.DataFrame) -> str:
         f"events={int(row.get('events', 0) or 0)};"
         f"outcomes={int(row.get('outcome_events', 0) or 0)};"
         f"outcomes_remaining={int(row.get('outcome_events_remaining', 0) or 0)};"
-        f"ready_for_modeling={bool(row.get('ready_for_modeling', False))}"
+        f"ready_for_modeling={strict_bool(row.get('ready_for_modeling', False))}"
     )
 
 

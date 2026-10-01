@@ -23,6 +23,7 @@ from quant_platform.rl.rl_acceptance import (
     return_summary,
 )
 from quant_platform.rl.rl_backtest import simulate_strategy_returns
+from quant_platform.runtime_types import strict_bool
 
 
 def run_rl_learning_cycle(
@@ -193,7 +194,7 @@ def run_rl_learning_cycle(
                 source_frame=test,
             )
             test_gates = _policy_gate_outcomes(test_summary, baseline_test, len(test), prefix="test")
-            test_gate_passed = bool(test_gates["test_eligible"])
+            test_gate_passed = strict_bool(test_gates["test_eligible"])
             for key, value in test_summary.items():
                 if key != "variant":
                     best_payload[f"test_{key}"] = value
@@ -207,7 +208,7 @@ def run_rl_learning_cycle(
             )
             per_policy_logs.append(test_log)
 
-        validation_passed = bool(top.get("validation_eligible", False)) and split_ready
+        validation_passed = strict_bool(top.get("validation_eligible", False)) and split_ready
         oos_validated = validation_passed and test_gate_passed
         best_payload["policy_selection_status"] = "OOS_VALIDATED" if oos_validated else "REJECTED"
         best_payload["status"] = "research_only" if oos_validated else "blocked"
@@ -245,7 +246,7 @@ def run_rl_learning_cycle(
                 "status": best_payload.get("status", "blocked"),
                 "blocker": best_payload.get("blocker", ""),
                 "policy_selection_status": best_payload.get("policy_selection_status", "REJECTED"),
-                "oos_test_passed": bool(best_payload.get("test_eligible", False)),
+                "oos_test_passed": strict_bool(best_payload.get("test_eligible", False)),
                 "split_ready": split_ready,
                 "live_enabled": False,
                 "generated_at": _now(),
@@ -421,8 +422,12 @@ def _blocked_split_audit(blocker: str, **values: object) -> pd.DataFrame:
 def _return_series(frame: pd.DataFrame) -> pd.Series:
     for column in ("profit_after_cost", "realized_return", "trade_return", "return", "returns"):
         if column in frame.columns:
-            return pd.to_numeric(frame[column], errors="coerce").fillna(0.0)
-    return pd.Series(0.0, index=frame.index)
+            if not frame.columns.is_unique:
+                return pd.Series(np.nan, index=frame.index, dtype=float)
+            raw = frame[column]
+            invalid_type = raw.map(lambda value: isinstance(value, (bool, np.bool_, complex, np.complexfloating)))
+            return pd.to_numeric(raw.where(~invalid_type, np.nan), errors="coerce")
+    return pd.Series(np.nan, index=frame.index, dtype=float)
 
 
 def _policy_gate_outcomes(
@@ -433,18 +438,25 @@ def _policy_gate_outcomes(
     prefix: str,
 ) -> dict[str, object]:
     minimum_trades = minimum_trade_count(total_rows)
+    def metric(row: dict[str, object], key: str) -> float:
+        value = row.get(key)
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, float, np.integer, np.floating)):
+            return float("nan")
+        return float(value) if np.isfinite(value) else float("nan")
+
     checks = {
-        "profit_factor_improves": float(summary.get("profit_factor", 0.0) or 0.0) > float(baseline.get("profit_factor", 0.0) or 0.0),
-        "drawdown_not_worse": float(summary.get("max_drawdown", 1.0) or 1.0) <= float(baseline.get("max_drawdown", 1.0) or 1.0),
-        "sharpe_not_materially_worse": float(summary.get("sharpe", 0.0) or 0.0) >= float(baseline.get("sharpe", 0.0) or 0.0) - 0.25,
-        "minimum_trades": int(summary.get("trades", 0) or 0) >= minimum_trades,
-        "minimum_take_rate": float(summary.get("take_rate", 0.0) or 0.0) >= MINIMUM_TAKE_RATE,
-        "pair_concentration": float(summary.get("pair_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "pair_pnl_concentration": float(summary.get("pair_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "timeframe_selection_concentration": float(summary.get("timeframe_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "timeframe_pnl_concentration": float(summary.get("timeframe_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "regime_concentration": float(summary.get("regime_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
-        "regime_pnl_concentration": float(summary.get("regime_pnl_concentration", 1.0) or 1.0) <= MAXIMUM_CONCENTRATION,
+        "qualified_calendar_metrics": summary.get("metrics_status") == "qualified" and baseline.get("metrics_status") == "qualified",
+        "profit_factor_improves": metric(summary, "profit_factor") > metric(baseline, "profit_factor"),
+        "drawdown_not_worse": metric(summary, "max_drawdown") <= metric(baseline, "max_drawdown"),
+        "sharpe_not_materially_worse": metric(summary, "sharpe") >= metric(baseline, "sharpe") - 0.25,
+        "minimum_trades": metric(summary, "trades") >= minimum_trades,
+        "minimum_take_rate": metric(summary, "take_rate") >= MINIMUM_TAKE_RATE,
+        "pair_concentration": metric(summary, "pair_concentration") <= MAXIMUM_CONCENTRATION,
+        "pair_pnl_concentration": metric(summary, "pair_pnl_concentration") <= MAXIMUM_CONCENTRATION,
+        "timeframe_selection_concentration": metric(summary, "timeframe_concentration") <= MAXIMUM_CONCENTRATION,
+        "timeframe_pnl_concentration": metric(summary, "timeframe_pnl_concentration") <= MAXIMUM_CONCENTRATION,
+        "regime_concentration": metric(summary, "regime_concentration") <= MAXIMUM_CONCENTRATION,
+        "regime_pnl_concentration": metric(summary, "regime_pnl_concentration") <= MAXIMUM_CONCENTRATION,
     }
     failed = [name for name, passed in checks.items() if not passed]
     output: dict[str, object] = {
@@ -464,7 +476,7 @@ def _select_policy_candidate(backtests: pd.DataFrame) -> pd.DataFrame:
     if backtests.empty:
         return backtests.head(0)
     ranked = backtests.copy()
-    ranked["_eligible_rank"] = ranked.get("validation_eligible", False).fillna(False).astype(bool).astype(int)
+    ranked["_eligible_rank"] = ranked.get("validation_eligible", False).map(strict_bool).astype(int)
     ranked["_gate_rank"] = pd.to_numeric(ranked.get("validation_gate_count", 0), errors="coerce").fillna(0)
     ranked["_pf_rank"] = pd.to_numeric(ranked.get("profit_factor", 0.0), errors="coerce").replace([np.inf, -np.inf], 10.0).fillna(0.0).clip(upper=10.0)
     ranked["_sharpe_rank"] = pd.to_numeric(ranked.get("sharpe", 0.0), errors="coerce").fillna(0.0)

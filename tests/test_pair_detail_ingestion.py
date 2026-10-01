@@ -17,6 +17,21 @@ from quant_platform.pair_detail_ingestion import (
     write_pair_detail_reports,
 )
 
+
+def test_snapshot_from_payload_parses_persisted_ecm_flags_strictly():
+    snapshot = pair_detail_ingestion.snapshot_from_payload({
+        "pair_id": "test",
+        "pair": "BTC-USD-ETH-USD",
+        "ecm_x_available": "False",
+        "ecm_y_available": "0",
+        "ecm_strength_available": "True",
+        "ecm_deviation_override_available": "False",
+    })
+    assert snapshot.ecm_x_available is False
+    assert snapshot.ecm_y_available is False
+    assert snapshot.ecm_strength_available is True
+    assert snapshot.ecm_deviation_override_available is False
+
 PAIR_DETAIL_TEXT = """Crypto Wizards
 BNB-USD STX-USD dyd
 pair/1

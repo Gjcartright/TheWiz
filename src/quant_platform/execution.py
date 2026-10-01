@@ -20,6 +20,7 @@ from urllib.request import Request, urlopen
 from uuid import uuid4
 
 import pandas as pd
+from quant_platform.runtime_types import strict_bool
 
 from quant_platform.orchestration.corrective_external_effects import (
     current_external_effect_issuer,
@@ -444,12 +445,12 @@ def validate_venue_order_client_adapter(venue: str, adapter_path: str | None = N
         report["has_submit_pair"] = callable(submit_pair)
         report["signature_accepts_pair_config"] = _place_order_accepts_intent_config(submit_pair)
         report["pair_submission_capable"] = bool(
-            getattr(adapter, "pair_submission_capable", False)
-            and report["has_submit_pair"]
-            and report["signature_accepts_pair_config"]
+            strict_bool(getattr(adapter, "pair_submission_capable", False))
+            and strict_bool(report["has_submit_pair"])
+            and strict_bool(report["signature_accepts_pair_config"])
         )
-        report["exchange_submission_capable"] = bool(getattr(adapter, "exchange_submission_capable", True))
-        report["record_only"] = bool(getattr(adapter, "record_only", False))
+        report["exchange_submission_capable"] = strict_bool(getattr(adapter, "exchange_submission_capable", True))
+        report["record_only"] = strict_bool(getattr(adapter, "record_only", False))
         report["valid"] = bool(report["has_place_order"] and report["signature_accepts_intent_config"])
         if not report["signature_accepts_intent_config"]:
             report["error"] = "place_order must accept intent and config arguments"
@@ -840,7 +841,7 @@ def refresh_injective_spot_first_candidate_shortlist(root: Path = ROOT, max_pair
         return frame
 
     shortlist = supported_universe[
-        supported_universe.get("injective_supported_for_spot", pd.Series(dtype=bool)).fillna(False).astype(bool)
+        supported_universe.get("injective_supported_for_spot", pd.Series(dtype=bool)).map(strict_bool)
     ].copy()
     if shortlist.empty:
         frame = pd.DataFrame(columns=columns)
@@ -1147,7 +1148,7 @@ def _gmx_market_indexes(root: Path = ROOT) -> tuple[dict[str, list[str]], list[s
     if inventory.empty:
         return market_index, blockers or ["gmx_testnet_market_inventory_empty"]
     working = inventory.copy()
-    tradable = working.get("tradable_perp", pd.Series(dtype=bool)).fillna(False).astype(bool)
+    tradable = working.get("tradable_perp", pd.Series(dtype=bool)).map(strict_bool)
     for _, row in working.loc[tradable].iterrows():
         asset = str(row.get("asset", "") or "").upper().strip()
         market = str(row.get("market_symbol", "") or "").strip()
@@ -1288,7 +1289,7 @@ def refresh_gmx_testnet_candidate_shortlist(root: Path = ROOT, max_pairs: int = 
         return frame
 
     supported = compatibility[
-        compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool)).fillna(False).astype(bool)
+        compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool)).map(strict_bool)
     ].copy()
     if supported.empty:
         frame = pd.DataFrame(columns=columns)
@@ -1838,7 +1839,7 @@ def _hyperliquid_market_indexes(root: Path = ROOT) -> tuple[dict[str, list[str]]
     market_index: dict[str, list[str]] = {}
     if inventory.empty:
         return market_index, blockers or ["hyperliquid_testnet_market_inventory_empty"]
-    tradable = inventory.get("tradable_perp", pd.Series(dtype=bool)).fillna(False).astype(bool)
+    tradable = inventory.get("tradable_perp", pd.Series(dtype=bool)).map(strict_bool)
     for _, row in inventory.loc[tradable].iterrows():
         asset = str(row.get("asset", "") or "").upper().strip()
         label = str(row.get("universe_name", "") or row.get("asset", "") or "").strip()
@@ -1927,10 +1928,10 @@ def hyperliquid_testnet_order_preflight_status() -> dict[str, object]:
     )
     return {
         "ready": ready,
-        "adapter_configured": bool(adapter_contract.get("configured")),
-        "adapter_valid": bool(adapter_contract.get("valid")),
-        "exchange_submission_capable": bool(adapter_contract.get("exchange_submission_capable")),
-        "single_leg_order_path_blocked": bool(adapter_contract.get("record_only")),
+        "adapter_configured": strict_bool(adapter_contract.get("configured")),
+        "adapter_valid": strict_bool(adapter_contract.get("valid")),
+        "exchange_submission_capable": strict_bool(adapter_contract.get("exchange_submission_capable")),
+        "single_leg_order_path_blocked": strict_bool(adapter_contract.get("record_only")),
         "pair_executor_available": pair_executor_available,
         "account_address_configured": account_configured,
         "master_address_configured": account_configured,
@@ -2050,7 +2051,7 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
         return frame
 
     supported = compatibility[
-        compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool)).fillna(False).astype(bool)
+        compatibility.get("mirrorable_for_paper", pd.Series(dtype=bool)).map(strict_bool)
     ].copy()
     if supported.empty:
         frame = pd.DataFrame(columns=columns)
@@ -2083,7 +2084,7 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
     next_actions: list[str] = []
     for _, row in supported.iterrows():
         bucket = str(row.get("decision_bucket", "") or "").strip().upper()
-        if bool(preflight["ready"]) and bucket == "PROMOTE":
+        if strict_bool(preflight["ready"]) and bucket == "PROMOTE":
             lane_status.append("hyperliquid_supported_and_preflight_ready")
             next_actions.append("paper_journal_then_manual_submit_approval")
         elif bucket == "PROMOTE":
@@ -2096,12 +2097,12 @@ def refresh_hyperliquid_testnet_candidate_shortlist(root: Path = ROOT, max_pairs
             lane_status.append("hyperliquid_supported_but_research_not_promoted")
             next_actions.append("repair_research_filters_before_hyperliquid_submit")
     supported["hyperliquid_lane_status"] = lane_status
-    supported["order_preflight_ready"] = bool(preflight["ready"])
+    supported["order_preflight_ready"] = strict_bool(preflight["ready"])
     supported["order_preflight_blocker"] = str(preflight["blocker"])
-    supported["order_adapter_configured"] = bool(preflight["adapter_configured"])
-    supported["account_address_configured"] = bool(preflight["account_address_configured"])
-    supported["secret_key_configured"] = bool(preflight["secret_key_configured"])
-    supported["submit_orders_enabled"] = bool(preflight["submit_orders_enabled"])
+    supported["order_adapter_configured"] = strict_bool(preflight["adapter_configured"])
+    supported["account_address_configured"] = strict_bool(preflight["account_address_configured"])
+    supported["secret_key_configured"] = strict_bool(preflight["secret_key_configured"])
+    supported["submit_orders_enabled"] = strict_bool(preflight["submit_orders_enabled"])
     supported["next_action"] = next_actions
     supported = supported.reset_index(drop=True)
     supported.insert(0, "shortlist_rank", supported.index + 1)
@@ -2352,7 +2353,7 @@ def refresh_non_eth_route_submit_queue(root: Path = ROOT, queue_path: Path | Non
             compatible = False
             if market_record:
                 status = str(market_record.get("last_status", "") or "").strip() or "market_not_in_execution_compatibility_table"
-                compatible = bool(market_record.get("compatible", False))
+                compatible = strict_bool(market_record.get("compatible", False))
             route_suffix = ""
             confirmed_routes = ""
             if market_record:
@@ -2486,35 +2487,23 @@ def effective_dydx_account_state_snapshot(
     config: DydxNetworkConfig | None = None,
     root: Path = ROOT,
 ) -> dict[str, object]:
-    live = dydx_account_state_snapshot(config=config)
+    """Keep live indexer state authoritative; a browser claim is advisory."""
+
+    live = dict(dydx_account_state_snapshot(config=config))
     override = load_browser_account_state_override(root=root)
     live_open_markets = [str(market) for market in live.get("open_markets", []) if str(market)]
     live_positions = live.get("positions", [])
     live_has_open_positions = bool(live_open_markets or live_positions)
-    if str(override.get("confirmed_flat", "")).strip().lower() in {"true", "1", "yes"}:
-        if bool(live.get("checked", False)) and live_has_open_positions:
-            live = dict(live)
+    live["source"] = "dydx_indexer"
+    if override:
+        live["browser_override_present"] = True
+        live["browser_override_authority"] = False
+        live["browser_override_confirmed_at_utc"] = str(override.get("confirmed_at_utc", ""))
+        live["browser_override_note"] = str(override.get("note", ""))
+        if override.get("confirmed_flat") is True and strict_bool(live.get("checked", False)) and live_has_open_positions:
             live["source"] = "dydx_indexer_browser_override_conflict"
-            live["browser_override_confirmed_at_utc"] = str(override.get("confirmed_at_utc", ""))
-            live["browser_override_note"] = str(override.get("note", ""))
             live["browser_override_conflict"] = True
             live["blocker"] = str(live.get("blocker", "") or "orphan_leg_open")
-            return live
-        return {
-            "checked": True,
-            "open_markets": [],
-            "positions": [],
-            "blocker": "",
-            "source": "browser_override",
-            "browser_override_confirmed_at_utc": str(override.get("confirmed_at_utc", "")),
-            "browser_override_note": str(override.get("note", "")),
-            "live_snapshot_checked": bool(live.get("checked", False)),
-            "live_snapshot_open_markets": live.get("open_markets", []),
-            "live_snapshot_positions": live.get("positions", []),
-            "live_snapshot_blocker": str(live.get("blocker", "")),
-        }
-    live = dict(live)
-    live["source"] = "dydx_indexer"
     return live
 
 
@@ -3775,7 +3764,7 @@ def refresh_live_paper_trade_monitor(root: Path = ROOT) -> dict[str, Path]:
         changed = bool(
             not pair_detail.empty
             and (
-                pair_detail.get("changed_vs_last_capture", pd.Series(dtype=bool)).fillna(False).astype(bool).any()
+                pair_detail.get("changed_vs_last_capture", pd.Series(dtype=bool)).map(strict_bool).any()
                 or pair_detail.get("delta_zscore_norm", pd.Series(dtype=float)).fillna(0).astype(float).ne(0).any()
                 or pair_detail.get("delta_zscore_roll", pd.Series(dtype=float)).fillna(0).astype(float).ne(0).any()
                 or pair_detail.get("delta_return_total", pd.Series(dtype=float)).fillna(0).astype(float).ne(0).any()
@@ -3947,7 +3936,7 @@ def refresh_paper_trade_decision_report(root: Path = ROOT) -> pd.DataFrame:
     paper_gate_ready = bool(
         not preflight.empty
         and "ready" in preflight.columns
-        and preflight["ready"].fillna(False).astype(bool).all()
+        and preflight["ready"].map(strict_bool).all()
     )
 
     route_by_pair = {}

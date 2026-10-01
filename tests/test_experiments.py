@@ -1,7 +1,9 @@
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 
-from quant_platform.backtest import CostModel
+from quant_platform.backtest import BacktestResult, CostModel
 from quant_platform.experiments import (
     AcceptanceGate,
     CostBucket,
@@ -239,6 +241,10 @@ def accepted_strategy_rows() -> pd.DataFrame:
                     "max_drawdown": 0.08,
                     "win_rate": 0.56,
                     "total_return": 0.12,
+                    "open_trades": 0,
+                    "sharpe_status": "valid",
+                    "reconciliation_error": 0.0,
+                    "expectancy_lower_95": 0.005,
                     "observations": 500,
                     "backtest_mode": "two_leg",
                     "has_price_x": True,
@@ -291,6 +297,72 @@ def test_strategy_acceptance_requires_multi_pair_and_required_cost_buckets():
     assert "missing_cost_buckets:stress" in missing_stress["acceptance_reason"].iloc[0]
 
 
+def test_acceptance_gate_rejects_nonfinite_and_unreconciled_open_backtest():
+    gate = AcceptanceGate()
+    valid = BacktestResult(
+        trades=250, profit_factor=2.1, expectancy=0.01, sharpe=1.8,
+        max_drawdown=0.05, win_rate=0.55, total_return=0.1,
+        sharpe_status="valid", expectancy_lower_95=0.005,
+    )
+    assert gate.evaluate(valid) == (True, "passed")
+    invalid = replace(
+        valid, profit_factor=float("inf"), sharpe_status="blocked",
+        open_trades=1, reconciliation_error=0.1, expectancy_lower_95=None,
+    )
+    accepted, reason = gate.evaluate(invalid)
+    assert not accepted
+    assert "profit_factor_nonfinite" in reason
+    assert "sharpe_invalid_or_unknown_interval" in reason
+    assert "open_trades_at_end" in reason
+    assert "expectancy_lower_95<=0_or_missing" in reason
+    assert "reconciliation_error>" in reason
+
+
+def test_strategy_acceptance_rechecks_claimed_eligible_rows():
+    rows = accepted_strategy_rows()
+    rows.loc[0, "open_trades"] = 1
+    report = strategy_acceptance_report(rows, AcceptanceGate())
+    assert not bool(report["production_eligible"].iloc[0])
+    assert "unverified_eligible_runs:1" in report["acceptance_reason"].iloc[0]
+
+    missing = accepted_strategy_rows().drop(columns=["expectancy_lower_95"])
+    report = strategy_acceptance_report(missing, AcceptanceGate())
+    assert not bool(report["production_eligible"].iloc[0])
+    assert "unverified_eligible_runs:4" in report["acceptance_reason"].iloc[0]
+
+    malformed = accepted_strategy_rows()
+    malformed["expectancy_lower_95"] = malformed["expectancy_lower_95"].astype(object)
+    malformed.at[0, "expectancy_lower_95"] = [0.005]
+    report = strategy_acceptance_report(malformed, AcceptanceGate())
+    assert not bool(report["production_eligible"].iloc[0])
+    assert "unverified_eligible_runs:1" in report["acceptance_reason"].iloc[0]
+
+
+def test_strategy_acceptance_counts_repriced_trades_once():
+    rows = accepted_strategy_rows()
+    rows["trades"] = 70
+    report = strategy_acceptance_report(rows, AcceptanceGate(min_trades=50))
+    row = report.iloc[0]
+    assert bool(row["production_eligible"])
+    assert row["total_trades"] == 140
+    assert not bool(row["preferred_eligible"])
+    assert "total_trades<250" in row["preferred_reason"]
+
+
+def test_strategy_acceptance_rejects_string_boolean_execution_flags():
+    rows = accepted_strategy_rows()
+    rows["has_beta"] = "False"
+    report = strategy_acceptance_report(rows, AcceptanceGate())
+    assert not bool(report["production_eligible"].iloc[0])
+    assert "two_leg_execution_input_pairs<2" in report["acceptance_reason"].iloc[0]
+
+    rows = accepted_strategy_rows()
+    rows["eligible"] = "True"
+    report = strategy_acceptance_report(rows, AcceptanceGate())
+    assert not bool(report["production_eligible"].iloc[0])
+    assert "passing_pairs<2" in report["acceptance_reason"].iloc[0]
+
+
 def test_strategy_acceptance_rejects_spread_only_results_for_production():
     gate = AcceptanceGate()
 
@@ -326,6 +398,8 @@ def test_write_reports_includes_acceptance_report(tmp_path):
         "strategy_id",
         "strategy_name",
         "family",
+        "implementation_kind",
+        "acceptance_authority",
         "production_eligible",
         "preferred_eligible",
         "research_eligible",

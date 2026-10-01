@@ -1,0 +1,24 @@
+{
+  "authority": "DISPOSABLE_LOCAL_TEST_NO_EXTERNAL_OR_ORDER",
+  "integration_errors": 0,
+  "integration_failure_causes": {
+    "PYTEST_CONFTEST_IMPORTS_SCHEDULER_BEFORE_COLLECTION_BARRIER": 10
+  },
+  "integration_failures": 10,
+  "integration_junit_path": "/Users/gregc/Backups/TheWiz/collection-release-diagnostics/2026-09-30/integration-junit.xml",
+  "integration_junit_sha256": "cfb7652b712d2fa44656b6f69364e3e78532984f6e8d2beedaf555319ecc7cd2",
+  "integration_pytest_summary": "157 passed, 10 failed, 29 subtests passed",
+  "integration_tests": 196,
+  "interpretation": "Package tests pass; broader pytest import order conflicts with dedicated collector bootstrap, while standalone process tests pass. Active-checkout integration remains unproven.",
+  "package_errors": 0,
+  "package_failures": 0,
+  "package_junit_path": "/Users/gregc/Backups/TheWiz/collection-release-diagnostics/2026-09-30/collection-release-junit.xml",
+  "package_junit_sha256": "cdf5ce26d3ba241a654d784c1e4a6bb75808b911bf779dc06520005eb9bbb3ad",
+  "package_pytest_summary": "89 passed, 221 subtests passed",
+  "package_tests": 310,
+  "schema_version": "thewiz.gate0.collection_release_diagnostic.v1",
+  "source_and_test_files_matching_runtime": 38,
+  "standalone_process_identity_tests_passed": 12,
+  "standalone_unittest_path": "/Users/gregc/Backups/TheWiz/collection-release-diagnostics/2026-09-30/process-unittest-stdout.txt",
+  "standalone_unittest_sha256": "a835ce0611894a9112962bebe377cb72d340c3070cd58cc8c45f7ce217c0033a"
+}

@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from quant_platform.orchestration.corrective_runtime import atomic_write_text
-
-from quant_platform.orchestration.corrective_runtime import atomic_write_csv
-
 from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+from numbers import Integral, Real
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from quant_platform.orchestration.teacher_contracts import EXACT_MODES, MATH_V2, normalize_exact_mode
-
+from quant_platform.orchestration.corrective_runtime import atomic_write_csv, atomic_write_text
+from quant_platform.orchestration.teacher_contracts import (
+    EXACT_MODES,
+    MATH_V2,
+    normalize_exact_mode,
+)
 
 STUDENT_TRAINING_COLUMNS: tuple[str, ...] = (
     "training_event_id",
@@ -52,6 +56,10 @@ class StudentReadinessPolicy:
     max_mode_share: float = 0.50
     required_math_version: str = MATH_V2
 
+    def __post_init__(self) -> None:
+        if self.required_math_version != MATH_V2:
+            raise ValueError("student readiness requires the current math version")
+
 
 def audit_student_training_dataset(
     dataset: pd.DataFrame,
@@ -62,6 +70,10 @@ def audit_student_training_dataset(
 
     policy = policy or StudentReadinessPolicy()
     rows: list[dict[str, object]] = []
+    if not isinstance(dataset, pd.DataFrame) or not dataset.columns.is_unique:
+        _check(rows, "unique_column_schema", False, "invalid or duplicate columns",
+               "DataFrame with unique columns", "invalid_student_column_schema")
+        return pd.DataFrame(rows)
     missing_columns = sorted(set(STUDENT_TRAINING_COLUMNS) - set(dataset.columns))
     _check(
         rows,
@@ -75,13 +87,32 @@ def audit_student_training_dataset(
         return pd.DataFrame(rows)
 
     working = dataset.copy()
-    feature_time = pd.to_datetime(working["feature_timestamp"], utc=True, errors="coerce")
-    label_time = pd.to_datetime(working["label_timestamp"], utc=True, errors="coerce")
+    feature_time = pd.to_datetime(working["feature_timestamp"].map(_explicit_timestamp), utc=True)
+    label_time = pd.to_datetime(working["label_timestamp"].map(_explicit_timestamp), utc=True)
     valid_time = feature_time.notna() & label_time.notna() & (feature_time < label_time)
     normalized_modes = working["exact_mode"].map(_safe_mode)
-    pair_count = int(working["pair"].astype(str).replace("", pd.NA).dropna().nunique())
-    timeframe_count = int(working["timeframe"].astype(str).replace("", pd.NA).dropna().nunique())
-    label_count = int(pd.to_numeric(working["good_trade"], errors="coerce").dropna().nunique())
+    identities_valid = all(bool(working[name].map(_identifier).all()) for name in
+        ("training_event_id", "context_id", "candidate_id", "pair", "timeframe", "source_system", "label_source", "evidence_path"))
+    _check(rows, "nonempty_identities", identities_valid, identities_valid,
+           "explicit nonempty identifiers and lineage labels", "invalid_training_identity")
+    _check(rows, "unique_training_events", bool(working["training_event_id"].map(_identifier).all()) and working["training_event_id"].is_unique,
+           len(working), "one row per training_event_id", "duplicate_training_event_id")
+    pair_count = int(working.loc[working["pair"].map(_identifier), "pair"].nunique())
+    timeframe_count = int(working.loc[working["timeframe"].map(_identifier), "timeframe"].nunique())
+    labels = _finite_numbers(working["good_trade"], allow_bool=True)
+    labels_valid = labels.notna() & working["good_trade"].map(_binary_label)
+    label_count = int(labels.loc[labels_valid].nunique())
+    _check(rows, "binary_trade_labels", bool(labels_valid.all()), int(labels_valid.sum()),
+           "finite binary good_trade labels on every row", "invalid_binary_trade_label")
+    excursions = [_finite_numbers(working[name]) for name in ("max_adverse_excursion", "max_favorable_excursion")]
+    # Producers retain signed MAE or adverse-magnitude conventions. Do not
+    # invent a sign migration here; only reject unavailable/nonfinite labels.
+    _check(rows, "finite_excursion_labels", all(bool(values.notna().all()) for values in excursions),
+           len(working), "finite excursion labels; sign/unit qualification remains separate", "invalid_excursion_label")
+    hold = _finite_numbers(working["hold_bars"])
+    hold_valid = hold.notna() & hold.ge(0) & hold.mod(1).eq(0)
+    _check(rows, "holding_bar_labels", bool(hold_valid.all()), int(hold_valid.sum()),
+           "finite nonnegative integral hold bars", "invalid_holding_bar_label")
     pair_share = _largest_share(working["pair"])
     raw_mode_share = _largest_share(normalized_modes)
     mode_share = _weighted_largest_share(normalized_modes, working.get("sample_weight"))
@@ -152,6 +183,9 @@ def audit_student_training_dataset(
         "unverified_math_version",
     )
     wizard_labels = _bool_series(working["uses_wizard_as_label"])
+    _check(rows, "known_provenance_flags", bool(wizard_labels.notna().all() and
+           _bool_series(working["uses_dashboard_hindsight"]).notna().all()), len(working),
+           "explicit true or false flags; unknown is not false", "unknown_provenance_flag")
     _check(
         rows,
         "wizard_not_label_authority",
@@ -169,7 +203,7 @@ def audit_student_training_dataset(
         0,
         "dashboard_hindsight_feature_present",
     )
-    after_cost = pd.to_numeric(working["profit_after_cost"], errors="coerce").notna()
+    after_cost = _finite_numbers(working["profit_after_cost"]).notna()
     _check(
         rows,
         "after_cost_labels",
@@ -204,7 +238,7 @@ def audit_student_training_dataset(
         "single_mode_concentration",
     )
     if "sample_weight" in working.columns:
-        sample_weight = pd.to_numeric(working["sample_weight"], errors="coerce")
+        sample_weight = _finite_numbers(working["sample_weight"])
         valid_weight = sample_weight.notna() & sample_weight.gt(0.0)
         _check(
             rows,
@@ -231,13 +265,13 @@ def audit_student_training_dataset(
         _check(
             rows,
             "row_training_eligibility",
-            bool(eligible.all()),
+            bool(eligible.notna().all() and eligible.all()),
             f"eligible={int(eligible.sum())}/{len(working)}",
             "all rows explicitly training eligible",
             "rows_marked_research_only",
             scope="supervised_student",
         )
-    propensity = pd.to_numeric(working["action_propensity"], errors="coerce")
+    propensity = _finite_numbers(working["action_propensity"])
     valid_propensity = propensity.notna() & propensity.gt(0.0) & propensity.le(1.0)
     _check(
         rows,
@@ -259,17 +293,23 @@ def audit_student_training_dataset(
             "synthetic_or_missing_propensity_lineage",
             scope="contextual_bandit",
         )
+    else:
+        _check(rows, "bandit_propensity_lineage", False, "missing", "logged_behavior_policy for every row",
+               "synthetic_or_missing_propensity_lineage", scope="contextual_bandit")
     if "behavior_policy_exploratory" in working.columns:
         exploratory = _bool_series(working["behavior_policy_exploratory"])
         _check(
             rows,
             "bandit_exploratory_action_support",
-            bool(exploratory.all()),
+            bool(exploratory.notna().all() and exploratory.all()),
             f"exploratory={int(exploratory.sum())}/{len(working)}",
             "logged nonzero support for alternative actions at every context",
             "deterministic_behavior_policy_has_no_counterfactual_support",
             scope="contextual_bandit",
         )
+    else:
+        _check(rows, "bandit_exploratory_action_support", False, "missing", "explicit logged alternative-action support",
+               "deterministic_behavior_policy_has_no_counterfactual_support", scope="contextual_bandit")
     return pd.DataFrame(rows)
 
 
@@ -370,19 +410,74 @@ def _weighted_largest_share(series: pd.Series, weights: pd.Series | None) -> flo
     frame = pd.DataFrame(
         {
             "value": series,
-            "weight": pd.to_numeric(weights, errors="coerce"),
+            "weight": _finite_numbers(weights),
         }
     ).dropna()
     frame = frame.loc[frame["weight"] > 0.0]
     if frame.empty:
         return 1.0
+    # Scale before aggregation to avoid finite large weights overflowing.
+    frame["weight"] = frame["weight"] / frame["weight"].max()
     totals = frame.groupby(frame["value"].astype(str))["weight"].sum()
     total = float(totals.sum())
     return float(totals.max() / total) if total > 0.0 else 1.0
 
 
 def _bool_series(series: pd.Series) -> pd.Series:
-    return series.astype(str).str.strip().str.lower().isin({"1", "true", "yes", "y"})
+    def parse(value):
+        if isinstance(value, (bool, np.bool_)):
+            return bool(value)
+        if isinstance(value, Integral) and value in (0, 1):
+            return bool(value)
+        if isinstance(value, str):
+            token = value.strip().lower()
+            if token in {"1", "true", "yes", "y"}:
+                return True
+            if token in {"0", "false", "no", "n"}:
+                return False
+        return pd.NA
+    return series.map(parse).astype("boolean")
+
+
+def _identifier(value: object) -> bool:
+    return isinstance(value, str) and bool(value) and value == value.strip() and value.lower() not in {"nan", "none", "null", "unknown"}
+
+
+def _binary_label(value: object) -> bool:
+    if isinstance(value, str):
+        try:
+            # Do not round an exact nonbinary decimal string into 0 or 1.
+            exact = Decimal(value)
+            return exact.is_finite() and exact in (Decimal(0), Decimal(1))
+        except InvalidOperation:
+            return False
+    return isinstance(value, (Real, np.bool_)) and value in (0, 1)
+
+
+def _finite_numbers(series: pd.Series, *, allow_bool: bool = False) -> pd.Series:
+    def parse(value):
+        if isinstance(value, (bool, np.bool_)) and not allow_bool:
+            return float("nan")
+        if not isinstance(value, (str, Real)):
+            return float("nan")
+        try:
+            result = float(value)
+        except (ValueError, TypeError, OverflowError):
+            return float("nan")
+        return result if np.isfinite(result) else float("nan")
+    return series.map(parse).astype(float)
+
+
+def _explicit_timestamp(value: object):
+    if not isinstance(value, (str, datetime, pd.Timestamp)):
+        return pd.NaT
+    try:
+        stamp = pd.Timestamp(value)
+        if pd.isna(stamp) or stamp.tzinfo is None:
+            return pd.NaT
+        return stamp.tz_convert("UTC").as_unit("ns")
+    except (ValueError, TypeError, OverflowError):
+        return pd.NaT
 
 
 def _read_csv(path: Path) -> pd.DataFrame:

@@ -1,0 +1,50 @@
+{
+  "action": [
+    "launchctl disable gui/501/com.openai.codexworkspace.mount",
+    "launchctl bootout gui/501/com.openai.codexworkspace.mount"
+  ],
+  "active_checkout": "/Volumes/Expansion/Crypto Wizard",
+  "after": {
+    "agent_plist_sha256": "c0a8d1b1dbd6b45cc08a652ab173909c14ae6305dd2033642d9f1290982177f2",
+    "disabled": true,
+    "launchctl_print_exit_code": 113,
+    "mount_script_sha256": "1c62ae6c85a3164e8511098bbe8b07484f4878536eeb1825e000a6a0badb05ee",
+    "service_unloaded": true
+  },
+  "backup_schedule_modified": false,
+  "before": {
+    "label": "com.openai.codexworkspace.mount",
+    "last_exit_code": 1,
+    "loaded": true,
+    "observed_runs": 6490,
+    "run_interval_seconds": 60,
+    "target_bundle": "/Volumes/Expansion/CodexWorkspace.sparsebundle",
+    "target_mount": "/Volumes/CodexWorkspace"
+  },
+  "decision": "OBSOLETE_ENCRYPTED_MOUNT_AGENT_DISABLED_REVERSIBLY",
+  "encrypted_bundle_modified": false,
+  "expansion_is_mount": true,
+  "nightly_backup": {
+    "installed_script_sha256": "9f772ca384312aa1968b075679e5d913c54eaca05bdc58039cf433c2f19a94fb",
+    "label": "com.thewiz.nightly-savepoint",
+    "last_exit_code": 0,
+    "loaded": true,
+    "repo_script_sha256": "9f772ca384312aa1968b075679e5d913c54eaca05bdc58039cf433c2f19a94fb",
+    "targets": [
+      "/Volumes/Expansion/Crypto Wizard",
+      "/Users/gregc/TheWiz-LocalRuntime"
+    ]
+  },
+  "observed_at_utc": "2026-09-30T19:28:57.929929+00:00",
+  "passcode_accessed": false,
+  "retained_for_reversal": {
+    "enable_commands": [
+      "launchctl enable gui/501/com.openai.codexworkspace.mount",
+      "launchctl bootstrap gui/501 '/Users/gregc/Library/LaunchAgents/com.openai.codexworkspace.mount.plist'"
+    ],
+    "mount_script_path": "/Users/gregc/Library/Application Support/CodexWorkspace/mount-codex-workspace.sh",
+    "plist_path": "/Users/gregc/Library/LaunchAgents/com.openai.codexworkspace.mount.plist"
+  },
+  "schema_version": "thewiz.gate0.legacy_encrypted_mount_retirement.v1",
+  "user_workspace_preference": "unencrypted Expansion checkout"
+}

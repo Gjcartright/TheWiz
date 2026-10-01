@@ -1,0 +1,47 @@
+flowchart LR
+    subgraph Inputs
+        W[Crypto Wizards discovery and exact-mode evidence]
+        X[Public exchange market data]
+        F[Archived fixtures and research references]
+    end
+
+    subgraph Research[Research and evidence path]
+        C[Raw immutable capture]
+        V[Schema, lineage, freshness, and universe validation]
+        P[Point-in-time pair replay]
+        A[Two-leg accounting and observed cost stress]
+        G[Walk-forward, regime, FDR, concentration, and robustness gates]
+        J[Watch journal and verified outcomes]
+        M[Leakage-audited ML gate]
+        B[Portfolio and venue compatibility]
+        T[Testnet candidate: separate evidence and approval]
+        L[Live canary: explicit authorization; disabled by default]
+        R[Blocked, rejected, or fetch more evidence]
+    end
+
+    W --> C
+    X --> C
+    F --> P
+    C --> V --> P --> A --> G
+    G -->|research pass only| J --> M --> B --> T --> L
+    G -->|fail or incomplete| R
+    T -->|missing scoped order approval| R
+    L -. live trading remains unauthorized by default .-> Z[No live authority]
+
+    subgraph LangGraph[Executable LangGraph control wrapper]
+        S((START)) --> I[initialize]
+        I --> N[run_stage]
+        N -->|next stage| N
+        N -->|complete or fail-fast| E[finalize]
+        E --> Q((END))
+    end
+
+    N -. dispatches existing stage contract .-> C
+    N -. writes run and graph reports .-> O[reports/active]
+
+    subgraph RuntimeSetup[Runtime setup]
+        PY[Python 3.11+; CI uses 3.12; uv.lock]
+        JS[Optional Node helpers and npx MCP; no package.json]
+        PY -. runs .-> LangGraph
+        JS -. browser helpers need host tab.playwright .-> W
+    end

@@ -13,10 +13,13 @@ def wizard_hyperliquid_candidate_set_id(frame: pd.DataFrame) -> str:
     material: set[str] = set()
     for _, row in frame.iterrows():
         config_hash = _text(row.get("candidate_config_hash", ""))
+        interval = _text(row.get("local_interval", row.get("interval", row.get("timeframe", ""))))
+        # Uppercase M denotes months; lowercasing it would alias minute rows.
+        interval_key = interval if interval.endswith("M") and interval[:-1].isdigit() else interval.lower()
         identity = config_hash or "|".join(
             [
                 _text(row.get("pair", "")).upper(),
-                _text(row.get("local_interval", row.get("interval", row.get("timeframe", "")))).lower(),
+                interval_key,
                 _text(row.get("exact_mode", "")).lower(),
             ]
         )

@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
 import numpy as np
 import pandas as pd
 
 from quant_platform.economic_contract import copula_distortion_signal
+from quant_platform.runtime_types import strict_bool
 from quant_platform.zscore_utils import coalesce_zscore
 
 SignalFunction = Callable[[pd.DataFrame], pd.Series]
 
 ZSCORE_WINDOW = 7
 ZSCORE_MIN_PERIODS = 7
+REGIME_REFERENCE_MIN_ROWS = 20
 
 
 def _coalesced_zscore(frame: pd.DataFrame) -> pd.Series:
@@ -39,6 +41,8 @@ class StrategySpec:
     primary_fields: tuple[str, ...]
     required_tests: tuple[str, ...]
     signal_function: SignalFunction | None = None
+    implementation_kind: str = "native_rule"
+    acceptance_authority: str = "local_costed_walkforward"
 
 
 def zscore_signal(frame: pd.DataFrame, entry: float = 2.0, exit_: float = 0.25) -> pd.Series:
@@ -50,7 +54,7 @@ def _stateful(entry_signal: pd.Series, exit_mask: pd.Series) -> pd.Series:
     """Hold entries until an explicit exit while keeping reversals non-overlapping."""
 
     entries = pd.to_numeric(entry_signal, errors="coerce").fillna(0.0)
-    exits = exit_mask.reindex(entries.index).fillna(False).astype(bool)
+    exits = exit_mask.reindex(entries.index).fillna(False).map(strict_bool)
     result = pd.Series(0.0, index=entries.index, dtype="float64")
     state = 0.0
     for position, (entry, should_exit) in enumerate(zip(entries.to_numpy(), exits.to_numpy())):
@@ -316,10 +320,22 @@ def _return_proxy(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(0.0, index=frame.index)
 
 
+def _prior_expanding_quantile(
+    values: pd.Series,
+    quantile: float,
+    *,
+    min_periods: int = REGIME_REFERENCE_MIN_ROWS,
+) -> pd.Series:
+    """Estimate a threshold from rows strictly before the current row."""
+
+    numeric = pd.to_numeric(values, errors="coerce")
+    return numeric.expanding(min_periods=min_periods).quantile(quantile).shift(1)
+
+
 def hmm_regime_signal(frame: pd.DataFrame) -> pd.Series:
     returns = _return_proxy(frame)
     vol = returns.rolling(10, min_periods=2).std().fillna(0.0)
-    calm = vol <= vol.rolling(50, min_periods=2).quantile(0.60).fillna(vol.median())
+    calm = vol <= _prior_expanding_quantile(vol, 0.60)
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame).where(calm, 0.0)
     )
@@ -328,7 +344,7 @@ def hmm_regime_signal(frame: pd.DataFrame) -> pd.Series:
 def gmm_regime_signal(frame: pd.DataFrame) -> pd.Series:
     returns = _return_proxy(frame)
     trend = returns.rolling(10, min_periods=2).sum().fillna(0.0)
-    favorable = trend.abs() < trend.abs().rolling(50, min_periods=2).quantile(0.70).fillna(trend.abs().median())
+    favorable = trend.abs() < _prior_expanding_quantile(trend.abs(), 0.70)
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame).where(favorable, 0.0)
     )
@@ -338,22 +354,24 @@ def kmeans_regime_signal(frame: pd.DataFrame) -> pd.Series:
     returns = _return_proxy(frame)
     vol = returns.rolling(10, min_periods=2).std().fillna(0.0)
     trend = returns.rolling(10, min_periods=2).sum().fillna(0.0)
-    favorable = (vol.rank(pct=True) < 0.75) & (trend.abs().rank(pct=True) < 0.75)
+    favorable = (vol < _prior_expanding_quantile(vol, 0.75)) & (
+        trend.abs() < _prior_expanding_quantile(trend.abs(), 0.75)
+    )
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame).where(favorable, 0.0)
     )
 
 
 def pair_ranking_signal(frame: pd.DataFrame) -> pd.Series:
-    score = _numeric(frame, "composite_score", 75.0)
+    score = _numeric(frame, "composite_score", 0.0)
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame, entry=1.5).where(score >= 70.0, 0.0)
     )
 
 
 def portfolio_rotation_signal(frame: pd.DataFrame) -> pd.Series:
-    score = _numeric(frame, "composite_score", 75.0)
-    drawdown = _numeric(frame, "drawdown", 0.0)
+    score = _numeric(frame, "composite_score", 0.0)
+    drawdown = _numeric(frame, "drawdown", np.inf)
     return _stateful_zscore_entry(
         frame,
         _base_zscore_direction(frame, entry=1.5).where(
@@ -363,9 +381,9 @@ def portfolio_rotation_signal(frame: pd.DataFrame) -> pd.Series:
 
 
 def risk_adjusted_ranking_signal(frame: pd.DataFrame) -> pd.Series:
-    sharpe = _numeric(frame, "sharpe", 1.5)
-    cvar = _numeric(frame, "cvar", 0.05)
-    drawdown = _numeric(frame, "drawdown", 0.05)
+    sharpe = _numeric(frame, "sharpe", -np.inf)
+    cvar = _numeric(frame, "cvar", np.inf)
+    drawdown = _numeric(frame, "drawdown", np.inf)
     favorable = (sharpe >= 1.2) & (cvar <= 0.10) & (drawdown <= 0.15)
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame, entry=1.5).where(favorable, 0.0)
@@ -374,9 +392,9 @@ def risk_adjusted_ranking_signal(frame: pd.DataFrame) -> pd.Series:
 
 def meta_model_proxy_signal(frame: pd.DataFrame) -> pd.Series:
     confidence = (
-        _numeric(frame, "ml_confidence", 0.55)
-        + _numeric(frame, "profile_match", 0.55)
-        + _numeric(frame, "ou_optimal", 0.55)
+        _numeric(frame, "ml_confidence", 0.0)
+        + _numeric(frame, "profile_match", 0.0)
+        + _numeric(frame, "ou_optimal", 0.0)
     ) / 3.0
     return _stateful_zscore_entry(
         frame,
@@ -386,10 +404,10 @@ def meta_model_proxy_signal(frame: pd.DataFrame) -> pd.Series:
 
 def feature_importance_proxy_signal(frame: pd.DataFrame) -> pd.Series:
     weighted = (
-        _numeric(frame, "ecm_strength", 0.5) * 0.35
-        + _numeric(frame, "tail_dependence", 0.3).rsub(1.0) * 0.25
+        _numeric(frame, "ecm_strength", 0.0) * 0.35
+        + _numeric(frame, "tail_dependence", 1.0).rsub(1.0) * 0.25
         + _numeric(frame, "hurst", 0.5).rsub(0.5).clip(lower=0.0) * 0.80
-        + _numeric(frame, "ml_confidence", 0.55) * 0.20
+        + _numeric(frame, "ml_confidence", 0.0) * 0.20
     )
     return _stateful_zscore_entry(
         frame, _base_zscore_direction(frame, entry=1.5).where(weighted >= 0.45, 0.0)
@@ -400,9 +418,9 @@ def trade_outcome_predictor_proxy_signal(frame: pd.DataFrame) -> pd.Series:
     probability = _numeric(frame, "trade_success_probability", np.nan)
     if probability.isna().all():
         probability = (
-            _numeric(frame, "ml_confidence", 0.55)
-            + _numeric(frame, "profile_match", 0.55)
-            + _numeric(frame, "ecm_strength", 0.55)
+            _numeric(frame, "ml_confidence", 0.0)
+            + _numeric(frame, "profile_match", 0.0)
+            + _numeric(frame, "ecm_strength", 0.0)
         ) / 3.0
     return _stateful_zscore_entry(
         frame,
@@ -449,6 +467,48 @@ ALL_STRATEGIES: tuple[StrategySpec, ...] = (
     StrategySpec(36, "Copula + ECM Strategy", "hybrid", "Copula dislocation plus correction force improves entries.", ("conditional_probabilities", "ecm_strength"), ("ablation",), copula_ecm_signal),
     StrategySpec(37, "Pure Copula Portfolio", "portfolio", "Portfolio built entirely from copula-ranked dislocations.", ("copula_dislocation_score",), ("portfolio_walk_forward",), copula_dislocation_ranking_signal),
 )
+
+
+_STRATEGY_IMPLEMENTATION_METADATA: dict[int, tuple[str, str]] = {
+    3: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    4: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    5: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    6: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    7: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    14: ("zscore_threshold_proxy", "research_only_until_ou_contract_proven"),
+    15: ("score_threshold_proxy", "research_only_until_model_oos_accepted"),
+    16: ("similarity_threshold_proxy", "research_only_until_model_oos_accepted"),
+    17: ("score_stack_proxy", "research_only_until_model_oos_accepted"),
+    18: ("score_threshold_proxy", "research_only_until_model_oos_accepted"),
+    19: ("vote_threshold_proxy", "research_only_until_model_oos_accepted"),
+    21: ("rolling_volatility_heuristic", "research_only_proxy"),
+    22: ("rolling_trend_heuristic", "research_only_proxy"),
+    23: ("rank_heuristic", "research_only_proxy"),
+    28: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    29: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    30: ("score_stack_proxy", "research_only_until_model_oos_accepted"),
+    31: ("hand_weighted_proxy", "research_only_until_model_oos_accepted"),
+    32: ("score_threshold_proxy", "research_only_until_model_oos_accepted"),
+    33: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    34: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    35: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    36: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+    37: ("gaussian_threshold_proxy", "research_only_until_copula_contract_proven"),
+}
+
+ALL_STRATEGIES = tuple(
+    replace(
+        strategy,
+        implementation_kind=_STRATEGY_IMPLEMENTATION_METADATA.get(
+            strategy.id, (strategy.implementation_kind, strategy.acceptance_authority)
+        )[0],
+        acceptance_authority=_STRATEGY_IMPLEMENTATION_METADATA.get(
+            strategy.id, (strategy.implementation_kind, strategy.acceptance_authority)
+        )[1],
+    )
+    for strategy in ALL_STRATEGIES
+)
+STRATEGY_BY_ID: dict[int, StrategySpec] = {strategy.id: strategy for strategy in ALL_STRATEGIES}
 
 
 OFFICIAL_CRYPTO_WIZARDS_STRATEGY_IDS: tuple[int, ...] = (
@@ -509,8 +569,8 @@ STRATEGY_REQUIRED_COLUMNS: dict[int, set[str]] = {
     22: {"spread", "zscore"},
     23: {"spread", "zscore"},
     24: {"spread", "zscore", "regime"},
-    25: {"spread", "zscore"},
-    26: {"spread", "zscore"},
+    25: {"spread", "zscore", "composite_score"},
+    26: {"spread", "zscore", "composite_score", "drawdown"},
     27: {"spread", "zscore", "sharpe", "cvar", "drawdown"},
     28: {"spread", "conditional_probability_distortion", "tail_dependence"},
     29: {"spread", "conditional_probability_distortion", "tail_dependence"},
@@ -535,6 +595,8 @@ def strategy_rows() -> list[dict[str, str]]:
             "primary_fields": ";".join(s.primary_fields),
             "required_tests": ";".join(s.required_tests),
             "executable_signal": str(s.signal_function is not None),
+            "implementation_kind": s.implementation_kind,
+            "acceptance_authority": s.acceptance_authority,
         }
         for s in STRATEGIES
     ]
@@ -550,6 +612,8 @@ def all_strategy_rows() -> list[dict[str, str]]:
             "primary_fields": ";".join(s.primary_fields),
             "required_tests": ";".join(s.required_tests),
             "executable_signal": str(s.signal_function is not None),
+            "implementation_kind": s.implementation_kind,
+            "acceptance_authority": s.acceptance_authority,
         }
         for s in ALL_STRATEGIES
     ]

@@ -1,0 +1,89 @@
+{
+  "base_commit": "14dc97e22cfa298b6d058e7b493c0ccd4aab8d61",
+  "decision": "RETIRED_FAIL_CLOSED",
+  "historical_git_blob": "1fbac8e5184069214abf1567dbb04bc5512fb6e0",
+  "historical_sha256": "27dd3688439ecef6c5543b743e820d7b1c47a848cc2aaa8bdcd54653d4b3d9cb",
+  "historical_source_reconciliation": {
+    "historical_log_queue_rows": 15,
+    "historical_log_status": "RETAIN_HISTORICAL_LOG_NO_PORT",
+    "source_reconciliation_row": 181,
+    "union_queue_row_for_script": 0,
+    "working_recovery_runtime_hashes_equal": true
+  },
+  "isolated_clone": "/Users/gregc/Backups/TheWiz/recovery-route-diagnostics/2026-09-30/legacy-loop-candidate-2r03cK/repo",
+  "qualification": {
+    "bash_syntax_exit_code": 0,
+    "expansion_source_changed": false,
+    "isolated_stub_invocation_exit_code": 78,
+    "isolated_stub_stderr": "ERROR: The three-hour BH research loop is retired.\nIts historical implementation is preserved in Git history.\nUse docs/current_corrective_operations.md for current Gate 0 procedures.",
+    "isolated_stub_stdout": "",
+    "launch_agent_state_changed": false,
+    "loop_started_during_review": false,
+    "provider_calls_during_review": false,
+    "shared_union_queue_changed": false
+  },
+  "reason": "The June 2026 loop hardcoded an absent Documents/Codex checkout, used an unpinned Python interpreter, repeated dYdX market-selection and pair-expansion commands, and suppressed command failures. A path-only update would revive an API-dependent research sequence outside current source/runtime and acceptance controls.",
+  "recovery": "The original implementation remains in Git history and the off-drive source bundle. Any replacement research schedule needs a new guarded design and separate acceptance evidence.",
+  "retirement_stub_sha256": "d5156e29299fa90f1a0f8c52c6121dce20f5ba006b65204a330999b9505ae302",
+  "reviewed_at_utc": "2026-09-30T19:43:32.802962+00:00",
+  "runtime_observation": {
+    "installed_thewiz_launch_agents": [
+      {
+        "label": "com.thewiz.corrective-l2-cadence",
+        "launchctl_print_exit_code": 113,
+        "loaded_at_review": false,
+        "plist_path": "/Users/gregc/Library/LaunchAgents/com.thewiz.corrective-l2-cadence.plist",
+        "program_arguments": [
+          "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/.venv/bin/python3",
+          "-m",
+          "quant_platform.orchestration.corrective_l2_scheduler",
+          "--capture"
+        ],
+        "references_legacy_loop": false
+      },
+      {
+        "label": "com.thewiz.corrective-research-daily",
+        "launchctl_print_exit_code": 113,
+        "loaded_at_review": false,
+        "plist_path": "/Users/gregc/Library/LaunchAgents/com.thewiz.corrective-research-daily.plist",
+        "program_arguments": [
+          "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/.venv/bin/python3",
+          "-m",
+          "quant_platform.orchestration.corrective_daily_scheduler",
+          "--execute"
+        ],
+        "references_legacy_loop": false
+      },
+      {
+        "label": "com.thewiz.corrective-wizard-proof",
+        "launchctl_print_exit_code": 113,
+        "loaded_at_review": false,
+        "plist_path": "/Users/gregc/Library/LaunchAgents/com.thewiz.corrective-wizard-proof.plist",
+        "program_arguments": [
+          "/Volumes/CodexWorkspace/Codex/TheWiz-publish-20260625/.venv/bin/python3",
+          "-m",
+          "quant_platform.orchestration.corrective_wizard_proof_launcher",
+          "--execute"
+        ],
+        "references_legacy_loop": false
+      },
+      {
+        "label": "com.thewiz.nightly-savepoint",
+        "launchctl_print_exit_code": 0,
+        "loaded_at_review": true,
+        "plist_path": "/Users/gregc/Library/LaunchAgents/com.thewiz.nightly-savepoint.plist",
+        "program_arguments": [
+          "/usr/bin/python3",
+          "/Users/gregc/Library/Application Support/TheWizBackup/nightly_savepoint.py"
+        ],
+        "references_legacy_loop": false
+      }
+    ],
+    "legacy_root": "/Users/gregc/Documents/Codex/TheWiz-publish-20260625",
+    "legacy_root_exists": false,
+    "limitation": "Point-in-time inspection of tracked source and installed TheWiz user LaunchAgents cannot exclude unknown external manual callers.",
+    "tracked_functional_callers": []
+  },
+  "schema": "thewiz.gate0.legacy_bh_loop_retirement.v1",
+  "scope": "scripts/run_three_hour_bh_loop.sh"
+}

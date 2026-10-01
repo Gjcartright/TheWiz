@@ -151,6 +151,22 @@ NON_FEATURE_COLUMNS = {
     "registered_candidate",
     "accepted_stage4_survivor",
     "experiment_id",
+    "native_promotion_basis",
+    "shared_outcome_count",
+    "shared_outcome_mean_drawdown",
+    "shared_outcome_mean_return",
+    "shared_outcome_win_rate",
+    "shared_verified_outcome_count",
+    "wizard_history_feature_count",
+    "wizard_learning_feature_state",
+    "wizard_same_regime_count",
+    "wizard_same_regime_strategy_venue_count",
+    "wizard_same_regime_strategy_venue_mean_drawdown",
+    "wizard_same_regime_strategy_venue_mean_return",
+    "wizard_same_regime_strategy_venue_win_rate",
+    "wizard_same_strategy_family_count",
+    "wizard_same_venue_count",
+    "wizard_verified_same_regime_strategy_venue_count",
     "pair_group_key",
     "pair_group_id",
     "walkforward_id",
@@ -213,6 +229,10 @@ NON_FEATURE_COLUMNS = {
     "asset_x",
     "asset_y",
 }
+
+MODEL_FEATURE_COLUMNS = tuple(
+    column for column in ML_DATASET_COLUMNS if column not in NON_FEATURE_COLUMNS
+)
 
 
 @dataclass(frozen=True)
@@ -531,6 +551,10 @@ def build_trade_filter_dataset(
         frame["timestamp"] = timestamps.loc[valid_timestamp]
         if len(frame) < min_rows:
             continue
+        # A spread-point proxy has no trade notional with which to label a
+        # supervised model. Keep it in research diagnostics only.
+        if not {"price_x", "price_y", "hedge_ratio"}.issubset(frame.columns):
+            continue
         for strategy in strategies:
             if strategy.signal_function is None:
                 continue
@@ -614,8 +638,9 @@ def train_trade_filter_walkforward(
     )
     if ordered.empty or not ordered["exit_timestamp"].gt(ordered[TIMESTAMP_COLUMN]).all():
         raise ValueError("dataset requires exit_timestamp after entry_timestamp for every row")
-    feature_columns = [column for column in ordered.columns if column not in NON_FEATURE_COLUMNS]
-    feature_columns = [column for column in feature_columns if column != TARGET_COLUMN]
+    feature_columns = [column for column in MODEL_FEATURE_COLUMNS if column in ordered.columns]
+    if not feature_columns:
+        raise ValueError("dataset has no approved entry-time model features")
     categorical_features = [
         column
         for column in feature_columns
@@ -1146,6 +1171,8 @@ def _candidate_rows_for_signal(
     cost_model: CostModel,
 ) -> list[dict[str, Any]]:
     detailed, backtest_mode = _detailed_backtest_frame(frame, signal, cost_model)
+    if backtest_mode != "two_leg":
+        return []
     entry_mask = detailed["signal_target"].ne(0.0) & detailed["signal_target"].shift(1).fillna(
         0.0
     ).eq(0.0)
@@ -1259,55 +1286,65 @@ def _normalize_timeframe(value: object) -> str:
 
 def _entry_feature_row(frame: pd.DataFrame, entry_pos: int) -> dict[str, Any]:
     row = frame.iloc[entry_pos]
-    return {
-        "entry_zscore": float(row.get("zscore", 0.0) or 0.0),
-        "entry_abs_zscore": abs(float(row.get("zscore", 0.0) or 0.0)),
-        "zscore_change_1": float(row.get("zscore_change_1", 0.0) or 0.0),
-        "zscore_change_3": float(row.get("zscore_change_3", 0.0) or 0.0),
-        "spread_level": float(row.get("spread", 0.0) or 0.0),
-        "spread_change_1": float(row.get("spread_change_1", 0.0) or 0.0),
-        "spread_change_3": float(row.get("spread_change_3", 0.0) or 0.0),
-        "spread_vol_12": float(row.get("spread_vol_12", 0.0) or 0.0),
-        "spread_vol_48": float(row.get("spread_vol_48", 0.0) or 0.0),
-        "hedge_ratio": float(row.get("hedge_ratio", 1.0) or 1.0),
-        "hedge_ratio_stability": float(row.get("hedge_ratio_stability", 0.0) or 0.0),
-        "beta": float(row.get("beta", 1.0) or 1.0),
-        "realized_volatility_percentile": float(
-            row.get("realized_volatility_percentile", 0.0) or 0.0
-        ),
-        "cvar": float(row.get("cvar", 0.0) or 0.0),
-        "var": float(row.get("var", 0.0) or 0.0),
-        "tail_dependence": float(row.get("tail_dependence", 0.0) or 0.0),
-        "crisis_probability": float(row.get("crisis_probability", 0.0) or 0.0),
-        "liquidity_score": float(row.get("liquidity_score", 0.0) or 0.0),
-        "bid_ask_spread_bps": float(row.get("bid_ask_spread_bps", 0.0) or 0.0),
-        "slippage_bps": float(row.get("slippage_bps", 0.0) or 0.0),
-        "volume_x_usd": float(row.get("volume_x_usd", 0.0) or 0.0),
-        "volume_y_usd": float(row.get("volume_y_usd", 0.0) or 0.0),
-        "funding_x_bps": float(row.get("funding_x_bps", 0.0) or 0.0),
-        "funding_y_bps": float(row.get("funding_y_bps", 0.0) or 0.0),
-        "funding_diff_bps": float(row.get("funding_diff_bps", 0.0) or 0.0),
-        "funding_abs_total_bps": float(row.get("funding_abs_total_bps", 0.0) or 0.0),
-        "funding_bps_per_day": float(row.get("funding_bps_per_day", 0.0) or 0.0),
-        "regime": str(row.get("regime", "UNKNOWN") or "UNKNOWN"),
-        "regime_strategy_match": float(row.get("regime_strategy_match", 0.0) or 0.0),
-        "cointegration_pvalue": float(row.get("cointegration_pvalue", 1.0) or 1.0),
-        "ecm_strength": float(row.get("ecm_strength", 0.0) or 0.0),
-        "ecm_x": float(row.get("ecm_x", 0.0) or 0.0),
-        "ecm_y": float(row.get("ecm_y", 0.0) or 0.0),
-        "half_life": float(row.get("half_life", 0.0) or 0.0),
-        "hurst": float(row.get("hurst", 0.0) or 0.0),
-        "conditional_probability_distortion": float(
-            row.get("conditional_probability_distortion", 0.0) or 0.0
-        ),
-        "copula_calibration_score": float(row.get("copula_calibration_score", 0.0) or 0.0),
-        "u1_given_u2": float(row.get("u1_given_u2", 0.0) or 0.0),
-        "u2_given_u1": float(row.get("u2_given_u1", 0.0) or 0.0),
-        "composite_score": float(row.get("composite_score", 0.0) or 0.0),
-        "ml_confidence": float(row.get("ml_confidence", 0.0) or 0.0),
-        "profile_match": float(row.get("profile_match", 0.0) or 0.0),
-        "ou_optimal": float(row.get("ou_optimal", 0.0) or 0.0),
+    source_by_feature = {
+        "entry_zscore": "zscore",
+        "zscore_change_1": "zscore_change_1",
+        "zscore_change_3": "zscore_change_3",
+        "spread_level": "spread",
+        "spread_change_1": "spread_change_1",
+        "spread_change_3": "spread_change_3",
+        "spread_vol_12": "spread_vol_12",
+        "spread_vol_48": "spread_vol_48",
+        "hedge_ratio": "hedge_ratio",
+        "hedge_ratio_stability": "hedge_ratio_stability",
+        "beta": "beta",
+        "realized_volatility_percentile": "realized_volatility_percentile",
+        "cvar": "cvar",
+        "var": "var",
+        "tail_dependence": "tail_dependence",
+        "crisis_probability": "crisis_probability",
+        "liquidity_score": "liquidity_score",
+        "bid_ask_spread_bps": "bid_ask_spread_bps",
+        "slippage_bps": "slippage_bps",
+        "volume_x_usd": "volume_x_usd",
+        "volume_y_usd": "volume_y_usd",
+        "funding_x_bps": "funding_x_bps",
+        "funding_y_bps": "funding_y_bps",
+        "funding_diff_bps": "funding_diff_bps",
+        "funding_abs_total_bps": "funding_abs_total_bps",
+        "funding_bps_per_day": "funding_bps_per_day",
+        "regime_strategy_match": "regime_strategy_match",
+        "cointegration_pvalue": "cointegration_pvalue",
+        "ecm_strength": "ecm_strength",
+        "ecm_x": "ecm_x",
+        "ecm_y": "ecm_y",
+        "half_life": "half_life",
+        "hurst": "hurst",
+        "conditional_probability_distortion": "conditional_probability_distortion",
+        "copula_calibration_score": "copula_calibration_score",
+        "u1_given_u2": "u1_given_u2",
+        "u2_given_u1": "u2_given_u1",
+        "composite_score": "composite_score",
+        "ml_confidence": "ml_confidence",
+        "profile_match": "profile_match",
+        "ou_optimal": "ou_optimal",
     }
+    features = {
+        feature: _entry_numeric_value(row, source)
+        for feature, source in source_by_feature.items()
+    }
+    features["entry_abs_zscore"] = abs(features["entry_zscore"])
+    features["regime"] = str(row.get("regime", "UNKNOWN") or "UNKNOWN")
+    return features
+
+
+def _entry_numeric_value(row: pd.Series, column: str) -> float:
+    if isinstance(row.get(column), (bool, np.bool_)):
+        return float("nan")
+    value = pd.to_numeric(
+        pd.Series([row.get(column, np.nan)]), errors="coerce"
+    ).iloc[0]
+    return float(value) if pd.notna(value) and np.isfinite(value) else float("nan")
 
 
 def _shadow_comparison_row(
@@ -1406,21 +1443,16 @@ def _detailed_backtest_frame(
     data["spread_change_3"] = data["spread"].diff(3).fillna(0.0)
     data["spread_vol_12"] = data["spread"].diff().rolling(12, min_periods=2).std().fillna(0.0)
     data["spread_vol_48"] = data["spread"].diff().rolling(48, min_periods=2).std().fillna(0.0)
-    data["funding_diff_bps"] = pd.to_numeric(
-        data.get("funding_y_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-    ).fillna(0.0) - pd.to_numeric(
-        data.get("funding_x_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-    ).fillna(0.0)
-    data["funding_abs_total_bps"] = (
-        pd.to_numeric(data.get("funding_x_bps", pd.Series(0.0, index=data.index)), errors="coerce")
-        .fillna(0.0)
-        .abs()
-        + pd.to_numeric(
-            data.get("funding_y_bps", pd.Series(0.0, index=data.index)), errors="coerce"
-        )
-        .fillna(0.0)
-        .abs()
-    )
+    if {"funding_x_bps", "funding_y_bps"}.issubset(data.columns):
+        funding_x = pd.to_numeric(data["funding_x_bps"], errors="coerce")
+        funding_y = pd.to_numeric(data["funding_y_bps"], errors="coerce")
+        data["funding_diff_bps"] = funding_y - funding_x
+        data["funding_abs_total_bps"] = funding_x.abs() + funding_y.abs()
+    else:
+        # The cost model may supply an explicit simulation assumption, but it
+        # must not become an observed entry feature for the ML model.
+        data["funding_diff_bps"] = np.nan
+        data["funding_abs_total_bps"] = np.nan
 
     if {"price_x", "price_y", "hedge_ratio"}.issubset(data.columns):
         backtest_mode = "two_leg"
