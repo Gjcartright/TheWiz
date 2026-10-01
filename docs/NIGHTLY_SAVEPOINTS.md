@@ -1,6 +1,6 @@
 # TheWiz nightly save points
 
-The Mac mini runs `com.thewiz.nightly-savepoint` at **12:00 AM America/New_York**. The installed program is `/Users/gregc/Library/Application Support/TheWizBackup/nightly_savepoint.py`; its maintained copy is `scripts/ops/nightly_savepoint.py`. The existing Codex automation `thewiz-nightly-github-backup` checks the receipt at 12:45 AM and retries a missing destination once. It no longer targets the unmounted recovery checkout.
+The Mac mini has a local Codex automation, `thewiz-midnight-three-destination-save-point`, scheduled for **12:00 AM America/New_York**. It runs `/Users/gregc/Library/Application Support/TheWizBackup/nightly_savepoint.py`; the maintained copy is `scripts/ops/nightly_savepoint.py`. The existing `thewiz-nightly-github-backup` automation checks the receipt at 12:45 AM and retries a missing destination once. Both use the active Expansion checkout.
 
 | Destination | Path | Coverage | Retention |
 | --- | --- | --- | --- |
@@ -20,4 +20,4 @@ To inspect the latest receipt:
 
 To restore, select a dated save point and copy its `project/` and `local_runtime/` folders into **new** directories first. Review the manifest and receipt before replacing any active checkout or runtime. Python environments can be rebuilt from `uv.lock`. GitHub contains the source and audit subset, while the two local destinations carry the broader data and report archive.
 
-The Mac must be on, the user LaunchAgent loaded, Expansion mounted, and macOS privacy must allow the scheduled `/usr/bin/python3` process to access removable volumes. A successful run from Terminal or Codex does not verify the LaunchAgent's permission because macOS can attribute it to a different app. If the Mac is asleep, the drive is absent, or the scheduled job is denied access, check the dated receipt and LaunchAgent logs in `/Users/gregc/Library/Logs/TheWizBackup/`; the 12:45 AM Codex check can retry when the drive is available. Verify a scheduler permission repair from the LaunchAgent context.
+The Mac and local Codex scheduler must be available, and Expansion must be mounted. The older `com.thewiz.nightly-savepoint` LaunchAgent is disabled because macOS denied its `/usr/bin/python3` process removable-volume access on 2026-10-01. It is not part of the active backup schedule. A successful Codex run uses the app's existing removable-volume permission. Check dated receipts and `/Users/gregc/Library/Logs/TheWizBackup/` for any failure; the 12:45 AM Codex check can retry when the drive is available.

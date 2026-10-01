@@ -752,7 +752,7 @@ Stop progression and keep `RESEARCH_ONLY` when any of these is true:
 
 ## Recovery
 
-The canonical source checkout is `/Volumes/Expansion/Crypto Wizard` on the mounted Expansion drive. The loaded `com.thewiz.nightly-savepoint` LaunchAgent runs at midnight, copying a dated project and LocalRuntime snapshot to Expansion and the Mac internal drive and pushing a source-only mirror to the private GitHub backup repository. The installed script matches `scripts/ops/nightly_savepoint.py` byte for byte. Check the three destination results and manifest hash with:
+The canonical source checkout is `/Volumes/Expansion/Crypto Wizard` on the mounted Expansion drive. The midnight local Codex automation runs the installed save-point script, copying a dated project and LocalRuntime snapshot to Expansion and the Mac internal drive and pushing a source-only mirror to the private GitHub backup repository. A 12:45 AM automation checks and retries any missing destination. The older LaunchAgent is disabled after its Python process was denied removable-volume access on 2026-10-01 and is not part of the active schedule. The installed script matches `scripts/ops/nightly_savepoint.py` byte for byte. Check the three destination results and manifest hash with:
 
 ```bash
 python scripts/ops/nightly_savepoint.py --status
